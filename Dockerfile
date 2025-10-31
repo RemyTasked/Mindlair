@@ -1,59 +1,32 @@
-# Multi-stage build for Meet Cute
+# Use Node.js 18 on Alpine Linux
+FROM node:18-alpine
 
-# Stage 1: Build frontend
-FROM node:18-alpine AS frontend-builder
+# Install OpenSSL 1.1 compatibility libraries
+RUN apk add --no-cache openssl1.1-compat
 
-WORKDIR /app/frontend
+# Create app directory
+WORKDIR /app
 
-COPY src/frontend/package*.json ./
+# Copy package files
+COPY package*.json ./
+COPY src/frontend/package*.json ./src/frontend/
+
+# Install dependencies
 RUN npm ci
+RUN cd src/frontend && npm ci
 
-COPY src/frontend ./
+# Copy application code
+COPY . .
+
+# Build application
 RUN npm run build
+RUN cd src/frontend && npm run build
 
-# Stage 2: Build backend
-FROM node:18-alpine AS backend-builder
-
-WORKDIR /app
-
-COPY package*.json ./
-COPY tsconfig*.json ./
-COPY prisma ./prisma
-
-RUN npm ci
-COPY src/backend ./src/backend
-
+# Generate Prisma Client
 RUN npx prisma generate
-RUN npm run build:backend
-
-# Stage 3: Production
-FROM node:18-alpine AS production
-
-WORKDIR /app
-
-# Install production dependencies
-COPY package*.json ./
-RUN npm ci --only=production
-
-# Copy Prisma schema and generate client
-COPY prisma ./prisma
-RUN npx prisma generate
-
-# Copy built backend
-COPY --from=backend-builder /app/dist ./dist
-
-# Copy built frontend (to serve if needed)
-COPY --from=frontend-builder /app/frontend/dist ./public
-
-# Create logs directory
-RUN mkdir -p logs
-
-# Set environment
-ENV NODE_ENV=production
 
 # Expose port
 EXPOSE 3000
 
-# Start application
-CMD ["node", "dist/server.js"]
-
+# Start the application
+CMD ["npm", "run", "start"]
