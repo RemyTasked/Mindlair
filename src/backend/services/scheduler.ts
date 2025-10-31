@@ -287,7 +287,7 @@ async function sendDailyWrapUps() {
 
         const stats = {
           totalMeetings: meetings.length,
-          scenesCompleted: meetings.filter((m) => m.cueDelivered).length,
+          scenesCompleted: meetings.filter((m: any) => m.cueDelivered).length,
           focusSessionsOpened: focusSessions.length,
         };
 
