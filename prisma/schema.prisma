@@ -1,0 +1,195 @@
+// Prisma Schema for Meet Cute
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Calendar Integrations
+  calendarAccounts CalendarAccount[]
+
+  // Preferences
+  preferences UserPreferences?
+
+  // Meetings & History
+  meetings        Meeting[]
+  focusSessions   FocusSession[]
+  dailyReflections DailyReflection[]
+
+  // Delivery Settings
+  deliverySettings DeliverySettings?
+
+  @@map("users")
+}
+
+model CalendarAccount {
+  id           String   @id @default(uuid())
+  userId       String
+  provider     String   // "google" or "microsoft"
+  email        String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("calendar_accounts")
+}
+
+model UserPreferences {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  tone      String   @default("balanced") // "executive", "cinematic", "balanced", "calm"
+  
+  // Timing preferences
+  alertMinutesBefore Int @default(5)
+  mergeBackToBack    Boolean @default(true)
+  
+  // Feature toggles
+  enableDailyWrapUp    Boolean @default(true)
+  enableFocusScene     Boolean @default(true)
+  enableAdaptiveTiming Boolean @default(false)
+  
+  // Adaptive learning data
+  averageEarlyJoinMinutes Float? // How early user typically joins
+  preferredAlertTime      Int?   // Learned optimal alert time
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model DeliverySettings {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  
+  // Delivery channels
+  emailEnabled   Boolean @default(true)
+  slackEnabled   Boolean @default(false)
+  smsEnabled     Boolean @default(false)
+  
+  // Contact info
+  phoneNumber    String?
+  slackUserId    String?
+  slackWebhookUrl String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_settings")
+}
+
+model Meeting {
+  id              String    @id @default(uuid())
+  userId          String
+  calendarEventId String    // External calendar event ID
+  
+  title           String
+  description     String?
+  startTime       DateTime
+  endTime         DateTime
+  attendees       String[]  // Array of email addresses
+  location        String?
+  meetingLink     String?
+  
+  // Meeting metadata
+  meetingType     String?   // Inferred type: "one-on-one", "team", "client", etc.
+  isBackToBack    Boolean   @default(false)
+  
+  // Cue delivery
+  cueScheduledFor DateTime?
+  cueSentAt       DateTime?
+  cueDelivered    Boolean   @default(false)
+  cueContent      String?   // The actual message sent
+  
+  // Focus Scene
+  focusSceneUrl   String?
+  focusSceneOpened Boolean  @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  focusSession  FocusSession?
+
+  @@unique([userId, calendarEventId])
+  @@index([userId, startTime])
+  @@index([cueScheduledFor])
+  @@map("meetings")
+}
+
+model FocusSession {
+  id              String    @id @default(uuid())
+  userId          String
+  meetingId       String    @unique
+  
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  duration        Int?      // Duration in seconds
+  
+  // User interactions
+  breathingExerciseCompleted Boolean @default(false)
+  reflectionNotes           String?
+  
+  createdAt       DateTime  @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@map("focus_sessions")
+}
+
+model DailyReflection {
+  id        String   @id @default(uuid())
+  userId    String
+  date      DateTime @db.Date
+  
+  totalMeetings       Int
+  scenesCompleted     Int
+  focusSessionsOpened Int
+  
+  // Insights
+  mostProductiveTime  String? // e.g., "morning", "afternoon"
+  averageJoinTime     Float?  // Average minutes before meeting joined
+  
+  wrapUpSentAt        DateTime?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("daily_reflections")
+}
+
+model SystemLog {
+  id        String   @id @default(uuid())
+  level     String   // "info", "warn", "error"
+  message   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([level, createdAt])
+  @@map("system_logs")
+}
+
