@@ -1,5 +1,6 @@
 [phases.setup]
 nixPkgs = ["nodejs-18_x", "npm-9_x", "openssl_1_1"]
+aptPkgs = ["openssl", "libssl1.1"]
 
 [phases.install]
 cmds = [
