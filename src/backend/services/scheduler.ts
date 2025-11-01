@@ -67,17 +67,37 @@ async function checkUpcomingMeetings() {
           if (account.provider === 'google') {
             // Refresh token if needed
             if (account.expiresAt && new Date(account.expiresAt) < now) {
-              const tokens = await googleCalendarService.refreshAccessToken(
-                account.refreshToken!
-              );
-              await prisma.calendarAccount.update({
-                where: { id: account.id },
-                data: {
-                  accessToken: tokens.access_token!,
-                  expiresAt: new Date(Date.now() + (tokens.expiry_date || 3600) * 1000),
-                },
-              });
-              account.accessToken = tokens.access_token!;
+            const tokens = await googleCalendarService.refreshAccessToken(
+              account.refreshToken!
+            );
+            
+            // Google returns expiry_date as absolute timestamp (ms)
+            // Validate it's reasonable (within next 24 hours)
+            let expiresAt = new Date();
+            if (tokens.expiry_date) {
+              const expiryTimestamp = Number(tokens.expiry_date);
+              const maxExpiry = Date.now() + 86400 * 1000; // 24 hours from now
+              const minExpiry = Date.now() + 60 * 1000; // 1 minute from now
+              
+              if (expiryTimestamp > minExpiry && expiryTimestamp < maxExpiry) {
+                expiresAt = new Date(expiryTimestamp);
+              } else {
+                // If invalid, default to 1 hour from now
+                expiresAt = new Date(Date.now() + 3600 * 1000);
+              }
+            } else {
+              // Default to 1 hour
+              expiresAt = new Date(Date.now() + 3600 * 1000);
+            }
+            
+            await prisma.calendarAccount.update({
+              where: { id: account.id },
+              data: {
+                accessToken: tokens.access_token!,
+                expiresAt,
+              },
+            });
+            account.accessToken = tokens.access_token!;
             }
 
             events = await googleCalendarService.getUpcomingEvents(
