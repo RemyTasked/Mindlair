@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Calendar, Sparkles, Clock, Mail, MessageSquare, Smartphone } from 'lucide-react';
+import { Calendar, Sparkles, Clock, Mail, MessageSquare, Smartphone, Moon, Sun, Star, Music } from 'lucide-react';
 
 export default function LandingPage() {
   const [loading, setLoading] = useState(false);
@@ -44,13 +44,18 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-20 text-center">
         <div className="max-w-4xl mx-auto">
+          <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full">
+            <span className="text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              🎬 NEW: Evening Rehearsal + Morning Confidence + Post-Meeting Insights
+            </span>
+          </div>
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            Transform Your Pre-Meeting Ritual
+            Your Complete Meeting Performance System
           </h1>
           <p className="text-xl text-gray-600 mb-12 leading-relaxed max-w-3xl mx-auto">
-            Meet Cute is an AI-enhanced pre-meeting ritual that helps you mentally prepare 
-            five minutes before every meeting. Turn routine calendar alerts into 
-            cinematic-professional focus moments.
+            From evening mental rehearsal to morning confidence to post-meeting reflection—
+            Meet Cute uses AI to transform every meeting into a professional performance. 
+            <strong className="text-gray-800"> Prepare. Perform. Improve.</strong>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -94,65 +99,113 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <section className="container mx-auto px-6 py-20">
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <h2 className="text-4xl font-bold text-center mb-4">Complete Performance Cycle</h2>
+        <p className="text-center text-gray-600 mb-16 text-lg">
+          AI-powered tools that work together from evening to morning to meeting
+        </p>
+        
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
+          {/* NEW: Highlight new features */}
           <FeatureCard
-            icon={<Calendar className="w-8 h-8 text-indigo-600" />}
-            title="Calendar Sync"
-            description="Automatically detects meetings from Google Calendar or Outlook"
+            icon={<Moon className="w-8 h-8 text-purple-600" />}
+            title="🌟 Presley Flow"
+            description="Evening mental rehearsal. Preview tomorrow's meetings with AI-guided visualization (3-7 min)"
+            isNew={true}
           />
           <FeatureCard
-            icon={<Sparkles className="w-8 h-8 text-purple-600" />}
-            title="AI-Powered Cues"
-            description="Personalized messages that help you focus and prepare"
+            icon={<Sun className="w-8 h-8 text-yellow-600" />}
+            title="🌟 Morning Recap"
+            description="Wake up to an energizing message with your first meeting time and confidence boost"
+            isNew={true}
+          />
+          <FeatureCard
+            icon={<Star className="w-8 h-8 text-indigo-600" />}
+            title="🌟 Meeting Ratings"
+            description="Rate your performance after meetings. AI learns from your feedback to improve guidance"
+            isNew={true}
           />
           <FeatureCard
             icon={<Clock className="w-8 h-8 text-indigo-600" />}
             title="Focus Scene"
-            description="5-minute guided experience with breathing and reflection"
+            description="5-minute guided preparation with breathing exercises and cinematic animations"
           />
           <FeatureCard
-            icon={<Mail className="w-8 h-8 text-purple-600" />}
+            icon={<Music className="w-8 h-8 text-purple-600" />}
+            title="🌟 Ambient Sounds"
+            description="Relaxing meditation audio: ocean waves, rain, forest, bells, or silence"
+            isNew={true}
+          />
+          <FeatureCard
+            icon={<Sparkles className="w-8 h-8 text-purple-600" />}
+            title="AI That Learns"
+            description="Gets smarter with every rating. Personalized cues based on what works for you"
+          />
+          <FeatureCard
+            icon={<Mail className="w-8 h-8 text-indigo-600" />}
             title="Email Delivery"
-            description="Beautiful pre-meeting cues delivered to your inbox"
-          />
-          <FeatureCard
-            icon={<MessageSquare className="w-8 h-8 text-indigo-600" />}
-            title="Slack Integration"
-            description="Get alerts where you already work"
+            description="Beautiful HTML emails with focus cues, evening sessions, and insights"
           />
           <FeatureCard
             icon={<Smartphone className="w-8 h-8 text-purple-600" />}
             title="SMS Alerts"
-            description="Optional text messages for on-the-go prep"
+            description="Get notifications via text message. Perfect for on-the-go preparation"
+          />
+          <FeatureCard
+            icon={<Calendar className="w-8 h-8 text-indigo-600" />}
+            title="Calendar Sync"
+            description="Works with Google Calendar and Outlook. Auto-detects all your meetings"
           />
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="container mx-auto px-6 py-20 bg-white rounded-3xl shadow-xl max-w-5xl">
-        <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
+      <section className="container mx-auto px-6 py-20 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl shadow-xl max-w-6xl">
+        <h2 className="text-4xl font-bold text-center mb-4">Your 24-Hour Performance Cycle</h2>
+        <p className="text-center text-gray-600 mb-16 text-lg">
+          From evening to morning to meeting—complete mental performance support
+        </p>
         
         <div className="space-y-12">
           <Step
-            number="1"
-            title="Connect Your Calendar"
-            description="Link your Google or Outlook calendar in seconds"
+            number="🌙"
+            title="Evening (8 PM): Presley Flow"
+            description="Receive your evening mental rehearsal. Preview tomorrow's meetings, set your intention, do guided visualization. Sleep knowing you're prepared."
+            emoji="evening"
           />
           <Step
-            number="2"
-            title="Get Pre-Meeting Cues"
-            description="5 minutes before each meeting, receive a personalized focus message"
+            number="☀️"
+            title="Morning (7 AM): Wake-Up Boost"
+            description="Get an energizing message reminding you of your preparation. See your first meeting time. Step into the day with confidence."
+            emoji="morning"
           />
           <Step
-            number="3"
-            title="Enter Focus Scene"
-            description="Optional: Click to open a guided 5-minute preparation experience"
+            number="⏰"
+            title="Pre-Meeting (5 min before): Focus Cue"
+            description="Receive AI-personalized preparation message via email or SMS. Optional: Open Focus Scene for guided breathing and meditation with ambient sounds."
+            emoji="pre"
           />
           <Step
-            number="4"
-            title="Step In Ready"
-            description="Join your meeting centered, confident, and clear"
+            number="🎬"
+            title="During Meeting: Perform"
+            description="Enter the meeting centered, prepared, and confident. The mental rehearsal and prep work pays off."
+            emoji="meeting"
           />
+          <Step
+            number="⭐"
+            title="Post-Meeting (30 min after): Reflect"
+            description="Rate your meeting performance (1-5 stars) and add optional feedback. AI learns what works best for you and improves future guidance."
+            emoji="post"
+          />
+        </div>
+
+        <div className="mt-16 p-8 bg-white rounded-2xl border-2 border-purple-200">
+          <p className="text-center text-lg text-gray-700 mb-2">
+            <strong className="text-purple-600">The more you rate, the smarter it gets.</strong>
+          </p>
+          <p className="text-center text-gray-600">
+            AI analyzes your 4-5 star meetings to understand what preparation style works best for you, 
+            then delivers increasingly personalized guidance over time.
+          </p>
         </div>
       </section>
 
@@ -165,9 +218,14 @@ export default function LandingPage() {
   );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function FeatureCard({ icon, title, description, isNew }: { icon: React.ReactNode; title: string; description: string; isNew?: boolean }) {
   return (
-    <article className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+    <article className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all relative group">
+      {isNew && (
+        <div className="absolute -top-3 -right-3 px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
+          NEW
+        </div>
+      )}
       <div className="mb-4">{icon}</div>
       <h3 className="text-xl font-semibold mb-3">{title}</h3>
       <p className="text-gray-600 leading-relaxed">{description}</p>
@@ -175,15 +233,15 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
   );
 }
 
-function Step({ number, title, description }: { number: string; title: string; description: string }) {
+function Step({ number, title, description, emoji }: { number: string; title: string; description: string; emoji?: string }) {
   return (
-    <div className="flex gap-6 items-start">
-      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
+    <div className="flex gap-6 items-start group">
+      <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
         {number}
       </div>
-      <div>
-        <h4 className="text-2xl font-semibold mb-2">{title}</h4>
-        <p className="text-gray-600 text-lg">{description}</p>
+      <div className="flex-1">
+        <h4 className="text-2xl font-semibold mb-3 text-gray-800">{title}</h4>
+        <p className="text-gray-600 text-lg leading-relaxed">{description}</p>
       </div>
     </div>
   );
