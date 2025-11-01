@@ -4,11 +4,16 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import BreathingCircle from '../components/BreathingCircle';
 import CountdownTimer from '../components/CountdownTimer';
+import AmbientSound from '../components/AmbientSound';
 
 interface MeetingData {
   title: string;
   startTime: string;
   cueContent: string;
+  soundPreferences?: {
+    enabled: boolean;
+    soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
+  };
 }
 
 export default function FocusScene() {
@@ -78,6 +83,14 @@ export default function FocusScene() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
+      {/* Ambient Sound Player */}
+      {meeting?.soundPreferences && currentPhase !== 'intro' && (
+        <AmbientSound
+          soundType={meeting.soundPreferences.soundType}
+          enabled={meeting.soundPreferences.enabled}
+        />
+      )}
+      
       <AnimatePresence mode="wait">
         {currentPhase === 'intro' && (
           <motion.div

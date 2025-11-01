@@ -8,6 +8,8 @@ interface Preferences {
   alertMinutesBefore: number;
   enableDailyWrapUp: boolean;
   enableFocusScene: boolean;
+  enableFocusSound: boolean;
+  focusSoundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
 }
 
 interface DeliverySettings {
@@ -25,6 +27,8 @@ export default function Settings() {
     alertMinutesBefore: 5,
     enableDailyWrapUp: true,
     enableFocusScene: true,
+    enableFocusSound: true,
+    focusSoundType: 'calm-ocean',
   });
   const [delivery, setDelivery] = useState<DeliverySettings>({
     emailEnabled: true,
@@ -155,6 +159,45 @@ export default function Settings() {
                   setPreferences({ ...preferences, enableFocusScene: checked })
                 }
               />
+            </div>
+          </Section>
+
+          {/* Focus Sound Settings */}
+          <Section title="Focus Sound">
+            <div className="space-y-6">
+              <Toggle
+                label="Enable Ambient Sound"
+                description="Play relaxing sounds during Focus Scene"
+                checked={preferences.enableFocusSound}
+                onChange={(checked) =>
+                  setPreferences({ ...preferences, enableFocusSound: checked })
+                }
+              />
+
+              {preferences.enableFocusSound && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sound Type
+                  </label>
+                  <select
+                    value={preferences.focusSoundType}
+                    onChange={(e) =>
+                      setPreferences({ ...preferences, focusSoundType: e.target.value as any })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="calm-ocean">Calm Ocean Waves</option>
+                    <option value="rain">Gentle Rain</option>
+                    <option value="forest">Forest Ambience</option>
+                    <option value="meditation-bell">Meditation Bell</option>
+                    <option value="white-noise">White Noise</option>
+                    <option value="none">Silence</option>
+                  </select>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Choose a calming sound to accompany your pre-meeting meditation
+                  </p>
+                </div>
+              )}
             </div>
           </Section>
 

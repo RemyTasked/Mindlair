@@ -23,6 +23,11 @@ router.get(
       throw new AppError('Meeting not found', 404);
     }
 
+    // Get user preferences for sound settings
+    const userPreferences = await prisma.userPreferences.findUnique({
+      where: { userId },
+    });
+
     // Update that focus scene was opened
     await prisma.meeting.update({
       where: { id: meeting.id },
@@ -34,6 +39,10 @@ router.get(
         title: meeting.title,
         startTime: meeting.startTime,
         cueContent: meeting.cueContent,
+        soundPreferences: {
+          enabled: userPreferences?.enableFocusSound ?? true,
+          soundType: userPreferences?.focusSoundType ?? 'calm-ocean',
+        },
       },
     });
   })

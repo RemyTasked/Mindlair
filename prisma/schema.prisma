@@ -64,6 +64,10 @@ model UserPreferences {
   enableFocusScene     Boolean @default(true)
   enableAdaptiveTiming Boolean @default(false)
   
+  // Sound preferences
+  enableFocusSound     Boolean @default(true)
+  focusSoundType       String  @default("calm-ocean") // "calm-ocean", "rain", "forest", "meditation-bell", "white-noise", "none"
+  
   // Adaptive learning data
   averageEarlyJoinMinutes Float? // How early user typically joins
   preferredAlertTime      Int?   // Learned optimal alert time
