@@ -165,7 +165,35 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
     });
     const isBackToBack = previousMeetings.length > 0;
 
-    // Generate AI cue
+    // Fetch historical insights from last 10 rated meetings
+    const historicalMeetings = await prisma.meeting.findMany({
+      where: {
+        userId: user.id,
+        meetingRating: {
+          not: null,
+        },
+        ratedAt: {
+          not: null,
+        },
+      },
+      orderBy: {
+        ratedAt: 'desc',
+      },
+      take: 10,
+      include: {
+        focusSession: true,
+      },
+    });
+
+    const historicalInsights = historicalMeetings.map(m => ({
+      meetingType: m.meetingType || 'general',
+      rating: m.meetingRating!,
+      feedback: m.meetingFeedback || undefined,
+      wasBackToBack: m.isBackToBack,
+      focusSceneUsed: m.focusSceneOpened,
+    }));
+
+    // Generate AI cue with historical context
     const tone = user.preferences?.tone || 'balanced';
     const cueMessage = await promptGenerator.generatePreMeetingCue(
       {
@@ -176,7 +204,8 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         isBackToBack,
         meetingType,
       },
-      tone
+      tone,
+      historicalInsights.length > 0 ? historicalInsights : undefined
     );
 
     // Create or update meeting record
@@ -304,6 +333,15 @@ async function sendDailyWrapUps() {
           focusSessionsOpened: focusSessions.length,
         };
 
+        // Get today's rated meetings with feedback
+        const ratedMeetings = meetings
+          .filter((m: any) => m.meetingRating !== null)
+          .map((m: any) => ({
+            title: m.title,
+            rating: m.meetingRating,
+            feedback: m.meetingFeedback,
+          }));
+
         // Get tomorrow's first meeting
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -323,10 +361,11 @@ async function sendDailyWrapUps() {
           },
         });
 
-        // Generate wrap-up message
+        // Generate wrap-up message with rating insights
         const wrapUpMessage = await promptGenerator.generateDailyWrapUp({
           ...stats,
           nextMeetingTime: nextMeeting?.startTime,
+          ratedMeetings: ratedMeetings.length > 0 ? ratedMeetings : undefined,
         });
 
         // Send wrap-up

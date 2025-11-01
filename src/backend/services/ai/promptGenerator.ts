@@ -14,6 +14,14 @@ export interface MeetingContext {
   meetingType?: string;
 }
 
+export interface HistoricalInsight {
+  meetingType: string;
+  rating: number;
+  feedback?: string;
+  wasBackToBack: boolean;
+  focusSceneUsed: boolean;
+}
+
 export type ToneType = 'executive' | 'cinematic' | 'balanced' | 'calm';
 
 const TONE_GUIDELINES = {
@@ -33,10 +41,34 @@ const TONE_GUIDELINES = {
 export class PromptGenerator {
   async generatePreMeetingCue(
     context: MeetingContext,
-    tone: ToneType = 'balanced'
+    tone: ToneType = 'balanced',
+    historicalInsights?: HistoricalInsight[]
   ): Promise<string> {
     try {
       const toneGuideline = TONE_GUIDELINES[tone];
+      
+      // Build historical context if available
+      let historicalContext = '';
+      if (historicalInsights && historicalInsights.length > 0) {
+        const avgRating = historicalInsights.reduce((sum, i) => sum + i.rating, 0) / historicalInsights.length;
+        const highRatedMeetings = historicalInsights.filter(i => i.rating >= 4);
+        const lowRatedMeetings = historicalInsights.filter(i => i.rating <= 2);
+        
+        historicalContext = `\n\nHISTORICAL PERFORMANCE INSIGHTS:
+Average recent rating: ${avgRating.toFixed(1)}/5 stars
+Recent meetings: ${historicalInsights.length} rated
+
+${highRatedMeetings.length > 0 ? `SUCCESS PATTERNS (${highRatedMeetings.length} meetings rated 4-5 stars):
+${highRatedMeetings.map(m => `- ${m.meetingType}: ${m.feedback || 'Went well'}${m.focusSceneUsed ? ' (Used Focus Scene)' : ''}`).slice(0, 2).join('\n')}` : ''}
+
+${lowRatedMeetings.length > 0 ? `\nAREAS TO IMPROVE (${lowRatedMeetings.length} meetings rated 1-2 stars):
+${lowRatedMeetings.map(m => `- ${m.meetingType}: ${m.feedback || 'Challenging'}${m.wasBackToBack ? ' (Was back-to-back)' : ''}`).slice(0, 2).join('\n')}` : ''}
+
+Use these insights to craft a message that:
+- Builds on what has worked well for this user
+- Addresses any patterns from lower-rated meetings
+- Provides specific, actionable focus points based on their history`;
+      }
       
       const prompt = `You are an AI assistant for "Meet Cute," a pre-meeting preparation tool that helps professionals mentally prepare before meetings.
 
@@ -50,14 +82,14 @@ ${context.isBackToBack ? 'Note: This is a back-to-back meeting' : ''}
 ${context.meetingType ? `Type: ${context.meetingType}` : ''}
 
 Tone: ${tone}
-${toneGuideline}
+${toneGuideline}${historicalContext}
 
 The message should:
 1. Be brief and impactful (2-3 sentences)
 2. Help the person mentally prepare and focus
 3. Match the ${tone} tone perfectly
 4. Reference the meeting context appropriately
-5. End with confidence and readiness
+${historicalInsights && historicalInsights.length > 0 ? '5. Subtly incorporate learnings from their past performance without explicitly mentioning ratings\n6. End with confidence and readiness' : '5. End with confidence and readiness'}
 
 Generate the message now:`;
 
@@ -102,8 +134,30 @@ Generate the message now:`;
     focusSessionsOpened: number;
     nextMeetingTime?: Date;
     insights?: string[];
+    ratedMeetings?: Array<{
+      title: string;
+      rating: number;
+      feedback?: string;
+    }>;
   }): Promise<string> {
     try {
+      // Build rating insights
+      let ratingInsights = '';
+      if (data.ratedMeetings && data.ratedMeetings.length > 0) {
+        const avgRating = data.ratedMeetings.reduce((sum, m) => sum + m.rating, 0) / data.ratedMeetings.length;
+        const highRated = data.ratedMeetings.filter(m => m.rating >= 4);
+        const lowRated = data.ratedMeetings.filter(m => m.rating <= 2);
+        
+        ratingInsights = `\n\nPERFORMANCE INSIGHTS TODAY:
+- Meetings rated: ${data.ratedMeetings.length}/${data.totalMeetings}
+- Average rating: ${avgRating.toFixed(1)}/5 stars
+${highRated.length > 0 ? `- ${highRated.length} meeting${highRated.length > 1 ? 's' : ''} went exceptionally well (4-5 stars)` : ''}
+${lowRated.length > 0 ? `- ${lowRated.length} meeting${lowRated.length > 1 ? 's' : ''} had challenges (1-2 stars)` : ''}
+
+Notable feedback:
+${data.ratedMeetings.filter(m => m.feedback).slice(0, 2).map(m => `- "${m.feedback}" (${m.rating}⭐)`).join('\n') || 'No specific feedback yet'}`;
+      }
+      
       const prompt = `Generate a brief daily wrap-up message for a user of Meet Cute.
 
 Today's Stats:
@@ -111,13 +165,14 @@ Today's Stats:
 - Scene Preps completed: ${data.scenesCompleted}
 - Focus Sessions opened: ${data.focusSessionsOpened}
 ${data.nextMeetingTime ? `- Tomorrow's first meeting: ${data.nextMeetingTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}` : ''}
-${data.insights && data.insights.length > 0 ? `\nInsights: ${data.insights.join(', ')}` : ''}
+${data.insights && data.insights.length > 0 ? `\nInsights: ${data.insights.join(', ')}` : ''}${ratingInsights}
 
-Create a warm, encouraging wrap-up message (2-3 sentences) that:
+Create a warm, encouraging wrap-up message (3-4 sentences) that:
 1. Acknowledges their preparation efforts
-2. Provides a gentle reflection
-3. Previews tomorrow if applicable
+2. ${ratingInsights ? 'Celebrates successes or addresses challenges from their rated meetings' : 'Provides a gentle reflection'}
+3. ${ratingInsights ? 'Offers specific, actionable insight for tomorrow based on today\'s performance' : 'Previews tomorrow if applicable'}
 4. Maintains a cinematic-professional tone
+5. Ends with encouragement
 
 Generate the message now:`;
 
