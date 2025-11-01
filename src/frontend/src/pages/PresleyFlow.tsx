@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Sun, Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 
 interface PresleyFlowData {
   openingScene: string;
@@ -25,7 +25,6 @@ export default function PresleyFlow() {
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<Phase>('opening');
   const [journalNote, setJournalNote] = useState('');
-  const [isBreathing, setIsBreathing] = useState(false);
 
   useEffect(() => {
     loadFlowData();
@@ -275,10 +274,7 @@ export default function PresleyFlow() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.9 }}
-                onClick={() => {
-                  setCurrentPhase('visualization');
-                  setIsBreathing(true);
-                }}
+                onClick={() => setCurrentPhase('visualization')}
                 className="mt-8 mx-auto block px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition-all"
               >
                 Begin Visualization →
