@@ -163,7 +163,7 @@ router.get(
         failed: results.tests.filter((t: any) => t.status === 'failed').length,
       };
 
-      res.json(results);
+      return res.json(results);
     } catch (error: any) {
       // Update the current test as failed
       const currentTest = results.tests[results.tests.length - 1];
@@ -183,7 +183,7 @@ router.get(
         failed: results.tests.filter((t: any) => t.status === 'failed').length,
       };
 
-      res.status(500).json(results);
+      return res.status(500).json(results);
     }
   })
 );
