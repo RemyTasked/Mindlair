@@ -14,7 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 // Get Google OAuth URL
 router.get('/google/url', (_req, res) => {
   const authUrl = googleCalendarService.getAuthUrl();
-  res.json({ authUrl });
+  return res.json({ authUrl });
 });
 
 // Google OAuth callback
@@ -108,7 +108,7 @@ router.get(
 // Get Microsoft OAuth URL
 router.get('/microsoft/url', (_req, res) => {
   const authUrl = outlookCalendarService.getAuthUrl();
-  res.json({ authUrl });
+  return res.json({ authUrl });
 });
 
 // Microsoft OAuth callback

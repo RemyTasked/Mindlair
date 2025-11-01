@@ -193,7 +193,7 @@ router.get(
  * GET /api/test/health
  */
 router.get('/health', (_req, res) => {
-  res.json({
+  return res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
