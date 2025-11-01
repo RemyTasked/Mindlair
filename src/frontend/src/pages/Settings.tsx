@@ -262,7 +262,7 @@ export default function Settings() {
                           <li>• Preview each meeting as a "scene"</li>
                           <li>• Guided visualization & breathing</li>
                           <li>• Set your intention for tomorrow</li>
-                          <li>• Takes just 1 minute</li>
+                          <li>• Takes 3-7 minutes</li>
                         </ul>
                       </div>
                     </div>

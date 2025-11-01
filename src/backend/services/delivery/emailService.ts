@@ -799,7 +799,7 @@ export class EmailService {
       </div>
 
       <p style="text-align: center; color: #64748b; font-size: 14px;">
-        Takes 1 minute · Best enjoyed before bed
+        Takes 3-7 minutes · Best enjoyed before bed
       </p>
     </div>
     <div class="footer">

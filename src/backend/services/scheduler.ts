@@ -564,8 +564,8 @@ async function sendPresleyFlowSessions() {
         const tomorrowDateStr = tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD
         const presleyFlowUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/presley-flow/${user.id}/${tomorrowDateStr}`;
 
-        // Send notification email
-        const sent = await emailService.sendPresleyFlowNotification(
+        // Send via email
+        const emailSent = await emailService.sendPresleyFlowNotification(
           user.email,
           presleyFlowUrl,
           tomorrowMeetings.length,
@@ -576,7 +576,16 @@ async function sendPresleyFlowSessions() {
           })
         );
 
-        if (sent) {
+        // Send via SMS if enabled
+        if (user.deliverySettings?.smsEnabled && user.deliverySettings.phoneNumber) {
+          await smsService.sendPresleyFlowNotification(
+            user.deliverySettings.phoneNumber,
+            presleyFlowUrl,
+            tomorrowMeetings.length
+          );
+        }
+
+        if (emailSent) {
           logger.info('Presley Flow notification sent', {
             userId: user.id,
             meetingCount: tomorrowMeetings.length,
@@ -645,8 +654,8 @@ async function sendMorningRecaps() {
           true // presleyFlowCompleted - we assume they saw it if enabled
         );
 
-        // Send morning recap email
-        const sent = await emailService.sendMorningRecap(
+        // Send via email
+        const emailSent = await emailService.sendMorningRecap(
           user.email,
           recapMessage,
           firstMeeting.startTime.toLocaleTimeString('en-US', {
@@ -655,7 +664,15 @@ async function sendMorningRecaps() {
           })
         );
 
-        if (sent) {
+        // Send via SMS if enabled
+        if (user.deliverySettings?.smsEnabled && user.deliverySettings.phoneNumber) {
+          await smsService.sendMorningRecap(
+            user.deliverySettings.phoneNumber,
+            recapMessage
+          );
+        }
+
+        if (emailSent) {
           logger.info('Morning recap sent', {
             userId: user.id,
             firstMeetingTime: firstMeeting.startTime,

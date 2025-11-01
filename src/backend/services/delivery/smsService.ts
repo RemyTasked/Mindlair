@@ -85,6 +85,63 @@ export class SMSService {
       return false;
     }
   }
+
+  async sendPresleyFlowNotification(
+    phoneNumber: string,
+    presleyFlowUrl: string,
+    meetingCount: number
+  ): Promise<boolean> {
+    if (!this.isConfigured()) {
+      logger.warn('SMS service not configured, skipping SMS send');
+      return false;
+    }
+
+    try {
+      const message = `🎬 Presley Flow is ready — preview tomorrow's scenes\n\nYou have ${meetingCount} meeting${meetingCount > 1 ? 's' : ''} tomorrow. Take a few minutes to mentally rehearse:\n\n${presleyFlowUrl}\n\nTakes 3-7 minutes · Best before bed`;
+
+      await this.client!.messages.create({
+        body: message,
+        from: this.fromNumber,
+        to: phoneNumber,
+      });
+
+      logger.info('Presley Flow SMS sent', { phoneNumber, meetingCount });
+      return true;
+    } catch (error: any) {
+      logger.error('Error sending Presley Flow SMS', {
+        error: error.message,
+        phoneNumber,
+      });
+      return false;
+    }
+  }
+
+  async sendMorningRecap(
+    phoneNumber: string,
+    recapMessage: string
+  ): Promise<boolean> {
+    if (!this.isConfigured()) {
+      logger.warn('SMS service not configured, skipping SMS send');
+      return false;
+    }
+
+    try {
+      await this.client!.messages.create({
+        body: `☀️ Good Morning\n\n${recapMessage}`,
+        from: this.fromNumber,
+        to: phoneNumber,
+      });
+
+      logger.info('Morning recap SMS sent', { phoneNumber });
+      return true;
+    } catch (error: any) {
+      logger.error('Error sending morning recap SMS', {
+        error: error.message,
+        phoneNumber,
+      });
+      return false;
+    }
+  }
 }
 
 export const smsService = new SMSService();
