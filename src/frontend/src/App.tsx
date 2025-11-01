@@ -5,6 +5,7 @@ import FocusSceneDemo from './pages/FocusSceneDemo';
 import Dashboard from './pages/Dashboard';
 import AuthCallback from './pages/AuthCallback';
 import Settings from './pages/Settings';
+import MeetingRating from './pages/MeetingRating';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/focus/demo" element={<FocusSceneDemo />} />
       <Route path="/focus/:userId/:meetingId" element={<FocusScene />} />
+      <Route path="/rate/:userId/:meetingId" element={<MeetingRating />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/auth/callback" element={<AuthCallback />} />

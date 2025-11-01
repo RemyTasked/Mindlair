@@ -129,6 +129,13 @@ model Meeting {
   focusSceneUrl   String?
   focusSceneOpened Boolean  @default(false)
   
+  // Post-meeting insights
+  postMeetingEmailSent Boolean @default(false)
+  postMeetingEmailSentAt DateTime?
+  meetingRating   Int?      // 1-5 star rating
+  meetingFeedback String?   // Optional user feedback
+  ratedAt         DateTime?
+  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

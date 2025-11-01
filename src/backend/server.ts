@@ -17,6 +17,7 @@ import userRoutes from './routes/user';
 import meetingRoutes from './routes/meeting';
 import focusSceneRoutes from './routes/focusScene';
 import webhookRoutes from './routes/webhook';
+import ratingRoutes from './routes/rating';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/focus-scene', focusSceneRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/rating', ratingRoutes);
 
 // Serve static files from frontend build in production
 if (process.env.NODE_ENV === 'production') {

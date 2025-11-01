@@ -21,6 +21,11 @@ export function startScheduler() {
     await sendDailyWrapUps();
   });
 
+  // Check for post-meeting insights every 5 minutes
+  cron.schedule('*/5 * * * *', async () => {
+    await sendPostMeetingInsights();
+  });
+
   logger.info('Scheduler initialized');
 }
 
@@ -370,6 +375,82 @@ async function sendDailyWrapUps() {
     }
   } catch (error: any) {
     logger.error('Error in daily wrap-up scheduler', { error: error.message });
+  }
+}
+
+async function sendPostMeetingInsights() {
+  try {
+    const now = new Date();
+    // Look for meetings that ended 30 minutes to 2 hours ago and haven't sent post-meeting email
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+    const twoHoursAgo = new Date(now.getTime() - 120 * 60 * 1000);
+
+    const meetings = await prisma.meeting.findMany({
+      where: {
+        endTime: {
+          gte: twoHoursAgo,
+          lte: thirtyMinutesAgo,
+        },
+        postMeetingEmailSent: false,
+        cueDelivered: true, // Only send insights if they received the pre-meeting cue
+      },
+      include: {
+        user: {
+          include: {
+            deliverySettings: true,
+          },
+        },
+      },
+    });
+
+    for (const meeting of meetings) {
+      try {
+        // Only send if email delivery is enabled
+        if (!meeting.user.deliverySettings?.emailEnabled) {
+          await prisma.meeting.update({
+            where: { id: meeting.id },
+            data: { postMeetingEmailSent: true },
+          });
+          continue;
+        }
+
+        // Generate rating URL
+        const ratingUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/rate/${meeting.userId}/${meeting.id}`;
+
+        // Send post-meeting insight email
+        const sent = await emailService.sendPostMeetingInsight(
+          meeting.user.email,
+          meeting.title,
+          meeting.startTime,
+          ratingUrl
+        );
+
+        if (sent) {
+          await prisma.meeting.update({
+            where: { id: meeting.id },
+            data: {
+              postMeetingEmailSent: true,
+              postMeetingEmailSentAt: new Date(),
+            },
+          });
+
+          logger.info('Post-meeting insight email sent', {
+            userId: meeting.userId,
+            meetingId: meeting.id,
+            meetingTitle: meeting.title,
+          });
+        }
+      } catch (error: any) {
+        logger.error('Error sending post-meeting insight', {
+          meetingId: meeting.id,
+          error: error.message,
+        });
+      }
+    }
+  } catch (error: any) {
+    logger.error('Error in post-meeting insights scheduler', {
+      error: error.message,
+    });
   }
 }
 

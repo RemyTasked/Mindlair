@@ -106,6 +106,46 @@ export class EmailService {
     }
   }
 
+  async sendPostMeetingInsight(
+    email: string,
+    meetingTitle: string,
+    meetingStartTime: Date,
+    ratingUrl: string
+  ): Promise<boolean> {
+    if (!this.isConfigured) {
+      logger.warn('Email service not configured, skipping email send');
+      return false;
+    }
+
+    try {
+      const html = this.generatePostMeetingInsightHtml(
+        meetingTitle,
+        meetingStartTime,
+        ratingUrl
+      );
+
+      await sgMail.send({
+        to: email,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: `✨ How did your meeting go? ${meetingTitle}`,
+        text: `How was your meeting "${meetingTitle}"? Take a moment to reflect and rate your performance: ${ratingUrl}`,
+        html,
+      });
+
+      logger.info('Post-meeting insight email sent', { email, meetingTitle });
+      return true;
+    } catch (error: any) {
+      logger.error('Error sending post-meeting insight email', {
+        error: error.message,
+        email,
+      });
+      return false;
+    }
+  }
+
   private generatePreMeetingHtml(
     meetingTitle: string,
     cueMessage: string,
@@ -319,6 +359,210 @@ export class EmailService {
 </body>
 </html>
     `;
+  }
+
+  private generatePostMeetingInsightHtml(
+    meetingTitle: string,
+    meetingStartTime: Date,
+    ratingUrl: string
+  ): string {
+    const timeAgo = this.getTimeAgo(meetingStartTime);
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 32px;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .meeting-info {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 4px;
+    }
+    .meeting-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #92400e;
+      margin-bottom: 5px;
+    }
+    .meeting-time {
+      font-size: 14px;
+      color: #78350f;
+    }
+    .question {
+      font-size: 20px;
+      font-weight: 600;
+      text-align: center;
+      margin: 30px 0;
+      color: #333;
+    }
+    .rating-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 30px 0;
+    }
+    .star-rating {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    .star {
+      font-size: 36px;
+      line-height: 1;
+    }
+    .cta-button {
+      display: inline-block;
+      padding: 16px 40px;
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .benefits {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 30px 0;
+    }
+    .benefit {
+      display: flex;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+    .benefit-icon {
+      margin-right: 12px;
+      font-size: 20px;
+    }
+    .benefit-text {
+      color: #475569;
+      font-size: 14px;
+    }
+    .footer {
+      padding: 20px 30px;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✨ How did it go?</h1>
+      <p>Take a moment to reflect on your meeting</p>
+    </div>
+    <div class="content">
+      <div class="meeting-info">
+        <div class="meeting-title">${meetingTitle}</div>
+        <div class="meeting-time">Ended ${timeAgo}</div>
+      </div>
+
+      <div class="question">
+        How would you rate your performance?
+      </div>
+
+      <div class="star-rating">
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 30px;">
+        <a href="${ratingUrl}" class="cta-button">
+          Rate Your Meeting →
+        </a>
+      </div>
+
+      <div class="benefits">
+        <div class="benefit">
+          <div class="benefit-icon">📊</div>
+          <div class="benefit-text">
+            <strong>Track your progress</strong> - See how you improve over time
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">💡</div>
+          <div class="benefit-text">
+            <strong>Get insights</strong> - Understand your meeting patterns
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🎯</div>
+          <div class="benefit-text">
+            <strong>Improve performance</strong> - Learn what works best for you
+          </div>
+        </div>
+      </div>
+
+      <p style="text-align: center; color: #666; font-size: 14px;">
+        Takes less than 30 seconds
+      </p>
+    </div>
+    <div class="footer">
+      Meet Cute · Reflect, learn, and grow
+    </div>
+  </div>
+</body>
+</html>
+    `;
+  }
+
+  private getTimeAgo(date: Date): string {
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
   }
 }
 
