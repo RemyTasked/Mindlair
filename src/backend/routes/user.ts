@@ -70,8 +70,8 @@ const deliverySchema = z.object({
   emailEnabled: z.boolean().optional(),
   slackEnabled: z.boolean().optional(),
   smsEnabled: z.boolean().optional(),
-  phoneNumber: z.string().optional(),
-  slackWebhookUrl: z.string().url().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  slackWebhookUrl: z.string().url().nullable().optional(),
 });
 
 router.put(
