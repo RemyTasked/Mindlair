@@ -33,19 +33,13 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Header */}
       <header className="container mx-auto px-6 py-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-center items-center">
           <div className="flex items-center gap-3">
             <div className="text-3xl">🎬</div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Meet Cute
             </h1>
           </div>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 text-indigo-600 hover:text-indigo-700 font-medium"
-          >
-            Sign In
-          </button>
         </div>
       </header>
 
