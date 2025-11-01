@@ -1,8 +1,7 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Meeting } from '@prisma/client';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { PromptGenerator } from '../services/ai/promptGenerator';
-import { z } from 'zod';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -59,15 +58,15 @@ router.get(
     });
 
     const historicalInsights = historicalMeetings
-      .filter((m) => m.meetingRating !== null)
-      .map((m) => ({
+      .filter((m: Meeting) => m.meetingRating !== null)
+      .map((m: Meeting) => ({
         rating: m.meetingRating!,
         feedback: m.meetingFeedback || '',
       }));
 
     // Generate Presley Flow content with AI
     const flowContent = await promptGenerator.generatePresleyFlowSession(
-      meetings.map((m) => ({
+      meetings.map((m: Meeting) => ({
         title: m.title,
         startTime: m.startTime,
         endTime: m.endTime,
@@ -79,7 +78,7 @@ router.get(
       historicalInsights.length > 0 ? historicalInsights : undefined
     );
 
-    res.json({
+    return res.json({
       flow: {
         ...flowContent,
         date: targetDate.toLocaleDateString('en-US', {
@@ -96,14 +95,13 @@ router.get(
 router.post(
   '/:userId/:date/complete',
   asyncHandler(async (req, res) => {
-    const { userId, date } = req.params;
-    const { journalNote, completedAt } = req.body;
-
     // Store completion record (you might want to create a new model for this)
-    // For now, we'll just log it
-    // In a full implementation, create a PresleyFlowSession model
+    // For now, we'll just acknowledge completion
+    // In a full implementation, create a PresleyFlowSession model to track:
+    // - userId, date from params
+    // - journalNote, completedAt from body
 
-    res.json({ message: 'Presley Flow completed successfully' });
+    return res.json({ message: 'Presley Flow completed successfully' });
   })
 );
 

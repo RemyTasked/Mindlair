@@ -195,7 +195,7 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
       },
     });
 
-    const historicalInsights = historicalMeetings.map(m => ({
+    const historicalInsights = historicalMeetings.map((m: any) => ({
       meetingType: m.meetingType || 'general',
       rating: m.meetingRating!,
       feedback: m.meetingFeedback || undefined,
@@ -507,7 +507,6 @@ async function sendPresleyFlowSessions() {
   try {
     const now = new Date();
     const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
 
     // Get all users with Presley Flow enabled
     const users = await prisma.user.findMany({
@@ -527,7 +526,7 @@ async function sendPresleyFlowSessions() {
       try {
         // Check if it's the user's configured time
         const presleyFlowTime = user.preferences?.presleyFlowTime || '20:00';
-        const [targetHour, targetMinute] = presleyFlowTime.split(':').map(Number);
+        const [targetHour] = presleyFlowTime.split(':').map(Number);
 
         // Only proceed if it's the right hour (we run every hour)
         if (currentHour !== targetHour) continue;
