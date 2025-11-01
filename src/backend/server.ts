@@ -18,6 +18,7 @@ import meetingRoutes from './routes/meeting';
 import focusSceneRoutes from './routes/focusScene';
 import webhookRoutes from './routes/webhook';
 import ratingRoutes from './routes/rating';
+import presleyFlowRoutes from './routes/presleyFlow';
 
 dotenv.config();
 
@@ -69,6 +70,7 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/focus-scene', focusSceneRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/rating', ratingRoutes);
+app.use('/api/presley-flow', presleyFlowRoutes);
 
 // Serve static files from frontend build in production
 if (process.env.NODE_ENV === 'production') {

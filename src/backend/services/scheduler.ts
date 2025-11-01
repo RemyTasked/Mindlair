@@ -26,6 +26,16 @@ export function startScheduler() {
     await sendPostMeetingInsights();
   });
 
+  // Send Presley Flow sessions every hour (users can configure their time)
+  cron.schedule('0 * * * *', async () => {
+    await sendPresleyFlowSessions();
+  });
+
+  // Send morning recaps at 7 AM every day
+  cron.schedule('0 7 * * *', async () => {
+    await sendMorningRecaps();
+  });
+
   logger.info('Scheduler initialized');
 }
 
@@ -488,6 +498,178 @@ async function sendPostMeetingInsights() {
     }
   } catch (error: any) {
     logger.error('Error in post-meeting insights scheduler', {
+      error: error.message,
+    });
+  }
+}
+
+async function sendPresleyFlowSessions() {
+  try {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Get all users with Presley Flow enabled
+    const users = await prisma.user.findMany({
+      where: {
+        preferences: {
+          enablePresleyFlow: true,
+        },
+      },
+      include: {
+        preferences: true,
+        deliverySettings: true,
+        calendarAccounts: true,
+      },
+    });
+
+    for (const user of users) {
+      try {
+        // Check if it's the user's configured time
+        const presleyFlowTime = user.preferences?.presleyFlowTime || '20:00';
+        const [targetHour, targetMinute] = presleyFlowTime.split(':').map(Number);
+
+        // Only proceed if it's the right hour (we run every hour)
+        if (currentHour !== targetHour) continue;
+
+        // Only send if email is enabled
+        if (!user.deliverySettings?.emailEnabled) continue;
+
+        // Check if there are meetings tomorrow
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        const endOfTomorrow = new Date(tomorrow);
+        endOfTomorrow.setHours(23, 59, 59, 999);
+
+        const tomorrowMeetings = await prisma.meeting.findMany({
+          where: {
+            userId: user.id,
+            startTime: {
+              gte: tomorrow,
+              lte: endOfTomorrow,
+            },
+          },
+          orderBy: { startTime: 'asc' },
+        });
+
+        if (tomorrowMeetings.length === 0) {
+          logger.info('No meetings tomorrow, skipping Presley Flow', {
+            userId: user.id,
+          });
+          continue;
+        }
+
+        // Generate Presley Flow URL
+        const tomorrowDateStr = tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD
+        const presleyFlowUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/presley-flow/${user.id}/${tomorrowDateStr}`;
+
+        // Send notification email
+        const sent = await emailService.sendPresleyFlowNotification(
+          user.email,
+          presleyFlowUrl,
+          tomorrowMeetings.length,
+          tomorrow.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'short',
+            day: 'numeric',
+          })
+        );
+
+        if (sent) {
+          logger.info('Presley Flow notification sent', {
+            userId: user.id,
+            meetingCount: tomorrowMeetings.length,
+          });
+        }
+      } catch (error: any) {
+        logger.error('Error sending Presley Flow for user', {
+          userId: user.id,
+          error: error.message,
+        });
+      }
+    }
+  } catch (error: any) {
+    logger.error('Error in Presley Flow scheduler', {
+      error: error.message,
+    });
+  }
+}
+
+async function sendMorningRecaps() {
+  try {
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    // Get all users with morning recap enabled
+    const users = await prisma.user.findMany({
+      where: {
+        preferences: {
+          enablePresleyFlow: true,
+          enableMorningRecap: true,
+        },
+      },
+      include: {
+        preferences: true,
+        deliverySettings: true,
+      },
+    });
+
+    for (const user of users) {
+      try {
+        // Only send if email is enabled
+        if (!user.deliverySettings?.emailEnabled) continue;
+
+        // Check if there are meetings today
+        const todayMeetings = await prisma.meeting.findMany({
+          where: {
+            userId: user.id,
+            startTime: {
+              gte: today,
+              lte: endOfToday,
+            },
+          },
+          orderBy: { startTime: 'asc' },
+        });
+
+        if (todayMeetings.length === 0) continue;
+
+        const firstMeeting = todayMeetings[0];
+
+        // Generate morning recap message
+        const recapMessage = await promptGenerator.generateMorningRecap(
+          firstMeeting.startTime,
+          true // presleyFlowCompleted - we assume they saw it if enabled
+        );
+
+        // Send morning recap email
+        const sent = await emailService.sendMorningRecap(
+          user.email,
+          recapMessage,
+          firstMeeting.startTime.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+          })
+        );
+
+        if (sent) {
+          logger.info('Morning recap sent', {
+            userId: user.id,
+            firstMeetingTime: firstMeeting.startTime,
+          });
+        }
+      } catch (error: any) {
+        logger.error('Error sending morning recap for user', {
+          userId: user.id,
+          error: error.message,
+        });
+      }
+    }
+  } catch (error: any) {
+    logger.error('Error in morning recap scheduler', {
       error: error.message,
     });
   }

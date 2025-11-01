@@ -63,10 +63,15 @@ model UserPreferences {
   enableDailyWrapUp    Boolean @default(true)
   enableFocusScene     Boolean @default(true)
   enableAdaptiveTiming Boolean @default(false)
+  enablePresleyFlow    Boolean @default(true)  // Evening mental rehearsal
   
   // Sound preferences
   enableFocusSound     Boolean @default(true)
   focusSoundType       String  @default("calm-ocean") // "calm-ocean", "rain", "forest", "meditation-bell", "white-noise", "none"
+  
+  // Presley Flow preferences
+  presleyFlowTime      String  @default("20:00") // Time to send Presley Flow (HH:mm format)
+  enableMorningRecap   Boolean @default(true)  // Send morning recap after Presley Flow
   
   // Adaptive learning data
   averageEarlyJoinMinutes Float? // How early user typically joins

@@ -146,6 +146,81 @@ export class EmailService {
     }
   }
 
+  async sendPresleyFlowNotification(
+    email: string,
+    presleyFlowUrl: string,
+    meetingCount: number,
+    tomorrowDate: string
+  ): Promise<boolean> {
+    if (!this.isConfigured) {
+      logger.warn('Email service not configured, skipping email send');
+      return false;
+    }
+
+    try {
+      const html = this.generatePresleyFlowHtml(
+        presleyFlowUrl,
+        meetingCount,
+        tomorrowDate
+      );
+
+      await sgMail.send({
+        to: email,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: '🎬 Presley Flow is ready — preview tomorrow\'s scenes',
+        text: `Your Presley Flow Session is ready. Preview tomorrow's ${meetingCount} meeting${meetingCount > 1 ? 's' : ''} and mentally rehearse your day: ${presleyFlowUrl}`,
+        html,
+      });
+
+      logger.info('Presley Flow notification sent', { email, meetingCount });
+      return true;
+    } catch (error: any) {
+      logger.error('Error sending Presley Flow notification', {
+        error: error.message,
+        email,
+      });
+      return false;
+    }
+  }
+
+  async sendMorningRecap(
+    email: string,
+    recapMessage: string,
+    firstMeetingTime?: string
+  ): Promise<boolean> {
+    if (!this.isConfigured) {
+      logger.warn('Email service not configured, skipping email send');
+      return false;
+    }
+
+    try {
+      const html = this.generateMorningRecapHtml(recapMessage, firstMeetingTime);
+
+      await sgMail.send({
+        to: email,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: '☀️ Good morning — your first scene awaits',
+        text: recapMessage,
+        html,
+      });
+
+      logger.info('Morning recap email sent', { email });
+      return true;
+    } catch (error: any) {
+      logger.error('Error sending morning recap email', {
+        error: error.message,
+        email,
+      });
+      return false;
+    }
+  }
+
   private generatePreMeetingHtml(
     meetingTitle: string,
     cueMessage: string,
@@ -546,6 +621,316 @@ export class EmailService {
     </div>
     <div class="footer">
       Meet Cute · Reflect, learn, and grow
+    </div>
+  </div>
+</body>
+</html>
+    `;
+  }
+
+  private generatePresleyFlowHtml(
+    presleyFlowUrl: string,
+    meetingCount: number,
+    tomorrowDate: string
+  ): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 32px;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 0;
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .moon-icon {
+      font-size: 64px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .intro {
+      text-align: center;
+      font-size: 18px;
+      color: #334155;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    .meeting-count {
+      background: #f1f5f9;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .meeting-count .number {
+      font-size: 48px;
+      font-weight: 700;
+      color: #667eea;
+      line-height: 1;
+    }
+    .meeting-count .label {
+      font-size: 14px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 8px;
+    }
+    .cta-button {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 18px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      margin-bottom: 30px;
+    }
+    .benefits {
+      background: #fef3c7;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+    .benefits h3 {
+      margin: 0 0 16px 0;
+      color: #92400e;
+      font-size: 16px;
+      text-align: center;
+    }
+    .benefit {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      color: #78350f;
+    }
+    .benefit:last-child {
+      margin-bottom: 0;
+    }
+    .benefit-icon {
+      margin-right: 12px;
+      font-size: 20px;
+    }
+    .footer {
+      padding: 20px 30px;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      border-top: 1px solid #eee;
+      background: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎬 Presley Flow Session</h1>
+      <p>Your evening mental rehearsal is ready</p>
+    </div>
+    <div class="content">
+      <div class="moon-icon">🌙</div>
+      
+      <div class="intro">
+        Tomorrow's script is ready. Take a few moments to preview your scenes and step into tomorrow with calm confidence.
+      </div>
+
+      <div class="meeting-count">
+        <div class="number">${meetingCount}</div>
+        <div class="label">Meeting${meetingCount > 1 ? 's' : ''} Tomorrow · ${tomorrowDate}</div>
+      </div>
+
+      <a href="${presleyFlowUrl}" class="cta-button">
+        Begin Presley Flow Session →
+      </a>
+
+      <div class="benefits">
+        <h3>🌟 What you'll experience:</h3>
+        <div class="benefit">
+          <div class="benefit-icon">🎭</div>
+          <div>Preview each meeting as a "scene"</div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🧘</div>
+          <div>Guided visualization & breathing</div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">💫</div>
+          <div>Set your intention for tomorrow</div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">😴</div>
+          <div>Rest easy knowing you're prepared</div>
+        </div>
+      </div>
+
+      <p style="text-align: center; color: #64748b; font-size: 14px;">
+        Takes 3-7 minutes · Best enjoyed before bed
+      </p>
+    </div>
+    <div class="footer">
+      Meet Cute · Rest well, you're prepared
+    </div>
+  </div>
+</body>
+</html>
+    `;
+  }
+
+  private generateMorningRecapHtml(
+    recapMessage: string,
+    firstMeetingTime?: string
+  ): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .header {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 32px;
+      font-weight: 700;
+    }
+    .content {
+      padding: 40px 30px;
+      text-align: center;
+    }
+    .sun-icon {
+      font-size: 72px;
+      margin-bottom: 24px;
+    }
+    .message {
+      font-size: 20px;
+      color: #1e293b;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    .first-meeting {
+      background: #fef3c7;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+    .first-meeting .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #92400e;
+      margin-bottom: 8px;
+    }
+    .first-meeting .time {
+      font-size: 28px;
+      font-weight: 700;
+      color: #b45309;
+    }
+    .ready-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #dbeafe;
+      padding: 12px 24px;
+      border-radius: 100px;
+      font-weight: 600;
+      color: #1e40af;
+      margin-top: 20px;
+    }
+    .footer {
+      padding: 20px 30px;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>☀️ Good Morning</h1>
+    </div>
+    <div class="content">
+      <div class="sun-icon">☀️</div>
+      
+      <div class="message">
+        ${recapMessage}
+      </div>
+
+      ${firstMeetingTime ? `
+      <div class="first-meeting">
+        <div class="label">Your first scene opens</div>
+        <div class="time">${firstMeetingTime}</div>
+      </div>
+      ` : ''}
+
+      <div class="ready-badge">
+        <span>✓</span>
+        <span>You're Prepared</span>
+      </div>
+
+      <p style="margin-top: 30px; color: #64748b; font-size: 14px;">
+        You rehearsed this yesterday. Trust your preparation.
+      </p>
+    </div>
+    <div class="footer">
+      Meet Cute · Shine bright today ⭐
     </div>
   </div>
 </body>

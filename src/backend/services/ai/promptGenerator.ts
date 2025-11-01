@@ -221,6 +221,174 @@ Generate the message now:`;
     return templates[tone];
   }
 
+  async generatePresleyFlowSession(meetings: Array<{
+    title: string;
+    startTime: Date;
+    endTime: Date;
+    attendees: string[];
+    description?: string;
+    meetingType?: string;
+  }>, tone: ToneType = 'balanced', historicalInsights?: HistoricalInsight[]): Promise<{
+    openingScene: string;
+    meetingPreviews: Array<{
+      title: string;
+      time: string;
+      focusCue: string;
+    }>;
+    mindsetTheme: string;
+    visualizationScript: string;
+    closingMessage: string;
+  }> {
+    try {
+      const meetingsSummary = meetings.map((m, i) => 
+        `${i + 1}. ${m.title} - ${m.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} (${Math.round((m.endTime.getTime() - m.startTime.getTime()) / 60000)} min, ${m.attendees.length} attendees)`
+      ).join('\n');
+
+      let historicalContext = '';
+      if (historicalInsights && historicalInsights.length > 0) {
+        const avgRating = historicalInsights.reduce((sum, i) => sum + i.rating, 0) / historicalInsights.length;
+        historicalContext = `\n\nUser's Historical Performance: ${avgRating.toFixed(1)}/5 average rating`;
+      }
+
+      const prompt = `You are creating an evening mental rehearsal script for tomorrow's meetings - a "Presley Flow Session."
+
+TOMORROW'S SCHEDULE:
+${meetingsSummary}
+
+User's Tone Preference: ${tone}${historicalContext}
+
+Create a cinematic, calming mental preparation experience with these components:
+
+1. OPENING SCENE (2 sentences):
+   - Set the tone: calm, cinematic, confident
+   - "Tomorrow's script is ready. You'll move through it with grace."
+
+2. MEETING PREVIEWS:
+   For each meeting, provide a brief focus cue (1 sentence) that helps them mentally rehearse their role:
+   ${meetings.map((m, i) => `   ${i + 1}. ${m.title} - Focus cue for this scene`).join('\n')}
+
+3. MINDSET THEME (2 sentences):
+   - Identify the emotional/strategic theme of tomorrow
+   - "Tomorrow's tone is collaborative and decisive" or "A day of focused execution"
+
+4. VISUALIZATION SCRIPT (3-4 sentences):
+   - A 30-second guided mental imagery
+   - Have them picture moving through each scene smoothly
+   - Cinematic language: "camera follows your composure"
+
+5. CLOSING MESSAGE (2 sentences):
+   - Reassurance and confidence
+   - "Tomorrow's script is ready. Rest easy—you're prepared."
+
+Match the ${tone} tone throughout. Make it feel like a director's cut of tomorrow.
+
+Return as JSON:
+{
+  "openingScene": "...",
+  "meetingPreviews": [{"title": "...", "time": "...", "focusCue": "..."}],
+  "mindsetTheme": "...",
+  "visualizationScript": "...",
+  "closingMessage": "..."
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a cinematic preparation coach creating evening mental rehearsals. Return valid JSON only.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 800,
+        response_format: { type: 'json_object' },
+      });
+
+      const content = response.choices[0]?.message?.content?.trim();
+      if (!content) {
+        throw new Error('Failed to generate Presley Flow content');
+      }
+
+      const parsed = JSON.parse(content);
+      
+      // Ensure meeting previews match the input
+      parsed.meetingPreviews = meetings.map((m, i) => ({
+        title: m.title,
+        time: m.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        focusCue: parsed.meetingPreviews?.[i]?.focusCue || `Bring clarity and presence to this ${m.meetingType || 'meeting'}.`,
+      }));
+
+      logger.info('Generated Presley Flow session', { meetingCount: meetings.length });
+      return parsed;
+    } catch (error) {
+      logger.error('Error generating Presley Flow', { error });
+      // Fallback
+      return {
+        openingScene: "Tomorrow's script is ready. You'll move through each scene with intention and ease.",
+        meetingPreviews: meetings.map(m => ({
+          title: m.title,
+          time: m.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+          focusCue: `Bring your full presence and clarity to this moment.`,
+        })),
+        mindsetTheme: "Tomorrow calls for focus and authentic connection. Trust your preparation.",
+        visualizationScript: "Picture yourself moving through tomorrow's scenes. The camera follows your composure. Each meeting unfolds smoothly. You transition with ease, centered and clear.",
+        closingMessage: "Tomorrow's script is ready. Rest well—you're prepared for every scene.",
+      };
+    }
+  }
+
+  async generateMorningRecap(firstMeetingTime?: Date, presleyFlowCompleted: boolean = false): Promise<string> {
+    try {
+      const timeStr = firstMeetingTime 
+        ? firstMeetingTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+        : 'soon';
+
+      const prompt = `Generate a brief morning recap message (2 sentences max) for someone who ${presleyFlowCompleted ? 'completed their Presley Flow evening rehearsal' : 'has meetings today'}.
+
+${firstMeetingTime ? `First meeting: ${timeStr}` : 'Schedule ahead'}
+
+The message should:
+1. Be brief and energizing
+2. Reference that they prepared last night (if applicable)
+3. Build confidence for the day
+4. Use cinematic tone: "Your first scene opens at..."
+
+Generate the message now:`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a supportive morning coach using cinematic language.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 100,
+      });
+
+      const message = response.choices[0]?.message?.content?.trim();
+      if (!message) {
+        throw new Error('Failed to generate morning recap');
+      }
+
+      return message;
+    } catch (error) {
+      logger.error('Error generating morning recap', { error });
+      return firstMeetingTime
+        ? `Good morning. Your first scene opens at ${firstMeetingTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}. You're ready.`
+        : 'Good morning. Step into today with confidence.';
+    }
+  }
+
   async inferMeetingType(title: string, attendees: string[]): Promise<string> {
     const attendeeCount = attendees.length;
     const lowerTitle = title.toLowerCase();

@@ -10,6 +10,9 @@ interface Preferences {
   enableFocusScene: boolean;
   enableFocusSound: boolean;
   focusSoundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
+  enablePresleyFlow: boolean;
+  presleyFlowTime: string;
+  enableMorningRecap: boolean;
 }
 
 interface DeliverySettings {
@@ -29,6 +32,9 @@ export default function Settings() {
     enableFocusScene: true,
     enableFocusSound: true,
     focusSoundType: 'calm-ocean',
+    enablePresleyFlow: true,
+    presleyFlowTime: '20:00',
+    enableMorningRecap: true,
   });
   const [delivery, setDelivery] = useState<DeliverySettings>({
     emailEnabled: true,
@@ -197,6 +203,71 @@ export default function Settings() {
                     Choose a calming sound to accompany your pre-meeting meditation
                   </p>
                 </div>
+              )}
+            </div>
+          </Section>
+
+          {/* Presley Flow Settings */}
+          <Section title="Presley Flow">
+            <div className="space-y-6">
+              <Toggle
+                label="Enable Presley Flow"
+                description="Evening mental rehearsal for tomorrow's meetings"
+                checked={preferences.enablePresleyFlow}
+                onChange={(checked) =>
+                  setPreferences({ ...preferences, enablePresleyFlow: checked })
+                }
+              />
+
+              {preferences.enablePresleyFlow && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Evening Notification Time
+                    </label>
+                    <input
+                      type="time"
+                      value={preferences.presleyFlowTime}
+                      onChange={(e) =>
+                        setPreferences({ ...preferences, presleyFlowTime: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <p className="mt-2 text-sm text-gray-500">
+                      Receive your evening mental rehearsal at this time (default: 8:00 PM)
+                    </p>
+                  </div>
+
+                  <Toggle
+                    label="Enable Morning Recap"
+                    description="Quick morning message after your Presley Flow"
+                    checked={preferences.enableMorningRecap}
+                    onChange={(checked) =>
+                      setPreferences({ ...preferences, enableMorningRecap: checked })
+                    }
+                  />
+
+                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border border-purple-200">
+                    <div className="flex items-start gap-4">
+                      <div className="text-4xl">🎬</div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-2">
+                          What is Presley Flow?
+                        </h3>
+                        <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                          A cinematic evening ritual that helps you mentally rehearse tomorrow's meetings before bed. 
+                          Think of it as previewing tomorrow's script—reducing anxiety and building calm confidence.
+                        </p>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• Preview each meeting as a "scene"</li>
+                          <li>• Guided visualization & breathing</li>
+                          <li>• Set your intention for tomorrow</li>
+                          <li>• Takes 3-7 minutes</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </Section>
