@@ -1,0 +1,13 @@
+# Meet Cute - Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.meetcuteai.com/sitemap.xml
+
+# Disallow private routes
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /settings
+Disallow: /scene
+

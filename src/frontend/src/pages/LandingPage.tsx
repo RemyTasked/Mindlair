@@ -33,10 +33,10 @@ export default function LandingPage() {
       <header className="container mx-auto px-6 py-6">
         <div className="flex justify-center items-center">
           <div className="flex items-center gap-3">
-            <div className="text-3xl">🎬</div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="text-3xl" role="img" aria-label="Film camera emoji">🎬</div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Meet Cute
-            </h1>
+            </div>
           </div>
         </div>
       </header>
@@ -44,9 +44,9 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
             Transform Your Pre-Meeting Ritual
-          </h2>
+          </h1>
           <p className="text-xl text-gray-600 mb-12 leading-relaxed max-w-3xl mx-auto">
             Meet Cute is an AI-enhanced pre-meeting ritual that helps you mentally prepare 
             five minutes before every meeting. Turn routine calendar alerts into 
@@ -57,6 +57,7 @@ export default function LandingPage() {
             <button
               onClick={handleGoogleAuth}
               disabled={loading}
+              aria-label="Sign in with Google Calendar"
               className="px-8 py-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-semibold disabled:opacity-50"
             >
               <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -71,6 +72,7 @@ export default function LandingPage() {
             <button
               onClick={handleMicrosoftAuth}
               disabled={loading}
+              aria-label="Sign in with Microsoft Outlook"
               className="px-8 py-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-semibold disabled:opacity-50"
             >
               <svg className="w-6 h-6" viewBox="0 0 23 23">
@@ -128,7 +130,7 @@ export default function LandingPage() {
 
       {/* How It Works */}
       <section className="container mx-auto px-6 py-20 bg-white rounded-3xl shadow-xl max-w-5xl">
-        <h3 className="text-4xl font-bold text-center mb-16">How It Works</h3>
+        <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
         
         <div className="space-y-12">
           <Step
@@ -165,11 +167,11 @@ export default function LandingPage() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+    <article className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
       <div className="mb-4">{icon}</div>
       <h3 className="text-xl font-semibold mb-3">{title}</h3>
       <p className="text-gray-600 leading-relaxed">{description}</p>
-    </div>
+    </article>
   );
 }
 

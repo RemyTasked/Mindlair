@@ -1,0 +1,11 @@
+NODE_ENV=production
+PORT=3000
+FRONTEND_URL=https://meetcuteai.com
+BACKEND_URL=https://meetcuteai.com
+DATABASE_URL=postgresql://postgres:ppdUxFYHuifBEOFQlHDjeVRQhBWRfoNa@shortline.proxy.rlwy.net:25265/railway
+JWT_SECRET=qFLmAO3Yd0ZvTrciM3quoMZNi1uViRwraH3l34w0tQu61aZsMjUEGdHPRX1lJmV8bJzQBs4/W45BXMAxfpKBzw==
+SESSION_SECRET=byh51/GJ42I7IGBpkzLtJqR9uBpjVsidUPrcIPnyMz3psBo+OduydPfODKis0MyTjNCMQDVIB/lOYm5mdqBqjQ==
+GOOGLE_CLIENT_ID=317117970533-c5ccu7sj627neq9g5jmlm5110umr7tel.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_REDIRECT_URI=https://meetcuteai.com/api/auth/google/callback
+OPENAI_API_KEY=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
