@@ -12,7 +12,7 @@ const promptGenerator = new PromptGenerator();
  */
 router.get(
   '/ai',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     const results: any = {
       timestamp: new Date().toISOString(),
       tests: [],
@@ -94,14 +94,18 @@ router.get(
         description: 'Quarterly business review with executive team',
       };
 
+      const meetingContext = {
+        title: sampleMeeting.title,
+        description: sampleMeeting.description,
+        attendees: sampleMeeting.attendees,
+        duration: 60,
+        isBackToBack: false,
+        meetingType: 'strategic_planning',
+      };
+
       const cue = await promptGenerator.generatePreMeetingCue(
-        sampleMeeting.title,
-        sampleMeeting.startTime,
-        sampleMeeting.endTime,
-        sampleMeeting.attendees,
+        meetingContext,
         'executive',
-        sampleMeeting.description,
-        undefined,
         undefined
       );
 
@@ -188,7 +192,7 @@ router.get(
  * Simple health check endpoint
  * GET /api/test/health
  */
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
