@@ -1,11 +1,39 @@
 import express from 'express';
-import { PrismaClient, Meeting } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { PromptGenerator } from '../services/ai/promptGenerator';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 const promptGenerator = new PromptGenerator();
+
+type Meeting = {
+  id: string;
+  userId: string;
+  calendarEventId: string;
+  title: string;
+  description: string | null;
+  startTime: Date;
+  endTime: Date;
+  attendees: string[];
+  location: string | null;
+  meetingLink: string | null;
+  meetingType: string | null;
+  isBackToBack: boolean;
+  cueScheduledFor: Date | null;
+  cueSentAt: Date | null;
+  cueDelivered: boolean;
+  cueContent: string | null;
+  focusSceneUrl: string | null;
+  focusSceneOpened: boolean;
+  postMeetingEmailSent: boolean;
+  postMeetingEmailSentAt: Date | null;
+  meetingRating: number | null;
+  meetingFeedback: string | null;
+  ratedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 // Get Presley Flow session data
 router.get(
@@ -94,7 +122,7 @@ router.get(
 // Mark Presley Flow as completed
 router.post(
   '/:userId/:date/complete',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     // Store completion record (you might want to create a new model for this)
     // For now, we'll just acknowledge completion
     // In a full implementation, create a PresleyFlowSession model to track:
