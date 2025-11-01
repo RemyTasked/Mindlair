@@ -27,6 +27,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.9.1",
     "@sendgrid/mail": "^8.1.0",
     "@slack/web-api": "^6.11.2",

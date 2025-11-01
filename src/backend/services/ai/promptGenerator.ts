@@ -1,9 +1,5 @@
-import OpenAI from 'openai';
 import { logger } from '../../utils/logger';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { aiService } from './aiService';
 
 export interface MeetingContext {
   title: string;
@@ -93,8 +89,7 @@ ${historicalInsights && historicalInsights.length > 0 ? '5. Subtly incorporate l
 
 Generate the message now:`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
+      const response = await aiService.generateCompletion({
         messages: [
           {
             role: 'system',
@@ -106,14 +101,20 @@ Generate the message now:`;
           },
         ],
         temperature: 0.8,
-        max_tokens: 150,
+        maxTokens: 150,
+        model: 'gpt-4',
       });
 
-      const generatedMessage = response.choices[0]?.message?.content?.trim();
+      const generatedMessage = response.content.trim();
 
       if (!generatedMessage) {
         throw new Error('Failed to generate message from AI');
       }
+      
+      logger.info('Pre-meeting cue generated', {
+        provider: response.provider,
+        model: response.model,
+      });
 
       logger.info('Generated pre-meeting cue', {
         meetingTitle: context.title,
@@ -176,8 +177,7 @@ Create a warm, encouraging wrap-up message (3-4 sentences) that:
 
 Generate the message now:`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
+      const response = await aiService.generateCompletion({
         messages: [
           {
             role: 'system',
@@ -189,14 +189,20 @@ Generate the message now:`;
           },
         ],
         temperature: 0.7,
-        max_tokens: 200,
+        maxTokens: 200,
+        model: 'gpt-4',
       });
 
-      const message = response.choices[0]?.message?.content?.trim();
+      const message = response.content.trim();
 
       if (!message) {
         throw new Error('Failed to generate wrap-up message');
       }
+      
+      logger.info('Daily wrap-up generated', {
+        provider: response.provider,
+        model: response.model,
+      });
 
       return message;
     } catch (error) {
@@ -291,8 +297,7 @@ Return as JSON:
   "closingMessage": "..."
 }`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
+      const response = await aiService.generateCompletion({
         messages: [
           {
             role: 'system',
@@ -304,14 +309,19 @@ Return as JSON:
           },
         ],
         temperature: 0.7,
-        max_tokens: 800,
-        response_format: { type: 'json_object' },
+        maxTokens: 800,
+        model: 'gpt-4',
       });
 
-      const content = response.choices[0]?.message?.content?.trim();
+      const content = response.content.trim();
       if (!content) {
         throw new Error('Failed to generate Presley Flow content');
       }
+      
+      logger.info('Presley Flow generated', {
+        provider: response.provider,
+        model: response.model,
+      });
 
       const parsed = JSON.parse(content);
       
@@ -359,8 +369,7 @@ The message should:
 
 Generate the message now:`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
+      const response = await aiService.generateCompletion({
         messages: [
           {
             role: 'system',
@@ -372,13 +381,19 @@ Generate the message now:`;
           },
         ],
         temperature: 0.7,
-        max_tokens: 100,
+        maxTokens: 100,
+        model: 'gpt-4',
       });
 
-      const message = response.choices[0]?.message?.content?.trim();
+      const message = response.content.trim();
       if (!message) {
         throw new Error('Failed to generate morning recap');
       }
+      
+      logger.info('Morning recap generated', {
+        provider: response.provider,
+        model: response.model,
+      });
 
       return message;
     } catch (error) {

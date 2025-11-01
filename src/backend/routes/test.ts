@@ -1,6 +1,7 @@
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { PromptGenerator } from '../services/ai/promptGenerator';
+import { aiService } from '../services/ai/aiService';
 import axios from 'axios';
 
 const router = express.Router();
@@ -20,25 +21,28 @@ router.get(
     };
 
     try {
-      // Test 1: Check OpenAI API key configuration
+      // Test 1: Check AI Provider Configuration
       results.tests.push({
-        name: 'Environment Configuration',
+        name: 'AI Provider Configuration',
         status: 'running',
       });
 
-      const hasApiKey = !!process.env.OPENAI_API_KEY;
-      if (!hasApiKey) {
+      const configuredProviders = aiService.getConfiguredProviders();
+      
+      if (configuredProviders.length === 0) {
         results.tests[0].status = 'failed';
-        results.tests[0].error = 'OPENAI_API_KEY not set in environment';
+        results.tests[0].error = 'No AI providers configured';
         results.success = false;
         return res.status(500).json(results);
       }
 
-      const keyPrefix = process.env.OPENAI_API_KEY!.substring(0, 7);
       results.tests[0].status = 'passed';
       results.tests[0].details = {
-        keyPrefix,
-        keyLength: process.env.OPENAI_API_KEY!.length,
+        configuredProviders,
+        primaryProvider: configuredProviders[0],
+        fallbackProvider: configuredProviders[1] || 'None',
+        openaiConfigured: !!process.env.OPENAI_API_KEY,
+        geminiConfigured: !!process.env.GOOGLE_GEMINI_API_KEY,
       };
 
       // Test 2: Make a simple API call to OpenAI
@@ -193,13 +197,22 @@ router.get(
  * GET /api/test/health
  */
 router.get('/health', (_req, res) => {
+  const configuredAIProviders = aiService.getConfiguredProviders();
+  
   return res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+    ai: {
+      providers: configuredAIProviders,
+      primary: configuredAIProviders[0] || 'None',
+      fallback: configuredAIProviders[1] || 'None',
+      available: configuredAIProviders.length > 0,
+    },
     services: {
-      database: 'connected', // Assuming Prisma is working if server is running
+      database: 'connected',
       openai: !!process.env.OPENAI_API_KEY,
+      gemini: !!process.env.GOOGLE_GEMINI_API_KEY,
       sendgrid: !!process.env.SENDGRID_API_KEY,
       twilio: !!process.env.TWILIO_ACCOUNT_SID,
     },
