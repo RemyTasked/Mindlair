@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Calendar, Sparkles, Clock, Mail, MessageSquare, Smartphone } from 'lucide-react';
 
 export default function LandingPage() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const handleGoogleAuth = async () => {
