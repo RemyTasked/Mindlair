@@ -60,6 +60,15 @@ router.get(
     }
 
     // Store calendar account
+    // Validate expiry_date to prevent invalid dates (cap at 24 hours)
+    let expiresAt = null;
+    if (tokens.expiry_date) {
+      const expiryTimestamp = Number(tokens.expiry_date);
+      const maxExpiry = Date.now() + 86400 * 1000; // 24 hours max
+      const validExpiry = Math.min(expiryTimestamp, maxExpiry);
+      expiresAt = new Date(validExpiry);
+    }
+    
     await prisma.calendarAccount.upsert({
       where: {
         userId_provider: {
@@ -73,16 +82,12 @@ router.get(
         email: userInfo.email,
         accessToken: tokens.access_token!,
         refreshToken: tokens.refresh_token || null,
-        expiresAt: tokens.expiry_date
-          ? new Date(tokens.expiry_date)
-          : null,
+        expiresAt: expiresAt,
       },
       update: {
         accessToken: tokens.access_token!,
         refreshToken: tokens.refresh_token || undefined,
-        expiresAt: tokens.expiry_date
-          ? new Date(tokens.expiry_date)
-          : undefined,
+        expiresAt: expiresAt || undefined,
       },
     });
 
@@ -151,6 +156,12 @@ router.get(
     }
 
     // Store calendar account
+    // Validate expires_in to prevent invalid dates
+    const expiresInSeconds = Math.min(
+      Math.max(Number(tokens.expires_in) || 3600, 60),
+      86400
+    );
+    
     await prisma.calendarAccount.upsert({
       where: {
         userId_provider: {
@@ -164,12 +175,12 @@ router.get(
         email: userInfo.email,
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token || null,
-        expiresAt: new Date(Date.now() + tokens.expires_in * 1000),
+        expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
       },
       update: {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token || undefined,
-        expiresAt: new Date(Date.now() + tokens.expires_in * 1000),
+        expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
       },
     });
 

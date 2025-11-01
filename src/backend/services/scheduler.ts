@@ -77,11 +77,19 @@ async function checkUpcomingMeetings() {
               const tokens = await outlookCalendarService.refreshAccessToken(
                 account.refreshToken!
               );
+              
+              // Validate expires_in (should be in seconds, typically 3600)
+              // Cap at 24 hours to prevent invalid dates
+              const expiresInSeconds = Math.min(
+                Math.max(Number(tokens.expires_in) || 3600, 60),
+                86400
+              );
+              
               await prisma.calendarAccount.update({
                 where: { id: account.id },
                 data: {
                   accessToken: tokens.access_token,
-                  expiresAt: new Date(Date.now() + tokens.expires_in * 1000),
+                  expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
                 },
               });
               account.accessToken = tokens.access_token;
