@@ -7,6 +7,8 @@ import AuthCallback from './pages/AuthCallback';
 import Settings from './pages/Settings';
 import MeetingRating from './pages/MeetingRating';
 import PresleyFlow from './pages/PresleyFlow';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
     </Routes>
   );
 }

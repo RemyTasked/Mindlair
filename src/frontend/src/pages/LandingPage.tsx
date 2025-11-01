@@ -207,6 +207,13 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="container mx-auto px-6 py-12 text-center text-gray-600">
         <p className="mb-4">Meet Cute · Cinematic-professional focus moments</p>
+        <div className="flex justify-center gap-6 mb-4 text-sm">
+          <a href="/terms" className="hover:text-indigo-600 transition-colors">Terms of Use</a>
+          <span>·</span>
+          <a href="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
+          <span>·</span>
+          <a href="mailto:support@meetcuteai.com" className="hover:text-indigo-600 transition-colors">Contact</a>
+        </div>
         <p className="text-sm">© 2025 Meet Cute. All rights reserved.</p>
       </footer>
     </div>
