@@ -80,28 +80,35 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-6 py-4">
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
+            {/* Logo Section */}
             <div className="flex items-center gap-3">
-              <div className="text-2xl">🎬</div>
-              <h1 className="text-xl font-bold text-gray-800">Meet Cute</h1>
+              <div className="text-2xl" role="img" aria-label="Film camera emoji">🎬</div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Meet Cute
+              </h1>
             </div>
 
-            <div className="flex items-center gap-4">
-              <span className="text-gray-600">{user?.email}</span>
-              <button
-                onClick={() => navigate('/settings')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <SettingsIcon className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                Logout
-              </button>
+            {/* User Section */}
+            <div className="flex items-center gap-6">
+              <span className="text-sm text-gray-600 hidden sm:block">{user?.email}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Settings"
+                >
+                  <SettingsIcon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
         </div>
