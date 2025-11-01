@@ -57,7 +57,8 @@ app.use('/api/webhooks', webhookRoutes);
 
 // Serve static files from frontend build in production
 if (process.env.NODE_ENV === 'production') {
-  const frontendDistPath = path.join(__dirname, '../../src/frontend/dist');
+  // In Docker, frontend is built to /app/src/frontend/dist
+  const frontendDistPath = path.resolve('/app/src/frontend/dist');
   app.use(express.static(frontendDistPath));
   
   // Serve index.html for all non-API routes (SPA support)
