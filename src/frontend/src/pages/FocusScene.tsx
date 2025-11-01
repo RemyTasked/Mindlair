@@ -97,22 +97,95 @@ export default function FocusScene() {
             key="intro"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-8"
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="min-h-screen flex flex-col items-center justify-center p-8 relative"
           >
+            {/* Animated background particles */}
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-center max-w-3xl"
+              className="absolute inset-0 overflow-hidden pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 1 }}
             >
-              <div className="text-6xl mb-8">🎬</div>
-              <h1 className="text-5xl font-bold mb-6 text-balance">
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white/20 rounded-full"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    y: [0, -30, 0],
+                    opacity: [0.2, 0.5, 0.2],
+                  }}
+                  transition={{
+                    duration: 3 + Math.random() * 2,
+                    repeat: Infinity,
+                    delay: Math.random() * 2,
+                  }}
+                />
+              ))}
+            </motion.div>
+
+            <motion.div
+              initial={{ scale: 0.8, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ 
+                delay: 0.3,
+                duration: 0.8,
+                type: "spring",
+                stiffness: 100
+              }}
+              className="text-center max-w-3xl relative z-10"
+            >
+              <motion.div 
+                className="text-6xl mb-8"
+                animate={{ 
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 3
+                }}
+              >
+                🎬
+              </motion.div>
+              <motion.h1 
+                className="text-5xl font-bold mb-6 text-balance"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+              >
                 {meeting.title}
-              </h1>
-              <p className="text-2xl text-purple-200 leading-relaxed">
+              </motion.h1>
+              <motion.p 
+                className="text-2xl text-purple-200 leading-relaxed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9, duration: 0.8 }}
+              >
                 {meeting.cueContent}
-              </p>
+              </motion.p>
+            </motion.div>
+
+            {/* Progress indicator */}
+            <motion.div
+              className="absolute bottom-12 left-1/2 transform -translate-x-1/2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5 }}
+            >
+              <motion.div
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="text-white/40 text-sm"
+              >
+                Preparing your focus moment...
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
@@ -120,26 +193,49 @@ export default function FocusScene() {
         {currentPhase === 'breathing' && (
           <motion.div
             key="breathing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="min-h-screen flex flex-col items-center justify-center p-8"
           >
-            <CountdownTimer
-              startTime={new Date(meeting.startTime)}
-              className="absolute top-8 right-8"
-            />
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <CountdownTimer
+                startTime={new Date(meeting.startTime)}
+                className="absolute top-8 right-8"
+              />
+            </motion.div>
 
-            <div className="text-center mb-12">
+            <motion.div 
+              className="text-center mb-12"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
               <h2 className="text-3xl font-semibold mb-4">Take a Breath</h2>
               <p className="text-xl text-purple-200">Center yourself before you enter</p>
-            </div>
+            </motion.div>
 
-            <BreathingCircle onComplete={handleBreathingComplete} />
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ 
+                delay: 0.6,
+                duration: 0.8,
+                type: "spring",
+                stiffness: 80
+              }}
+            >
+              <BreathingCircle onComplete={handleBreathingComplete} />
+            </motion.div>
 
             <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 15 }}
               onClick={() => setCurrentPhase('reflection')}
               className="mt-12 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors backdrop-blur-sm"
@@ -204,39 +300,156 @@ export default function FocusScene() {
         {currentPhase === 'complete' && (
           <motion.div
             key="complete"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-8"
+            className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden"
           >
+            {/* Confetti particles */}
+            <motion.div className="absolute inset-0 pointer-events-none">
+              {[...Array(50)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full"
+                  style={{
+                    left: `${50}%`,
+                    top: '20%',
+                    background: ['#FFD700', '#FF69B4', '#87CEEB', '#98FB98', '#DDA0DD'][i % 5],
+                  }}
+                  initial={{ 
+                    x: 0, 
+                    y: 0, 
+                    opacity: 0,
+                    scale: 0 
+                  }}
+                  animate={{
+                    x: (Math.random() - 0.5) * 1000,
+                    y: Math.random() * 800 + 200,
+                    opacity: [0, 1, 1, 0],
+                    scale: [0, 1, 1, 0.5],
+                    rotate: Math.random() * 720,
+                  }}
+                  transition={{
+                    duration: 2 + Math.random(),
+                    ease: "easeOut",
+                    delay: i * 0.02,
+                  }}
+                />
+              ))}
+            </motion.div>
+
+            {/* Spotlight effect */}
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-              className="text-8xl mb-8"
+              className="absolute inset-0 bg-gradient-radial from-white/10 via-transparent to-transparent"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 2, opacity: 1 }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+            />
+
+            {/* Main content */}
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ 
+                type: 'spring', 
+                stiffness: 150, 
+                damping: 12,
+                delay: 0.2 
+              }}
+              className="text-9xl mb-8 relative z-10"
             >
               ✨
             </motion.div>
 
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
+              initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-center"
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="text-center relative z-10"
             >
-              <h2 className="text-4xl font-bold mb-4">Scene Wrapped</h2>
-              <p className="text-2xl text-purple-200">
+              <motion.h2 
+                className="text-5xl font-bold mb-6 bg-gradient-to-r from-yellow-200 via-pink-200 to-purple-200 bg-clip-text text-transparent"
+                animate={{ 
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                Scene Wrapped
+              </motion.h2>
+              <motion.p 
+                className="text-3xl text-purple-100 font-light"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
                 Step in with confidence.
-              </p>
+              </motion.p>
             </motion.div>
 
+            {/* Success checkmarks */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              className="mt-12 flex gap-6 relative z-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className="mt-12 text-center text-purple-300"
             >
-              <p>You can close this window now.</p>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
+                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full"
+              >
+                <span className="text-green-400 text-xl">✓</span>
+                <span className="text-sm">Centered</span>
+              </motion.div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1.4, type: "spring", stiffness: 200 }}
+                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full"
+              >
+                <span className="text-green-400 text-xl">✓</span>
+                <span className="text-sm">Focused</span>
+              </motion.div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1.6, type: "spring", stiffness: 200 }}
+                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full"
+              >
+                <span className="text-green-400 text-xl">✓</span>
+                <span className="text-sm">Ready</span>
+              </motion.div>
+            </motion.div>
+
+            {/* Pulsing glow effect */}
+            <motion.div
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 2, duration: 0.6 }}
+              className="mt-16 text-center text-purple-300 relative z-10"
+            >
+              <motion.p
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-lg"
+              >
+                You're ready to shine ⭐
+              </motion.p>
+              <p className="text-sm mt-4 opacity-60">You can close this window now.</p>
             </motion.div>
           </motion.div>
         )}
