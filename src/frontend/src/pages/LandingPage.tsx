@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Calendar, Sparkles, Clock, Mail, MessageSquare, Smartphone, Moon, Sun, Star, Music } from 'lucide-react';
+import { Calendar, Sparkles, Clock, Mail, Smartphone, Moon, Sun, Star, Music } from 'lucide-react';
 
 export default function LandingPage() {
   const [loading, setLoading] = useState(false);
@@ -170,31 +170,26 @@ export default function LandingPage() {
             number="🌙"
             title="Evening (8 PM): Presley Flow"
             description="Receive your evening mental rehearsal. Preview tomorrow's meetings, set your intention, do guided visualization. Sleep knowing you're prepared."
-            emoji="evening"
           />
           <Step
             number="☀️"
             title="Morning (7 AM): Wake-Up Boost"
             description="Get an energizing message reminding you of your preparation. See your first meeting time. Step into the day with confidence."
-            emoji="morning"
           />
           <Step
             number="⏰"
             title="Pre-Meeting (5 min before): Focus Cue"
             description="Receive AI-personalized preparation message via email or SMS. Optional: Open Focus Scene for guided breathing and meditation with ambient sounds."
-            emoji="pre"
           />
           <Step
             number="🎬"
             title="During Meeting: Perform"
             description="Enter the meeting centered, prepared, and confident. The mental rehearsal and prep work pays off."
-            emoji="meeting"
           />
           <Step
             number="⭐"
             title="Post-Meeting (30 min after): Reflect"
             description="Rate your meeting performance (1-5 stars) and add optional feedback. AI learns what works best for you and improves future guidance."
-            emoji="post"
           />
         </div>
 
@@ -233,7 +228,7 @@ function FeatureCard({ icon, title, description, isNew }: { icon: React.ReactNod
   );
 }
 
-function Step({ number, title, description, emoji }: { number: string; title: string; description: string; emoji?: string }) {
+function Step({ number, title, description }: { number: string; title: string; description: string }) {
   return (
     <div className="flex gap-6 items-start group">
       <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
