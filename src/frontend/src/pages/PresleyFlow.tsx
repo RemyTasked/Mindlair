@@ -344,9 +344,9 @@ export default function PresleyFlow() {
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 30 }}
+                transition={{ delay: 12 }}
                 onClick={() => setCurrentPhase('closing')}
-                className="mt-12 px-8 py-4 bg-white/10 hover:bg-white/20 rounded-full font-semibold transition-all"
+                className="mt-8 px-8 py-4 bg-white/10 hover:bg-white/20 rounded-full font-semibold transition-all"
               >
                 Continue →
               </motion.button>
