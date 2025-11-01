@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meet Cute - Logo Options</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      color: white;
+      font-size: 3rem;
+      margin-bottom: 20px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.9);
+      font-size: 1.2rem;
+      margin-bottom: 50px;
+    }
+    
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+      margin-bottom: 50px;
+    }
+    
+    .logo-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .logo-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    }
+    
+    .logo-card.current {
+      border: 4px solid #fbbf24;
+      position: relative;
+    }
+    
+    .logo-card.current::before {
+      content: "CURRENT";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #fbbf24;
+      color: #1f2937;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    
+    .logo-display {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .logo-emoji {
+      font-size: 6rem;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    
+    .logo-svg {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+    }
+    
+    .logo-name {
+      font-size: 2rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    
+    .logo-tagline {
+      color: #6b7280;
+      font-size: 0.9rem;
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+    
+    .logo-description {
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    
+    .logo-pros {
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    
+    .logo-pros h4 {
+      color: #15803d;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    
+    .logo-pros ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .logo-pros li {
+      color: #166534;
+      font-size: 0.9rem;
+      padding-left: 20px;
+      position: relative;
+      margin-bottom: 5px;
+    }
+    
+    .logo-pros li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #22c55e;
+      font-weight: bold;
+    }
+    
+    .custom-section {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    
+    .custom-section h2 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+    }
+    
+    .custom-section p {
+      color: #4b5563;
+      line-height: 1.8;
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+    }
+    
+    .custom-examples {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+    
+    .custom-example {
+      text-align: center;
+    }
+    
+    .custom-example-label {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Meet Cute Logo Options</h1>
+    <p class="subtitle">Choose the visual identity that best represents your meeting performance system</p>
+    
+    <div class="logo-grid">
+      <!-- Option 1: Current - Film Camera -->
+      <div class="logo-card current">
+        <div class="logo-display">
+          <div class="logo-emoji">🎬</div>
+          <div class="logo-name">Meet Cute</div>
+          <div class="logo-tagline">Cinematic-professional focus moments</div>
+        </div>
+        <div class="logo-description">
+          The film clapperboard represents the cinematic, production-quality approach to meeting prep. 
+          It ties into the "Presley Flow" theatrical theme and the idea of each meeting as a "scene."
+        </div>
+        <div class="logo-pros">
+          <h4>Why This Works</h4>
+          <ul>
+            <li>Reinforces the cinematic/theatrical brand language</li>
+            <li>Memorable and distinctive in the productivity space</li>
+            <li>Connects to "scenes," "rehearsal," and "performance"</li>
+            <li>Universal symbol that translates across cultures</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Option 2: Theater Masks -->
+      <div class="logo-card">
+        <div class="logo-display">
+          <div class="logo-emoji">🎭</div>
+          <div class="logo-name">Meet Cute</div>
+          <div class="logo-tagline">Prepare your performance</div>
+        </div>
+        <div class="logo-description">
+          Theater masks symbolize performance and preparation. The duality (comedy/tragedy) 
+          reflects the emotional journey of meetings—from nervousness to confidence.
+        </div>
+        <div class="logo-pros">
+          <h4>Why This Works</h4>
+          <ul>
+            <li>Classic theatrical symbolism</li>
+            <li>Represents emotional preparation and performance</li>
+            <li>Visually elegant and sophisticated</li>
+            <li>Strong association with "acting your best self"</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Option 3: Sparkles -->
+      <div class="logo-card">
+        <div class="logo-display">
+          <div class="logo-emoji">✨</div>
+          <div class="logo-name">Meet Cute</div>
+          <div class="logo-tagline">Transform your meeting presence</div>
+        </div>
+        <div class="logo-description">
+          Sparkles represent transformation, magic, and the "aha!" moment. It emphasizes the 
+          transformative power of AI-enhanced preparation—turning ordinary into extraordinary.
+        </div>
+        <div class="logo-pros">
+          <h4>Why This Works</h4>
+          <ul>
+            <li>Conveys transformation and enhancement</li>
+            <li>Modern, tech-forward aesthetic</li>
+            <li>Positive, uplifting emotional tone</li>
+            <li>Works well with AI/smart features messaging</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Option 4: Target/Bullseye -->
+      <div class="logo-card">
+        <div class="logo-display">
+          <div class="logo-emoji">🎯</div>
+          <div class="logo-name">Meet Cute</div>
+          <div class="logo-tagline">Hit your mark every time</div>
+        </div>
+        <div class="logo-description">
+          The target symbolizes precision, focus, and hitting your objectives. It's professional 
+          and goal-oriented, emphasizing the performance and achievement aspect.
+        </div>
+        <div class="logo-pros">
+          <h4>Why This Works</h4>
+          <ul>
+            <li>Clear focus on goals and precision</li>
+            <li>Professional and results-oriented</li>
+            <li>Universal symbol of success and accuracy</li>
+            <li>Strong for executive/enterprise positioning</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Option 5: Rising Star -->
+      <div class="logo-card">
+        <div class="logo-display">
+          <div class="logo-emoji">🌟</div>
+          <div class="logo-name">Meet Cute</div>
+          <div class="logo-tagline">Your moment to shine</div>
+        </div>
+        <div class="logo-description">
+          A star represents excellence, aspiration, and "star performance." It positions 
+          every meeting as an opportunity to shine and be your best professional self.
+        </div>
+        <div class="logo-pros">
+          <h4>Why This Works</h4>
+          <ul>
+            <li>Aspirational and confidence-building</li>
+            <li>Links to "star performance" concept</li>
+            <li>Bright, positive, and memorable</li>
+            <li>Works well with achievement/growth messaging</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Option 6: Zen Circle -->
+      <div class="logo-card">
+        <div class="logo-display">
+          <div class="logo-emoji">🧘</div>
+          <div class="logo-name">Meet Cute</div>
+          <div class="logo-tagline">Calm confidence, professional focus</div>
+        </div>
+        <div class="logo-description">
+          The meditation figure represents mindfulness, calm preparation, and mental clarity. 
+          It emphasizes the wellness and mental rehearsal aspects of the platform.
+        </div>
+        <div class="logo-pros">
+          <h4>Why This Works</h4>
+          <ul>
+            <li>Strong connection to mindfulness and breathing exercises</li>
+            <li>Emphasizes calm confidence over stress</li>
+            <li>Differentiates from purely task-focused tools</li>
+            <li>Appeals to wellness-conscious professionals</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Option 7: Lightning Bolt -->
+      <div class="logo-card">
+        <div class="logo-display">
+          <div class="logo-emoji">⚡</div>
+          <div class="logo-name">Meet Cute</div>
+          <div class="logo-tagline">Instant clarity, powerful presence</div>
+        </div>
+        <div class="logo-description">
+          Lightning represents speed, energy, and breakthrough moments. It conveys the quick 
+          5-minute prep that delivers powerful results and instant mental clarity.
+        </div>
+        <div class="logo-pros">
+          <h4>Why This Works</h4>
+          <ul>
+            <li>Dynamic and energetic</li>
+            <li>Emphasizes speed and efficiency</li>
+            <li>Modern, tech-forward aesthetic</li>
+            <li>Conveys power and breakthrough insights</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Option 8: Moon (Evening Ritual) -->
+      <div class="logo-card">
+        <div class="logo-display">
+          <div class="logo-emoji">🌙</div>
+          <div class="logo-name">Meet Cute</div>
+          <div class="logo-tagline">From evening prep to morning confidence</div>
+        </div>
+        <div class="logo-description">
+          The crescent moon represents the evening Presley Flow ritual and the 24-hour cycle 
+          of preparation. It's calming, reflective, and ties to the night-before rehearsal.
+        </div>
+        <div class="logo-pros">
+          <h4>Why This Works</h4>
+          <ul>
+            <li>Perfect for Presley Flow evening ritual</li>
+            <li>Calming and reflective tone</li>
+            <li>Represents the complete 24-hour cycle</li>
+            <li>Unique in the productivity tool space</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Logo Section -->
+    <div class="custom-section">
+      <h2>Want Something More Custom?</h2>
+      <p>
+        I can also create a custom SVG logo that combines elements or creates something entirely unique. 
+        Here are some concepts that could work:
+      </p>
+      
+      <div class="custom-examples">
+        <div class="custom-example">
+          <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- MC Monogram -->
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <text x="50" y="70" font-size="70" font-weight="bold" fill="url(#grad1)" text-anchor="middle" font-family="Arial, sans-serif">MC</text>
+          </svg>
+          <div class="custom-example-label">Monogram Style</div>
+        </div>
+
+        <div class="custom-example">
+          <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Film Strip with Star -->
+            <defs>
+              <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <rect x="20" y="30" width="60" height="40" fill="url(#grad2)" rx="5"/>
+            <rect x="22" y="32" width="8" height="8" fill="white"/>
+            <rect x="22" y="60" width="8" height="8" fill="white"/>
+            <rect x="70" y="32" width="8" height="8" fill="white"/>
+            <rect x="70" y="60" width="8" height="8" fill="white"/>
+            <polygon points="50,40 53,48 61,48 55,53 57,61 50,56 43,61 45,53 39,48 47,48" fill="#fbbf24"/>
+          </svg>
+          <div class="custom-example-label">Film + Performance</div>
+        </div>
+
+        <div class="custom-example">
+          <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Minimalist Circle with Cursor -->
+            <defs>
+              <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="35" stroke="url(#grad3)" stroke-width="5" fill="none"/>
+            <circle cx="50" cy="30" r="5" fill="#fbbf24"/>
+          </svg>
+          <div class="custom-example-label">Focus Point</div>
+        </div>
+
+        <div class="custom-example">
+          <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Abstract M Shape -->
+            <defs>
+              <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <path d="M 25 70 L 25 30 L 40 50 L 50 35 L 60 50 L 75 30 L 75 70" stroke="url(#grad4)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="custom-example-label">Abstract "M"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
