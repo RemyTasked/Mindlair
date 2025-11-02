@@ -39,10 +39,18 @@ router.get(
       results.tests[0].status = 'passed';
       results.tests[0].details = {
         configuredProviders,
-        primaryProvider: configuredProviders[0],
+        primaryProvider: configuredProviders[0] || 'None',
         fallbackProvider: configuredProviders[1] || 'None',
         openaiConfigured: !!process.env.OPENAI_API_KEY,
         geminiConfigured: !!process.env.GOOGLE_GEMINI_API_KEY,
+        // Debug: Check if service is available
+        aiServiceAvailable: aiService.isAvailable(),
+        envVarCheck: {
+          OPENAI_API_KEY_exists: !!process.env.OPENAI_API_KEY,
+          GOOGLE_GEMINI_API_KEY_exists: !!process.env.GOOGLE_GEMINI_API_KEY,
+          OPENAI_API_KEY_length: process.env.OPENAI_API_KEY?.length || 0,
+          GOOGLE_GEMINI_API_KEY_length: process.env.GOOGLE_GEMINI_API_KEY?.length || 0,
+        },
       };
 
       // Test 2: Make a simple API call to OpenAI
