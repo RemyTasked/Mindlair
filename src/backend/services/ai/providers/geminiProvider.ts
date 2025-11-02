@@ -10,12 +10,32 @@ export class GeminiProvider implements AIProvider {
   constructor() {
     this.apiKey = process.env.GOOGLE_GEMINI_API_KEY;
     if (this.apiKey) {
-      this.client = new GoogleGenerativeAI(this.apiKey);
+      try {
+        this.client = new GoogleGenerativeAI(this.apiKey);
+        logger.info('Gemini provider initialized successfully', {
+          keyPrefix: this.apiKey.substring(0, 8),
+          keyLength: this.apiKey.length,
+        });
+      } catch (error: any) {
+        logger.error('Failed to initialize Gemini client', {
+          error: error.message,
+        });
+        this.client = null;
+      }
+    } else {
+      logger.warn('GOOGLE_GEMINI_API_KEY not found in environment');
     }
   }
 
   isConfigured(): boolean {
-    return !!this.apiKey && !!this.client;
+    const configured = !!this.apiKey && !!this.client;
+    if (!configured) {
+      logger.debug('Gemini isConfigured check', {
+        hasApiKey: !!this.apiKey,
+        hasClient: !!this.client,
+      });
+    }
+    return configured;
   }
 
   async generateCompletion(request: AICompletionRequest): Promise<AICompletionResponse> {
