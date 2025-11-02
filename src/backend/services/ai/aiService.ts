@@ -17,9 +17,10 @@ export class AIService {
 
     // Log configured providers
     const configured = this.providers.filter(p => p.isConfigured());
-    logger.info('AI Service initialized', {
+    logger.info('AI Service initialized with fallback support', {
       totalProviders: this.providers.length,
       configuredProviders: configured.map(p => p.name),
+      timestamp: new Date().toISOString(),
     });
 
     if (configured.length === 0) {
