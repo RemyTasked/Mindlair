@@ -54,8 +54,17 @@ async function checkUpcomingMeetings() {
       if (user.calendarAccounts.length === 0) continue;
 
       const alertMinutes = user.preferences?.alertMinutesBefore || 5;
-      const alertTime = new Date(now.getTime() + alertMinutes * 60 * 1000);
-      const endTime = new Date(alertTime.getTime() + 2 * 60 * 1000); // 2-minute window
+      
+      // Fetch events for today and tomorrow (wider range for dashboard and planning)
+      const startOfToday = new Date(now);
+      startOfToday.setHours(0, 0, 0, 0);
+      
+      const endOfTomorrow = new Date(now);
+      endOfTomorrow.setDate(endOfTomorrow.getDate() + 1);
+      endOfTomorrow.setHours(23, 59, 59, 999);
+      
+      const alertTime = startOfToday; // Fetch from start of today
+      const endTime = endOfTomorrow;  // Through end of tomorrow
 
       // Fetch events from all connected calendars
       const allEvents = [];
@@ -161,6 +170,7 @@ async function checkUpcomingMeetings() {
 
 async function processUpcomingMeeting(user: any, event: any, alertMinutes: number) {
   try {
+    const now = new Date();
     const cueScheduledFor = new Date(event.start.getTime() - alertMinutes * 60 * 1000);
 
     // Check if meeting already exists and cue was sent
@@ -176,6 +186,10 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
     if (existingMeeting?.cueDelivered) {
       return; // Already sent cue for this meeting
     }
+
+    // Check if it's time to send the cue (within 2-minute window)
+    const timeDiffMs = cueScheduledFor.getTime() - now.getTime();
+    const shouldSendCue = timeDiffMs >= 0 && timeDiffMs <= 2 * 60 * 1000; // 0-2 minutes window
 
     // Infer meeting type
     const meetingType = await promptGenerator.inferMeetingType(
@@ -265,51 +279,70 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         cueScheduledFor,
         cueContent: cueMessage,
         focusSceneUrl,
-        cueDelivered: true,
-        cueSentAt: new Date(),
+        cueDelivered: shouldSendCue,
+        cueSentAt: shouldSendCue ? new Date() : null,
       },
       update: {
+        title: event.summary,
+        description: event.description,
+        startTime: event.start,
+        endTime: event.end,
+        attendees: event.attendees,
+        location: event.location,
+        meetingLink: event.hangoutLink,
         cueContent: cueMessage,
-        cueDelivered: true,
-        cueSentAt: new Date(),
+        cueScheduledFor,
+        ...(shouldSendCue && {
+          cueDelivered: true,
+          cueSentAt: new Date(),
+        }),
       },
     });
 
-    // Send cue via enabled channels
-    const delivery = user.deliverySettings;
+    // Only send cue if it's time
+    if (shouldSendCue) {
+      const delivery = user.deliverySettings;
 
-    if (delivery?.emailEnabled) {
-      await emailService.sendPreMeetingCue(
-        user.email,
-        event.summary,
-        cueMessage,
-        focusSceneUrl
-      );
+      if (delivery?.emailEnabled) {
+        await emailService.sendPreMeetingCue(
+          user.email,
+          event.summary,
+          cueMessage,
+          focusSceneUrl
+        );
+      }
+
+      if (delivery?.slackEnabled && delivery?.slackWebhookUrl) {
+        await slackService.sendPreMeetingCue(
+          delivery.slackWebhookUrl,
+          event.summary,
+          cueMessage,
+          focusSceneUrl
+        );
+      }
+
+      if (delivery?.smsEnabled && delivery?.phoneNumber) {
+        await smsService.sendPreMeetingCue(
+          delivery.phoneNumber,
+          event.summary,
+          cueMessage,
+          focusSceneUrl
+        );
+      }
+
+      logger.info('Pre-meeting cue sent', {
+        userId: user.id,
+        meetingId: meeting.id,
+        title: event.summary,
+      });
+    } else {
+      logger.debug('Meeting stored but cue not sent yet', {
+        userId: user.id,
+        meetingTitle: event.summary,
+        cueScheduledFor,
+        minutesUntilCue: Math.round(timeDiffMs / (1000 * 60)),
+      });
     }
-
-    if (delivery?.slackEnabled && delivery?.slackWebhookUrl) {
-      await slackService.sendPreMeetingCue(
-        delivery.slackWebhookUrl,
-        event.summary,
-        cueMessage,
-        focusSceneUrl
-      );
-    }
-
-    if (delivery?.smsEnabled && delivery?.phoneNumber) {
-      await smsService.sendPreMeetingCue(
-        delivery.phoneNumber,
-        event.summary,
-        cueMessage,
-        focusSceneUrl
-      );
-    }
-
-    logger.info('Pre-meeting cue sent', {
-      userId: user.id,
-      meetingId: meeting.id,
-      title: event.summary,
-    });
   } catch (error: any) {
     logger.error('Error processing upcoming meeting', {
       userId: user.id,
