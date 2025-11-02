@@ -10,6 +10,7 @@ interface Meeting {
   endTime: string;
   cueDelivered: boolean;
   focusSceneOpened: boolean;
+  focusSceneUrl?: string;
 }
 
 interface Stats {
