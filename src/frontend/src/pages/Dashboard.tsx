@@ -33,12 +33,20 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem('meetcute_token');
 
+      console.log('🔍 Dashboard - Loading user data', {
+        hasToken: !!token,
+        tokenLength: token?.length || 0,
+        tokenPreview: token?.substring(0, 20) + '...',
+      });
+
       if (!token) {
+        console.error('❌ No token found in localStorage');
         navigate('/');
         return;
       }
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      console.log('📡 Making API calls to load user data...');
 
       const [userResponse, meetingsResponse, statsResponse] = await Promise.all([
         axios.get('/api/user/profile'),
@@ -54,12 +62,25 @@ export default function Dashboard() {
         }),
       ]);
 
+      console.log('✅ API calls successful', {
+        userEmail: userResponse.data.user?.email,
+        meetingsCount: meetingsResponse.data.meetings?.length,
+        totalMeetings: statsResponse.data.stats?.totalMeetings,
+      });
+
       setUser(userResponse.data.user);
       setMeetings(meetingsResponse.data.meetings);
       setStats(statsResponse.data.stats);
       setLoading(false);
-    } catch (error) {
-      console.error('Error loading user data:', error);
+    } catch (error: any) {
+      console.error('❌ Error loading user data:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+      console.log('🔄 Removing token and redirecting to landing page');
       localStorage.removeItem('meetcute_token');
       navigate('/');
     }

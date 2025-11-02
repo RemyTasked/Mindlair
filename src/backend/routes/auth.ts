@@ -91,6 +91,11 @@ router.get(
       },
     });
 
+    logger.info('📝 Stored Google calendar account', { 
+      userId: user.id, 
+      email: user.email,
+    });
+
     // Generate JWT
     const jwtToken = jwt.sign(
       { userId: user.id, email: user.email },
@@ -98,10 +103,22 @@ router.get(
       { expiresIn: '7d' }
     );
 
+    logger.info('✅ JWT token generated for Google auth', {
+      userId: user.id,
+      email: user.email,
+      tokenLength: jwtToken.length,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      jwtSecretLength: process.env.JWT_SECRET?.length || 0,
+    });
+
     // Redirect to frontend with token
-    res.redirect(
-      `${process.env.FRONTEND_URL}/auth/callback?token=${jwtToken}`
-    );
+    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${jwtToken}`;
+    logger.info('🔄 Redirecting to frontend after Google auth', { 
+      frontendUrl: process.env.FRONTEND_URL,
+      redirectUrlPreview: redirectUrl.substring(0, 100) + '...',
+    });
+    
+    res.redirect(redirectUrl);
   })
 );
 
