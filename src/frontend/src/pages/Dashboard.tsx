@@ -180,16 +180,35 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
     day: 'numeric',
   });
 
+  const now = new Date();
+  const minutesUntilMeeting = Math.floor((startTime.getTime() - now.getTime()) / (1000 * 60));
+  const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 60; // Within 1 hour
+
   return (
     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors">
       <div className="flex-1">
         <h3 className="font-semibold text-lg mb-1">{meeting.title}</h3>
-        <div className="text-gray-600">
-          {dateString} at {timeString}
+        <div className="text-gray-600 space-y-1">
+          <div>{dateString} at {timeString}</div>
+          {minutesUntilMeeting > 0 && minutesUntilMeeting <= 60 && (
+            <div className="text-sm text-indigo-600 font-medium">
+              Starting in {minutesUntilMeeting} minute{minutesUntilMeeting !== 1 ? 's' : ''}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
+        {canStartFocusSession && meeting.focusSceneUrl && (
+          <a
+            href={meeting.focusSceneUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+          >
+            🎬 Start Focus Session
+          </a>
+        )}
         {meeting.cueDelivered && (
           <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
             Cue Sent
@@ -197,7 +216,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
         )}
         {meeting.focusSceneOpened && (
           <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
-            Completed
+            ✓ Completed
           </span>
         )}
       </div>

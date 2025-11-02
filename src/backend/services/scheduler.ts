@@ -69,6 +69,14 @@ async function checkUpcomingMeetings() {
       // Fetch events from all connected calendars
       const allEvents = [];
 
+      logger.info('🔍 Checking calendar for user', {
+        userId: user.id,
+        email: user.email,
+        alertMinutes,
+        fetchingFrom: startOfToday.toISOString(),
+        fetchingTo: endOfTomorrow.toISOString(),
+      });
+
       for (const account of user.calendarAccounts) {
         try {
           let events;
@@ -157,6 +165,16 @@ async function checkUpcomingMeetings() {
           });
         }
       }
+
+      logger.info('📅 Found calendar events', {
+        userId: user.id,
+        email: user.email,
+        eventCount: allEvents.length,
+        events: allEvents.map((e: any) => ({
+          title: e.summary,
+          start: e.start,
+        })),
+      });
 
       // Process each event
       for (const event of allEvents) {

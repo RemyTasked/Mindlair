@@ -34,11 +34,22 @@ export class EmailService {
     focusSceneUrl?: string
   ): Promise<boolean> {
     if (!this.isConfigured) {
-      logger.warn('Email service not configured, skipping email send');
+      logger.error('❌ Email service NOT configured', {
+        hasApiKey: !!process.env.SENDGRID_API_KEY,
+        apiKeyPrefix: process.env.SENDGRID_API_KEY?.substring(0, 8),
+        fromEmail: this.fromEmail,
+      });
       return false;
     }
 
     try {
+      logger.info('📧 Attempting to send pre-meeting cue email', {
+        to: email,
+        meetingTitle,
+        hasApiKey: !!process.env.SENDGRID_API_KEY,
+        fromEmail: this.fromEmail,
+      });
+
       const html = this.generatePreMeetingHtml(
         meetingTitle,
         cueMessage,
@@ -56,12 +67,15 @@ export class EmailService {
         html,
       });
 
-      logger.info('Pre-meeting cue email sent', { email, meetingTitle });
+      logger.info('✅ Pre-meeting cue email sent successfully', { email, meetingTitle });
       return true;
     } catch (error: any) {
-      logger.error('Error sending pre-meeting cue email', {
+      logger.error('❌ Failed to send pre-meeting cue email', {
         error: error.message,
+        statusCode: error.code,
+        response: error.response?.body,
         email,
+        meetingTitle,
       });
       return false;
     }
