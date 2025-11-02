@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Check, ArrowLeft } from 'lucide-react';
 
@@ -31,7 +31,7 @@ export default function MeetingRating() {
 
   const loadMeetingData = async () => {
     try {
-      const response = await axios.get(`/api/rating/${userId}/${meetingId}`);
+      const response = await api.get(`/api/rating/${userId}/${meetingId}`);
       setMeeting(response.data.meeting);
       
       // If already rated, populate the form
@@ -53,7 +53,7 @@ export default function MeetingRating() {
 
     setSubmitting(true);
     try {
-      await axios.post(`/api/rating/${userId}/${meetingId}`, {
+      await api.post(`/api/rating/${userId}/${meetingId}`, {
         rating,
         feedback: feedback.trim() || undefined,
       });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../lib/axios';
 import { Calendar, Settings as SettingsIcon, TrendingUp } from 'lucide-react';
 
 interface Meeting {
@@ -45,17 +45,16 @@ export default function Dashboard() {
         return;
       }
 
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       console.log('📡 Making API calls to load user data...');
 
       const [userResponse, meetingsResponse, statsResponse] = await Promise.all([
-        axios.get('/api/user/profile'),
-        axios.get('/api/meetings', {
+        api.get('/api/user/profile'),
+        api.get('/api/meetings', {
           params: {
             startDate: new Date().toISOString(),
           },
         }),
-        axios.get('/api/user/stats', {
+        api.get('/api/user/stats', {
           params: {
             startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
           },

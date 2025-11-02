@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../lib/axios';
 import { ArrowLeft, Save } from 'lucide-react';
 
 interface Preferences {
@@ -56,8 +56,7 @@ export default function Settings() {
         return;
       }
 
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      const response = await axios.get('/api/user/profile');
+      const response = await api.get('/api/user/profile');
       
       if (response.data.user.preferences) {
         setPreferences(response.data.user.preferences);
@@ -76,8 +75,8 @@ export default function Settings() {
 
     try {
       await Promise.all([
-        axios.put('/api/user/preferences', preferences),
-        axios.put('/api/user/delivery', delivery),
+        api.put('/api/user/preferences', preferences),
+        api.put('/api/user/delivery', delivery),
       ]);
 
       setMessage('Settings saved successfully!');

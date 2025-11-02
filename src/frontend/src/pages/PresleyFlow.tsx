@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock } from 'lucide-react';
 
@@ -32,7 +32,7 @@ export default function PresleyFlow() {
 
   const loadFlowData = async () => {
     try {
-      const response = await axios.get(`/api/presley-flow/${userId}/${date}`);
+      const response = await api.get(`/api/presley-flow/${userId}/${date}`);
       setFlowData(response.data.flow);
       setLoading(false);
       
@@ -46,7 +46,7 @@ export default function PresleyFlow() {
 
   const handleComplete = async () => {
     try {
-      await axios.post(`/api/presley-flow/${userId}/${date}/complete`, {
+      await api.post(`/api/presley-flow/${userId}/${date}/complete`, {
         journalNote: journalNote.trim() || undefined,
         completedAt: new Date(),
       });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import BreathingCircle from '../components/BreathingCircle';
 import CountdownTimer from '../components/CountdownTimer';
@@ -30,7 +30,7 @@ export default function FocusScene() {
 
   const loadMeetingData = async () => {
     try {
-      const response = await axios.get(`/api/focus-scene/${userId}/${meetingId}`);
+      const response = await api.get(`/api/focus-scene/${userId}/${meetingId}`);
       setMeeting(response.data.meeting);
       setLoading(false);
 
@@ -49,7 +49,7 @@ export default function FocusScene() {
 
   const handleComplete = async () => {
     try {
-      await axios.post(`/api/focus-scene/${userId}/${meetingId}/complete`, {
+      await api.post(`/api/focus-scene/${userId}/${meetingId}/complete`, {
         breathingExerciseCompleted: breathingCompleted,
         reflectionNotes: reflectionNotes || undefined,
       });

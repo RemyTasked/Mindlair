@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../lib/axios';
 import { Calendar, Sparkles, Clock, Mail, Smartphone, Moon, Sun, Star, Music } from 'lucide-react';
 
 export default function LandingPage() {
@@ -8,7 +8,7 @@ export default function LandingPage() {
   const handleGoogleAuth = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/auth/google/url');
+      const response = await api.get('/api/auth/google/url');
       window.location.href = response.data.authUrl;
     } catch (error) {
       console.error('Error initiating Google auth:', error);
@@ -19,7 +19,7 @@ export default function LandingPage() {
   const handleMicrosoftAuth = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/auth/microsoft/url');
+      const response = await api.get('/api/auth/microsoft/url');
       window.location.href = response.data.authUrl;
     } catch (error) {
       console.error('Error initiating Microsoft auth:', error);
