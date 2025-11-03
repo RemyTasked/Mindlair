@@ -64,9 +64,17 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
       return;
     }
 
-    // Don't auto-initialize - wait for user interaction
-    // This prevents autoplay errors
-    console.log('🎵 Ambient sound ready - waiting for user interaction');
+    // Try to auto-play (will work if user just interacted with page)
+    console.log('🎵 Attempting to start ambient sound...');
+    const attemptAutoPlay = async () => {
+      try {
+        await initializeAudio();
+      } catch (error) {
+        console.log('⚠️ Auto-play blocked, showing enable button');
+      }
+    };
+    
+    attemptAutoPlay();
 
     // Cleanup
     return () => {
@@ -75,6 +83,7 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
         audioRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [soundType, enabled]);
 
   const handleClick = async () => {

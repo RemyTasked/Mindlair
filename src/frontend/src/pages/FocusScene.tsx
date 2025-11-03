@@ -132,8 +132,8 @@ export default function FocusScene() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
-      {/* Ambient Sound Player */}
-      {meeting?.soundPreferences && currentPhase !== 'intro' && (
+      {/* Ambient Sound Player - Show from mind state selection onwards */}
+      {meeting?.soundPreferences && (currentPhase === 'mindstate' || currentPhase === 'ai-message' || currentPhase === 'breathing' || currentPhase === 'reflection') && (
         <AmbientSound
           soundType={meeting.soundPreferences.soundType}
           enabled={meeting.soundPreferences.enabled}
