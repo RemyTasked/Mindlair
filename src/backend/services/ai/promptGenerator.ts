@@ -9,6 +9,7 @@ export interface MeetingContext {
   duration: number; // in minutes
   isBackToBack: boolean;
   meetingType?: string;
+  isOrganizer?: boolean; // Is the user hosting/organizing this meeting?
 }
 
 export interface HistoricalInsight {
@@ -87,6 +88,10 @@ IMPORTANT: Use this data to provide MORE GROUNDED, PRACTICAL support:
 - Match the energy level to their needs: stressed users need grounding, not hype`;
       }
       
+      const roleContext = context.isOrganizer 
+        ? 'USER ROLE: Meeting Organizer/Host - They are leading this meeting'
+        : 'USER ROLE: Meeting Participant/Attendee - They are joining this meeting';
+
       const prompt = `You are an AI assistant for "Meet Cute," a pre-meeting preparation tool that helps professionals mentally prepare before meetings.
 
 Generate a short, personalized pre-meeting message (2-3 sentences max) with the following context:
@@ -97,6 +102,7 @@ Attendees: ${context.attendees.length} people
 Duration: ${context.duration} minutes
 ${context.isBackToBack ? 'Note: This is a back-to-back meeting' : ''}
 ${context.meetingType ? `Type: ${context.meetingType}` : ''}
+${roleContext}
 
 Tone: ${tone}
 ${toneGuideline}${historicalContext}${mindStateContext}
@@ -106,6 +112,9 @@ The message should:
 2. Help the person mentally prepare and focus
 3. Match the ${tone} tone perfectly
 4. Reference the meeting context appropriately
+5. TAILOR TO THEIR ROLE:
+   - If ORGANIZER: Focus on leadership, setting the agenda, facilitating, keeping things on track
+   - If PARTICIPANT: Focus on engagement, contributing value, active listening, prepared questions
 ${historicalInsights && historicalInsights.length > 0 ? '5. Subtly incorporate learnings from their past performance without explicitly mentioning ratings\n6. End with confidence and readiness' : '5. End with confidence and readiness'}
 ${mindStateContext ? '7. Be GROUNDED and PRACTICAL based on their stress patterns - avoid generic motivation if they typically find this type of meeting stressful' : ''}
 

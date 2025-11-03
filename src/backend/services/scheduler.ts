@@ -127,7 +127,8 @@ async function checkUpcomingMeetings() {
               account.accessToken,
               account.refreshToken || undefined,
               alertTime,
-              endTime
+              endTime,
+              account.email // Pass user's calendar email for organizer detection
             );
           } else if (account.provider === 'microsoft') {
             // Refresh token if needed
@@ -285,6 +286,7 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         duration: Math.round((event.end - event.start) / (1000 * 60)),
         isBackToBack,
         meetingType,
+        isOrganizer: event.isOrganizer,
       },
       tone,
       historicalInsights.length > 0 ? historicalInsights : undefined,
@@ -314,6 +316,7 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         location: event.location,
         meetingLink: event.hangoutLink,
         meetingType,
+        isOrganizer: event.isOrganizer || false,
         isBackToBack,
         cueScheduledFor,
         cueContent: cueMessage,
@@ -329,6 +332,7 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         attendees: event.attendees,
         location: event.location,
         meetingLink: event.hangoutLink,
+        isOrganizer: event.isOrganizer || false,
         cueContent: cueMessage,
         cueScheduledFor,
         ...(shouldSendCue && {

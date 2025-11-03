@@ -120,6 +120,10 @@ router.post(
         unclear: 'The user is feeling foggy, uncertain, or unclear',
       };
 
+      const roleContext = meeting.isOrganizer
+        ? 'USER ROLE: Meeting Organizer/Host - They are leading this meeting'
+        : 'USER ROLE: Meeting Participant/Attendee - They are joining this meeting';
+
       const prompt = `You are a supportive AI coach helping someone prepare for a meeting. Generate a brief, personalized message (2-3 sentences max) for someone who just indicated they are feeling "${mindState}".
 
 MEETING CONTEXT:
@@ -128,6 +132,7 @@ MEETING CONTEXT:
 - Time: ${timeOfDay} on ${dayOfWeek}
 - Starting in: ${minutesUntil} minutes
 - User's tone preference: ${tone}
+- ${roleContext}
 
 MIND STATE: ${mindStateDescriptions[mindState]}${contextNotes}
 
@@ -136,9 +141,12 @@ IMPORTANT GUIDELINES:
 2. Acknowledge their current state authentically
 3. Reference the specific meeting naturally
 4. Match the ${tone} tone
-5. If they're stressed and this type of meeting/day is typically stressful for them, acknowledge that reality and provide concrete grounding techniques
-6. Keep it brief (2-3 sentences max)
-7. End with confidence and readiness
+5. TAILOR TO THEIR ROLE:
+   - If ORGANIZER: Help them step into leadership mode - setting agenda, facilitating, creating space
+   - If PARTICIPANT: Help them prepare to contribute meaningfully - questions to ask, value to add, active presence
+6. If they're stressed and this type of meeting/day is typically stressful for them, acknowledge that reality and provide concrete grounding techniques
+7. Keep it brief (2-3 sentences max)
+8. End with confidence and readiness
 
 Generate the message now:`;
 

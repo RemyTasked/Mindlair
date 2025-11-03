@@ -11,6 +11,7 @@ export interface CalendarEvent {
   attendees: string[];
   location?: string;
   hangoutLink?: string;
+  isOrganizer?: boolean; // Is the user the organizer/host?
 }
 
 export class GoogleCalendarService {
@@ -51,7 +52,8 @@ export class GoogleCalendarService {
     accessToken: string,
     refreshToken?: string,
     timeMin?: Date,
-    timeMax?: Date
+    timeMax?: Date,
+    userEmail?: string
   ): Promise<CalendarEvent[]> {
     try {
       this.oauth2Client.setCredentials({
@@ -74,19 +76,28 @@ export class GoogleCalendarService {
 
       return events
         .filter((event) => event.start?.dateTime && event.end?.dateTime)
-        .map((event) => ({
-          id: event.id!,
-          summary: event.summary || 'Untitled Meeting',
-          description: event.description || undefined,
-          start: new Date(event.start!.dateTime!),
-          end: new Date(event.end!.dateTime!),
-          attendees:
-            event.attendees
-              ?.filter((a) => a.email)
-              .map((a) => a.email!) || [],
-          location: event.location || undefined,
-          hangoutLink: event.hangoutLink || undefined,
-        }));
+        .map((event) => {
+          // Check if user is the organizer
+          // User is organizer if: event.organizer.email matches userEmail OR if organizer.self is true
+          const isOrganizer = 
+            event.organizer?.self === true || 
+            (userEmail && event.organizer?.email === userEmail);
+
+          return {
+            id: event.id!,
+            summary: event.summary || 'Untitled Meeting',
+            description: event.description || undefined,
+            start: new Date(event.start!.dateTime!),
+            end: new Date(event.end!.dateTime!),
+            attendees:
+              event.attendees
+                ?.filter((a) => a.email)
+                .map((a) => a.email!) || [],
+            location: event.location || undefined,
+            hangoutLink: event.hangoutLink || undefined,
+            isOrganizer: isOrganizer || false,
+          };
+        });
     } catch (error: any) {
       logger.error('Error fetching Google Calendar events', {
         error: error.message,
