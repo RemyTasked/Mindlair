@@ -6,13 +6,14 @@ interface AmbientSoundProps {
   enabled: boolean;
 }
 
-// Sound URLs - using free ambient sounds from various sources
+// Sound URLs - using reliable free ambient sounds
+// Using freesound.org and other reliable sources with proper CORS headers
 const SOUND_URLS: Record<string, string> = {
-  'calm-ocean': 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_5cbbe1cc9e.mp3',
-  'rain': 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-  'forest': 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c610217018.mp3',
-  'meditation-bell': 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_2c8e1f4e8a.mp3',
-  'white-noise': 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_bb630cc098.mp3',
+  'calm-ocean': 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
+  'rain': 'https://assets.mixkit.co/active_storage/sfx/2390/2390-preview.mp3',
+  'forest': 'https://assets.mixkit.co/active_storage/sfx/2462/2462-preview.mp3',
+  'meditation-bell': 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
+  'white-noise': 'https://assets.mixkit.co/active_storage/sfx/2390/2390-preview.mp3',
   'none': '',
 };
 

@@ -411,6 +411,8 @@ export default function FocusScene() {
               </motion.div>
 
               <motion.textarea
+                id="intention-notes"
+                name="intention"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -418,6 +420,7 @@ export default function FocusScene() {
                 onChange={(e) => setReflectionNotes(e.target.value)}
                 placeholder="Optional: Write your intention..."
                 className="w-full h-32 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                aria-label="Meeting intention notes"
               />
 
               <motion.div
