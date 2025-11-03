@@ -44,7 +44,7 @@ router.get(
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        userPreferences: true,
+        preferences: true,
       },
     });
 
@@ -88,8 +88,11 @@ router.get(
     const historicalInsights = historicalMeetings
       .filter((m: Meeting) => m.meetingRating !== null)
       .map((m: Meeting) => ({
+        meetingType: m.meetingType || 'general',
         rating: m.meetingRating!,
         feedback: m.meetingFeedback || '',
+        wasBackToBack: m.isBackToBack,
+        focusSceneUsed: m.focusSceneOpened,
       }));
 
     // Generate Presley Flow content with AI
@@ -102,8 +105,9 @@ router.get(
         description: m.description || undefined,
         meetingType: m.meetingType || undefined,
       })),
-      user.userPreferences?.tone as any,
-      historicalInsights.length > 0 ? historicalInsights : undefined
+      (user as any).preferences?.tone as any,
+      historicalInsights.length > 0 ? historicalInsights : undefined,
+      userId
     );
 
     return res.json({

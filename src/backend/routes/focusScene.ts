@@ -79,14 +79,14 @@ router.post(
         userId,
         meetingId: meeting.id,
         completedAt: new Date(),
-        breathingFlowType: data.mindState ? `adaptive-${data.mindState}` : undefined,
+        ...(data.mindState ? { breathingFlowType: `adaptive-${data.mindState}` } : {}),
         ...data,
-      },
+      } as any,
       update: {
         completedAt: new Date(),
-        breathingFlowType: data.mindState ? `adaptive-${data.mindState}` : undefined,
+        ...(data.mindState ? { breathingFlowType: `adaptive-${data.mindState}` } : {}),
         ...data,
-      },
+      } as any,
     });
 
     // Update meeting with mind state for pattern analysis

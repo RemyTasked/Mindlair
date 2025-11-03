@@ -36,7 +36,6 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
     const sessions = await prisma.focusSession.findMany({
       where: {
         userId,
-        mindState: { not: null },
         startedAt: { gte: ninetyDaysAgo },
       },
       include: {
@@ -45,7 +44,10 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
       orderBy: { startedAt: 'desc' },
     });
 
-    if (sessions.length < 3) {
+    // Filter for sessions with mindState (Prisma types not yet regenerated)
+    const sessionsWithMindState = sessions.filter((s: any) => s.mindState != null);
+
+    if (sessionsWithMindState.length < 3) {
       return {
         mostCommonState: 'unknown',
         stressFrequency: 0,
@@ -59,7 +61,7 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
 
     // Analyze state distribution
     const stateCounts: Record<string, number> = {};
-    sessions.forEach((s: any) => {
+    sessionsWithMindState.forEach((s: any) => {
       if (s.mindState) {
         stateCounts[s.mindState] = (stateCounts[s.mindState] || 0) + 1;
       }
@@ -69,13 +71,13 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
       .sort(([, a], [, b]) => b - a)[0][0];
 
     const stressedCount = stateCounts['stressed'] || 0;
-    const stressFrequency = (stressedCount / sessions.length) * 100;
+    const stressFrequency = (stressedCount / sessionsWithMindState.length) * 100;
 
     // Analyze day of week patterns
     const dayStressCounts: Record<string, { stressed: number; total: number }> = {};
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     
-    sessions.forEach((s: any) => {
+    sessionsWithMindState.forEach((s: any) => {
       const dayIndex = new Date(s.meeting.startTime).getDay();
       const dayName = daysOfWeek[dayIndex];
       
@@ -106,7 +108,7 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
       evening: { stressed: 0, total: 0 },
     };
 
-    sessions.forEach((s: any) => {
+    sessionsWithMindState.forEach((s: any) => {
       const hour = new Date(s.meeting.startTime).getHours();
       const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
       
@@ -124,7 +126,7 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
     // Analyze meeting type patterns
     const meetingTypeStress: Record<string, { stressed: number; total: number }> = {};
     
-    sessions.forEach((s: any) => {
+    sessionsWithMindState.forEach((s: any) => {
       const type = s.meeting.meetingType || 'general';
       
       if (!meetingTypeStress[type]) {
@@ -154,8 +156,8 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
     const fourWeeksAgo = new Date();
     fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
 
-    const recentSessions = sessions.filter((s: any) => new Date(s.startedAt) >= twoWeeksAgo);
-    const previousSessions = sessions.filter(
+    const recentSessions = sessionsWithMindState.filter((s: any) => new Date(s.startedAt) >= twoWeeksAgo);
+    const previousSessions = sessionsWithMindState.filter(
       (s: any) => new Date(s.startedAt) >= fourWeeksAgo && new Date(s.startedAt) < twoWeeksAgo
     );
 
@@ -207,7 +209,7 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
 
     logger.info('Mind state pattern analysis completed', {
       userId,
-      sessionCount: sessions.length,
+      sessionCount: sessionsWithMindState.length,
       stressFrequency,
       stressfulDaysOfWeek,
       recentTrend,

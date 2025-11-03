@@ -808,7 +808,7 @@ async function sendWellnessReminders() {
       where: {
         preferences: {
           enableWellnessReminders: true,
-        },
+        } as any,
       },
       include: {
         preferences: true,
@@ -823,9 +823,9 @@ async function sendWellnessReminders() {
             createdAt: 'desc',
           },
           take: 1,
-        },
-      },
-    });
+        } as any,
+      } as any,
+    }) as any;
 
     for (const user of users) {
       try {
@@ -872,7 +872,7 @@ async function sendWellnessReminders() {
 
         if (sent) {
           // Create a wellness check-in record
-          await prisma.wellnessCheckIn.create({
+          await (prisma as any).wellnessCheckIn.create({
             data: {
               userId: user.id,
               type,
