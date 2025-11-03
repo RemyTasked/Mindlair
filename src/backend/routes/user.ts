@@ -47,7 +47,8 @@ router.get(
             calendarAccounts: { select: { id: true, provider: true, email: true, createdAt: true } },
           },
         });
-        return res.json({ user: updatedUser });
+        res.json({ user: updatedUser });
+        return;
       }
 
       res.json({ user });
