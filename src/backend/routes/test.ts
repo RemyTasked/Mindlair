@@ -2,6 +2,7 @@ import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { PromptGenerator } from '../services/ai/promptGenerator';
 import { aiService } from '../services/ai/aiService';
+import { emailService } from '../services/delivery/emailService';
 import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
@@ -399,6 +400,53 @@ router.get(
       })),
       baseUrl: process.env.BASE_URL,
     });
+  })
+);
+
+/**
+ * Test email service
+ * GET /api/test/email?to=user@example.com
+ */
+router.get(
+  '/email',
+  asyncHandler(async (req, res) => {
+    const { to } = req.query;
+
+    if (!to || typeof to !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'Email address required. Use ?to=your@email.com',
+      });
+    }
+
+    logger.info('📧 Testing email service', { to });
+
+    const result = await emailService.sendPreMeetingCue(
+      to,
+      'Test Meeting - Email Service Check',
+      'This is a test email from Meet Cute to verify your email notifications are working correctly! 🎬',
+      `${process.env.BASE_URL}/dashboard`
+    );
+
+    if (result) {
+      return res.json({
+        success: true,
+        message: 'Test email sent successfully!',
+        to,
+        checkInbox: 'Check your email inbox (and spam folder)',
+        sendgridConfigured: !!process.env.SENDGRID_API_KEY,
+        fromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@meetcuteai.com',
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to send email',
+        sendgridConfigured: !!process.env.SENDGRID_API_KEY,
+        apiKeyPrefix: process.env.SENDGRID_API_KEY?.substring(0, 8),
+        fromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@meetcuteai.com',
+        hint: 'Check Railway logs for detailed error messages',
+      });
+    }
   })
 );
 
