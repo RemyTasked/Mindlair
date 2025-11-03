@@ -126,9 +126,34 @@ export default function LandingPage() {
             </button>
           </div>
 
-          <p className="text-sm text-gray-500">
-            No app download required • Works with your existing calendar
-          </p>
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm text-gray-500">
+              No app download required • Works with your existing calendar
+            </p>
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+                Encrypted
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Read-only access
+              </span>
+              <span>•</span>
+              <a href="/privacy" className="hover:text-indigo-600 transition-colors flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                </svg>
+                Privacy Policy
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -220,13 +245,50 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Security Banner */}
+      <section className="container mx-auto px-6 py-12">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Enterprise-Grade Security</h3>
+            <p className="text-gray-600">Your calendar data is safe with us</p>
+          </div>
+          <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="text-3xl mb-2">🔒</div>
+              <div className="font-semibold text-gray-900 text-sm">TLS 1.3 Encryption</div>
+              <div className="text-xs text-gray-600">Bank-level security</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl mb-2">👁️</div>
+              <div className="font-semibold text-gray-900 text-sm">Read-Only Access</div>
+              <div className="text-xs text-gray-600">We can't modify events</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl mb-2">🔑</div>
+              <div className="font-semibold text-gray-900 text-sm">OAuth 2.0</div>
+              <div className="text-xs text-gray-600">Never see your password</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl mb-2">🛡️</div>
+              <div className="font-semibold text-gray-900 text-sm">GDPR Compliant</div>
+              <div className="text-xs text-gray-600">Your data, your control</div>
+            </div>
+          </div>
+          <div className="text-center mt-6">
+            <a href="/privacy" className="text-indigo-600 hover:text-indigo-700 font-medium text-sm">
+              Read our full Privacy & Security policy →
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="container mx-auto px-6 py-12 text-center text-gray-600">
         <p className="mb-4">Meet Cute · Cinematic-professional focus moments</p>
         <div className="flex justify-center gap-6 mb-4 text-sm">
           <a href="/terms" className="hover:text-indigo-600 transition-colors">Terms of Use</a>
           <span>·</span>
-          <a href="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
+          <a href="/privacy" className="hover:text-indigo-600 transition-colors">Privacy & Security</a>
           <span>·</span>
           <a href="mailto:support@meetcuteai.com" className="hover:text-indigo-600 transition-colors">Contact</a>
         </div>

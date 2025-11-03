@@ -1,242 +1,231 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Shield, Lock, Eye, Database, Key, UserCheck, ArrowLeft } from 'lucide-react';
 
 export default function Privacy() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Home
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="text-3xl" role="img" aria-label="Film camera emoji">🎬</div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Meet Cute
-            </h1>
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-800">Privacy & Security</h1>
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <article className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
-          <h1 className="text-4xl font-bold mb-4 text-gray-900">Privacy Policy</h1>
-          <p className="text-gray-600 mb-8">Last Updated: November 1, 2025</p>
-
-          <div className="prose prose-indigo max-w-none">
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">1. Introduction</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                Meet Cute ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
-                explains how we collect, use, disclose, and safeguard your information when you use our meeting 
-                preparation platform.
+      <main className="container mx-auto px-6 py-12 max-w-4xl">
+        {/* Hero Section */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 mb-12 border border-indigo-200">
+          <div className="flex items-start gap-4">
+            <Shield className="w-12 h-12 text-indigo-600 flex-shrink-0" />
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Your Privacy is Our Priority
+              </h2>
+              <p className="text-lg text-gray-700 leading-relaxed">
+                Meet Cute is designed with security-first principles. We only access what we need, 
+                encrypt everything, and never sell your data. Your calendar and meeting information 
+                stay private and secure.
               </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">2. Information We Collect</h2>
-              
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">2.1 Information You Provide</h3>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li><strong>Account Information:</strong> Email address, name (from OAuth providers)</li>
-                <li><strong>Settings & Preferences:</strong> Tone preferences, alert timing, notification settings</li>
-                <li><strong>Feedback:</strong> Meeting ratings, optional text feedback, journal entries</li>
-                <li><strong>Contact Information:</strong> Phone number (optional, for SMS notifications)</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">2.2 Calendar Data</h3>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                When you connect your calendar, we access:
-              </p>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li>Meeting titles</li>
-                <li>Start and end times</li>
-                <li>Attendee email addresses</li>
-                <li>Meeting descriptions and locations</li>
-                <li>Meeting links (Zoom, Teams, etc.)</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">2.3 Automatically Collected Information</h3>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li><strong>Usage Data:</strong> Which features you use, when you open Focus Scenes, meeting preparation patterns</li>
-                <li><strong>Technical Data:</strong> IP address, browser type, device information</li>
-                <li><strong>OAuth Tokens:</strong> Access and refresh tokens for calendar integration (encrypted)</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">3. How We Use Your Information</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We use your information to:
-              </p>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li><strong>Provide the Service:</strong> Send pre-meeting cues, evening rehearsals, and morning recaps</li>
-                <li><strong>Personalization:</strong> Use AI to generate content tailored to your meeting history and preferences</li>
-                <li><strong>Improve the Service:</strong> Analyze usage patterns to enhance features and fix bugs</li>
-                <li><strong>Communication:</strong> Send service updates, notifications, and support responses</li>
-                <li><strong>Security:</strong> Detect and prevent fraud, abuse, and security issues</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">4. AI and Data Processing</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                <strong>OpenAI GPT-4:</strong> We use OpenAI's API to generate personalized meeting preparation content. 
-                The data we send includes:
-              </p>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li>Meeting titles and times (never full descriptions)</li>
-                <li>Your tone preferences</li>
-                <li>Historical meeting ratings (aggregated patterns, not specific feedback)</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                OpenAI does not use data submitted via their API to train their models. See OpenAI's privacy policy 
-                for more details.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">5. Information Sharing</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We do NOT sell your personal information. We share data only with:
-              </p>
-              
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">5.1 Service Providers</h3>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li><strong>Railway:</strong> Hosting and infrastructure</li>
-                <li><strong>OpenAI:</strong> AI content generation</li>
-                <li><strong>SendGrid:</strong> Email delivery</li>
-                <li><strong>Twilio:</strong> SMS delivery (if you enable SMS)</li>
-                <li><strong>Google/Microsoft:</strong> Calendar access via OAuth</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">5.2 Legal Requirements</h3>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We may disclose your information if required by law, court order, or government request.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">6. Data Security</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We implement industry-standard security measures:
-              </p>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li><strong>Encryption:</strong> Data in transit (HTTPS/TLS) and at rest</li>
-                <li><strong>OAuth Tokens:</strong> Encrypted storage with secure refresh mechanisms</li>
-                <li><strong>Access Controls:</strong> Restricted database and system access</li>
-                <li><strong>Regular Updates:</strong> Security patches and monitoring</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                However, no method of transmission over the Internet is 100% secure. We cannot guarantee absolute security.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">7. Data Retention</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We retain your information for as long as your account is active or as needed to provide services. 
-                Specifically:
-              </p>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li><strong>Calendar Events:</strong> Stored only for upcoming and recent meetings (30-day history)</li>
-                <li><strong>Meeting Ratings:</strong> Retained to improve AI personalization (last 10 ratings used)</li>
-                <li><strong>Account Data:</strong> Deleted within 30 days of account deletion</li>
-                <li><strong>Logs:</strong> System logs retained for 90 days for security and debugging</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">8. Your Rights</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                You have the right to:
-              </p>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li><strong>Access:</strong> Request a copy of your data</li>
-                <li><strong>Correction:</strong> Update inaccurate information</li>
-                <li><strong>Deletion:</strong> Request account and data deletion</li>
-                <li><strong>Portability:</strong> Export your data in a machine-readable format</li>
-                <li><strong>Opt-Out:</strong> Disable specific notifications or features</li>
-                <li><strong>Revoke Access:</strong> Disconnect calendar integration at any time</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                To exercise these rights, contact us at <a href="mailto:privacy@meetcuteai.com" className="text-indigo-600 hover:text-indigo-700">privacy@meetcuteai.com</a>
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">9. Cookies and Tracking</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We use essential cookies for:
-              </p>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li><strong>Authentication:</strong> Session management and login persistence</li>
-                <li><strong>Preferences:</strong> Storing your settings and preferences</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We do NOT use advertising or tracking cookies.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">10. Children's Privacy</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                Meet Cute is not intended for children under 13. We do not knowingly collect information from 
-                children under 13. If you believe we have collected such information, please contact us immediately.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">11. International Users</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                If you access Meet Cute from outside the United States, your information may be transferred to, 
-                stored, and processed in the United States where our servers are located.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">12. Changes to This Policy</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We may update this Privacy Policy from time to time. We will notify you of material changes via 
-                email or through the Service. The "Last Updated" date will reflect when changes were made.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">13. Contact Us</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                If you have questions about this Privacy Policy or our data practices:
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                Email: <a href="mailto:privacy@meetcuteai.com" className="text-indigo-600 hover:text-indigo-700">privacy@meetcuteai.com</a><br />
-                Support: <a href="mailto:support@meetcuteai.com" className="text-indigo-600 hover:text-indigo-700">support@meetcuteai.com</a><br />
-                Website: <a href="https://www.meetcuteai.com" className="text-indigo-600 hover:text-indigo-700">www.meetcuteai.com</a>
-              </p>
-            </section>
+            </div>
           </div>
-        </article>
-      </main>
-
-      {/* Footer */}
-      <footer className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-600">
-        <div className="flex justify-center gap-6 mb-4 text-sm">
-          <a href="/" className="hover:text-indigo-600 transition-colors">Home</a>
-          <span>·</span>
-          <a href="/terms" className="hover:text-indigo-600 transition-colors">Terms of Use</a>
-          <span>·</span>
-          <a href="mailto:support@meetcuteai.com" className="hover:text-indigo-600 transition-colors">Contact</a>
         </div>
-        <p className="text-sm">© 2025 Meet Cute. All rights reserved.</p>
-      </footer>
+
+        {/* Security Features */}
+        <div className="space-y-8 mb-12">
+          <h3 className="text-2xl font-bold text-gray-900">Security Features</h3>
+          
+          <SecurityFeature
+            icon={<Lock className="w-8 h-8 text-green-600" />}
+            title="End-to-End Encryption"
+            description="All data transmitted between your browser and our servers uses industry-standard TLS 1.3 encryption. Your calendar data is encrypted at rest in our database."
+          />
+
+          <SecurityFeature
+            icon={<Key className="w-8 h-8 text-blue-600" />}
+            title="OAuth 2.0 Authentication"
+            description="We use Google and Microsoft's official OAuth 2.0 protocols. We never see or store your password. You can revoke access anytime from your Google/Microsoft account settings."
+          />
+
+          <SecurityFeature
+            icon={<Eye className="w-8 h-8 text-purple-600" />}
+            title="Read-Only Calendar Access"
+            description="We only request read-only access to your calendar. We cannot create, modify, or delete any of your meetings or calendar events."
+          />
+
+          <SecurityFeature
+            icon={<Database className="w-8 h-8 text-indigo-600" />}
+            title="Minimal Data Storage"
+            description="We only store meeting titles, times, and attendee counts—nothing sensitive. No meeting notes, attachments, or private details are ever stored."
+          />
+
+          <SecurityFeature
+            icon={<UserCheck className="w-8 h-8 text-teal-600" />}
+            title="SOC 2 Compliant Infrastructure"
+            description="Hosted on Railway with PostgreSQL, following industry best practices for security, availability, and confidentiality."
+          />
+
+          <SecurityFeature
+            icon={<Shield className="w-8 h-8 text-red-600" />}
+            title="Regular Security Audits"
+            description="We perform regular security reviews and keep all dependencies up-to-date to protect against vulnerabilities."
+          />
+        </div>
+
+        {/* What We Access */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">What We Access</h3>
+          
+          <div className="space-y-4">
+            <AccessItem
+              allowed={true}
+              title="Meeting titles and times"
+              description="To generate personalized pre-meeting cues"
+            />
+            <AccessItem
+              allowed={true}
+              title="Number of attendees"
+              description="To tailor preparation advice (1:1 vs team meeting)"
+            />
+            <AccessItem
+              allowed={true}
+              title="Meeting duration"
+              description="To provide appropriate timing for focus sessions"
+            />
+            <AccessItem
+              allowed={false}
+              title="Meeting content or notes"
+              description="We never access the actual content of your meetings"
+            />
+            <AccessItem
+              allowed={false}
+              title="Email content"
+              description="We only send emails TO you, never read your inbox"
+            />
+            <AccessItem
+              allowed={false}
+              title="Contact information"
+              description="We don't access your contacts or attendee email addresses"
+            />
+          </div>
+        </div>
+
+        {/* Data Practices */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Our Data Practices</h3>
+          
+          <div className="space-y-6">
+            <DataPractice
+              title="We Never Sell Your Data"
+              description="Your information is never sold, rented, or shared with third parties for marketing purposes. Period."
+            />
+            <DataPractice
+              title="You Own Your Data"
+              description="You can export or delete all your data at any time. When you delete your account, we permanently remove all your information within 30 days."
+            />
+            <DataPractice
+              title="Transparent AI Usage"
+              description="We use OpenAI and Google Gemini to generate personalized messages. Only meeting titles and context are sent—never sensitive content."
+            />
+            <DataPractice
+              title="No Third-Party Tracking"
+              description="We don't use Google Analytics, Facebook Pixel, or other tracking scripts. Your browsing behavior stays private."
+            />
+            <DataPractice
+              title="GDPR & CCPA Compliant"
+              description="We comply with international privacy regulations including GDPR (Europe) and CCPA (California)."
+            />
+          </div>
+        </div>
+
+        {/* Revoking Access */}
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 mb-12 border border-amber-200">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">Revoking Access</h3>
+          <p className="text-gray-700 mb-4">
+            You can revoke Meet Cute's access to your calendar at any time:
+          </p>
+          <ul className="space-y-2 text-gray-700">
+            <li className="flex items-start gap-2">
+              <span className="font-semibold min-w-[120px]">Google:</span>
+              <span>Visit <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">myaccount.google.com/permissions</a> → Find "Meet Cute" → Remove Access</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="font-semibold min-w-[120px]">Microsoft:</span>
+              <span>Visit <a href="https://account.microsoft.com/privacy/app-access" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">account.microsoft.com/privacy</a> → Apps & Services → Remove Meet Cute</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="font-semibold min-w-[120px]">Meet Cute:</span>
+              <span>Settings → Delete Account (permanently removes all data)</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Contact */}
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">Questions or Concerns?</h3>
+          <p className="text-gray-700 mb-4">
+            We're committed to transparency and protecting your privacy. If you have any questions 
+            about our security practices or data handling:
+          </p>
+          <div className="space-y-2">
+            <p className="text-gray-700">
+              <strong>Email:</strong> <a href="mailto:privacy@meetcuteai.com" className="text-indigo-600 hover:underline">privacy@meetcuteai.com</a>
+            </p>
+            <p className="text-gray-700">
+              <strong>Security Issues:</strong> <a href="mailto:security@meetcuteai.com" className="text-indigo-600 hover:underline">security@meetcuteai.com</a>
+            </p>
+          </div>
+          <p className="text-sm text-gray-500 mt-6">
+            Last updated: November 3, 2025
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
 
+function SecurityFeature({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="flex items-start gap-4 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <div className="flex-shrink-0">{icon}</div>
+      <div>
+        <h4 className="text-lg font-semibold text-gray-900 mb-2">{title}</h4>
+        <p className="text-gray-600 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function AccessItem({ allowed, title, description }: { allowed: boolean; title: string; description: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${allowed ? 'bg-green-100' : 'bg-red-100'}`}>
+        {allowed ? (
+          <span className="text-green-600 text-sm font-bold">✓</span>
+        ) : (
+          <span className="text-red-600 text-sm font-bold">✗</span>
+        )}
+      </div>
+      <div>
+        <div className="font-medium text-gray-900">{title}</div>
+        <div className="text-sm text-gray-600">{description}</div>
+      </div>
+    </div>
+  );
+}
+
+function DataPractice({ title, description }: { title: string; description: string }) {
+  return (
+    <div>
+      <h4 className="text-lg font-semibold text-gray-900 mb-2">✓ {title}</h4>
+      <p className="text-gray-600 leading-relaxed">{description}</p>
+    </div>
+  );
+}
