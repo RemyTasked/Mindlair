@@ -450,5 +450,51 @@ router.get(
   })
 );
 
+// Debug user authentication flow
+router.get('/user/:userId', asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  console.log('🔍 Debug: Checking user', { userId });
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        preferences: true,
+        calendarAccounts: true,
+        deliverySettings: true,
+      },
+    });
+
+    if (!user) {
+      return res.json({
+        success: false,
+        error: 'User not found',
+        userId,
+      });
+    }
+
+    return res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        hasPreferences: !!user.preferences,
+        hasCalendarAccounts: user.calendarAccounts.length > 0,
+        hasDeliverySettings: !!user.deliverySettings,
+        preferences: user.preferences,
+      },
+    });
+  } catch (error: any) {
+    console.error('❌ Error checking user:', error);
+    return res.json({
+      success: false,
+      error: error.message,
+      userId,
+    });
+  }
+}));
+
 export default router;
 
