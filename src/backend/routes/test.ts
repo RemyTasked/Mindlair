@@ -276,17 +276,17 @@ router.get(
     return res.json({
       timestamp: now.toISOString(),
       tenMinutesFromNow: tenMinutesFromNow.toISOString(),
-      users: users.map(u => ({
+      users: users.map((u: any) => ({
         id: u.id,
         email: u.email,
         hasCalendarAccounts: u.calendarAccounts.length > 0,
-        calendarProviders: u.calendarAccounts.map(a => a.provider),
+        calendarProviders: u.calendarAccounts.map((a: any) => a.provider),
         alertMinutesBefore: u.preferences?.alertMinutesBefore || 10,
         enableFocusScene: u.preferences?.enableFocusScene ?? true,
       })),
       totalMeetings: allMeetings.length,
       upcomingMeetingsWithin10Min: upcomingMeetings.length,
-      upcomingMeetings: upcomingMeetings.map(m => ({
+      upcomingMeetings: upcomingMeetings.map((m: any) => ({
         id: m.id,
         title: m.title,
         startTime: m.startTime,
@@ -295,7 +295,7 @@ router.get(
         focusSceneUrl: m.focusSceneUrl,
         cueDelivered: m.cueDelivered,
       })),
-      allMeetings: allMeetings.slice(0, 5).map(m => ({
+      allMeetings: allMeetings.slice(0, 5).map((m: any) => ({
         title: m.title,
         startTime: m.startTime,
         minutesUntil: Math.round((m.startTime.getTime() - now.getTime()) / (1000 * 60)),
