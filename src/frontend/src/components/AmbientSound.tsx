@@ -21,7 +21,6 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(true); // Start as true - require interaction
-  const [hasInteracted, setHasInteracted] = useState(false);
 
   const initializeAudio = async () => {
     if (!enabled || soundType === 'none') return;
@@ -43,7 +42,6 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
       // Try to play
       await audio.play();
       setIsLoading(false);
-      setHasInteracted(true);
       console.log('✅ Ambient sound started successfully');
     } catch (error: any) {
       console.error('Error playing ambient sound:', error);
