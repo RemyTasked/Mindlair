@@ -21,7 +21,7 @@ interface PresleyFlowData {
   dailyOutcomes?: string; // AI summary of today's meetings (evening only)
 }
 
-type Phase = 'opening' | 'wrapup' | 'lineup' | 'mindset' | 'visualization' | 'closing' | 'complete';
+type Phase = 'opening' | 'wrapup' | 'reflection' | 'lineup' | 'mindset' | 'visualization' | 'closing' | 'complete';
 
 export default function PresleyFlow() {
   const { userId, date } = useParams();
@@ -29,6 +29,8 @@ export default function PresleyFlow() {
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<Phase>('opening');
   const [journalNote, setJournalNote] = useState('');
+  const [performanceRating, setPerformanceRating] = useState<number | null>(null);
+  const [improvementNotes, setImprovementNotes] = useState('');
 
   useEffect(() => {
     loadFlowData();
@@ -60,6 +62,8 @@ export default function PresleyFlow() {
       await api.post(`/api/presley-flow/${userId}/${date}/complete`, {
         journalNote: journalNote.trim() || undefined,
         completedAt: new Date(),
+        performanceRating: performanceRating || undefined,
+        improvementNotes: improvementNotes.trim() || undefined,
       });
       setCurrentPhase('complete');
     } catch (error) {
@@ -105,8 +109,8 @@ export default function PresleyFlow() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white overflow-hidden">
-      {/* Ambient Sound - meditation/calm for Presley Flow */}
-      <AmbientSound soundType="meditation" enabled={true} />
+      {/* Ambient Sound - meditation bell/calm for Presley Flow */}
+      <AmbientSound soundType="meditation-bell" enabled={true} />
       
       {/* Ambient background stars */}
       <div className="fixed inset-0 pointer-events-none">
@@ -224,11 +228,112 @@ export default function PresleyFlow() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                onClick={() => setCurrentPhase('lineup')}
+                onClick={() => setCurrentPhase('reflection')}
                 className="mt-12 mx-auto block px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-semibold text-lg hover:scale-105 transition-transform shadow-lg shadow-purple-500/30"
               >
-                Prepare for Tomorrow →
+                Reflect & Plan Ahead →
               </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Evening Reflection (Evening Only) */}
+        {currentPhase === 'reflection' && flowData.timeOfDay === 'evening' && (
+          <motion.div
+            key="reflection"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-8 relative z-10"
+          >
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="w-full max-w-4xl"
+            >
+              <div className="flex items-center justify-center gap-3 mb-12">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="text-6xl"
+                >
+                  💭
+                </motion.div>
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 bg-clip-text text-transparent">
+                  How Did Today Go?
+                </h2>
+              </div>
+
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="space-y-8"
+              >
+                {/* Performance Rating */}
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8">
+                  <h3 className="text-xl font-semibold mb-4 text-purple-200">
+                    Rate Your Performance Today
+                  </h3>
+                  <p className="text-purple-100 mb-6">
+                    How satisfied are you with how you showed up in today's meetings?
+                  </p>
+                  <div className="flex gap-4 justify-center">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <motion.button
+                        key={rating}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setPerformanceRating(rating)}
+                        className={`w-16 h-16 rounded-full font-bold text-2xl transition-all ${
+                          performanceRating === rating
+                            ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg shadow-yellow-500/50'
+                            : 'bg-white/10 text-purple-200 hover:bg-white/20'
+                        }`}
+                      >
+                        {rating}⭐
+                      </motion.button>
+                    ))}
+                  </div>
+                  <p className="text-center text-purple-300 text-sm mt-4">
+                    1 = Struggled • 5 = Thrived
+                  </p>
+                </div>
+
+                {/* Improvement Notes */}
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8">
+                  <h3 className="text-xl font-semibold mb-4 text-purple-200">
+                    What Would Help Tomorrow?
+                  </h3>
+                  <p className="text-purple-100 mb-6">
+                    Reflect on what you'd like to improve or adjust for tomorrow's meetings.
+                  </p>
+                  <textarea
+                    value={improvementNotes}
+                    onChange={(e) => setImprovementNotes(e.target.value)}
+                    placeholder="I want to work on... I need to focus more on... Tomorrow I'll try..."
+                    className="w-full h-32 px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  />
+                  <p className="text-purple-300 text-sm mt-3">
+                    💡 Your insights help our AI provide better support and track your growth over time
+                  </p>
+                </div>
+
+                <motion.button
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  onClick={() => setCurrentPhase('lineup')}
+                  disabled={performanceRating === null}
+                  className={`mt-8 mx-auto block px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-lg ${
+                    performanceRating === null
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-105 shadow-purple-500/30'
+                  }`}
+                >
+                  {performanceRating === null ? 'Rate Your Day First' : 'Continue to Tomorrow →'}
+                </motion.button>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}

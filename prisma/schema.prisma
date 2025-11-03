@@ -238,19 +238,21 @@ model WellnessCheckIn {
 }
 
 model PresleyFlowSession {
-  id             String   @id @default(uuid())
-  userId         String
-  date           DateTime // The date this session is for
-  flowType       String   // "morning" or "evening"
-  completedAt    DateTime?
-  journalNote    String?
+  id                 String   @id @default(uuid())
+  userId             String
+  date               DateTime // The date this session is for
+  flowType           String   // "morning" or "evening"
+  completedAt        DateTime?
+  journalNote        String?
   
   // Evening-specific fields
-  dailyOutcomes  String?  // AI summary of today's meeting outcomes
-  reflectionText String?  // User's reflection on the day
+  dailyOutcomes      String?  // AI summary of today's meeting outcomes
+  reflectionText     String?  // User's reflection on the day
+  performanceRating  Int?     // 1-5 rating of today's performance
+  improvementNotes   String?  // What the user wants to improve tomorrow
   
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -167,6 +167,65 @@ export default function Privacy() {
           </ul>
         </div>
 
+        {/* Mental Health Disclaimer */}
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-8 mb-8">
+          <div className="flex items-start gap-4 mb-4">
+            <UserCheck className="w-10 h-10 text-amber-600 flex-shrink-0 mt-1" />
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Important Health Disclaimer</h3>
+              <p className="text-lg font-semibold text-amber-800">
+                Meet Cute is a Professional Tool, Not Medical Care
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              <strong>Meet Cute is designed to help you prepare mentally for meetings and improve your focus.</strong> 
+              It is a productivity and wellness tool that provides AI-generated suggestions for meeting preparation, 
+              breathing exercises, and reflection prompts.
+            </p>
+            
+            <div className="bg-white p-5 rounded-lg border border-amber-200">
+              <p className="font-semibold text-amber-900 mb-3">This tool is NOT:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-700">
+                <li>A substitute for professional mental health care, therapy, or counseling</li>
+                <li>Medical advice or treatment for mental health conditions</li>
+                <li>A diagnostic tool for anxiety, depression, or other mental health conditions</li>
+                <li>A replacement for crisis intervention or emergency mental health services</li>
+              </ul>
+            </div>
+
+            <div className="bg-white p-5 rounded-lg border border-amber-200">
+              <p className="font-semibold text-amber-900 mb-3">If you are experiencing:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-700">
+                <li>Persistent anxiety, stress, or depression</li>
+                <li>Thoughts of self-harm or suicide</li>
+                <li>Difficulty functioning in daily life</li>
+                <li>Any mental health crisis</li>
+              </ul>
+              <p className="font-semibold mt-4 text-gray-900">
+                Please seek help from a qualified mental health professional immediately.
+              </p>
+            </div>
+
+            <div className="bg-red-50 p-5 rounded-lg border-2 border-red-300">
+              <p className="font-bold text-red-900 mb-3">🆘 Crisis Resources:</p>
+              <ul className="space-y-2 text-gray-800">
+                <li>🇺🇸 <strong>National Suicide Prevention Lifeline:</strong> <a href="tel:988" className="text-indigo-600 hover:underline font-semibold">988</a></li>
+                <li>🇺🇸 <strong>Crisis Text Line:</strong> Text HOME to <a href="sms:741741" className="text-indigo-600 hover:underline font-semibold">741741</a></li>
+                <li>🌍 <strong>International:</strong> <a href="https://findahelpline.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline font-semibold">findahelpline.com</a></li>
+              </ul>
+            </div>
+
+            <p className="text-sm text-gray-600 italic bg-white p-4 rounded-lg border border-gray-200">
+              <strong>By using Meet Cute, you acknowledge that:</strong> This tool is for professional productivity 
+              and should not replace proper mental health care when needed. Always consult qualified healthcare 
+              providers for medical advice, diagnosis, or treatment.
+            </p>
+          </div>
+        </div>
+
         {/* Contact */}
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">Questions or Concerns?</h3>

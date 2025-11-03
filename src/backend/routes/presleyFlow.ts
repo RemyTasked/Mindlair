@@ -293,14 +293,52 @@ router.get(
 // Mark Presley Flow as completed
 router.post(
   '/:userId/:date/complete',
-  asyncHandler(async (_req, res) => {
-    // Store completion record (you might want to create a new model for this)
-    // For now, we'll just acknowledge completion
-    // In a full implementation, create a PresleyFlowSession model to track:
-    // - userId, date from params
-    // - journalNote, completedAt from body
+  asyncHandler(async (req, res) => {
+    const { userId, date } = req.params;
+    const { journalNote, completedAt, performanceRating, improvementNotes } = req.body;
 
-    return res.json({ message: 'Presley Flow completed successfully' });
+    const parsedDate = new Date(date);
+    const currentHour = new Date().getHours();
+    const flowType = currentHour < 18 ? 'morning' : 'evening';
+
+    // Create or update Presley Flow session
+    const session = await prisma.presleyFlowSession.upsert({
+      where: {
+        userId_date_flowType: {
+          userId,
+          date: parsedDate,
+          flowType,
+        },
+      },
+      create: {
+        userId,
+        date: parsedDate,
+        flowType,
+        completedAt: completedAt ? new Date(completedAt) : new Date(),
+        journalNote,
+        performanceRating: performanceRating || undefined,
+        improvementNotes: improvementNotes || undefined,
+      },
+      update: {
+        completedAt: completedAt ? new Date(completedAt) : new Date(),
+        journalNote,
+        performanceRating: performanceRating || undefined,
+        improvementNotes: improvementNotes || undefined,
+      },
+    });
+
+    logger.info('Presley Flow completed', {
+      userId,
+      date,
+      flowType,
+      hasPerformanceRating: !!performanceRating,
+      hasImprovementNotes: !!improvementNotes,
+    });
+
+    return res.json({ 
+      message: 'Presley Flow completed successfully',
+      session,
+    });
   })
 );
 

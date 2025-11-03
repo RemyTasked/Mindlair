@@ -292,6 +292,11 @@ export default function LandingPage() {
           <span>·</span>
           <a href="mailto:support@meetcuteai.com" className="hover:text-indigo-600 transition-colors">Contact</a>
         </div>
+        <p className="text-xs text-gray-500 max-w-2xl mx-auto mb-4">
+          Meet Cute is a meeting preparation tool designed to help you focus and mentally prepare. 
+          It is not a substitute for professional mental health care, therapy, or medical advice. 
+          If you are experiencing mental health challenges, please consult a qualified healthcare provider.
+        </p>
         <p className="text-sm">© 2025 Meet Cute. All rights reserved.</p>
       </footer>
     </div>
