@@ -3,9 +3,11 @@ import { asyncHandler } from '../middleware/errorHandler';
 import { PromptGenerator } from '../services/ai/promptGenerator';
 import { aiService } from '../services/ai/aiService';
 import axios from 'axios';
+import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
 const promptGenerator = new PromptGenerator();
+const prisma = new PrismaClient();
 
 /**
  * Test endpoint to verify AI API integration
@@ -226,6 +228,83 @@ router.get('/health', (_req, res) => {
     },
   });
 });
+
+/**
+ * Debug endpoint to check meetings in database
+ * GET /api/test/meetings
+ */
+router.get(
+  '/meetings',
+  asyncHandler(async (_req, res) => {
+    const now = new Date();
+    const tenMinutesFromNow = new Date(now.getTime() + 10 * 60 * 1000);
+
+    // Get all users
+    const users = await prisma.user.findMany({
+      include: {
+        calendarAccounts: true,
+        preferences: true,
+      },
+    });
+
+    // Get all meetings
+    const allMeetings = await prisma.meeting.findMany({
+      where: {
+        startTime: {
+          gte: now,
+        },
+      },
+      orderBy: {
+        startTime: 'asc',
+      },
+      take: 20,
+    });
+
+    // Get meetings within 10 minutes
+    const upcomingMeetings = await prisma.meeting.findMany({
+      where: {
+        startTime: {
+          gte: now,
+          lte: tenMinutesFromNow,
+        },
+      },
+      orderBy: {
+        startTime: 'asc',
+      },
+    });
+
+    return res.json({
+      timestamp: now.toISOString(),
+      tenMinutesFromNow: tenMinutesFromNow.toISOString(),
+      users: users.map(u => ({
+        id: u.id,
+        email: u.email,
+        hasCalendarAccounts: u.calendarAccounts.length > 0,
+        calendarProviders: u.calendarAccounts.map(a => a.provider),
+        alertMinutesBefore: u.preferences?.alertMinutesBefore || 10,
+        enableFocusScene: u.preferences?.enableFocusScene ?? true,
+      })),
+      totalMeetings: allMeetings.length,
+      upcomingMeetingsWithin10Min: upcomingMeetings.length,
+      upcomingMeetings: upcomingMeetings.map(m => ({
+        id: m.id,
+        title: m.title,
+        startTime: m.startTime,
+        minutesUntil: Math.round((m.startTime.getTime() - now.getTime()) / (1000 * 60)),
+        hasFocusSceneUrl: !!m.focusSceneUrl,
+        focusSceneUrl: m.focusSceneUrl,
+        cueDelivered: m.cueDelivered,
+      })),
+      allMeetings: allMeetings.slice(0, 5).map(m => ({
+        title: m.title,
+        startTime: m.startTime,
+        minutesUntil: Math.round((m.startTime.getTime() - now.getTime()) / (1000 * 60)),
+        hasFocusSceneUrl: !!m.focusSceneUrl,
+      })),
+      baseUrl: process.env.BASE_URL,
+    });
+  })
+);
 
 export default router;
 
