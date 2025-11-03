@@ -46,17 +46,52 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full">
             <span className="text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              🧠 NEW: AI learns your stress patterns & adapts to support you
+              🎬 5-minute pre-meeting preparation
             </span>
           </div>
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            AI That Understands Your Stress
+            Enter Every Meeting Centered
           </h1>
-          <p className="text-xl text-gray-600 mb-12 leading-relaxed max-w-3xl mx-auto">
-            Meet Cute learns when meetings stress you most—then provides grounded, practical support.
-            Adaptive breathing flows, wellness check-ins, and AI that gets smarter with every session.
-            <strong className="text-gray-800"> Not just motivation. Real support.</strong>
+          <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
+            5 minutes before your meeting, get an AI cue + guided breathing + ambient sounds.
+            <strong className="text-gray-800"> Walk in prepared, not panicked.</strong>
           </p>
+          
+          {/* Visual Preview */}
+          <div className="mb-12 max-w-2xl mx-auto">
+            <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-8 shadow-xl">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="text-5xl">🎬</div>
+                <div className="text-left">
+                  <div className="text-2xl font-bold text-indigo-900">Your Focus Scene</div>
+                  <div className="text-indigo-700">5 minutes • Before every meeting</div>
+                </div>
+              </div>
+              <div className="space-y-3 text-left bg-white rounded-xl p-6">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">1️⃣</div>
+                  <div>
+                    <div className="font-semibold text-gray-800">AI Cue</div>
+                    <div className="text-gray-600 text-sm">Personalized prep message based on your patterns</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">2️⃣</div>
+                  <div>
+                    <div className="font-semibold text-gray-800">Mind State Check</div>
+                    <div className="text-gray-600 text-sm">Select: Calm, Stressed, Focused, or Unclear</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">3️⃣</div>
+                  <div>
+                    <div className="font-semibold text-gray-800">Adaptive Breathing</div>
+                    <div className="text-gray-600 text-sm">Custom flow matched to your state + ambient sounds</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <button
@@ -99,116 +134,88 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <section className="container mx-auto px-6 py-20">
-        <h2 className="text-4xl font-bold text-center mb-4">AI That Learns Your Patterns</h2>
+        <h2 className="text-4xl font-bold text-center mb-4">Beyond the 5-Minute Prep</h2>
         <p className="text-center text-gray-600 mb-16 text-lg">
-          The more you use it, the smarter it gets about what you need
+          AI that learns and adapts to support you all day
         </p>
         
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
-          {/* NEW: Highlight mind state features */}
           <FeatureCard
             icon={<Brain className="w-8 h-8 text-purple-600" />}
-            title="🧠 Mind State Tracking"
-            description="Tell us how you're feeling (calm, stressed, focused, unclear) and get adaptive breathing flows matched to your state"
+            title="Adaptive Breathing"
+            description="4 custom flows: Calm, Stressed, Focused, Unclear"
             isNew={true}
-          />
-          <FeatureCard
-            icon={<Heart className="w-8 h-8 text-red-500" />}
-            title="💙 Wellness Check-Ins"
-            description="Throughout the day, get personalized reminders to breathe, walk, or pause—based on your stress patterns"
-            isNew={true}
-          />
-          <FeatureCard
-            icon={<Sparkles className="w-8 h-8 text-indigo-600" />}
-            title="✨ Pattern Recognition"
-            description="AI learns which days, times, and meeting types stress you most—then provides extra support when you need it"
-            isNew={true}
-          />
-          <FeatureCard
-            icon={<Moon className="w-8 h-8 text-purple-600" />}
-            title="Presley Flow"
-            description="Evening mental rehearsal with insights about tomorrow's potentially stressful meetings"
-          />
-          <FeatureCard
-            icon={<Sun className="w-8 h-8 text-yellow-600" />}
-            title="Morning Recap"
-            description="Wake up to personalized prep tips based on your typical stress patterns for the day ahead"
-          />
-          <FeatureCard
-            icon={<Star className="w-8 h-8 text-indigo-600" />}
-            title="Meeting Ratings"
-            description="Rate your performance. AI learns what preparation style works best for you"
-          />
-          <FeatureCard
-            icon={<Clock className="w-8 h-8 text-indigo-600" />}
-            title="Focus Scene"
-            description="5-minute guided preparation with breathing exercises and cinematic animations"
           />
           <FeatureCard
             icon={<Music className="w-8 h-8 text-purple-600" />}
             title="Ambient Sounds"
-            description="Relaxing meditation audio: ocean waves, rain, forest, bells, or silence"
+            description="Ocean, rain, forest, bells, or silence"
+            isNew={true}
+          />
+          <FeatureCard
+            icon={<Sparkles className="w-8 h-8 text-indigo-600" />}
+            title="AI Pattern Learning"
+            description="Learns your stress triggers and adapts"
+            isNew={true}
+          />
+          <FeatureCard
+            icon={<Heart className="w-8 h-8 text-red-500" />}
+            title="Daily Wellness"
+            description="Reminders to breathe, walk, or pause"
+          />
+          <FeatureCard
+            icon={<Moon className="w-8 h-8 text-purple-600" />}
+            title="Evening Prep"
+            description="Preview tomorrow with stress insights"
+          />
+          <FeatureCard
+            icon={<Sun className="w-8 h-8 text-yellow-600" />}
+            title="Morning Boost"
+            description="Wake up with personalized confidence"
           />
           <FeatureCard
             icon={<Mail className="w-8 h-8 text-indigo-600" />}
-            title="Email Delivery"
-            description="Beautiful HTML emails with focus cues, evening sessions, and insights"
-          />
-          <FeatureCard
-            icon={<Smartphone className="w-8 h-8 text-purple-600" />}
-            title="SMS Alerts"
-            description="Get notifications via text message. Perfect for on-the-go preparation"
+            title="Email + SMS"
+            description="Get cues however you prefer"
           />
           <FeatureCard
             icon={<Calendar className="w-8 h-8 text-indigo-600" />}
-            title="Calendar Sync"
-            description="Works with Google Calendar and Outlook. Auto-detects all your meetings"
+            title="Auto-Sync"
+            description="Google Calendar & Outlook"
+          />
+          <FeatureCard
+            icon={<Star className="w-8 h-8 text-indigo-600" />}
+            title="Meeting Ratings"
+            description="Rate meetings, AI improves"
           />
         </div>
       </section>
 
       {/* How It Works */}
       <section className="container mx-auto px-6 py-20 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl shadow-xl max-w-6xl">
-        <h2 className="text-4xl font-bold text-center mb-4">How It Works</h2>
-        <p className="text-center text-gray-600 mb-16 text-lg">
-          AI that learns your stress patterns and adapts to support you
-        </p>
+        <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
         
-        <div className="space-y-12">
+        <div className="space-y-8">
           <Step
-            number="🌙"
-            title="Evening (8 PM): Smart Preparation"
-            description="Get tomorrow's meeting preview with insights: 'Mondays are typically stressful for you—plan extra self-care' or 'You have a client meeting tomorrow, which you often find challenging.'"
+            number="📧"
+            title="Get the Cue"
+            description="5 minutes before your meeting, receive an email or SMS with your personalized AI prep message."
           />
           <Step
-            number="☀️"
-            title="Morning (7 AM): Personalized Boost"
-            description="Wake up to a message tailored to your patterns: 'You have morning meetings today, which can be stressful for you. Consider a calming routine.'"
+            number="🎬"
+            title="Open Focus Scene"
+            description="Click the link. Select your mind state. Get a custom breathing flow (2-3 min) with ambient sounds."
           />
           <Step
-            number="⏰"
-            title="Pre-Meeting (5 min before): Adaptive Support"
-            description="Receive grounded, practical cues based on your history. Open Focus Scene, select your mind state (calm/stressed/focused/unclear), and get a breathing flow matched to how you feel."
-          />
-          <Step
-            number="🧘"
-            title="Throughout Day: Wellness Check-Ins"
-            description="Get personalized reminders to breathe, walk, or pause—timed based on your stress patterns. High-stress users get more breathing prompts. Afternoon slumps trigger walk suggestions."
-          />
-          <Step
-            number="⭐"
-            title="Post-Meeting: Learn & Improve"
-            description="Rate your meeting. AI analyzes patterns: Which meeting types stress you? Which days? Which times? Then uses this data to provide better support next time."
+            number="✨"
+            title="Walk In Ready"
+            description="Enter the meeting centered, not scattered. The AI learns from your ratings and gets smarter over time."
           />
         </div>
 
         <div className="mt-16 p-8 bg-white rounded-2xl border-2 border-purple-200">
-          <p className="text-center text-lg text-gray-700 mb-2">
-            <strong className="text-purple-600">Real support, not just motivation.</strong>
-          </p>
-          <p className="text-center text-gray-600">
-            After 10+ rated meetings, Meet Cute knows your patterns: "Team meetings are stressful 80% of the time for you. Here's a specific strategy..."
-            Instead of generic "You've got this!", you get practical, grounded support based on your actual experience.
+          <p className="text-center text-lg text-gray-700">
+            <strong className="text-purple-600">The more you use it, the better it gets.</strong> AI learns which meeting types stress you and adapts your cues accordingly.
           </p>
         </div>
       </section>
