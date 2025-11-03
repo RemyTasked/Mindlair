@@ -47,11 +47,16 @@ export default function Dashboard() {
 
       console.log('📡 Making API calls to load user data...');
 
+      // Fetch meetings for next 2 days
+      const now = new Date();
+      const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+
       const [userResponse, meetingsResponse, statsResponse] = await Promise.all([
         api.get('/api/user/profile'),
         api.get('/api/meetings', {
           params: {
-            startDate: new Date().toISOString(),
+            startDate: now.toISOString(),
+            endDate: twoDaysFromNow.toISOString(),
           },
         }),
         api.get('/api/user/stats', {
@@ -157,17 +162,30 @@ export default function Dashboard() {
 
         {/* Upcoming Meetings */}
         <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Upcoming Meetings</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+            Upcoming Meetings (Next 2 Days)
+          </h2>
 
           {meetings.length === 0 ? (
             <div className="text-center py-8 sm:py-12 text-gray-500">
               <Calendar className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 opacity-50" />
-              <p className="text-base sm:text-lg">No upcoming meetings</p>
+              <p className="text-base sm:text-lg">No upcoming meetings in the next 2 days</p>
+              <p className="text-sm mt-2">Meetings will appear here when they're scheduled</p>
             </div>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
-              {meetings.slice(0, 10).map((meeting) => (
-                <MeetingCard key={meeting.id} meeting={meeting} />
+            <div className="space-y-6">
+              {groupMeetingsByDay(meetings).map(({ date, meetings: dayMeetings }) => (
+                <div key={date}>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    {date}
+                  </h3>
+                  <div className="space-y-3">
+                    {dayMeetings.map((meeting) => (
+                      <MeetingCard key={meeting.id} meeting={meeting} />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -175,6 +193,40 @@ export default function Dashboard() {
       </main>
     </div>
   );
+}
+
+function groupMeetingsByDay(meetings: Meeting[]): { date: string; meetings: Meeting[] }[] {
+  const groups: { [key: string]: Meeting[] } = {};
+  const now = new Date();
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  meetings.forEach((meeting) => {
+    const meetingDate = new Date(meeting.startTime);
+    meetingDate.setHours(0, 0, 0, 0);
+    
+    let dateLabel: string;
+    if (meetingDate.getTime() === today.getTime()) {
+      dateLabel = 'Today';
+    } else if (meetingDate.getTime() === tomorrow.getTime()) {
+      dateLabel = 'Tomorrow';
+    } else {
+      dateLabel = meetingDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      });
+    }
+
+    if (!groups[dateLabel]) {
+      groups[dateLabel] = [];
+    }
+    groups[dateLabel].push(meeting);
+  });
+
+  return Object.entries(groups).map(([date, meetings]) => ({ date, meetings }));
 }
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
@@ -195,25 +247,41 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
     hour: 'numeric',
     minute: '2-digit',
   });
-  const dateString = startTime.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
 
   const now = new Date();
   const minutesUntilMeeting = Math.floor((startTime.getTime() - now.getTime()) / (1000 * 60));
+  const hoursUntilMeeting = Math.floor(minutesUntilMeeting / 60);
   const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 10; // Within 10 minutes
+
+  // Format time until meeting
+  let timeUntilText = '';
+  if (minutesUntilMeeting <= 0) {
+    timeUntilText = 'In progress or passed';
+  } else if (minutesUntilMeeting <= 10) {
+    timeUntilText = `Starting in ${minutesUntilMeeting} min`;
+  } else if (minutesUntilMeeting < 60) {
+    timeUntilText = `In ${minutesUntilMeeting} minutes`;
+  } else if (hoursUntilMeeting < 24) {
+    const remainingMinutes = minutesUntilMeeting % 60;
+    timeUntilText = `In ${hoursUntilMeeting}h ${remainingMinutes}m`;
+  } else {
+    const days = Math.floor(hoursUntilMeeting / 24);
+    const remainingHours = hoursUntilMeeting % 24;
+    timeUntilText = `In ${days}d ${remainingHours}h`;
+  }
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors gap-3 sm:gap-4">
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{meeting.title}</h3>
         <div className="text-gray-600 text-sm sm:text-base space-y-0.5 sm:space-y-1">
-          <div className="truncate">{dateString} at {timeString}</div>
-          {minutesUntilMeeting > 0 && minutesUntilMeeting <= 10 && (
-            <div className="text-xs sm:text-sm text-indigo-600 font-medium">
-              Starting in {minutesUntilMeeting} minute{minutesUntilMeeting !== 1 ? 's' : ''}
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{timeString}</span>
+            <span className="text-xs sm:text-sm text-gray-500">• {timeUntilText}</span>
+          </div>
+          {canStartFocusSession && (
+            <div className="text-xs sm:text-sm text-indigo-600 font-medium animate-pulse">
+              🎬 Focus Session Available Now!
             </div>
           )}
         </div>
@@ -229,6 +297,11 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
           >
             🎬 Start Focus Session
           </a>
+        )}
+        {!canStartFocusSession && minutesUntilMeeting > 10 && (
+          <span className="px-2 sm:px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs sm:text-sm whitespace-nowrap">
+            Available in {minutesUntilMeeting - 10} min
+          </span>
         )}
         {meeting.cueDelivered && (
           <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm whitespace-nowrap">
