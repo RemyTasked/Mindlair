@@ -182,8 +182,18 @@ async function checkUpcomingMeetings() {
         })),
       });
 
-      // Process each event
+      // Process each event (exclude single-attendee meetings - likely personal tasks/reminders)
       for (const event of allEvents) {
+        // Skip if only 1 or 0 attendees (user only or no attendees)
+        if (!event.attendees || event.attendees.length <= 1) {
+          logger.info('⏭️ Skipping single-attendee event', {
+            userId: user.id,
+            event: event.summary,
+            attendeeCount: event.attendees?.length || 0,
+          });
+          continue;
+        }
+        
         await processUpcomingMeeting(user, event, alertMinutes);
       }
     }
