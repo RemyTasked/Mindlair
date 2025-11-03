@@ -218,18 +218,20 @@ router.get(
       
       // Generate AI summary of today's outcomes
       if (todaysMeetings.length > 0) {
-        dailyOutcomes = await promptGenerator.generateDailyWrapUp(
-          todaysMeetings.map((m: Meeting) => ({
+        const ratedMeetings = todaysMeetings
+          .filter((m: Meeting) => m.meetingRating !== null)
+          .map((m: Meeting) => ({
             title: m.title,
-            startTime: m.startTime,
-            endTime: m.endTime,
-            attendees: m.attendees,
-            meetingRating: m.meetingRating || undefined,
-            meetingFeedback: m.meetingFeedback || undefined,
-            focusSceneUsed: m.focusSceneOpened,
-          })),
-          (user as any).preferences?.tone as any
-        );
+            rating: m.meetingRating!,
+            feedback: m.meetingFeedback || undefined,
+          }));
+
+        dailyOutcomes = await promptGenerator.generateDailyWrapUp({
+          totalMeetings: todaysMeetings.length,
+          scenesCompleted: todaysMeetings.filter((m: Meeting) => m.focusSceneOpened).length,
+          focusSessionsOpened: todaysMeetings.filter((m: Meeting) => m.focusSceneOpened).length,
+          ratedMeetings: ratedMeetings.length > 0 ? ratedMeetings : undefined,
+        });
       }
     }
 
