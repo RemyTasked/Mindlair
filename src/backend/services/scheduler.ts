@@ -205,9 +205,10 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
       return; // Already sent cue for this meeting
     }
 
-    // Check if it's time to send the cue (within 2-minute window)
+    // Check if it's time to send the cue (within alert window or past due)
     const timeDiffMs = cueScheduledFor.getTime() - now.getTime();
-    const shouldSendCue = timeDiffMs >= 0 && timeDiffMs <= 2 * 60 * 1000; // 0-2 minutes window
+    // Send if: cue time has passed OR within next 2 minutes
+    const shouldSendCue = timeDiffMs <= 2 * 60 * 1000; // Send if due now or within 2 minutes
 
     // Infer meeting type
     const meetingType = await promptGenerator.inferMeetingType(
@@ -321,6 +322,16 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
     if (shouldSendCue) {
       const delivery = user.deliverySettings;
 
+      logger.info('📧 Sending pre-meeting cue', {
+        userId: user.id,
+        email: user.email,
+        meetingTitle: event.summary,
+        cueScheduledFor,
+        emailEnabled: delivery?.emailEnabled,
+        slackEnabled: delivery?.slackEnabled,
+        smsEnabled: delivery?.smsEnabled,
+      });
+
       if (delivery?.emailEnabled) {
         await emailService.sendPreMeetingCue(
           user.email,
@@ -328,6 +339,15 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
           cueMessage,
           focusSceneUrl
         );
+        logger.info('✅ Email cue sent successfully', {
+          userId: user.id,
+          email: user.email,
+        });
+      } else {
+        logger.warn('⚠️ Email delivery not enabled', {
+          userId: user.id,
+          deliverySettings: delivery,
+        });
       }
 
       if (delivery?.slackEnabled && delivery?.slackWebhookUrl) {
