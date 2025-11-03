@@ -103,6 +103,18 @@ export default function FocusScene() {
         mindState: mindState || undefined,
       });
       setCurrentPhase('complete');
+      
+      // Auto-close after 4 seconds to return user to their workflow
+      setTimeout(() => {
+        // Try to close the window/tab
+        window.close();
+        
+        // If window.close() doesn't work (some browsers block it),
+        // redirect to dashboard
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 500);
+      }, 4000);
     } catch (error) {
       console.error('Error completing focus session:', error);
     }
@@ -592,7 +604,14 @@ export default function FocusScene() {
               >
                 You're ready to shine ⭐
               </motion.p>
-              <p className="text-sm mt-4 opacity-60">You can close this window now.</p>
+              <motion.p 
+                className="text-sm mt-4 opacity-60"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2.5 }}
+              >
+                Returning to your meeting in a moment...
+              </motion.p>
             </motion.div>
           </motion.div>
         )}
