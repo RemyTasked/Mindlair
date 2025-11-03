@@ -12,27 +12,38 @@ router.get(
   '/profile',
   authenticate,
   asyncHandler(async (req: Request, res) => {
-    const user = await prisma.user.findUnique({
-      where: { id: req.userId },
-      include: {
-        preferences: true,
-        deliverySettings: true,
-        calendarAccounts: {
-          select: {
-            id: true,
-            provider: true,
-            email: true,
-            createdAt: true,
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        include: {
+          preferences: true,
+          deliverySettings: true,
+          calendarAccounts: {
+            select: {
+              id: true,
+              provider: true,
+              email: true,
+              createdAt: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (!user) {
-      throw new AppError('User not found', 404);
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      res.json({ user });
+    } catch (error: any) {
+      console.error('❌ Error fetching user profile:', {
+        userId: req.userId,
+        error: error.message,
+        stack: error.stack,
+      });
+      
+      // Re-throw to be handled by error handler
+      throw error;
     }
-
-    res.json({ user });
   })
 );
 
