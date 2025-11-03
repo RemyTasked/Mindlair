@@ -639,12 +639,15 @@ async function sendPresleyFlowSessions() {
 
     for (const user of users) {
       try {
-        // Check if it's the user's configured time
-        const presleyFlowTime = user.preferences?.presleyFlowTime || '20:00';
-        const [targetHour] = presleyFlowTime.split(':').map(Number);
+        // Check if it's the user's configured evening flow time
+        const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
+        const [targetHour] = eveningFlowTime.split(':').map(Number);
 
         // Only proceed if it's the right hour (we run every hour)
         if (currentHour !== targetHour) continue;
+        
+        // Check if evening flow is enabled
+        if (!user.preferences?.enableEveningFlow) continue;
 
         // Only send if email is enabled
         if (!user.deliverySettings?.emailEnabled) continue;
@@ -727,12 +730,12 @@ async function sendMorningRecaps() {
     const endOfToday = new Date(today);
     endOfToday.setHours(23, 59, 59, 999);
 
-    // Get all users with morning recap enabled
+    // Get all users with morning flow enabled
     const users = await prisma.user.findMany({
       where: {
         preferences: {
           enablePresleyFlow: true,
-          enableMorningRecap: true,
+          enableMorningFlow: true,
         },
       },
       include: {
