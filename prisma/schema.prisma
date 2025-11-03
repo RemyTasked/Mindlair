@@ -23,10 +23,11 @@ model User {
   preferences UserPreferences?
 
   // Meetings & History
-  meetings        Meeting[]
-  focusSessions   FocusSession[]
-  dailyReflections DailyReflection[]
-  wellnessCheckIns WellnessCheckIn[]
+  meetings           Meeting[]
+  focusSessions      FocusSession[]
+  dailyReflections   DailyReflection[]
+  wellnessCheckIns   WellnessCheckIn[]
+  presleyFlowSessions PresleyFlowSession[]
 
   // Delivery Settings
   deliverySettings DeliverySettings?
@@ -71,10 +72,12 @@ model UserPreferences {
   focusSoundType       String  @default("calm-ocean") // "calm-ocean", "rain", "forest", "meditation-bell", "white-noise", "none"
   
   // Presley Flow preferences
-  presleyFlowTime      String  @default("20:00") // Time to send Presley Flow (HH:mm format)
-  enableMorningRecap   Boolean @default(true)  // Send morning recap after Presley Flow
+  morningFlowTime      String  @default("06:00") // Time when morning flow becomes available (HH:mm format)
+  eveningFlowTime      String  @default("18:00") // Time when evening flow becomes available (HH:mm format)
+  enableMorningFlow    Boolean @default(true)  // Enable morning prep/recap
+  enableEveningFlow    Boolean @default(true)  // Enable evening wrap-up + mental rehearsal
   
-  // Wellness reminders
+  // Wellness reminders (9am-6pm window)
   enableWellnessReminders Boolean @default(true)  // Enable daily wellness check-ins
   wellnessReminderFrequency Int @default(3)      // Hours between reminders (default: 3 hours)
   
@@ -231,5 +234,27 @@ model WellnessCheckIn {
 
   @@index([userId, createdAt])
   @@map("wellness_checkins")
+}
+
+model PresleyFlowSession {
+  id             String   @id @default(uuid())
+  userId         String
+  date           DateTime // The date this session is for
+  flowType       String   // "morning" or "evening"
+  completedAt    DateTime?
+  journalNote    String?
+  
+  // Evening-specific fields
+  dailyOutcomes  String?  // AI summary of today's meeting outcomes
+  reflectionText String?  // User's reflection on the day
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date, flowType])
+  @@index([userId, date])
+  @@map("presley_flow_sessions")
 }
 

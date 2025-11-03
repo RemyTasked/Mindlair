@@ -56,33 +56,71 @@ router.get(
       throw new AppError('User not found', 404);
     }
 
-    // Check if Presley Flow is enabled
-    if (!user.preferences?.enablePresleyFlow) {
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    // Get user's configured flow times
+    const morningFlowHour = parseInt((user as any).preferences?.morningFlowTime?.split(':')[0] || '6');
+    const eveningFlowHour = parseInt((user as any).preferences?.eveningFlowTime?.split(':')[0] || '18');
+    
+    // Check if we're in the morning or evening window
+    const isMorningWindow = currentHour >= morningFlowHour && currentHour < eveningFlowHour;
+    const isEveningWindow = currentHour >= eveningFlowHour;
+    
+    // Check if flows are enabled
+    const morningFlowEnabled = (user as any).preferences?.enableMorningFlow !== false;
+    const eveningFlowEnabled = (user as any).preferences?.enableEveningFlow !== false;
+    
+    // Determine if flow is available based on time and preferences
+    const isAvailable = (isMorningWindow && morningFlowEnabled) || (isEveningWindow && eveningFlowEnabled);
+    
+    if (!isAvailable) {
       return res.json({ available: false });
     }
 
-    // Check for meetings today
+    // For morning: Check today's meetings
+    // For evening: Check tomorrow's meetings (or show wrap-up if today had meetings)
     const today = new Date();
     const startOfDay = new Date(today);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(today);
     endOfDay.setHours(23, 59, 59, 999);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const startOfTomorrow = new Date(tomorrow);
+    startOfTomorrow.setHours(0, 0, 0, 0);
+    const endOfTomorrow = new Date(tomorrow);
+    endOfTomorrow.setHours(23, 59, 59, 999);
 
-    const todaysMeetings = await prisma.meeting.findMany({
+    const relevantMeetings = await prisma.meeting.findMany({
       where: {
         userId,
-        startTime: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        startTime: isMorningWindow
+          ? { gte: startOfDay, lte: endOfDay }
+          : { gte: startOfTomorrow, lte: endOfTomorrow },
       },
       orderBy: {
         startTime: 'asc',
       },
     });
+    
+    // For evening, also check if today had meetings (for wrap-up)
+    let todayMeetingCount = 0;
+    if (isEveningWindow) {
+      const todayMeetings = await prisma.meeting.findMany({
+        where: {
+          userId,
+          startTime: { gte: startOfDay, lte: endOfDay },
+        },
+      });
+      todayMeetingCount = todayMeetings.length;
+    }
 
-    // Only show if there are meetings today
-    if (todaysMeetings.length === 0) {
+    // Show flow if: morning with today's meetings OR evening with today/tomorrow meetings
+    const hasRelevantMeetings = relevantMeetings.length > 0 || (isEveningWindow && todayMeetingCount > 0);
+    
+    if (!hasRelevantMeetings) {
       return res.json({ available: false });
     }
 
@@ -91,9 +129,10 @@ router.get(
 
     return res.json({
       available: true,
-      meetingCount: todaysMeetings.length,
+      meetingCount: relevantMeetings.length,
       presleyFlowUrl,
       date: dateString,
+      flowType: isMorningWindow ? 'morning' : 'evening',
     });
   })
 );
@@ -116,13 +155,37 @@ router.get(
     }
 
     // Parse date (format: YYYY-MM-DD)
-    const targetDate = new Date(date);
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    const targetDate = new Date(date + 'T00:00:00Z'); // Parse as UTC to avoid timezone issues
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    // Get user's configured flow times
+    const morningFlowHour = parseInt((user as any).preferences?.morningFlowTime?.split(':')[0] || '6');
+    const eveningFlowHour = parseInt((user as any).preferences?.eveningFlowTime?.split(':')[0] || '18');
+    
+    // Determine flow type based on current time
+    // Morning: from morningFlowTime until eveningFlowTime (default 6am-6pm)
+    // Evening: from eveningFlowTime onwards (default 6pm+)
+    const isMorning = currentHour >= morningFlowHour && currentHour < eveningFlowHour;
+    
+    let startOfDay, endOfDay;
+    if (isMorning) {
+      // Morning: Get today's meetings
+      startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+    } else {
+      // Evening: Get tomorrow's meetings
+      const tomorrow = new Date(targetDate);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      startOfDay = new Date(tomorrow);
+      startOfDay.setHours(0, 0, 0, 0);
+      endOfDay = new Date(tomorrow);
+      endOfDay.setHours(23, 59, 59, 999);
+    }
 
-    // Fetch tomorrow's meetings
+    // Fetch meetings for the appropriate day
     const meetings = await prisma.meeting.findMany({
       where: {
         userId,
@@ -134,7 +197,43 @@ router.get(
       orderBy: { startTime: 'asc' },
     });
 
-    if (meetings.length === 0) {
+    // For evening flow, also get today's completed meetings for wrap-up
+    let dailyOutcomes = null;
+    if (!isMorning) {
+      const todayStart = new Date(targetDate);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(targetDate);
+      todayEnd.setHours(23, 59, 59, 999);
+      
+      const todaysMeetings = await prisma.meeting.findMany({
+        where: {
+          userId,
+          startTime: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+        orderBy: { startTime: 'asc' },
+      });
+      
+      // Generate AI summary of today's outcomes
+      if (todaysMeetings.length > 0) {
+        dailyOutcomes = await promptGenerator.generateDailyWrapUp(
+          todaysMeetings.map((m: Meeting) => ({
+            title: m.title,
+            startTime: m.startTime,
+            endTime: m.endTime,
+            attendees: m.attendees,
+            meetingRating: m.meetingRating || undefined,
+            meetingFeedback: m.meetingFeedback || undefined,
+            focusSceneUsed: m.focusSceneOpened,
+          })),
+          (user as any).preferences?.tone as any
+        );
+      }
+    }
+
+    if (meetings.length === 0 && !dailyOutcomes) {
       return res.json({ flow: null });
     }
 
@@ -181,6 +280,9 @@ router.get(
           month: 'short',
           day: 'numeric',
         }),
+        timeOfDay: isMorning ? 'morning' : 'evening',
+        meetingDay: isMorning ? 'today' : 'tomorrow',
+        dailyOutcomes, // Only populated for evening flow
       },
     });
   })

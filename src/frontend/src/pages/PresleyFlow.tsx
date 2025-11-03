@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock } from 'lucide-react';
+import AmbientSound from '../components/AmbientSound';
 
 interface PresleyFlowData {
   openingScene: string;
@@ -15,9 +16,12 @@ interface PresleyFlowData {
   visualizationScript: string;
   closingMessage: string;
   date: string;
+  timeOfDay?: string;
+  meetingDay?: string;
+  dailyOutcomes?: string; // AI summary of today's meetings (evening only)
 }
 
-type Phase = 'opening' | 'lineup' | 'mindset' | 'visualization' | 'closing' | 'complete';
+type Phase = 'opening' | 'wrapup' | 'lineup' | 'mindset' | 'visualization' | 'closing' | 'complete';
 
 export default function PresleyFlow() {
   const { userId, date } = useParams();
@@ -33,11 +37,18 @@ export default function PresleyFlow() {
   const loadFlowData = async () => {
     try {
       const response = await api.get(`/api/presley-flow/${userId}/${date}`);
-      setFlowData(response.data.flow);
+      const flow = response.data.flow;
+      setFlowData(flow);
       setLoading(false);
       
-      // Auto-progress from opening to lineup after 5 seconds
-      setTimeout(() => setCurrentPhase('lineup'), 5000);
+      // Auto-progress from opening: evening with wrap-up goes to 'wrapup', otherwise 'lineup'
+      setTimeout(() => {
+        if (flow.timeOfDay === 'evening' && flow.dailyOutcomes) {
+          setCurrentPhase('wrapup');
+        } else {
+          setCurrentPhase('lineup');
+        }
+      }, 5000);
     } catch (error) {
       console.error('Error loading Presley Flow:', error);
       setLoading(false);
@@ -57,6 +68,9 @@ export default function PresleyFlow() {
   };
 
   if (loading) {
+    const currentHour = new Date().getHours();
+    const isMorning = currentHour < 14;
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950">
         <motion.div
@@ -69,9 +83,9 @@ export default function PresleyFlow() {
             transition={{ duration: 2, repeat: Infinity }}
             className="text-4xl text-center mb-4"
           >
-            🌙
+            {isMorning ? '🌅' : '🌙'}
           </motion.div>
-          Preparing your evening rehearsal...
+          {isMorning ? 'Preparing your morning flow...' : 'Preparing your evening rehearsal...'}
         </motion.div>
       </div>
     );
@@ -91,6 +105,9 @@ export default function PresleyFlow() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white overflow-hidden">
+      {/* Ambient Sound - meditation/calm for Presley Flow */}
+      <AmbientSound soundType="meditation" enabled={true} />
+      
       {/* Ambient background stars */}
       <div className="fixed inset-0 pointer-events-none">
         {[...Array(30)].map((_, i) => (
@@ -130,7 +147,7 @@ export default function PresleyFlow() {
               transition={{ type: 'spring', stiffness: 100, delay: 0.3 }}
               className="text-8xl mb-8"
             >
-              🌙
+              {flowData.timeOfDay === 'morning' ? '🌅' : '🌙'}
             </motion.div>
             
             <motion.div
@@ -157,8 +174,61 @@ export default function PresleyFlow() {
                 animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                Preparing tomorrow's scenes...
+                {flowData.timeOfDay === 'morning' 
+                  ? "Preparing today's scenes..." 
+                  : "Preparing tomorrow's scenes..."}
               </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Daily Wrap-Up (Evening Only) */}
+        {currentPhase === 'wrapup' && flowData.dailyOutcomes && (
+          <motion.div
+            key="wrapup"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-8 relative z-10"
+          >
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="w-full max-w-4xl"
+            >
+              <div className="flex items-center justify-center gap-3 mb-12">
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="text-6xl"
+                >
+                  ☀️
+                </motion.div>
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-200 via-purple-200 to-blue-200 bg-clip-text text-transparent">
+                  Today's Reflection
+                </h2>
+              </div>
+
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8"
+              >
+                <p className="text-xl text-purple-100 leading-relaxed whitespace-pre-line">
+                  {flowData.dailyOutcomes}
+                </p>
+              </motion.div>
+
+              <motion.button
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                onClick={() => setCurrentPhase('lineup')}
+                className="mt-12 mx-auto block px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-semibold text-lg hover:scale-105 transition-transform shadow-lg shadow-purple-500/30"
+              >
+                Prepare for Tomorrow →
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
@@ -179,7 +249,9 @@ export default function PresleyFlow() {
             >
               <div className="flex items-center justify-center gap-3 mb-12">
                 <Calendar className="w-8 h-8 text-purple-300" />
-                <h2 className="text-4xl font-bold">Tomorrow's Line-Up</h2>
+                <h2 className="text-4xl font-bold">
+                  {flowData.timeOfDay === 'morning' ? "Today's Line-Up" : "Tomorrow's Line-Up"}
+                </h2>
               </div>
 
               <div className="space-y-6">
