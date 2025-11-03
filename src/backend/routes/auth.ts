@@ -21,17 +21,58 @@ router.get('/google/url', (_req, res) => {
 router.get(
   '/google/callback',
   asyncHandler(async (req, res) => {
-    const { code } = req.query;
+    const { code, error } = req.query;
+
+    logger.info('🔐 Google OAuth callback received', {
+      hasCode: !!code,
+      error: error,
+      query: req.query,
+      frontendUrl: process.env.FRONTEND_URL,
+      redirectUri: process.env.GOOGLE_REDIRECT_URI,
+    });
+
+    if (error) {
+      logger.error('❌ Google OAuth error', { error });
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?error=${error}`;
+      return res.redirect(redirectUrl);
+    }
 
     if (!code || typeof code !== 'string') {
-      throw new AppError('Authorization code is required', 400);
+      logger.error('❌ No authorization code provided');
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?error=no_code`;
+      return res.redirect(redirectUrl);
     }
 
     // Exchange code for tokens
-    const tokens = await googleCalendarService.getTokensFromCode(code);
+    let tokens;
+    try {
+      tokens = await googleCalendarService.getTokensFromCode(code);
+      logger.info('✅ Google tokens received', {
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token,
+      });
+    } catch (error: any) {
+      logger.error('❌ Failed to exchange code for tokens', {
+        error: error.message,
+        code: code?.substring(0, 20) + '...',
+      });
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?error=token_exchange_failed`;
+      return res.redirect(redirectUrl);
+    }
 
     // Get user info
-    const userInfo = await googleCalendarService.getUserInfo(tokens.access_token!);
+    let userInfo;
+    try {
+      userInfo = await googleCalendarService.getUserInfo(tokens.access_token!);
+      logger.info('✅ Google user info received', {
+        email: userInfo.email,
+        name: userInfo.name,
+      });
+    } catch (error: any) {
+      logger.error('❌ Failed to get user info', { error: error.message });
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?error=user_info_failed`;
+      return res.redirect(redirectUrl);
+    }
 
     // Create or update user
     let user = await prisma.user.findUnique({

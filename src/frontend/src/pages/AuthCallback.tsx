@@ -7,21 +7,48 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const token = searchParams.get('token');
+    const error = searchParams.get('error');
     
-    console.log('🔍 AuthCallback - Token received:', {
+    console.log('🔍 AuthCallback - Received:', {
       hasToken: !!token,
       tokenLength: token?.length || 0,
       tokenPreview: token?.substring(0, 20) + '...',
+      error: error,
+      fullUrl: window.location.href,
       allParams: Object.fromEntries(searchParams.entries()),
     });
 
+    if (error) {
+      console.error('❌ OAuth error:', error);
+      alert(`Authentication error: ${error}`);
+      navigate('/');
+      return;
+    }
+
     if (token) {
-      localStorage.setItem('meetcute_token', token);
-      console.log('✅ Token stored in localStorage');
-      console.log('🚀 Navigating to /dashboard');
-      navigate('/dashboard');
+      try {
+        localStorage.setItem('meetcute_token', token);
+        console.log('✅ Token stored in localStorage');
+        
+        // Verify token was stored
+        const storedToken = localStorage.getItem('meetcute_token');
+        console.log('✅ Verified token in localStorage:', {
+          stored: !!storedToken,
+          matches: storedToken === token,
+        });
+        
+        console.log('🚀 Navigating to /dashboard');
+        navigate('/dashboard', { replace: true });
+      } catch (err) {
+        console.error('❌ Error storing token:', err);
+        alert('Failed to save authentication. Please try again.');
+        navigate('/');
+      }
     } else {
-      console.error('❌ No token found in URL, redirecting to landing page');
+      console.error('❌ No token found in URL params');
+      console.error('Full URL:', window.location.href);
+      console.error('Search params:', window.location.search);
+      alert('Authentication failed: No token received. Please try again.');
       navigate('/');
     }
   }, [searchParams, navigate]);
