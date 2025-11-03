@@ -59,7 +59,7 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
 
     // Analyze state distribution
     const stateCounts: Record<string, number> = {};
-    sessions.forEach(s => {
+    sessions.forEach((s: any) => {
       if (s.mindState) {
         stateCounts[s.mindState] = (stateCounts[s.mindState] || 0) + 1;
       }
@@ -75,7 +75,7 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
     const dayStressCounts: Record<string, { stressed: number; total: number }> = {};
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     
-    sessions.forEach(s => {
+    sessions.forEach((s: any) => {
       const dayIndex = new Date(s.meeting.startTime).getDay();
       const dayName = daysOfWeek[dayIndex];
       
@@ -106,7 +106,7 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
       evening: { stressed: 0, total: 0 },
     };
 
-    sessions.forEach(s => {
+    sessions.forEach((s: any) => {
       const hour = new Date(s.meeting.startTime).getHours();
       const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
       
@@ -124,7 +124,7 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
     // Analyze meeting type patterns
     const meetingTypeStress: Record<string, { stressed: number; total: number }> = {};
     
-    sessions.forEach(s => {
+    sessions.forEach((s: any) => {
       const type = s.meeting.meetingType || 'general';
       
       if (!meetingTypeStress[type]) {
@@ -154,16 +154,16 @@ export async function analyzeMindStatePatterns(userId: string): Promise<MindStat
     const fourWeeksAgo = new Date();
     fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
 
-    const recentSessions = sessions.filter(s => new Date(s.startedAt) >= twoWeeksAgo);
+    const recentSessions = sessions.filter((s: any) => new Date(s.startedAt) >= twoWeeksAgo);
     const previousSessions = sessions.filter(
-      s => new Date(s.startedAt) >= fourWeeksAgo && new Date(s.startedAt) < twoWeeksAgo
+      (s: any) => new Date(s.startedAt) >= fourWeeksAgo && new Date(s.startedAt) < twoWeeksAgo
     );
 
     let recentTrend: 'improving' | 'stable' | 'worsening' | 'insufficient_data' = 'insufficient_data';
     
     if (recentSessions.length >= 2 && previousSessions.length >= 2) {
-      const recentStressRate = recentSessions.filter(s => s.mindState === 'stressed').length / recentSessions.length;
-      const previousStressRate = previousSessions.filter(s => s.mindState === 'stressed').length / previousSessions.length;
+      const recentStressRate = recentSessions.filter((s: any) => s.mindState === 'stressed').length / recentSessions.length;
+      const previousStressRate = previousSessions.filter((s: any) => s.mindState === 'stressed').length / previousSessions.length;
       const difference = recentStressRate - previousStressRate;
 
       if (Math.abs(difference) < 0.1) {
@@ -277,25 +277,25 @@ export async function getTomorrowMindStateInsights(userId: string): Promise<stri
 
     // Check meeting types
     const stressfulTypes = new Set(patterns.stressfulMeetingTypes.map(mt => mt.type));
-    const hasStressfulMeetingType = tomorrowMeetings.some(m => 
+    const hasStressfulMeetingType = tomorrowMeetings.some((m: any) => 
       m.meetingType && stressfulTypes.has(m.meetingType)
     );
 
     if (hasStressfulMeetingType) {
-      const stressfulMeeting = tomorrowMeetings.find(m => 
+      const stressfulMeeting = tomorrowMeetings.find((m: any) => 
         m.meetingType && stressfulTypes.has(m.meetingType)
       );
       insights.push(`You have a ${stressfulMeeting?.meetingType} meeting tomorrow, which you often find stressful. Extra preparation could help.`);
     }
 
     // Check time of day
-    const morningMeetings = tomorrowMeetings.filter(m => new Date(m.startTime).getHours() < 12);
+    const morningMeetings = tomorrowMeetings.filter((m: any) => new Date(m.startTime).getHours() < 12);
     if (morningMeetings.length > 0 && patterns.stressfulTimesOfDay.includes('morning')) {
       insights.push('You have morning meetings tomorrow, which can be stressful for you. Consider a calming morning routine.');
     }
 
     // Check for back-to-back
-    const hasBackToBack = tomorrowMeetings.some(m => m.isBackToBack);
+    const hasBackToBack = tomorrowMeetings.some((m: any) => m.isBackToBack);
     if (hasBackToBack && patterns.stressFrequency > 40) {
       insights.push('You have back-to-back meetings tomorrow. Build in micro-breaks to reset between them.');
     }
