@@ -286,5 +286,100 @@ router.get('/verify', asyncHandler(async (req, res) => {
   res.json({ user });
 }));
 
+// Disconnect calendar
+router.delete(
+  '/calendar/:provider',
+  asyncHandler(async (req, res) => {
+    const { userId } = req.body;
+    const { provider } = req.params;
+
+    if (!userId) {
+      throw new AppError('User ID is required', 400);
+    }
+
+    if (provider !== 'google' && provider !== 'microsoft') {
+      throw new AppError('Invalid provider. Must be "google" or "microsoft"', 400);
+    }
+
+    logger.info('🔌 Disconnecting calendar', {
+      userId,
+      provider,
+    });
+
+    // Delete calendar account
+    const deleted = await prisma.calendarAccount.deleteMany({
+      where: {
+        userId,
+        provider,
+      },
+    });
+
+    if (deleted.count === 0) {
+      throw new AppError('Calendar account not found', 404);
+    }
+
+    // Delete associated meetings (cascade should handle this, but being explicit)
+    await prisma.meeting.deleteMany({
+      where: {
+        userId,
+      },
+    });
+
+    logger.info('✅ Calendar disconnected successfully', {
+      userId,
+      provider,
+      deletedAccounts: deleted.count,
+    });
+
+    res.json({
+      message: `${provider} calendar disconnected successfully`,
+      provider,
+    });
+  })
+);
+
+// Delete account
+router.delete(
+  '/account',
+  asyncHandler(async (req, res) => {
+    const { userId } = req.body;
+
+    if (!userId) {
+      throw new AppError('User ID is required', 400);
+    }
+
+    logger.warn('🗑️  Account deletion requested', {
+      userId,
+    });
+
+    // Verify user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        calendarAccounts: true,
+      },
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Delete user (cascade will handle all related data)
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    logger.warn('✅ Account deleted successfully', {
+      userId,
+      email: user.email,
+      calendarAccountsDeleted: user.calendarAccounts.length,
+    });
+
+    res.json({
+      message: 'Account deleted successfully',
+    });
+  })
+);
+
 export default router;
 

@@ -95,6 +95,89 @@ export default function Settings() {
     }
   };
 
+  const handleDisconnectCalendar = async (provider: 'google' | 'microsoft') => {
+    const confirmed = window.confirm(
+      `Are you sure you want to disconnect your ${provider === 'google' ? 'Google' : 'Microsoft'} calendar?\n\n` +
+      'This will:\n' +
+      '• Remove all synced meetings\n' +
+      '• Stop future syncing\n' +
+      '• Delete all focus sessions\n\n' +
+      'You can always reconnect later.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('meetcute_token');
+      if (!token) {
+        navigate('/');
+        return;
+      }
+
+      const decoded: any = JSON.parse(atob(token.split('.')[1]));
+      const userId = decoded.userId;
+
+      await api.delete(`/api/auth/calendar/${provider}`, {
+        data: { userId },
+      });
+
+      alert(`${provider === 'google' ? 'Google' : 'Microsoft'} calendar disconnected successfully.\n\nYou will be logged out.`);
+      
+      // Log out and redirect
+      localStorage.removeItem('meetcute_token');
+      navigate('/');
+    } catch (error: any) {
+      alert('Error disconnecting calendar: ' + (error.response?.data?.message || error.message));
+      console.error('Error disconnecting calendar:', error);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      '⚠️ WARNING: This action CANNOT be undone!\n\n' +
+      'Are you absolutely sure you want to delete your account?\n\n' +
+      'This will permanently delete:\n' +
+      '• All calendar connections\n' +
+      '• All meetings and focus sessions\n' +
+      '• All preferences and settings\n' +
+      '• All wellness check-ins and history\n\n' +
+      'Type "DELETE" in the next prompt to confirm.'
+    );
+
+    if (!confirmed) return;
+
+    const confirmation = window.prompt('Type DELETE to confirm account deletion:');
+    
+    if (confirmation !== 'DELETE') {
+      alert('Account deletion cancelled. You must type "DELETE" exactly to confirm.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('meetcute_token');
+      if (!token) {
+        navigate('/');
+        return;
+      }
+
+      const decoded: any = JSON.parse(atob(token.split('.')[1]));
+      const userId = decoded.userId;
+
+      await api.delete('/api/auth/account', {
+        data: { userId },
+      });
+
+      alert('Your account has been permanently deleted.\n\nThank you for using Meet Cute. We hope to see you again someday. 💜');
+      
+      // Log out and redirect
+      localStorage.removeItem('meetcute_token');
+      navigate('/');
+    } catch (error: any) {
+      alert('Error deleting account: ' + (error.response?.data?.message || error.message));
+      console.error('Error deleting account:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -420,6 +503,65 @@ export default function Settings() {
                     className="mt-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 )}
+              </div>
+            </div>
+          </Section>
+
+          {/* Account Management */}
+          <Section title="Account Management">
+            <div className="space-y-6">
+              {/* Connected Calendars */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Connected Calendars</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+                        G
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Google Calendar</p>
+                        <p className="text-sm text-gray-500">Syncing meetings automatically</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDisconnectCalendar('google')}
+                      className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-gray-500">
+                  Disconnecting will remove all synced meetings and stop future syncing.
+                </p>
+              </div>
+
+              {/* Danger Zone */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-red-600 mb-4">Danger Zone</h3>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900 mb-2">Delete Account</h4>
+                      <p className="text-sm text-gray-700 mb-4">
+                        Permanently delete your Meet Cute account and all associated data. This action cannot be undone.
+                      </p>
+                      <ul className="text-sm text-gray-600 space-y-1 mb-4">
+                        <li>• All calendar connections will be removed</li>
+                        <li>• All meetings and focus sessions will be deleted</li>
+                        <li>• All preferences and settings will be erased</li>
+                        <li>• Your data cannot be recovered</li>
+                      </ul>
+                      <button
+                        onClick={handleDeleteAccount}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                      >
+                        Delete My Account
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </Section>
