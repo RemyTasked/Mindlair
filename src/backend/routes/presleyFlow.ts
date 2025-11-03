@@ -7,6 +7,9 @@ const router = express.Router();
 const prisma = new PrismaClient();
 const promptGenerator = new PromptGenerator();
 
+// IMPORTANT: More specific routes must come BEFORE parameterized routes
+// /check/:userId must come before /:userId/:date
+
 type Meeting = {
   id: string;
   userId: string;
@@ -34,6 +37,66 @@ type Meeting = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+// Check if Presley Flow is available for today
+// MUST come before /:userId/:date to avoid route matching conflicts
+router.get(
+  '/check/:userId',
+  asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        preferences: true,
+      },
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Check if Presley Flow is enabled
+    if (!user.preferences?.enablePresleyFlow) {
+      return res.json({ available: false });
+    }
+
+    // Check for meetings today
+    const today = new Date();
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const todaysMeetings = await prisma.meeting.findMany({
+      where: {
+        userId,
+        startTime: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      orderBy: {
+        startTime: 'asc',
+      },
+    });
+
+    // Only show if there are meetings today
+    if (todaysMeetings.length === 0) {
+      return res.json({ available: false });
+    }
+
+    const dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const presleyFlowUrl = `${process.env.BASE_URL}/presley-flow/${userId}/${dateString}`;
+
+    return res.json({
+      available: true,
+      meetingCount: todaysMeetings.length,
+      presleyFlowUrl,
+      date: dateString,
+    });
+  })
+);
 
 // Get Presley Flow session data
 router.get(
@@ -134,65 +197,6 @@ router.post(
     // - journalNote, completedAt from body
 
     return res.json({ message: 'Presley Flow completed successfully' });
-  })
-);
-
-// Check if Presley Flow is available for today
-router.get(
-  '/check/:userId',
-  asyncHandler(async (req, res) => {
-    const { userId } = req.params;
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        preferences: true,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-
-    // Check if Presley Flow is enabled
-    if (!user.preferences?.enablePresleyFlow) {
-      return res.json({ available: false });
-    }
-
-    // Check for meetings today
-    const today = new Date();
-    const startOfDay = new Date(today);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(today);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const todaysMeetings = await prisma.meeting.findMany({
-      where: {
-        userId,
-        startTime: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-      },
-      orderBy: {
-        startTime: 'asc',
-      },
-    });
-
-    // Only show if there are meetings today
-    if (todaysMeetings.length === 0) {
-      return res.json({ available: false });
-    }
-
-    const dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
-    const presleyFlowUrl = `${process.env.BASE_URL}/presley-flow/${userId}/${dateString}`;
-
-    return res.json({
-      available: true,
-      meetingCount: todaysMeetings.length,
-      presleyFlowUrl,
-      date: dateString,
-    });
   })
 );
 
