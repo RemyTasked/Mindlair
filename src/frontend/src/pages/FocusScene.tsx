@@ -41,9 +41,17 @@ export default function FocusScene() {
 
       // Auto-progress to mind state selector
       setTimeout(() => setCurrentPhase('mindstate'), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading meeting data:', error);
       setLoading(false);
+      
+      // If session is already completed, redirect to dashboard
+      if (error.response?.status === 403) {
+        alert('This focus session has already been completed. Redirecting to dashboard...');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 2000);
+      }
     }
   };
 

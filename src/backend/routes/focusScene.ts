@@ -20,10 +20,18 @@ router.get(
         calendarEventId: meetingId,
         userId,
       },
+      include: {
+        focusSession: true,
+      },
     });
 
     if (!meeting) {
       throw new AppError('Meeting not found', 404);
+    }
+
+    // Check if session is already completed
+    if (meeting.focusSession?.completedAt) {
+      throw new AppError('This focus session has already been completed', 403);
     }
 
     // Get user preferences for sound settings
