@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
+import VoiceNarrator from '../components/VoiceNarrator';
 
 type MindState = 'calm' | 'stressed' | 'focused' | 'unclear';
 
@@ -28,6 +29,8 @@ export default function FocusScene() {
   const [loadingAiMessage, setLoadingAiMessage] = useState(false);
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [breathingCompleted, setBreathingCompleted] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true); // Voice narration enabled by default
+  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
 
   useEffect(() => {
     loadMeetingData();
@@ -149,13 +152,45 @@ export default function FocusScene() {
     );
   }
 
+  // Get narration text based on current phase
+  const getNarrationText = (): string => {
+    switch (currentPhase) {
+      case 'intro':
+        return `Welcome to your focus session. You have a meeting coming up: ${meeting?.title}. Let's take a few minutes to prepare mentally.`;
+      case 'mindstate':
+        return 'How are you feeling right now? Take a moment to check in with yourself, and select the state that best describes your current mindset.';
+      case 'ai-message':
+        return aiMessage;
+      case 'breathing':
+        return 'Follow the breathing guide. Breathe slowly and deeply, letting each breath ground you in this moment.';
+      case 'reflection':
+        return 'As you prepare to enter your meeting, take a moment to set your intention. What do you want to bring to this conversation?';
+      case 'complete':
+        return 'You\'re ready. Step into this meeting with clarity and presence.';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
-      {/* Ambient Sound Player - Show from mind state selection onwards */}
+      {/* Voice Narration */}
+      {meeting && (currentPhase === 'intro' || currentPhase === 'mindstate' || currentPhase === 'ai-message' || currentPhase === 'reflection' || currentPhase === 'complete') && (
+        <VoiceNarrator
+          text={getNarrationText()}
+          enabled={voiceEnabled}
+          onToggle={() => setVoiceEnabled(!voiceEnabled)}
+          onSpeaking={setIsVoiceSpeaking}
+          autoPlay={true}
+        />
+      )}
+
+      {/* Ambient Sound Player - Show from mind state selection onwards, dim when voice speaks */}
       {(currentPhase === 'mindstate' || currentPhase === 'ai-message' || currentPhase === 'breathing' || currentPhase === 'reflection' || currentPhase === 'complete') && (
         <AmbientSound
           soundType={meeting?.soundPreferences?.soundType || 'calm-ocean'}
           enabled={meeting?.soundPreferences?.enabled ?? true}
+          dimVolume={isVoiceSpeaking}
         />
       )}
       

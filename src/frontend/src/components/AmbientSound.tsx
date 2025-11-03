@@ -4,9 +4,10 @@ import { Volume2, VolumeX } from 'lucide-react';
 interface AmbientSoundProps {
   soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
   enabled: boolean;
+  dimVolume?: boolean; // Dim volume when voice is speaking
 }
 
-export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) {
+export default function AmbientSound({ soundType, enabled, dimVolume = false }: AmbientSoundProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const oscillatorsRef = useRef<OscillatorNode[]>([]);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -172,6 +173,21 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [soundType, enabled]);
 
+  // Dim volume when voice is speaking
+  useEffect(() => {
+    if (gainNodeRef.current && !isMuted) {
+      if (dimVolume) {
+        // Smoothly dim to 10% when voice speaks
+        gainNodeRef.current.gain.setTargetAtTime(0.1, audioContextRef.current!.currentTime, 0.3);
+        console.log('🔉 Dimming ambient sound for voice narration');
+      } else {
+        // Smoothly restore to 30% when voice stops
+        gainNodeRef.current.gain.setTargetAtTime(0.3, audioContextRef.current!.currentTime, 0.3);
+        console.log('🔊 Restoring ambient sound volume');
+      }
+    }
+  }, [dimVolume, isMuted]);
+
   const handleClick = () => {
     console.log('🖱️ Audio button clicked', { needsInteraction, isPlaying, isMuted });
     
@@ -183,7 +199,7 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
       // Toggle mute
       if (isMuted) {
         console.log('🔊 Unmuting audio');
-        gainNodeRef.current.gain.value = 0.3;
+        gainNodeRef.current.gain.value = dimVolume ? 0.1 : 0.3;
         setIsMuted(false);
       } else {
         console.log('🔇 Muting audio');

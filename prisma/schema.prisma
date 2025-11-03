@@ -70,6 +70,7 @@ model UserPreferences {
   // Sound preferences
   enableFocusSound     Boolean @default(true)
   focusSoundType       String  @default("calm-ocean") // "calm-ocean", "rain", "forest", "meditation-bell", "white-noise", "none"
+  enableVoiceNarration Boolean @default(true)  // Enable voice narration in flows
   
   // Presley Flow preferences
   morningFlowTime      String  @default("06:00") // Time when morning flow becomes available (HH:mm format)

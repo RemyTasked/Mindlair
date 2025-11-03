@@ -10,6 +10,7 @@ interface Preferences {
   enableFocusScene: boolean;
   enableFocusSound: boolean;
   focusSoundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
+  enableVoiceNarration: boolean;
   morningFlowTime: string;
   eveningFlowTime: string;
   enableMorningFlow: boolean;
@@ -35,6 +36,7 @@ export default function Settings() {
     enableFocusScene: true,
     enableFocusSound: true,
     focusSoundType: 'calm-ocean',
+    enableVoiceNarration: true,
     morningFlowTime: '06:00',
     eveningFlowTime: '18:00',
     enableMorningFlow: true,
@@ -292,6 +294,25 @@ export default function Settings() {
                   </select>
                   <p className="mt-2 text-sm text-gray-500">
                     Choose a calming sound to accompany your pre-meeting meditation
+                  </p>
+                </div>
+              )}
+
+              <Toggle
+                label="Enable Voice Narration"
+                description="Soothing female voice guides you through focus flows"
+                checked={preferences.enableVoiceNarration}
+                onChange={(checked) =>
+                  setPreferences({ ...preferences, enableVoiceNarration: checked })
+                }
+              />
+
+              {preferences.enableVoiceNarration && (
+                <div className="bg-indigo-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    <strong>🎙️ Voice Narration</strong> provides a calm, professional female voice that walks you 
+                    through each phase of your focus session. The ambient sound automatically dims when the voice 
+                    speaks. You can toggle voice on/off at any time during a flow using the button in the top-right corner.
                   </p>
                 </div>
               )}
