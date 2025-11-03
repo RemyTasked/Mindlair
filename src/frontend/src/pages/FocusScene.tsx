@@ -45,12 +45,11 @@ export default function FocusScene() {
       console.error('Error loading meeting data:', error);
       setLoading(false);
       
-      // If session is already completed, redirect to dashboard
+      // If session is already completed, show message and redirect to dashboard
       if (error.response?.status === 403) {
-        alert('This focus session has already been completed. Redirecting to dashboard...');
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 2000);
+        console.log('⚠️ Session already completed - redirecting to dashboard');
+        // Immediately redirect without alert
+        window.location.href = '/dashboard';
       }
     }
   };
@@ -82,14 +81,14 @@ export default function FocusScene() {
         console.log('✅ AI-generated message received');
       }
       
-      // Auto-progress to breathing after showing message
-      setTimeout(() => setCurrentPhase('breathing'), 5000);
+      // Auto-progress to breathing after showing message (10 seconds for reading)
+      setTimeout(() => setCurrentPhase('breathing'), 10000);
     } catch (error) {
       console.error('❌ Error generating AI message:', error);
       // Client-side fallback (should rarely happen as server has fallbacks)
       setAiMessage(getFallbackMessage(state));
       setLoadingAiMessage(false);
-      setTimeout(() => setCurrentPhase('breathing'), 5000);
+      setTimeout(() => setCurrentPhase('breathing'), 10000);
     }
   };
   
@@ -153,7 +152,7 @@ export default function FocusScene() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
       {/* Ambient Sound Player - Show from mind state selection onwards */}
-      {(currentPhase === 'mindstate' || currentPhase === 'ai-message' || currentPhase === 'breathing' || currentPhase === 'reflection') && (
+      {(currentPhase === 'mindstate' || currentPhase === 'ai-message' || currentPhase === 'breathing' || currentPhase === 'reflection' || currentPhase === 'complete') && (
         <AmbientSound
           soundType={meeting?.soundPreferences?.soundType || 'calm-ocean'}
           enabled={meeting?.soundPreferences?.enabled ?? true}

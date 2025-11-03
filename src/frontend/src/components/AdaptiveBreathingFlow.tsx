@@ -15,26 +15,73 @@ interface AdaptiveBreathingFlowProps {
   onComplete: () => void;
 }
 
-const BREATHING_FLOWS: Record<MindState, BreathingPhase[]> = {
+const BREATHING_PROMPTS: Record<MindState, string[]> = {
   calm: [
-    { action: 'Breathe In', duration: 4, instruction: 'Gently fill your lungs', color: 'from-blue-400 to-cyan-400' },
-    { action: 'Hold', duration: 4, instruction: 'Feel the stillness', color: 'from-purple-400 to-blue-400' },
-    { action: 'Breathe Out', duration: 6, instruction: 'Release with ease', color: 'from-indigo-400 to-purple-400' },
+    'Gently fill your lungs',
+    'Feel the stillness',
+    'Release with ease',
+    'Breathe in peace',
+    'Hold this moment',
+    'Let it flow out',
+    'Drawing in calm',
+    'Rest here',
+    'Softly release',
   ],
   stressed: [
-    { action: 'Breathe In', duration: 4, instruction: 'Draw in calm energy', color: 'from-green-400 to-emerald-400' },
-    { action: 'Hold', duration: 7, instruction: 'Let tension dissolve', color: 'from-teal-400 to-green-400' },
-    { action: 'Breathe Out', duration: 8, instruction: 'Release all stress', color: 'from-blue-400 to-teal-400' },
+    'Draw in calm energy',
+    'Let tension dissolve',
+    'Release all stress',
+    'Breathe in relief',
+    'Feel it melt away',
+    'Exhale the pressure',
+    'Invite peace in',
+    'Rest in stillness',
+    'Let it all go',
   ],
   focused: [
-    { action: 'Breathe In', duration: 3, instruction: 'Sharp and clear', color: 'from-orange-400 to-amber-400' },
-    { action: 'Hold', duration: 3, instruction: 'Gather your energy', color: 'from-yellow-400 to-orange-400' },
-    { action: 'Breathe Out', duration: 3, instruction: 'Quick and complete', color: 'from-amber-400 to-yellow-400' },
+    'Sharp and clear',
+    'Gather your energy',
+    'Quick and complete',
+    'Fuel your focus',
+    'Harness this power',
+    'Channel your strength',
+    'Breathe in clarity',
+    'Hold your intention',
+    'Release, renewed',
   ],
   unclear: [
-    { action: 'Breathe In', duration: 5, instruction: 'Invite clarity', color: 'from-violet-400 to-purple-400' },
-    { action: 'Hold', duration: 5, instruction: 'Create space', color: 'from-purple-400 to-fuchsia-400' },
-    { action: 'Breathe Out', duration: 7, instruction: 'Let go of confusion', color: 'from-pink-400 to-violet-400' },
+    'Invite clarity',
+    'Create space',
+    'Let go of confusion',
+    'Breathe in light',
+    'Ground yourself here',
+    'Release the fog',
+    'Draw in focus',
+    'Find your center',
+    'Clear the noise',
+  ],
+};
+
+const BREATHING_FLOWS: Record<MindState, BreathingPhase[]> = {
+  calm: [
+    { action: 'Breathe In', duration: 4, instruction: '', color: 'from-blue-400 to-cyan-400' },
+    { action: 'Hold', duration: 4, instruction: '', color: 'from-purple-400 to-blue-400' },
+    { action: 'Breathe Out', duration: 6, instruction: '', color: 'from-indigo-400 to-purple-400' },
+  ],
+  stressed: [
+    { action: 'Breathe In', duration: 4, instruction: '', color: 'from-green-400 to-emerald-400' },
+    { action: 'Hold', duration: 7, instruction: '', color: 'from-teal-400 to-green-400' },
+    { action: 'Breathe Out', duration: 8, instruction: '', color: 'from-blue-400 to-teal-400' },
+  ],
+  focused: [
+    { action: 'Breathe In', duration: 3, instruction: '', color: 'from-orange-400 to-amber-400' },
+    { action: 'Hold', duration: 3, instruction: '', color: 'from-yellow-400 to-orange-400' },
+    { action: 'Breathe Out', duration: 3, instruction: '', color: 'from-amber-400 to-yellow-400' },
+  ],
+  unclear: [
+    { action: 'Breathe In', duration: 5, instruction: '', color: 'from-violet-400 to-purple-400' },
+    { action: 'Hold', duration: 5, instruction: '', color: 'from-purple-400 to-fuchsia-400' },
+    { action: 'Breathe Out', duration: 7, instruction: '', color: 'from-pink-400 to-violet-400' },
   ],
 };
 
@@ -50,10 +97,13 @@ export default function AdaptiveBreathingFlow({ mindState, onComplete }: Adaptiv
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isActive, setIsActive] = useState(false);
+  const [promptIndex, setPromptIndex] = useState(0);
 
   const flow = BREATHING_FLOWS[mindState];
+  const prompts = BREATHING_PROMPTS[mindState];
   const totalCycles = 5;
   const currentPhase = flow[currentPhaseIndex];
+  const currentPrompt = prompts[promptIndex % prompts.length];
 
   useEffect(() => {
     // Start the first phase
@@ -82,6 +132,7 @@ export default function AdaptiveBreathingFlow({ mindState, onComplete }: Adaptiv
           }
           
           setCurrentPhaseIndex(nextPhaseIndex);
+          setPromptIndex((prev) => prev + 1); // Cycle through prompts
           return flow[nextPhaseIndex].duration;
         }
         return prev - 1;
@@ -156,13 +207,14 @@ export default function AdaptiveBreathingFlow({ mindState, onComplete }: Adaptiv
       {/* Instruction */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentPhase.instruction}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          key={`${currentPhase.action}-${promptIndex}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.4 }}
           className="text-xl sm:text-2xl text-white font-light mb-6 sm:mb-8 text-center px-4"
         >
-          {currentPhase.instruction}
+          {currentPrompt}
         </motion.div>
       </AnimatePresence>
 
