@@ -156,16 +156,16 @@ export default function Dashboard() {
         </div>
 
         {/* Upcoming Meetings */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-6">Upcoming Meetings</h2>
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Upcoming Meetings</h2>
 
           {meetings.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg">No upcoming meetings</p>
+            <div className="text-center py-8 sm:py-12 text-gray-500">
+              <Calendar className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 opacity-50" />
+              <p className="text-base sm:text-lg">No upcoming meetings</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {meetings.slice(0, 10).map((meeting) => (
                 <MeetingCard key={meeting.id} meeting={meeting} />
               ))}
@@ -206,37 +206,37 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
   const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 60; // Within 1 hour
 
   return (
-    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors">
-      <div className="flex-1">
-        <h3 className="font-semibold text-lg mb-1">{meeting.title}</h3>
-        <div className="text-gray-600 space-y-1">
-          <div>{dateString} at {timeString}</div>
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors gap-3 sm:gap-4">
+      <div className="flex-1 min-w-0">
+        <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{meeting.title}</h3>
+        <div className="text-gray-600 text-sm sm:text-base space-y-0.5 sm:space-y-1">
+          <div className="truncate">{dateString} at {timeString}</div>
           {minutesUntilMeeting > 0 && minutesUntilMeeting <= 60 && (
-            <div className="text-sm text-indigo-600 font-medium">
+            <div className="text-xs sm:text-sm text-indigo-600 font-medium">
               Starting in {minutesUntilMeeting} minute{minutesUntilMeeting !== 1 ? 's' : ''}
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
         {canStartFocusSession && meeting.focusSceneUrl && (
           <a
             href={meeting.focusSceneUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg text-center whitespace-nowrap"
           >
             🎬 Start Focus Session
           </a>
         )}
         {meeting.cueDelivered && (
-          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+          <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm whitespace-nowrap">
             Cue Sent
           </span>
         )}
         {meeting.focusSceneOpened && (
-          <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+          <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs sm:text-sm whitespace-nowrap">
             ✓ Completed
           </span>
         )}

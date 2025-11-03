@@ -197,27 +197,27 @@ export default function FocusScene() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="min-h-screen flex flex-col items-center justify-center p-8"
+            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 pt-24 sm:pt-8"
           >
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
+              className="absolute top-4 right-4 sm:top-8 sm:right-8"
             >
               <CountdownTimer
                 startTime={new Date(meeting.startTime)}
-                className="absolute top-8 right-8"
               />
             </motion.div>
 
             <motion.div 
-              className="text-center mb-12"
+              className="text-center mb-8 sm:mb-12 px-4"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-              <h2 className="text-3xl font-semibold mb-4">Take a Breath</h2>
-              <p className="text-xl text-purple-200">Center yourself before you enter</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold mb-3 sm:mb-4">Take a Breath</h2>
+              <p className="text-lg sm:text-xl text-purple-200">Center yourself before you enter</p>
             </motion.div>
 
             <motion.div
@@ -251,12 +251,13 @@ export default function FocusScene() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-8"
+            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 pt-24 sm:pt-8"
           >
-            <CountdownTimer
-              startTime={new Date(meeting.startTime)}
-              className="absolute top-8 right-8"
-            />
+            <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
+              <CountdownTimer
+                startTime={new Date(meeting.startTime)}
+              />
+            </div>
 
             <div className="max-w-2xl w-full">
               <motion.div

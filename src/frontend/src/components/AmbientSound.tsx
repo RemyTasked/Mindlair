@@ -20,6 +20,40 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [needsInteraction, setNeedsInteraction] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const initializeAudio = async () => {
+    if (!enabled || soundType === 'none') return;
+
+    const soundUrl = SOUND_URLS[soundType];
+    if (!soundUrl) return;
+
+    try {
+      // Create and configure audio element
+      const audio = new Audio(soundUrl);
+      audio.loop = true;
+      audio.volume = 0.4;
+      audio.preload = 'auto';
+      audioRef.current = audio;
+
+      setIsLoading(true);
+      setNeedsInteraction(false);
+
+      // Try to play
+      await audio.play();
+      setIsLoading(false);
+      setIsPlaying(true);
+    } catch (error: any) {
+      console.error('Error playing ambient sound:', error);
+      setIsLoading(false);
+      
+      // If autoplay was blocked, show button to enable sound
+      if (error.name === 'NotAllowedError') {
+        setNeedsInteraction(true);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!enabled || soundType === 'none') {
@@ -27,33 +61,12 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
         audioRef.current.pause();
         audioRef.current = null;
       }
+      setIsPlaying(false);
       return;
     }
 
-    const soundUrl = SOUND_URLS[soundType];
-    if (!soundUrl) return;
-
-    // Create and configure audio element
-    const audio = new Audio(soundUrl);
-    audio.loop = true;
-    audio.volume = 0.4; // Set to 40% volume for background ambience
-    audioRef.current = audio;
-
-    setIsLoading(true);
-
-    // Play the audio
-    const playPromise = audio.play();
-    
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          console.error('Error playing ambient sound:', error);
-          setIsLoading(false);
-        });
-    }
+    // Initialize audio
+    initializeAudio();
 
     // Cleanup
     return () => {
@@ -61,11 +74,16 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
         audioRef.current.pause();
         audioRef.current = null;
       }
+      setIsPlaying(false);
     };
   }, [soundType, enabled]);
 
-  const toggleMute = () => {
-    if (audioRef.current) {
+  const handleClick = async () => {
+    if (needsInteraction) {
+      // User clicked to enable sound
+      await initializeAudio();
+    } else if (audioRef.current) {
+      // Toggle mute
       if (isMuted) {
         audioRef.current.volume = 0.4;
         setIsMuted(false);
@@ -82,17 +100,22 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
 
   return (
     <button
-      onClick={toggleMute}
-      className="fixed bottom-8 left-8 p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all text-white"
-      aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
-      title={isMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
+      onClick={handleClick}
+      className="fixed bottom-4 left-4 sm:bottom-8 sm:left-8 p-3 sm:p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all text-white shadow-lg z-50"
+      aria-label={needsInteraction ? 'Enable sound' : (isMuted ? 'Unmute sound' : 'Mute sound')}
+      title={needsInteraction ? 'Tap to enable ambient sound' : (isMuted ? 'Unmute ambient sound' : 'Mute ambient sound')}
     >
       {isLoading ? (
-        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+      ) : needsInteraction ? (
+        <div className="relative">
+          <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse" />
+        </div>
       ) : isMuted ? (
-        <VolumeX className="w-6 h-6" />
+        <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" />
       ) : (
-        <Volume2 className="w-6 h-6" />
+        <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
       )}
     </button>
   );
