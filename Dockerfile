@@ -1,9 +1,9 @@
 # Use Node.js 18 on Debian (better Prisma compatibility)
 FROM node:18-slim
 
-# Install OpenSSL and other dependencies for Prisma
+# Install OpenSSL, PostgreSQL client, and other dependencies for Prisma
 RUN apt-get update -y && \
-    apt-get install -y openssl libssl-dev ca-certificates && \
+    apt-get install -y openssl libssl-dev ca-certificates postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
 # Create app directory
@@ -30,8 +30,9 @@ RUN npx prisma generate
 # Expose port
 EXPOSE 3000
 
+# Copy startup script
+COPY start.sh .
+RUN chmod +x start.sh
+
 # Start the application (with migration on startup)
-CMD npx prisma migrate resolve --applied 20251101165908_add_focus_sound_preferences && \
-    npx prisma migrate resolve --applied 20251101174823_add_post_meeting_insights && \
-    npx prisma migrate resolve --applied 20251101181116_add_presley_flow_preferences && \
-    npx prisma migrate deploy && npm run start
+CMD ["./start.sh"]
