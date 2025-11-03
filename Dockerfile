@@ -31,4 +31,7 @@ RUN npx prisma generate
 EXPOSE 3000
 
 # Start the application (with migration on startup)
-CMD npx prisma migrate deploy && npm run start
+CMD npx prisma migrate resolve --applied 20251101165908_add_focus_sound_preferences && \
+    npx prisma migrate resolve --applied 20251101174823_add_post_meeting_insights && \
+    npx prisma migrate resolve --applied 20251101181116_add_presley_flow_preferences && \
+    npx prisma migrate deploy && npm run start
