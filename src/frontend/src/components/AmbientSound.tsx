@@ -20,7 +20,8 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [needsInteraction, setNeedsInteraction] = useState(false);
+  const [needsInteraction, setNeedsInteraction] = useState(true); // Start as true - require interaction
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const initializeAudio = async () => {
     if (!enabled || soundType === 'none') return;
@@ -42,13 +43,16 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
       // Try to play
       await audio.play();
       setIsLoading(false);
+      setHasInteracted(true);
+      console.log('✅ Ambient sound started successfully');
     } catch (error: any) {
       console.error('Error playing ambient sound:', error);
       setIsLoading(false);
       
       // If autoplay was blocked, show button to enable sound
-      if (error.name === 'NotAllowedError') {
+      if (error.name === 'NotAllowedError' || error.name === 'NotSupportedError') {
         setNeedsInteraction(true);
+        console.log('⚠️ Autoplay blocked - user interaction needed');
       }
     }
   };
@@ -62,8 +66,9 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
       return;
     }
 
-    // Initialize audio
-    initializeAudio();
+    // Don't auto-initialize - wait for user interaction
+    // This prevents autoplay errors
+    console.log('🎵 Ambient sound ready - waiting for user interaction');
 
     // Cleanup
     return () => {
@@ -97,16 +102,20 @@ export default function AmbientSound({ soundType, enabled }: AmbientSoundProps) 
   return (
     <button
       onClick={handleClick}
-      className="fixed bottom-4 left-4 sm:bottom-8 sm:left-8 p-3 sm:p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all text-white shadow-lg z-50"
+      className={`fixed bottom-4 left-4 sm:bottom-8 sm:left-8 p-3 sm:p-4 backdrop-blur-sm rounded-full transition-all text-white shadow-lg z-50 ${
+        needsInteraction 
+          ? 'bg-yellow-500/80 hover:bg-yellow-600/80 animate-pulse' 
+          : 'bg-white/10 hover:bg-white/20'
+      }`}
       aria-label={needsInteraction ? 'Enable sound' : (isMuted ? 'Unmute sound' : 'Mute sound')}
-      title={needsInteraction ? 'Tap to enable ambient sound' : (isMuted ? 'Unmute ambient sound' : 'Mute ambient sound')}
+      title={needsInteraction ? '🔊 Tap to enable ambient sound' : (isMuted ? 'Unmute ambient sound' : 'Mute ambient sound')}
     >
       {isLoading ? (
         <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
       ) : needsInteraction ? (
-        <div className="relative">
+        <div className="relative flex items-center gap-2">
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse" />
+          <span className="hidden sm:inline text-sm font-semibold">Enable Sound</span>
         </div>
       ) : isMuted ? (
         <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" />

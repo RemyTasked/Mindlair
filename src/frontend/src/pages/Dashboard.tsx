@@ -203,7 +203,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
 
   const now = new Date();
   const minutesUntilMeeting = Math.floor((startTime.getTime() - now.getTime()) / (1000 * 60));
-  const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 60; // Within 1 hour
+  const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 10; // Within 10 minutes
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors gap-3 sm:gap-4">
@@ -211,7 +211,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
         <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{meeting.title}</h3>
         <div className="text-gray-600 text-sm sm:text-base space-y-0.5 sm:space-y-1">
           <div className="truncate">{dateString} at {timeString}</div>
-          {minutesUntilMeeting > 0 && minutesUntilMeeting <= 60 && (
+          {minutesUntilMeeting > 0 && minutesUntilMeeting <= 10 && (
             <div className="text-xs sm:text-sm text-indigo-600 font-medium">
               Starting in {minutesUntilMeeting} minute{minutesUntilMeeting !== 1 ? 's' : ''}
             </div>

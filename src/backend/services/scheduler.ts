@@ -59,7 +59,7 @@ async function checkUpcomingMeetings() {
     for (const user of users) {
       if (user.calendarAccounts.length === 0) continue;
 
-      const alertMinutes = user.preferences?.alertMinutesBefore || 5;
+      const alertMinutes = user.preferences?.alertMinutesBefore || 10;
       
       // Fetch events for today and tomorrow (wider range for dashboard and planning)
       const startOfToday = new Date(now);

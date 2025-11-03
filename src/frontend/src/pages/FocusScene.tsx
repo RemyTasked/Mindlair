@@ -22,8 +22,10 @@ export default function FocusScene() {
   const { userId, meetingId } = useParams();
   const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPhase, setCurrentPhase] = useState<'intro' | 'mindstate' | 'breathing' | 'reflection' | 'complete'>('intro');
+  const [currentPhase, setCurrentPhase] = useState<'intro' | 'mindstate' | 'ai-message' | 'breathing' | 'reflection' | 'complete'>('intro');
   const [mindState, setMindState] = useState<MindState | null>(null);
+  const [aiMessage, setAiMessage] = useState<string>('');
+  const [loadingAiMessage, setLoadingAiMessage] = useState(false);
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [breathingCompleted, setBreathingCompleted] = useState(false);
 
@@ -50,9 +52,37 @@ export default function FocusScene() {
     setTimeout(() => setCurrentPhase('reflection'), 1000);
   };
 
-  const handleMindStateSelect = (state: MindState) => {
+  const handleMindStateSelect = async (state: MindState) => {
     setMindState(state);
-    setCurrentPhase('breathing');
+    setLoadingAiMessage(true);
+    setCurrentPhase('ai-message');
+    
+    try {
+      // Generate AI message based on mind state
+      const response = await api.post(`/api/focus-scene/${userId}/${meetingId}/ai-message`, {
+        mindState: state,
+      });
+      setAiMessage(response.data.message);
+      setLoadingAiMessage(false);
+      
+      // Auto-progress to breathing after showing message
+      setTimeout(() => setCurrentPhase('breathing'), 5000);
+    } catch (error) {
+      console.error('Error generating AI message:', error);
+      setAiMessage(getFallbackMessage(state));
+      setLoadingAiMessage(false);
+      setTimeout(() => setCurrentPhase('breathing'), 5000);
+    }
+  };
+  
+  const getFallbackMessage = (state: MindState): string => {
+    const messages = {
+      calm: "You're already in a good place. Let's maintain that centered energy as you prepare.",
+      stressed: "I see you're feeling the pressure. Let's take a moment to ground yourself and release that tension.",
+      focused: "Great energy! Let's channel that focus and sharpen your presence for this meeting.",
+      unclear: "Feeling foggy is normal. Let's bring some clarity and presence to this moment together.",
+    };
+    return messages[state];
   };
 
   const handleComplete = async () => {
@@ -245,6 +275,68 @@ export default function FocusScene() {
                   <div className="text-sm sm:text-base text-white/80">{option.description}</div>
                 </motion.button>
               ))}
+            </motion.div>
+          </motion.div>
+        )}
+
+        {currentPhase === 'ai-message' && (
+          <motion.div
+            key="ai-message"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="text-center max-w-2xl"
+            >
+              {loadingAiMessage ? (
+                <>
+                  <motion.div
+                    className="text-6xl mb-6"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    ✨
+                  </motion.div>
+                  <p className="text-2xl text-purple-200">
+                    Personalizing your experience...
+                  </p>
+                </>
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
+                    className="text-6xl mb-6"
+                  >
+                    {mindState === 'calm' && '😌'}
+                    {mindState === 'stressed' && '😰'}
+                    {mindState === 'focused' && '🎯'}
+                    {mindState === 'unclear' && '🌫️'}
+                  </motion.div>
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-2xl sm:text-3xl text-white leading-relaxed mb-8"
+                  >
+                    {aiMessage}
+                  </motion.p>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="text-purple-300 text-sm"
+                  >
+                    Preparing your breathing flow...
+                  </motion.div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}

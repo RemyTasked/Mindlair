@@ -57,7 +57,7 @@ model UserPreferences {
   tone      String   @default("balanced") // "executive", "cinematic", "balanced", "calm"
   
   // Timing preferences
-  alertMinutesBefore Int @default(5)
+  alertMinutesBefore Int @default(10)
   mergeBackToBack    Boolean @default(true)
   
   // Feature toggles
