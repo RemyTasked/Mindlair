@@ -4,6 +4,8 @@ import { PromptGenerator } from '../services/ai/promptGenerator';
 import { aiService } from '../services/ai/aiService';
 import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
+import { googleCalendarService } from '../services/calendar/googleCalendar';
+import { logger } from '../utils/logger';
 
 const router = express.Router();
 const promptGenerator = new PromptGenerator();
@@ -228,6 +230,100 @@ router.get('/health', (_req, res) => {
     },
   });
 });
+
+/**
+ * Manual calendar sync endpoint
+ * GET /api/test/sync-calendar
+ */
+router.get(
+  '/sync-calendar',
+  asyncHandler(async (_req, res) => {
+    const now = new Date();
+    const results: any = {
+      timestamp: now.toISOString(),
+      users: [],
+      errors: [],
+    };
+
+    try {
+      // Get all users with calendar accounts
+      const users = await prisma.user.findMany({
+        include: {
+          calendarAccounts: true,
+          preferences: true,
+        },
+      });
+
+      for (const user of users) {
+        const userResult: any = {
+          userId: user.id,
+          email: user.email,
+          calendars: [],
+        };
+
+        for (const account of user.calendarAccounts) {
+          try {
+            if (account.provider === 'google') {
+              // Fetch events from today through tomorrow
+              const startOfToday = new Date(now);
+              startOfToday.setHours(0, 0, 0, 0);
+              
+              const endOfTomorrow = new Date(now);
+              endOfTomorrow.setDate(endOfTomorrow.getDate() + 1);
+              endOfTomorrow.setHours(23, 59, 59, 999);
+
+              logger.info('Fetching calendar events', {
+                userId: user.id,
+                email: user.email,
+                from: startOfToday.toISOString(),
+                to: endOfTomorrow.toISOString(),
+              });
+
+              const events = await googleCalendarService.getUpcomingEvents(
+                account.accessToken,
+                account.refreshToken || undefined,
+                startOfToday,
+                endOfTomorrow
+              );
+
+              userResult.calendars.push({
+                provider: 'google',
+                eventsFound: events.length,
+                events: events.map((e: any) => ({
+                  id: e.id,
+                  summary: e.summary,
+                  start: e.start,
+                  end: e.end,
+                  attendees: e.attendees?.length || 0,
+                })),
+              });
+            }
+          } catch (error: any) {
+            userResult.calendars.push({
+              provider: account.provider,
+              error: error.message,
+            });
+            results.errors.push({
+              userId: user.id,
+              provider: account.provider,
+              error: error.message,
+            });
+          }
+        }
+
+        results.users.push(userResult);
+      }
+
+      return res.json(results);
+    } catch (error: any) {
+      logger.error('Error in sync-calendar test', { error: error.message });
+      return res.status(500).json({
+        error: error.message,
+        results,
+      });
+    }
+  })
+);
 
 /**
  * Debug endpoint to check meetings in database
