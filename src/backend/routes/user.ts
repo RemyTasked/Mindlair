@@ -33,6 +33,23 @@ router.get(
         throw new AppError('User not found', 404);
       }
 
+      // HOTFIX: Ensure preferences exist for old accounts
+      if (!user.preferences) {
+        await prisma.userPreferences.create({
+          data: { userId: user.id },
+        });
+        // Refetch user with preferences
+        const updatedUser = await prisma.user.findUnique({
+          where: { id: req.userId },
+          include: {
+            preferences: true,
+            deliverySettings: true,
+            calendarAccounts: { select: { id: true, provider: true, email: true, createdAt: true } },
+          },
+        });
+        return res.json({ user: updatedUser });
+      }
+
       res.json({ user });
     } catch (error: any) {
       console.error('❌ Error fetching user profile:', {
