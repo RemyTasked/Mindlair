@@ -77,20 +77,27 @@ export default function Dashboard() {
         }),
       ]);
 
-      // Check for Presley Flow
-      const presleyResponse = await api.get(`/api/presley-flow/check/${userResponse.data.user.id}`);
+      // Check for Presley Flow (non-critical - don't fail if it errors)
+      let presleyData = { available: false };
+      try {
+        const presleyResponse = await api.get(`/api/presley-flow/check/${userResponse.data.user.id}`);
+        presleyData = presleyResponse.data;
+      } catch (presleyError: any) {
+        console.warn('⚠️ Presley Flow check failed (non-critical):', presleyError.message);
+        // Don't fail the whole dashboard load if Presley Flow check fails
+      }
 
       console.log('✅ API calls successful', {
         userEmail: userResponse.data.user?.email,
         meetingsCount: meetingsResponse.data.meetings?.length,
         totalMeetings: statsResponse.data.stats?.totalMeetings,
-        presleyFlowAvailable: presleyResponse.data.available,
+        presleyFlowAvailable: presleyData.available,
       });
 
       setUser(userResponse.data.user);
       setMeetings(meetingsResponse.data.meetings);
       setStats(statsResponse.data.stats);
-      setPresleyFlow(presleyResponse.data);
+      setPresleyFlow(presleyData);
       setLoading(false);
     } catch (error: any) {
       console.error('❌ Error loading user data:', error);
