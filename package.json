@@ -10,7 +10,7 @@
     "build": "prisma generate && npm run build:backend && npm run build:frontend",
     "build:backend": "tsc -p tsconfig.backend.json",
     "build:frontend": "cd src/frontend && npm run build",
-    "start": "prisma migrate deploy && node dist/server.js",
+    "start": "npm run prisma:migrate:deploy && node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",

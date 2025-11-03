@@ -450,6 +450,102 @@ router.get(
   })
 );
 
+// Check if database migrations have run
+router.get('/db-schema', asyncHandler(async (_req, res) => {
+  try {
+    // Try to query with new fields to see if they exist
+    const schemaCheck: any = {
+      timestamp: new Date().toISOString(),
+      checks: [],
+    };
+
+    // Check 1: Can we query user_preferences with new fields?
+    try {
+      const prefs = await prisma.userPreferences.findFirst({
+        select: {
+          enableVoiceNarration: true,
+          morningFlowTime: true,
+          eveningFlowTime: true,
+          enableMorningFlow: true,
+          enableEveningFlow: true,
+        },
+      });
+      schemaCheck.checks.push({
+        table: 'user_preferences',
+        newFields: ['enableVoiceNarration', 'morningFlowTime', 'eveningFlowTime', 'enableMorningFlow', 'enableEveningFlow'],
+        status: 'EXISTS',
+        sampleData: prefs || 'No records yet',
+      });
+    } catch (error: any) {
+      schemaCheck.checks.push({
+        table: 'user_preferences',
+        newFields: ['enableVoiceNarration', 'morningFlowTime', 'eveningFlowTime', 'enableMorningFlow', 'enableEveningFlow'],
+        status: 'MISSING',
+        error: error.message,
+      });
+    }
+
+    // Check 2: Can we query meetings with isOrganizer?
+    try {
+      const meeting = await prisma.meeting.findFirst({
+        select: {
+          isOrganizer: true,
+        },
+      });
+      schemaCheck.checks.push({
+        table: 'meetings',
+        newFields: ['isOrganizer'],
+        status: 'EXISTS',
+        sampleData: meeting || 'No records yet',
+      });
+    } catch (error: any) {
+      schemaCheck.checks.push({
+        table: 'meetings',
+        newFields: ['isOrganizer'],
+        status: 'MISSING',
+        error: error.message,
+      });
+    }
+
+    // Check 3: Can we query presley_flow_sessions?
+    try {
+      const session = await prisma.presleyFlowSession.findFirst({
+        select: {
+          performanceRating: true,
+          improvementNotes: true,
+        },
+      });
+      schemaCheck.checks.push({
+        table: 'presley_flow_sessions',
+        newFields: ['performanceRating', 'improvementNotes'],
+        status: 'EXISTS',
+        sampleData: session || 'No records yet',
+      });
+    } catch (error: any) {
+      schemaCheck.checks.push({
+        table: 'presley_flow_sessions',
+        newFields: ['performanceRating', 'improvementNotes'],
+        status: 'MISSING',
+        error: error.message,
+      });
+    }
+
+    const allChecksPass = schemaCheck.checks.every((c: any) => c.status === 'EXISTS');
+    schemaCheck.migrationsComplete = allChecksPass;
+    schemaCheck.message = allChecksPass 
+      ? '✅ All migrations have run successfully' 
+      : '❌ Some migrations are missing - database schema is out of date';
+
+    return res.json(schemaCheck);
+  } catch (error: any) {
+    console.error('❌ Error checking database schema:', error);
+    return res.status(500).json({
+      error: error.message,
+      message: 'Failed to check database schema',
+    });
+  }
+}));
+
 // Debug user authentication flow
 router.get('/user/:userId', asyncHandler(async (req, res) => {
   const { userId } = req.params;
