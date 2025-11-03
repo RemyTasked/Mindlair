@@ -21,11 +21,19 @@ interface Stats {
   totalFocusSessions: number;
 }
 
+interface PresleyFlow {
+  available: boolean;
+  meetingCount?: number;
+  presleyFlowUrl?: string;
+  date?: string;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [presleyFlow, setPresleyFlow] = useState<PresleyFlow | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,15 +77,20 @@ export default function Dashboard() {
         }),
       ]);
 
+      // Check for Presley Flow
+      const presleyResponse = await api.get(`/api/presley-flow/check/${userResponse.data.user.id}`);
+
       console.log('✅ API calls successful', {
         userEmail: userResponse.data.user?.email,
         meetingsCount: meetingsResponse.data.meetings?.length,
         totalMeetings: statsResponse.data.stats?.totalMeetings,
+        presleyFlowAvailable: presleyResponse.data.available,
       });
 
       setUser(userResponse.data.user);
       setMeetings(meetingsResponse.data.meetings);
       setStats(statsResponse.data.stats);
+      setPresleyFlow(presleyResponse.data);
       setLoading(false);
     } catch (error: any) {
       console.error('❌ Error loading user data:', error);
@@ -162,6 +175,37 @@ export default function Dashboard() {
             value={stats?.totalFocusSessions || 0}
           />
         </div>
+
+        {/* Presley Flow Card */}
+        {presleyFlow?.available && (
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-6 mb-8 border-2 border-purple-200">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="text-4xl">🌙</div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      Today's Mental Rehearsal
+                    </h3>
+                    <p className="text-sm text-purple-600 font-medium">Presley Flow Available</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 mb-4 leading-relaxed">
+                  Prepare for today's {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} with a cinematic mental rehearsal. 
+                  Visualize success before your day begins.
+                </p>
+                <a
+                  href={presleyFlow.presleyFlowUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+                >
+                  🎬 Start Mental Rehearsal
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Upcoming Meetings */}
         <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">

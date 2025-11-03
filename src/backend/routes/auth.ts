@@ -46,7 +46,7 @@ router.get(
           preferences: {
             create: {
               tone: 'balanced',
-              alertMinutesBefore: 5,
+              alertMinutesBefore: 10,
             },
           },
           deliverySettings: {
@@ -159,7 +159,7 @@ router.get(
           preferences: {
             create: {
               tone: 'balanced',
-              alertMinutesBefore: 5,
+              alertMinutesBefore: 10,
             },
           },
           deliverySettings: {
