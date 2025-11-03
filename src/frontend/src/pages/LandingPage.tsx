@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import api from '../lib/axios';
-import { Calendar, Sparkles, Clock, Mail, Smartphone, Moon, Sun, Star, Music, Heart, Brain } from 'lucide-react';
+import { Calendar, Sparkles, Mail, Moon, Sun, Star, Music, Heart, Brain } from 'lucide-react';
 
 export default function LandingPage() {
   const [loading, setLoading] = useState(false);
