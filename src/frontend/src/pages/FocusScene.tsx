@@ -59,16 +59,26 @@ export default function FocusScene() {
     
     try {
       // Generate AI message based on mind state
+      // Fallback chain: OpenAI → Gemini → Template messages
       const response = await api.post(`/api/focus-scene/${userId}/${meetingId}/ai-message`, {
         mindState: state,
       });
+      
       setAiMessage(response.data.message);
       setLoadingAiMessage(false);
+      
+      // Log which provider was used
+      if (response.data.fallback) {
+        console.log('⚠️ Using template message fallback (OpenAI & Gemini unavailable)');
+      } else {
+        console.log('✅ AI-generated message received');
+      }
       
       // Auto-progress to breathing after showing message
       setTimeout(() => setCurrentPhase('breathing'), 5000);
     } catch (error) {
-      console.error('Error generating AI message:', error);
+      console.error('❌ Error generating AI message:', error);
+      // Client-side fallback (should rarely happen as server has fallbacks)
       setAiMessage(getFallbackMessage(state));
       setLoadingAiMessage(false);
       setTimeout(() => setCurrentPhase('breathing'), 5000);

@@ -164,14 +164,16 @@ Generate the message now:`;
 
       res.json({ message });
     } catch (error: any) {
-      logger.error('Error generating AI message', {
+      logger.error('All AI providers failed, falling back to template messages', {
         userId,
         meetingId,
         mindState,
         error: error.message,
+        fallbackChain: 'OpenAI → Gemini → Templates',
       });
       
-      // Fallback to template messages if AI fails
+      // Last resort: Fallback to template messages if all AI providers fail
+      // This ensures user always gets a message even if OpenAI AND Gemini are down
       const fallbackMessages = {
         calm: `You're already centered. Let's maintain that peaceful energy as you step into ${meeting.title}.`,
         stressed: `I see the pressure building. Before ${meeting.title}, let's take a moment to ground yourself and release that tension.`,
@@ -181,6 +183,7 @@ Generate the message now:`;
       
       res.json({
         message: fallbackMessages[mindState] || `Take a deep breath. You're prepared for this meeting.`,
+        fallback: true, // Indicate this was a fallback message
       });
     }
   })
