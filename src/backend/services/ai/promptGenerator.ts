@@ -1,5 +1,6 @@
 import { logger } from '../../utils/logger';
 import { aiService } from './aiService';
+import { MindStatePattern, getTomorrowMindStateInsights } from './mindStateAnalyzer';
 
 export interface MeetingContext {
   title: string;
@@ -38,7 +39,8 @@ export class PromptGenerator {
   async generatePreMeetingCue(
     context: MeetingContext,
     tone: ToneType = 'balanced',
-    historicalInsights?: HistoricalInsight[]
+    historicalInsights?: HistoricalInsight[],
+    mindStatePatterns?: MindStatePattern
   ): Promise<string> {
     try {
       const toneGuideline = TONE_GUIDELINES[tone];
@@ -65,6 +67,25 @@ Use these insights to craft a message that:
 - Addresses any patterns from lower-rated meetings
 - Provides specific, actionable focus points based on their history`;
       }
+
+      // Build mind state pattern context if available
+      let mindStateContext = '';
+      if (mindStatePatterns && mindStatePatterns.mostCommonState !== 'unknown') {
+        const stressLevel = mindStatePatterns.stressFrequency > 50 ? 'high' : 
+                           mindStatePatterns.stressFrequency > 30 ? 'moderate' : 'low';
+        
+        mindStateContext = `\n\nMIND STATE PATTERNS:
+Stress frequency: ${Math.round(mindStatePatterns.stressFrequency)}% of meetings (${stressLevel})
+Recent trend: ${mindStatePatterns.recentTrend}
+${mindStatePatterns.stressfulDaysOfWeek.length > 0 ? `Typically stressed on: ${mindStatePatterns.stressfulDaysOfWeek.join(', ')}` : ''}
+${mindStatePatterns.stressfulMeetingTypes.length > 0 ? `\nStressful meeting types: ${mindStatePatterns.stressfulMeetingTypes.map(mt => `${mt.type} (${Math.round(mt.stressRate)}%)`).join(', ')}` : ''}
+
+IMPORTANT: Use this data to provide MORE GROUNDED, PRACTICAL support:
+- If stress is high, focus on concrete calming techniques (not just "stay calm")
+- If this meeting type/day typically causes stress, acknowledge it and provide specific prep strategies
+- If trend is worsening, be extra supportive and suggest buffer time or breaks
+- Match the energy level to their needs: stressed users need grounding, not hype`;
+      }
       
       const prompt = `You are an AI assistant for "Meet Cute," a pre-meeting preparation tool that helps professionals mentally prepare before meetings.
 
@@ -78,7 +99,7 @@ ${context.isBackToBack ? 'Note: This is a back-to-back meeting' : ''}
 ${context.meetingType ? `Type: ${context.meetingType}` : ''}
 
 Tone: ${tone}
-${toneGuideline}${historicalContext}
+${toneGuideline}${historicalContext}${mindStateContext}
 
 The message should:
 1. Be brief and impactful (2-3 sentences)
@@ -86,6 +107,7 @@ The message should:
 3. Match the ${tone} tone perfectly
 4. Reference the meeting context appropriately
 ${historicalInsights && historicalInsights.length > 0 ? '5. Subtly incorporate learnings from their past performance without explicitly mentioning ratings\n6. End with confidence and readiness' : '5. End with confidence and readiness'}
+${mindStateContext ? '7. Be GROUNDED and PRACTICAL based on their stress patterns - avoid generic motivation if they typically find this type of meeting stressful' : ''}
 
 Generate the message now:`;
 
@@ -234,7 +256,7 @@ Generate the message now:`;
     attendees: string[];
     description?: string;
     meetingType?: string;
-  }>, tone: ToneType = 'balanced', historicalInsights?: HistoricalInsight[]): Promise<{
+  }>, tone: ToneType = 'balanced', historicalInsights?: HistoricalInsight[], userId?: string): Promise<{
     openingScene: string;
     meetingPreviews: Array<{
       title: string;
@@ -256,12 +278,24 @@ Generate the message now:`;
         historicalContext = `\n\nUser's Historical Performance: ${avgRating.toFixed(1)}/5 average rating`;
       }
 
+      // Get mind state insights for tomorrow
+      let mindStateInsights = '';
+      if (userId) {
+        const insights = await getTomorrowMindStateInsights(userId);
+        if (insights.length > 0) {
+          mindStateInsights = `\n\nMIND STATE INSIGHTS FOR TOMORROW:
+${insights.map(i => `- ${i}`).join('\n')}
+
+IMPORTANT: Incorporate these insights naturally into your preparation script. If certain meetings or times are typically stressful, provide specific grounding strategies (not just "stay positive"). Be practical and supportive.`;
+        }
+      }
+
       const prompt = `You are creating an evening mental rehearsal script for tomorrow's meetings - a "Presley Flow Session."
 
 TOMORROW'S SCHEDULE:
 ${meetingsSummary}
 
-User's Tone Preference: ${tone}${historicalContext}
+User's Tone Preference: ${tone}${historicalContext}${mindStateInsights}
 
 Create a cinematic, calming mental preparation experience with these components:
 
@@ -351,15 +385,28 @@ Return as JSON:
     }
   }
 
-  async generateMorningRecap(firstMeetingTime?: Date, presleyFlowCompleted: boolean = false): Promise<string> {
+  async generateMorningRecap(
+    firstMeetingTime?: Date, 
+    presleyFlowCompleted: boolean = false,
+    userId?: string
+  ): Promise<string> {
     try {
       const timeStr = firstMeetingTime 
         ? firstMeetingTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
         : 'soon';
 
+      // Get mind state insights
+      let mindStateNote = '';
+      if (userId) {
+        const insights = await getTomorrowMindStateInsights(userId);
+        if (insights.length > 0) {
+          mindStateNote = `\n\nNote: ${insights[0]}`; // Include first insight only for brevity
+        }
+      }
+
       const prompt = `Generate a brief morning recap message (2 sentences max) for someone who ${presleyFlowCompleted ? 'completed their Presley Flow evening rehearsal' : 'has meetings today'}.
 
-${firstMeetingTime ? `First meeting: ${timeStr}` : 'Schedule ahead'}
+${firstMeetingTime ? `First meeting: ${timeStr}` : 'Schedule ahead'}${mindStateNote}
 
 The message should:
 1. Be brief and energizing

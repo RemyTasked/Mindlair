@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import BreathingCircle from '../components/BreathingCircle';
+import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
+
+type MindState = 'calm' | 'stressed' | 'focused' | 'unclear';
 
 interface MeetingData {
   title: string;
@@ -20,7 +22,8 @@ export default function FocusScene() {
   const { userId, meetingId } = useParams();
   const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPhase, setCurrentPhase] = useState<'intro' | 'breathing' | 'reflection' | 'complete'>('intro');
+  const [currentPhase, setCurrentPhase] = useState<'intro' | 'mindstate' | 'breathing' | 'reflection' | 'complete'>('intro');
+  const [mindState, setMindState] = useState<MindState | null>(null);
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [breathingCompleted, setBreathingCompleted] = useState(false);
 
@@ -34,8 +37,8 @@ export default function FocusScene() {
       setMeeting(response.data.meeting);
       setLoading(false);
 
-      // Auto-progress through phases
-      setTimeout(() => setCurrentPhase('breathing'), 3000);
+      // Auto-progress to mind state selector
+      setTimeout(() => setCurrentPhase('mindstate'), 3000);
     } catch (error) {
       console.error('Error loading meeting data:', error);
       setLoading(false);
@@ -47,11 +50,17 @@ export default function FocusScene() {
     setTimeout(() => setCurrentPhase('reflection'), 1000);
   };
 
+  const handleMindStateSelect = (state: MindState) => {
+    setMindState(state);
+    setCurrentPhase('breathing');
+  };
+
   const handleComplete = async () => {
     try {
       await api.post(`/api/focus-scene/${userId}/${meetingId}/complete`, {
         breathingExerciseCompleted: breathingCompleted,
         reflectionNotes: reflectionNotes || undefined,
+        mindState: mindState || undefined,
       });
       setCurrentPhase('complete');
     } catch (error) {
@@ -190,7 +199,57 @@ export default function FocusScene() {
           </motion.div>
         )}
 
-        {currentPhase === 'breathing' && (
+        {currentPhase === 'mindstate' && (
+          <motion.div
+            key="mindstate"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8"
+          >
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="text-center mb-8 sm:mb-12 max-w-2xl"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">How are you feeling right now?</h2>
+              <p className="text-lg sm:text-xl text-purple-200">
+                We'll adapt your breathing flow to support your current state
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-2xl"
+            >
+              {[
+                { state: 'calm' as MindState, emoji: '😌', label: 'Calm', description: 'Centered and peaceful', color: 'from-blue-500 to-cyan-500' },
+                { state: 'stressed' as MindState, emoji: '😰', label: 'Stressed', description: 'Tense or overwhelmed', color: 'from-red-500 to-orange-500' },
+                { state: 'focused' as MindState, emoji: '🎯', label: 'Focused', description: 'Alert and ready', color: 'from-amber-500 to-yellow-500' },
+                { state: 'unclear' as MindState, emoji: '🌫️', label: 'Unclear', description: 'Foggy or uncertain', color: 'from-purple-500 to-pink-500' },
+              ].map((option, index) => (
+                <motion.button
+                  key={option.state}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3 + index * 0.1, type: 'spring', stiffness: 200 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleMindStateSelect(option.state)}
+                  className={`p-6 sm:p-8 rounded-2xl bg-gradient-to-br ${option.color} text-white text-left transition-all hover:shadow-2xl`}
+                >
+                  <div className="text-4xl sm:text-5xl mb-3">{option.emoji}</div>
+                  <div className="text-xl sm:text-2xl font-bold mb-2">{option.label}</div>
+                  <div className="text-sm sm:text-base text-white/80">{option.description}</div>
+                </motion.button>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+
+        {currentPhase === 'breathing' && mindState && (
           <motion.div
             key="breathing"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -210,38 +269,16 @@ export default function FocusScene() {
               />
             </motion.div>
 
-            <motion.div 
-              className="text-center mb-8 sm:mb-12 px-4"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              <h2 className="text-2xl sm:text-3xl font-semibold mb-3 sm:mb-4">Take a Breath</h2>
-              <p className="text-lg sm:text-xl text-purple-200">Center yourself before you enter</p>
-            </motion.div>
-
             <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ 
-                delay: 0.6,
-                duration: 0.8,
-                type: "spring",
-                stiffness: 80
-              }}
+              transition={{ delay: 0.3 }}
             >
-              <BreathingCircle onComplete={handleBreathingComplete} />
+              <AdaptiveBreathingFlow
+                mindState={mindState}
+                onComplete={handleBreathingComplete}
+              />
             </motion.div>
-
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 15 }}
-              onClick={() => setCurrentPhase('reflection')}
-              className="mt-12 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors backdrop-blur-sm"
-            >
-              Skip to Reflection →
-            </motion.button>
           </motion.div>
         )}
 

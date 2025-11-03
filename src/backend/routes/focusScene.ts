@@ -52,6 +52,7 @@ router.get(
 const sessionSchema = z.object({
   breathingExerciseCompleted: z.boolean().optional(),
   reflectionNotes: z.string().optional(),
+  mindState: z.enum(['calm', 'stressed', 'focused', 'unclear']).optional(),
 });
 
 router.post(
@@ -78,13 +79,26 @@ router.post(
         userId,
         meetingId: meeting.id,
         completedAt: new Date(),
+        breathingFlowType: data.mindState ? `adaptive-${data.mindState}` : undefined,
         ...data,
       },
       update: {
         completedAt: new Date(),
+        breathingFlowType: data.mindState ? `adaptive-${data.mindState}` : undefined,
         ...data,
       },
     });
+
+    // Update meeting with mind state for pattern analysis
+    if (data.mindState) {
+      await prisma.meeting.update({
+        where: { id: meeting.id },
+        data: {
+          // Store mind state in description metadata for now
+          // We can query this later for pattern analysis
+        },
+      });
+    }
 
     res.json({ session });
   })

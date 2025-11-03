@@ -952,6 +952,163 @@ export class EmailService {
     `;
   }
 
+  async sendWellnessReminder(
+    email: string,
+    type: 'breathing' | 'walk' | 'mindful_moment',
+    message: string
+  ): Promise<boolean> {
+    if (!this.isConfigured) {
+      logger.warn('Email service not configured, skipping wellness reminder');
+      return false;
+    }
+
+    try {
+      const typeEmojis = {
+        breathing: '🌬️',
+        walk: '🚶',
+        mindful_moment: '🧘',
+      };
+
+      const typeTitles = {
+        breathing: 'Time to Breathe',
+        walk: 'Take a Walk',
+        mindful_moment: 'Mindful Moment',
+      };
+
+      const msg = {
+        to: email,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: `${typeEmojis[type]} ${typeTitles[type]}`,
+        text: message,
+        html: this.generateWellnessReminderHTML(type, message, typeEmojis[type], typeTitles[type]),
+      };
+
+      await sgMail.send(msg);
+      logger.info('Wellness reminder email sent', { email, type });
+      return true;
+    } catch (error: any) {
+      logger.error('Error sending wellness reminder email', {
+        email,
+        type,
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
+  private generateWellnessReminderHTML(
+    type: string,
+    message: string,
+    emoji: string,
+    title: string
+  ): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+    .emoji {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .content {
+      padding: 40px 30px;
+      text-align: center;
+    }
+    .message {
+      font-size: 18px;
+      color: #334155;
+      line-height: 1.8;
+      margin-bottom: 30px;
+    }
+    .tip {
+      background: #f1f5f9;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      font-size: 14px;
+      color: #64748b;
+    }
+    .footer {
+      padding: 20px 30px;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="emoji">${emoji}</div>
+      <h1>${title}</h1>
+    </div>
+    <div class="content">
+      <div class="message">
+        ${message}
+      </div>
+      
+      ${type === 'breathing' ? `
+      <div class="tip">
+        <strong>Quick Breathing Exercise:</strong><br>
+        Breathe in for 4 counts, hold for 4, breathe out for 6.<br>
+        Repeat 3 times.
+      </div>
+      ` : type === 'walk' ? `
+      <div class="tip">
+        <strong>Walking Tip:</strong><br>
+        Even 5 minutes outside can reset your mind.<br>
+        Leave your phone behind if you can.
+      </div>
+      ` : `
+      <div class="tip">
+        <strong>Mindful Moment:</strong><br>
+        Close your eyes. Notice 3 things you can hear.<br>
+        Take 3 deep breaths. Return refreshed.
+      </div>
+      `}
+    </div>
+    <div class="footer">
+      Meet Cute · Your wellness matters 💙
+    </div>
+  </div>
+</body>
+</html>
+    `;
+  }
+
   private getTimeAgo(date: Date): string {
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
     

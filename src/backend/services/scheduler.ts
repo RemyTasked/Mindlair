@@ -7,6 +7,7 @@ import { emailService } from './delivery/emailService';
 import { slackService } from './delivery/slackService';
 import { smsService } from './delivery/smsService';
 import { logger } from '../utils/logger';
+import { analyzeMindStatePatterns } from './ai/mindStateAnalyzer';
 
 const prisma = new PrismaClient();
 
@@ -34,6 +35,11 @@ export function startScheduler() {
   // Send morning recaps at 7 AM every day
   cron.schedule('0 7 * * *', async () => {
     await sendMorningRecaps();
+  });
+
+  // Send wellness reminders every hour (users can configure frequency)
+  cron.schedule('0 * * * *', async () => {
+    await sendWellnessReminders();
   });
 
   logger.info('Scheduler initialized');
@@ -256,7 +262,10 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
       focusSceneUsed: m.focusSceneOpened,
     }));
 
-    // Generate AI cue with historical context
+    // Analyze mind state patterns for more grounded cues
+    const mindStatePatterns = await analyzeMindStatePatterns(user.id);
+
+    // Generate AI cue with historical context and mind state patterns
     const tone = user.preferences?.tone || 'balanced';
     const cueMessage = await promptGenerator.generatePreMeetingCue(
       {
@@ -268,7 +277,8 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         meetingType,
       },
       tone,
-      historicalInsights.length > 0 ? historicalInsights : undefined
+      historicalInsights.length > 0 ? historicalInsights : undefined,
+      mindStatePatterns
     );
 
     // Create or update meeting record
@@ -741,7 +751,8 @@ async function sendMorningRecaps() {
         // Generate morning recap message
         const recapMessage = await promptGenerator.generateMorningRecap(
           firstMeeting.startTime,
-          true // presleyFlowCompleted - we assume they saw it if enabled
+          true, // presleyFlowCompleted - we assume they saw it if enabled
+          user.id // Pass userId for mind state insights
         );
 
         // Send via email
@@ -777,6 +788,113 @@ async function sendMorningRecaps() {
     }
   } catch (error: any) {
     logger.error('Error in morning recap scheduler', {
+      error: error.message,
+    });
+  }
+}
+
+async function sendWellnessReminders() {
+  try {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // Only send during working hours (9 AM - 6 PM)
+    if (currentHour < 9 || currentHour >= 18) {
+      return;
+    }
+
+    // Get users with wellness reminders enabled
+    const users = await prisma.user.findMany({
+      where: {
+        preferences: {
+          enableWellnessReminders: true,
+        },
+      },
+      include: {
+        preferences: true,
+        deliverySettings: true,
+        wellnessCheckIns: {
+          where: {
+            createdAt: {
+              gte: new Date(now.getTime() - 24 * 60 * 60 * 1000), // Last 24 hours
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+      },
+    });
+
+    for (const user of users) {
+      try {
+        // Check if email is enabled
+        if (!user.deliverySettings?.emailEnabled) continue;
+
+        const frequency = user.preferences?.wellnessReminderFrequency || 3; // Default: every 3 hours
+        
+        // Check if it's time for this user's reminder
+        const lastCheckIn = user.wellnessCheckIns[0];
+        const hoursSinceLastCheckIn = lastCheckIn
+          ? (now.getTime() - new Date(lastCheckIn.createdAt).getTime()) / (1000 * 60 * 60)
+          : frequency + 1; // If no check-ins, send one
+
+        if (hoursSinceLastCheckIn < frequency) {
+          continue; // Too soon for next reminder
+        }
+
+        // Analyze mind state patterns to personalize the reminder
+        const patterns = await analyzeMindStatePatterns(user.id);
+        
+        // Determine reminder type based on patterns and time of day
+        let type: 'breathing' | 'walk' | 'mindful_moment';
+        let message: string;
+
+        if (patterns.stressFrequency > 50 || patterns.recentTrend === 'worsening') {
+          // High stress users get more breathing reminders
+          type = currentHour < 12 ? 'breathing' : currentHour < 15 ? 'walk' : 'breathing';
+          message = patterns.stressFrequency > 50
+            ? "You've been experiencing high stress before meetings lately. Take a moment to reset with some deep breaths."
+            : "Your stress levels have been climbing. Let's pause and breathe together.";
+        } else if (currentHour >= 14 && currentHour < 16) {
+          // Afternoon slump - suggest a walk
+          type = 'walk';
+          message = "Afternoon energy dip? A quick walk can refresh your mind and boost your focus.";
+        } else {
+          // General mindful moment
+          type = 'mindful_moment';
+          message = "Take a brief pause. Notice your breath, your body, this moment. You're doing great.";
+        }
+
+        // Send the reminder
+        const sent = await emailService.sendWellnessReminder(user.email, type, message);
+
+        if (sent) {
+          // Create a wellness check-in record
+          await prisma.wellnessCheckIn.create({
+            data: {
+              userId: user.id,
+              type,
+              completed: false, // User hasn't confirmed yet
+            },
+          });
+
+          logger.info('Wellness reminder sent', {
+            userId: user.id,
+            type,
+            stressFrequency: patterns.stressFrequency,
+          });
+        }
+      } catch (error: any) {
+        logger.error('Error sending wellness reminder for user', {
+          userId: user.id,
+          error: error.message,
+        });
+      }
+    }
+  } catch (error: any) {
+    logger.error('Error in wellness reminders scheduler', {
       error: error.message,
     });
   }

@@ -26,6 +26,7 @@ model User {
   meetings        Meeting[]
   focusSessions   FocusSession[]
   dailyReflections DailyReflection[]
+  wellnessCheckIns WellnessCheckIn[]
 
   // Delivery Settings
   deliverySettings DeliverySettings?
@@ -72,6 +73,10 @@ model UserPreferences {
   // Presley Flow preferences
   presleyFlowTime      String  @default("20:00") // Time to send Presley Flow (HH:mm format)
   enableMorningRecap   Boolean @default(true)  // Send morning recap after Presley Flow
+  
+  // Wellness reminders
+  enableWellnessReminders Boolean @default(true)  // Enable daily wellness check-ins
+  wellnessReminderFrequency Int @default(3)      // Hours between reminders (default: 3 hours)
   
   // Adaptive learning data
   averageEarlyJoinMinutes Float? // How early user typically joins
@@ -166,6 +171,10 @@ model FocusSession {
   breathingExerciseCompleted Boolean @default(false)
   reflectionNotes           String?
   
+  // Mind state tracking
+  mindState       String?   // "calm", "stressed", "focused", "unclear"
+  breathingFlowType String? // Type of breathing flow used based on mind state
+  
   createdAt       DateTime  @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -207,5 +216,20 @@ model SystemLog {
 
   @@index([level, createdAt])
   @@map("system_logs")
+}
+
+model WellnessCheckIn {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // "breathing", "walk", "mindful_moment"
+  completed Boolean  @default(false)
+  mindState String?  // User's mind state at check-in
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("wellness_checkins")
 }
 
