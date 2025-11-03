@@ -13,6 +13,8 @@ interface Preferences {
   enablePresleyFlow: boolean;
   presleyFlowTime: string;
   enableMorningRecap: boolean;
+  enableWellnessReminders: boolean;
+  wellnessReminderFrequency: number;
 }
 
 interface DeliverySettings {
@@ -27,7 +29,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const [preferences, setPreferences] = useState<Preferences>({
     tone: 'balanced',
-    alertMinutesBefore: 5,
+    alertMinutesBefore: 10,
     enableDailyWrapUp: true,
     enableFocusScene: true,
     enableFocusSound: true,
@@ -35,6 +37,8 @@ export default function Settings() {
     enablePresleyFlow: true,
     presleyFlowTime: '20:00',
     enableMorningRecap: true,
+    enableWellnessReminders: true,
+    wellnessReminderFrequency: 3,
   });
   const [delivery, setDelivery] = useState<DeliverySettings>({
     emailEnabled: true,
@@ -130,11 +134,11 @@ export default function Settings() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Alert Timing (minutes before meeting)
+                  Focus Scene Availability (minutes before meeting)
                 </label>
                 <input
                   type="number"
-                  min="1"
+                  min="5"
                   max="30"
                   value={preferences.alertMinutesBefore}
                   onChange={(e) =>
@@ -145,6 +149,9 @@ export default function Settings() {
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
+                <p className="mt-2 text-sm text-gray-500">
+                  Focus Scene becomes available this many minutes before your meeting (default: 10 minutes)
+                </p>
               </div>
 
               <Toggle
@@ -262,6 +269,69 @@ export default function Settings() {
                           <li>• Guided visualization & breathing</li>
                           <li>• Set your intention for tomorrow</li>
                           <li>• Takes 3-7 minutes</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Section>
+
+          {/* Wellness Reminders */}
+          <Section title="Wellness Reminders">
+            <div className="space-y-6">
+              <Toggle
+                label="Enable Wellness Reminders"
+                description="Receive periodic reminders to breathe, walk, or take mindful breaks"
+                checked={preferences.enableWellnessReminders}
+                onChange={(checked) =>
+                  setPreferences({ ...preferences, enableWellnessReminders: checked })
+                }
+              />
+
+              {preferences.enableWellnessReminders && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Reminder Frequency (hours)
+                    </label>
+                    <select
+                      value={preferences.wellnessReminderFrequency}
+                      onChange={(e) =>
+                        setPreferences({
+                          ...preferences,
+                          wellnessReminderFrequency: parseInt(e.target.value),
+                        })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="1">Every hour</option>
+                      <option value="2">Every 2 hours</option>
+                      <option value="3">Every 3 hours (recommended)</option>
+                      <option value="4">Every 4 hours</option>
+                      <option value="6">Every 6 hours</option>
+                    </select>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Reminders are sent during working hours (9 AM - 6 PM)
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-xl border border-green-200">
+                    <div className="flex items-start gap-4">
+                      <div className="text-4xl">🧘</div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-2">
+                          AI-Powered Wellness Check-ins
+                        </h3>
+                        <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                          Based on your stress patterns, we'll send personalized reminders when you need them most.
+                        </p>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>🌬️ <strong>Breathing exercises</strong> - When stress is high</li>
+                          <li>🚶 <strong>Walk breaks</strong> - During afternoon slumps</li>
+                          <li>🧘 <strong>Mindful moments</strong> - Quick mental resets</li>
+                          <li>📊 <strong>Pattern learning</strong> - Gets smarter over time</li>
                         </ul>
                       </div>
                     </div>
