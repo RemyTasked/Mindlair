@@ -592,5 +592,72 @@ router.get('/user/:userId', asyncHandler(async (req, res) => {
   }
 }));
 
+/**
+ * Version check endpoint - tells us what code is actually running
+ * GET /api/test/version
+ */
+router.get('/version', asyncHandler(async (_req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  // Read package.json to get version
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')
+  );
+  
+  // Check what fields exist in the Prisma schema
+  const schemaFields: any = {
+    hasOldFields: false,
+    hasNewFields: false,
+    oldFields: [],
+    newFields: [],
+  };
+  
+  try {
+    // Try to query with old field
+    await prisma.$queryRaw`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'user_preferences' 
+      AND column_name IN ('enablePresleyFlow', 'presleyFlowTime', 'enableMorningRecap')
+    `.then((result: any) => {
+      schemaFields.oldFields = result.map((r: any) => r.column_name);
+      schemaFields.hasOldFields = result.length > 0;
+    });
+    
+    // Try to query with new field
+    await prisma.$queryRaw`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'user_preferences' 
+      AND column_name IN ('enableMorningFlow', 'enableEveningFlow', 'morningFlowTime', 'eveningFlowTime')
+    `.then((result: any) => {
+      schemaFields.newFields = result.map((r: any) => r.column_name);
+      schemaFields.hasNewFields = result.length > 0;
+    });
+  } catch (error: any) {
+    logger.error('Error checking schema fields', { error: error.message });
+  }
+  
+  // Get git commit hash if available
+  let gitCommit = 'unknown';
+  try {
+    gitCommit = fs.readFileSync(path.join(process.cwd(), '.git/HEAD'), 'utf8').trim();
+  } catch {
+    // Git info not available in production
+  }
+  
+  return res.json({
+    version: packageJson.version,
+    name: packageJson.name,
+    nodeVersion: process.version,
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    gitCommit,
+    schemaFields,
+    status: schemaFields.hasOldFields ? '❌ RUNNING OLD CODE' : '✅ RUNNING NEW CODE',
+  });
+}));
+
 export default router;
 
