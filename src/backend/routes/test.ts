@@ -12,6 +12,66 @@ const router = express.Router();
 const promptGenerator = new PromptGenerator();
 
 /**
+ * Test endpoint to check user's upcoming meetings and focus URLs
+ * GET /api/test/meetings/:userId
+ */
+router.get(
+  '/meetings/:userId',
+  asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    const now = new Date();
+    const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+    
+    const meetings = await prisma.meeting.findMany({
+      where: {
+        userId,
+        startTime: {
+          gte: now,
+          lte: twoDaysFromNow,
+        },
+      },
+      include: {
+        focusSession: true,
+      },
+      orderBy: {
+        startTime: 'asc',
+      },
+    });
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        preferences: true,
+        deliverySettings: true,
+      },
+    });
+    
+    res.json({
+      timestamp: now.toISOString(),
+      userId,
+      userEmail: user?.email,
+      enableFocusScene: user?.preferences?.enableFocusScene,
+      totalMeetings: meetings.length,
+      meetings: meetings.map(m => ({
+        id: m.id,
+        calendarEventId: m.calendarEventId,
+        title: m.title,
+        startTime: m.startTime,
+        cueScheduledFor: m.cueScheduledFor,
+        cueDelivered: m.cueDelivered,
+        cueSentAt: m.cueSentAt,
+        focusSceneUrl: m.focusSceneUrl,
+        focusSceneOpened: m.focusSceneOpened,
+        focusSessionCompleted: m.focusSession?.completedAt ? true : false,
+        minutesUntilMeeting: Math.round((new Date(m.startTime).getTime() - now.getTime()) / (1000 * 60)),
+        canStartFocusSession: Math.round((new Date(m.startTime).getTime() - now.getTime()) / (1000 * 60)) <= 10,
+      })),
+    });
+  })
+);
+
+/**
  * Test endpoint to verify AI API integration
  * GET /api/test/ai
  */
