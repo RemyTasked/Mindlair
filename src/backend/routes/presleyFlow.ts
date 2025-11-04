@@ -38,8 +38,24 @@ type Meeting = {
   updatedAt: Date;
 };
 
-// Check if Presley Flow is available for today
-// MUST come before /:userId/:date to avoid route matching conflicts
+/**
+ * Check if Presley Flow is available
+ * 
+ * MORNING FLOW (6 AM - First Meeting Start):
+ * - Available from user-configured morning time (default 6 AM)
+ * - Shows TODAY's meetings only
+ * - Locked after first meeting of the day starts
+ * - Purpose: Morning prep/recap for today
+ * 
+ * EVENING FLOW (6 PM - Midnight):
+ * - Available from user-configured evening time (default 6 PM)
+ * - Shows:
+ *   1. Daily Wrap-Up (summary of TODAY's meetings)
+ *   2. Mental Rehearsal (preview of TOMORROW's meetings)
+ * - Purpose: Close out today + prep for tomorrow
+ * 
+ * MUST come before /:userId/:date to avoid route matching conflicts
+ */
 router.get(
   '/check/:userId',
   asyncHandler(async (req, res) => {
@@ -104,6 +120,23 @@ router.get(
         startTime: 'asc',
       },
     });
+    
+    // CRITICAL: Lock morning flow after first meeting starts
+    if (isMorningWindow && relevantMeetings.length > 0) {
+      const firstMeetingStart = new Date(relevantMeetings[0].startTime);
+      if (now >= firstMeetingStart) {
+        logger.info('Morning flow locked - first meeting has started', {
+          userId,
+          firstMeetingStart: firstMeetingStart.toISOString(),
+          currentTime: now.toISOString(),
+        });
+        return res.json({ 
+          available: false,
+          reason: 'Morning flow is only available before your first meeting starts',
+          locked: true,
+        });
+      }
+    }
     
     // For evening, also check if today had meetings (for wrap-up)
     let todayMeetingCount = 0;
