@@ -1,13 +1,12 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { outlookCalendarService } from '../services/calendar/outlookCalendar';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
+import { prisma } from '../utils/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
