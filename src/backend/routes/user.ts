@@ -33,20 +33,41 @@ router.get(
         throw new AppError('User not found', 404);
       }
 
-      // HOTFIX: Ensure preferences exist for old accounts
+      // HOTFIX: Ensure preferences and delivery settings exist for old accounts
+      let needsRefetch = false;
+      
       if (!user.preferences) {
+        console.log('⚠️ Creating missing preferences for user', req.userId);
         await prisma.userPreferences.create({
           data: { userId: user.id },
         });
-        // Refetch user with preferences
+        needsRefetch = true;
+      }
+      
+      if (!user.deliverySettings) {
+        console.log('⚠️ Creating missing delivery settings for user', req.userId);
+        await prisma.deliverySettings.create({
+          data: { 
+            userId: user.id,
+            emailEnabled: true,
+          },
+        });
+        needsRefetch = true;
+      }
+      
+      if (needsRefetch) {
+        // Refetch user with all relations
         const updatedUser = await prisma.user.findUnique({
           where: { id: req.userId },
           include: {
             preferences: true,
             deliverySettings: true,
-            calendarAccounts: { select: { id: true, provider: true, email: true, createdAt: true } },
+            calendarAccounts: { 
+              select: { id: true, provider: true, email: true, createdAt: true } 
+            },
           },
         });
+        console.log('✅ Refetched user with created preferences/settings');
         res.json({ user: updatedUser });
         return;
       }
