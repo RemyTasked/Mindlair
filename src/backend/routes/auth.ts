@@ -190,6 +190,10 @@ router.get(
     // Create or update user
     let user = await prisma.user.findUnique({
       where: { email: userInfo.email },
+      include: {
+        preferences: true,
+        deliverySettings: true,
+      },
     });
 
     if (!user) {
@@ -209,8 +213,29 @@ router.get(
             },
           },
         },
+        include: {
+          preferences: true,
+          deliverySettings: true,
+        },
       });
-      logger.info('New user created', { userId: user.id, email: user.email });
+      logger.info('New user created (Microsoft)', { userId: user.id, email: user.email });
+    } else {
+      // HOTFIX: For existing users, ensure they have preferences and delivery settings
+      if (!user.preferences) {
+        await prisma.userPreferences.create({
+          data: { userId: user.id },
+        });
+        logger.info('Created missing preferences for existing user (Microsoft)', { userId: user.id });
+      }
+      if (!user.deliverySettings) {
+        await prisma.deliverySettings.create({
+          data: { 
+            userId: user.id,
+            emailEnabled: true,
+          },
+        });
+        logger.info('Created missing delivery settings for existing user (Microsoft)', { userId: user.id });
+      }
     }
 
     // Store calendar account
