@@ -2,7 +2,7 @@
 FROM node:18-slim
 
 # Build argument to bust cache when needed
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 
 # Install OpenSSL, PostgreSQL client, and other dependencies for Prisma
 RUN apt-get update -y && \
@@ -24,12 +24,12 @@ RUN cd src/frontend && npm ci
 RUN echo "Cache bust: $CACHEBUST"
 COPY . .
 
-# Build application
+# Generate Prisma Client FIRST (before building)
+RUN npx prisma generate
+
+# Build application (will use the generated Prisma Client)
 RUN npm run build
 RUN cd src/frontend && npm run build
-
-# Generate Prisma Client
-RUN npx prisma generate
 
 # Expose port
 EXPOSE 3000

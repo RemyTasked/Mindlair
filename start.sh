@@ -18,10 +18,6 @@ psql $DATABASE_URL -c "SELECT migration_name, finished_at FROM _prisma_migration
 echo "Verifying schema..."
 psql $DATABASE_URL -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_preferences' AND column_name IN ('enablePresleyFlow', 'enableMorningFlow', 'enableEveningFlow');"
 
-echo "Regenerating Prisma Client to match database schema..."
-npx prisma generate
-
-echo "Prisma Client regenerated successfully!"
 echo "Starting application..."
 node dist/server.js
 
