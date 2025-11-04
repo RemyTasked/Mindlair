@@ -27,15 +27,15 @@ export function startScheduler() {
     await sendPostMeetingInsights();
   });
 
-  // Send Presley Flow sessions every hour (users can configure their time)
-  cron.schedule('0 * * * *', async () => {
-    await sendPresleyFlowSessions();
-  });
+  // TEMPORARILY DISABLED - Presley Flow sessions (will re-enable after login works)
+  // cron.schedule('0 * * * *', async () => {
+  //   await sendPresleyFlowSessions();
+  // });
 
-  // Send morning recaps at 7 AM every day
-  cron.schedule('0 7 * * *', async () => {
-    await sendMorningRecaps();
-  });
+  // TEMPORARILY DISABLED - Morning recaps (will re-enable after login works)
+  // cron.schedule('0 7 * * *', async () => {
+  //   await sendMorningRecaps();
+  // });
 
   // Send wellness reminders every hour (users can configure frequency)
   cron.schedule('0 * * * *', async () => {
