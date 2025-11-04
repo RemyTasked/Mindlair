@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import api from '../lib/axios';
 import { Calendar, Sparkles, Mail, Moon, Sun, Star, Music, Heart, Brain } from 'lucide-react';
 
@@ -28,38 +29,102 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-indigo-400/30 to-purple-400/30 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            rotate: [0, -90, 0],
+            opacity: [0.3, 0.6, 0.3],
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-pink-400/30 to-purple-400/30 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            y: [0, -50, 0],
+            x: [0, 30, 0],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/3 right-1/4 w-96 h-96 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl"
+        />
+      </div>
+
       {/* Header */}
-      <header className="container mx-auto px-6 py-6">
-        <div className="flex justify-center items-center">
+      <header className="container mx-auto px-6 py-6 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex justify-center items-center"
+        >
           <div className="flex items-center gap-3">
-            <div className="text-3xl" role="img" aria-label="Film camera emoji">🎬</div>
-            <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              className="text-3xl"
+              role="img"
+              aria-label="Film camera emoji"
+            >
+              🎬
+            </motion.div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Meet Cute
             </div>
           </div>
-        </div>
+        </motion.div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-6 py-20 text-center">
+      <section className="container mx-auto px-6 py-20 text-center relative z-10">
         <div className="max-w-4xl mx-auto">
-          <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full">
-            <span className="text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-indigo-200/80 to-purple-200/80 rounded-full backdrop-blur-sm"
+          >
+            <span className="text-sm font-semibold bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent">
               🎬 5-minute pre-meeting preparation
             </span>
-          </div>
-          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+          >
             Enter Every Meeting Centered
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-xl text-gray-700 mb-8 leading-relaxed max-w-3xl mx-auto"
+          >
             5 minutes before your meeting, get an AI cue + guided breathing + ambient sounds.
-            <strong className="text-gray-800"> Walk in prepared, not panicked.</strong>
-          </p>
+            <strong className="text-gray-900"> Walk in prepared, not panicked.</strong>
+          </motion.p>
           
           {/* Visual Preview */}
-          <div className="mb-12 max-w-2xl mx-auto">
-            <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-8 shadow-xl">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mb-12 max-w-2xl mx-auto"
+          >
+            <div className="bg-gradient-to-br from-indigo-200/80 to-purple-200/80 rounded-2xl p-8 shadow-2xl backdrop-blur-sm border border-white/50">
               <div className="flex items-center justify-center gap-4 mb-4">
                 <div className="text-5xl">🎬</div>
                 <div className="text-left">
@@ -91,9 +156,14 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+          >
             <button
               onClick={handleGoogleAuth}
               disabled={loading}
@@ -124,9 +194,14 @@ export default function LandingPage() {
               </svg>
               Continue with Outlook
             </button>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col items-center gap-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+            className="flex flex-col items-center gap-3"
+          >
             <p className="text-sm text-gray-500">
               No app download required • Works with your existing calendar
             </p>
@@ -153,12 +228,12 @@ export default function LandingPage() {
                 Privacy Policy
               </a>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-6 py-20">
+      <section className="container mx-auto px-6 py-20 relative z-10">
         <h2 className="text-4xl font-bold text-center mb-4">Beyond the 5-Minute Prep</h2>
         <p className="text-center text-gray-600 mb-16 text-lg">
           AI that learns and adapts to support you all day
@@ -217,7 +292,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="container mx-auto px-6 py-20 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl shadow-xl max-w-6xl">
+      <section className="container mx-auto px-6 py-20 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 rounded-3xl shadow-2xl max-w-6xl relative z-10 border border-white/50">
         <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
         
         <div className="space-y-8">
@@ -238,15 +313,21 @@ export default function LandingPage() {
           />
         </div>
 
-        <div className="mt-16 p-8 bg-white rounded-2xl border-2 border-purple-200">
-          <p className="text-center text-lg text-gray-700">
-            <strong className="text-purple-600">The more you use it, the better it gets.</strong> AI learns which meeting types stress you and adapts your cues accordingly.
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mt-16 p-8 bg-gradient-to-r from-white to-purple-50 rounded-2xl border-2 border-purple-300 shadow-xl"
+        >
+          <p className="text-center text-lg text-gray-800">
+            <strong className="text-transparent bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text">The more you use it, the better it gets.</strong> AI learns which meeting types stress you and adapts your cues accordingly.
           </p>
-        </div>
+        </motion.div>
       </section>
 
       {/* Security Banner */}
-      <section className="container mx-auto px-6 py-12">
+      <section className="container mx-auto px-6 py-12 relative z-10">
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Enterprise-Grade Security</h3>
@@ -305,30 +386,58 @@ export default function LandingPage() {
 
 function FeatureCard({ icon, title, description, isNew }: { icon: React.ReactNode; title: string; description: string; isNew?: boolean }) {
   return (
-    <article className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all relative group">
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.05, y: -5 }}
+      className="bg-gradient-to-br from-white to-indigo-50/50 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all relative group border border-indigo-100/50"
+    >
       {isNew && (
-        <div className="absolute -top-3 -right-3 px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 500, delay: 0.2 }}
+          className="absolute -top-3 -right-3 px-3 py-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg"
+        >
           NEW
-        </div>
+        </motion.div>
       )}
-      <div className="mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-3">{title}</h3>
+      <motion.div
+        whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+        transition={{ duration: 0.5 }}
+        className="mb-4"
+      >
+        {icon}
+      </motion.div>
+      <h3 className="text-xl font-semibold mb-3 text-gray-900">{title}</h3>
       <p className="text-gray-600 leading-relaxed">{description}</p>
-    </article>
+    </motion.article>
   );
 }
 
 function Step({ number, title, description }: { number: string; title: string; description: string }) {
   return (
-    <div className="flex gap-6 items-start group">
-      <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      className="flex gap-6 items-start group"
+    >
+      <motion.div
+        whileHover={{ scale: 1.2, rotate: [0, -10, 10, 0] }}
+        transition={{ duration: 0.3 }}
+        className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 shadow-lg flex items-center justify-center text-4xl border-2 border-white"
+      >
         {number}
-      </div>
+      </motion.div>
       <div className="flex-1">
-        <h4 className="text-2xl font-semibold mb-3 text-gray-800">{title}</h4>
-        <p className="text-gray-600 text-lg leading-relaxed">{description}</p>
+        <h4 className="text-2xl font-semibold mb-3 text-gray-900">{title}</h4>
+        <p className="text-gray-700 text-lg leading-relaxed">{description}</p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
