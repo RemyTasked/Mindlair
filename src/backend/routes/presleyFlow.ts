@@ -138,6 +138,40 @@ router.get(
       }
     }
     
+    // CRITICAL: Lock evening flow until ALL today's meetings are done
+    if (isEveningWindow) {
+      const todayMeetings = await prisma.meeting.findMany({
+        where: {
+          userId,
+          startTime: { gte: startOfDay, lte: endOfDay },
+        },
+        orderBy: {
+          startTime: 'asc',
+        },
+      });
+      
+      // Check if there are any meetings today that haven't finished yet
+      if (todayMeetings.length > 0) {
+        const lastMeeting = todayMeetings[todayMeetings.length - 1];
+        const lastMeetingEnd = new Date(lastMeeting.endTime);
+        
+        if (now < lastMeetingEnd) {
+          logger.info('Evening flow locked - meetings still in progress', {
+            userId,
+            lastMeetingEnd: lastMeetingEnd.toISOString(),
+            currentTime: now.toISOString(),
+            remainingMeetings: todayMeetings.filter(m => new Date(m.endTime) > now).length,
+          });
+          return res.json({ 
+            available: false,
+            reason: 'Evening flow is only available after all today\'s meetings are complete',
+            locked: true,
+            remainingMeetings: todayMeetings.filter(m => new Date(m.endTime) > now).length,
+          });
+        }
+      }
+    }
+    
     // For evening, also check if today had meetings (for wrap-up)
     let todayMeetingCount = 0;
     if (isEveningWindow) {

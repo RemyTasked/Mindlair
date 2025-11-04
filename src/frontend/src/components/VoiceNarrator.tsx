@@ -57,9 +57,15 @@ export default function VoiceNarrator({
     utteranceRef.current = utterance;
 
     // Configure voice settings for natural, conversational narration
-    utterance.rate = 0.95; // More natural speaking pace (was 0.85)
-    utterance.pitch = 1.05; // Slightly higher pitch for warmth
-    utterance.volume = 0.85; // Slightly quieter for calm presence
+    // Add natural pauses by inserting commas and periods in the text
+    const naturalText = text
+      .replace(/\. /g, '... ') // Longer pauses after sentences
+      .replace(/\, /g, ',, '); // Slight pauses after commas
+    
+    utterance.text = naturalText;
+    utterance.rate = 0.92; // Slightly slower for more natural flow (was 0.95)
+    utterance.pitch = 1.08; // Higher pitch for warmth and less robotic
+    utterance.volume = 0.8; // Quieter for calm, gentle presence
 
     // Try to use a natural, conversational voice
     const voices = window.speechSynthesis.getVoices();

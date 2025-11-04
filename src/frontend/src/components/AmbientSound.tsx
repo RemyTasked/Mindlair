@@ -165,13 +165,24 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
     // Try to auto-play (will work if user just interacted with page)
     console.log('🎵 Attempting to start ambient sound...');
     initializeAudio();
+    
+    // Add global click listener to auto-start sound after ANY user interaction
+    const handleGlobalClick = () => {
+      if (needsInteraction && !isPlaying) {
+        console.log('👆 User clicked page - attempting to start audio');
+        initializeAudio();
+      }
+    };
+    
+    document.addEventListener('click', handleGlobalClick);
 
     // Cleanup
     return () => {
       stopAudio();
+      document.removeEventListener('click', handleGlobalClick);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [soundType, enabled]);
+  }, [soundType, enabled, needsInteraction, isPlaying]);
 
   // Dim volume when voice is speaking
   useEffect(() => {
