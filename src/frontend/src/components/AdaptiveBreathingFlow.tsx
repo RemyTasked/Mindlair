@@ -64,24 +64,24 @@ const BREATHING_PROMPTS: Record<MindState, string[]> = {
 
 const BREATHING_FLOWS: Record<MindState, BreathingPhase[]> = {
   calm: [
-    { action: 'Breathe In', duration: 4, instruction: '', color: 'from-blue-400 to-cyan-400' },
-    { action: 'Hold', duration: 4, instruction: '', color: 'from-purple-400 to-blue-400' },
-    { action: 'Breathe Out', duration: 6, instruction: '', color: 'from-indigo-400 to-purple-400' },
+    { action: 'Breathe In', duration: 5, instruction: '', color: 'from-blue-400 to-cyan-400' },
+    { action: 'Hold', duration: 5, instruction: '', color: 'from-purple-400 to-blue-400' },
+    { action: 'Breathe Out', duration: 7, instruction: '', color: 'from-indigo-400 to-purple-400' },
   ],
   stressed: [
-    { action: 'Breathe In', duration: 4, instruction: '', color: 'from-green-400 to-emerald-400' },
-    { action: 'Hold', duration: 7, instruction: '', color: 'from-teal-400 to-green-400' },
-    { action: 'Breathe Out', duration: 8, instruction: '', color: 'from-blue-400 to-teal-400' },
+    { action: 'Breathe In', duration: 5, instruction: '', color: 'from-green-400 to-emerald-400' },
+    { action: 'Hold', duration: 8, instruction: '', color: 'from-teal-400 to-green-400' },
+    { action: 'Breathe Out', duration: 10, instruction: '', color: 'from-blue-400 to-teal-400' },
   ],
   focused: [
-    { action: 'Breathe In', duration: 3, instruction: '', color: 'from-orange-400 to-amber-400' },
-    { action: 'Hold', duration: 3, instruction: '', color: 'from-yellow-400 to-orange-400' },
-    { action: 'Breathe Out', duration: 3, instruction: '', color: 'from-amber-400 to-yellow-400' },
+    { action: 'Breathe In', duration: 4, instruction: '', color: 'from-orange-400 to-amber-400' },
+    { action: 'Hold', duration: 4, instruction: '', color: 'from-yellow-400 to-orange-400' },
+    { action: 'Breathe Out', duration: 4, instruction: '', color: 'from-amber-400 to-yellow-400' },
   ],
   unclear: [
-    { action: 'Breathe In', duration: 5, instruction: '', color: 'from-violet-400 to-purple-400' },
-    { action: 'Hold', duration: 5, instruction: '', color: 'from-purple-400 to-fuchsia-400' },
-    { action: 'Breathe Out', duration: 7, instruction: '', color: 'from-pink-400 to-violet-400' },
+    { action: 'Breathe In', duration: 6, instruction: '', color: 'from-violet-400 to-purple-400' },
+    { action: 'Hold', duration: 6, instruction: '', color: 'from-purple-400 to-fuchsia-400' },
+    { action: 'Breathe Out', duration: 8, instruction: '', color: 'from-pink-400 to-violet-400' },
   ],
 };
 
@@ -101,7 +101,7 @@ export default function AdaptiveBreathingFlow({ mindState, onComplete }: Adaptiv
 
   const flow = BREATHING_FLOWS[mindState];
   const prompts = BREATHING_PROMPTS[mindState];
-  const totalCycles = 5;
+  const totalCycles = 3; // Reduced from 5 to 3 cycles, but each cycle is more deliberate
   const currentPhase = flow[currentPhaseIndex];
   const currentPrompt = prompts[promptIndex % prompts.length];
 

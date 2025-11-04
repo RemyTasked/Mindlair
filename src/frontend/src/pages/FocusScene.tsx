@@ -42,8 +42,8 @@ export default function FocusScene() {
       setMeeting(response.data.meeting);
       setLoading(false);
 
-      // Auto-progress to mind state selector
-      setTimeout(() => setCurrentPhase('mindstate'), 3000);
+      // Auto-progress to mind state selector (increased from 3s to 5s for better pacing)
+      setTimeout(() => setCurrentPhase('mindstate'), 5000);
     } catch (error: any) {
       console.error('Error loading meeting data:', error);
       setLoading(false);
@@ -59,7 +59,8 @@ export default function FocusScene() {
 
   const handleBreathingComplete = () => {
     setBreathingCompleted(true);
-    setTimeout(() => setCurrentPhase('reflection'), 1000);
+    // Add 2-second pause after breathing before reflection (increased from 1s)
+    setTimeout(() => setCurrentPhase('reflection'), 2000);
   };
 
   const handleMindStateSelect = async (state: MindState) => {

@@ -36,6 +36,18 @@ class PushNotificationService {
       console.log('Safari 16+ detected - Push notifications supported with limitations');
     }
 
+    // Firefox has excellent push notification support
+    const isFirefox = /firefox/i.test(navigator.userAgent);
+    if (isFirefox) {
+      console.log('Firefox detected - Full push notification support');
+    }
+
+    // Chrome/Edge have full support (no special checks needed)
+    const isChrome = /chrome|chromium|edg/i.test(navigator.userAgent);
+    if (isChrome) {
+      console.log('Chrome/Edge detected - Full push notification support');
+    }
+
     return true;
   }
 
