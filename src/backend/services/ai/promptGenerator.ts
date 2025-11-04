@@ -277,9 +277,16 @@ Generate the message now:`;
     closingMessage: string;
   }> {
     try {
-      const meetingsSummary = meetings.map((m, i) => 
-        `${i + 1}. ${m.title} - ${m.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} (${Math.round((m.endTime.getTime() - m.startTime.getTime()) / 60000)} min, ${m.attendees.length} attendees)`
-      ).join('\n');
+      const meetingsSummary = meetings.map((m, i) => {
+        // Format time in user's local timezone (the Date object is in UTC, toLocaleTimeString handles conversion)
+        const timeStr = m.startTime.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          timeZone: 'America/New_York' // TODO: Get from user preferences
+        });
+        const duration = Math.round((m.endTime.getTime() - m.startTime.getTime()) / 60000);
+        return `${i + 1}. ${m.title} - ${timeStr} (${duration} min, ${m.attendees.length} attendees)`;
+      }).join('\n');
 
       let historicalContext = '';
       if (historicalInsights && historicalInsights.length > 0) {

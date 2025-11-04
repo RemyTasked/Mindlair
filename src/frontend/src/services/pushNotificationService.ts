@@ -8,9 +8,35 @@ class PushNotificationService {
 
   /**
    * Check if push notifications are supported
+   * Note: Safari on macOS/iOS has limited/no support for Web Push API
    */
   isSupported(): boolean {
-    return 'serviceWorker' in navigator && 'PushManager' in window;
+    // Check basic support
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return false;
+    }
+
+    // Safari on iOS doesn't support Push API at all
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      console.warn('Push notifications are not supported on iOS Safari');
+      return false;
+    }
+
+    // Safari on macOS has limited support (requires macOS 13+ and Safari 16+)
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (isSafari) {
+      // Check Safari version
+      const match = navigator.userAgent.match(/Version\/(\d+)/);
+      const version = match ? parseInt(match[1]) : 0;
+      if (version < 16) {
+        console.warn('Push notifications require Safari 16+ on macOS 13+');
+        return false;
+      }
+      console.log('Safari 16+ detected - Push notifications supported with limitations');
+    }
+
+    return true;
   }
 
   /**

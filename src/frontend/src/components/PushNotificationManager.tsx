@@ -34,7 +34,11 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
 
   const handleToggle = async () => {
     if (!isSupported) {
-      alert('Push notifications are not supported in your browser.');
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      const message = isSafari
+        ? 'Safari has limited support for push notifications. For the best experience, please use Chrome, Firefox, or Edge.'
+        : 'Push notifications are not supported in your browser. Please use Chrome, Firefox, Edge, or Safari 16+.';
+      alert(message);
       return;
     }
 
