@@ -627,7 +627,7 @@ async function sendPresleyFlowSessions() {
     const users = await prisma.user.findMany({
       where: {
         preferences: {
-          enablePresleyFlow: true,
+          enableEveningFlow: true,
         },
       },
       include: {
@@ -734,7 +734,6 @@ async function sendMorningRecaps() {
     const users = await prisma.user.findMany({
       where: {
         preferences: {
-          enablePresleyFlow: true,
           enableMorningFlow: true,
         },
       },
