@@ -208,6 +208,7 @@ Generate the message now:`;
 const sessionSchema = z.object({
   breathingExerciseCompleted: z.boolean().optional(),
   reflectionNotes: z.string().optional(),
+  intention: z.string().optional(), // User's focus/goal for the meeting
   mindState: z.enum(['calm', 'stressed', 'focused', 'unclear']).optional(),
 });
 

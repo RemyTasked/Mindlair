@@ -187,6 +187,7 @@ model FocusSession {
   // User interactions
   breathingExerciseCompleted Boolean @default(false)
   reflectionNotes           String?
+  intention                 String?  // User's focus/goal for the meeting ("What's your focus for this meeting?")
   
   // Mind state tracking
   mindState       String?   // "calm", "stressed", "focused", "unclear"

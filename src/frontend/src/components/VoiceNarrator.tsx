@@ -56,34 +56,44 @@ export default function VoiceNarrator({
     const utterance = new SpeechSynthesisUtterance(text);
     utteranceRef.current = utterance;
 
-    // Configure voice settings for calm, soothing narration
-    utterance.rate = 0.85; // Slightly slower for calming effect
-    utterance.pitch = 1.0;
-    utterance.volume = 0.9;
+    // Configure voice settings for natural, conversational narration
+    utterance.rate = 0.95; // More natural speaking pace (was 0.85)
+    utterance.pitch = 1.05; // Slightly higher pitch for warmth
+    utterance.volume = 0.85; // Slightly quieter for calm presence
 
-    // Try to use a calm, professional voice
+    // Try to use a natural, conversational voice
     const voices = window.speechSynthesis.getVoices();
     
-    // Priority order for calm, professional voices
+    // Priority order for most natural-sounding voices
     const preferredVoiceNames = [
-      'Samantha',           // macOS - warm, professional
-      'Karen',              // macOS - Australian English
-      'Moira',              // macOS - Irish English
-      'Microsoft Zira',     // Windows - US English
-      'Google US English Female', // Chrome
+      'Samantha',           // macOS - Most natural, warm voice
+      'Ava',                // macOS - Natural, clear
+      'Allison',            // macOS - Professional, natural
+      'Susan',              // macOS - Warm, conversational
+      'Karen',              // macOS - Australian English, natural
+      'Google US English',  // Chrome - Neural voice (more natural)
+      'Microsoft Aria Online (Natural)', // Windows - Neural voice
+      'Microsoft Jenny Online (Natural)', // Windows - Neural voice
       'Google UK English Female', // Chrome
-      'Fiona',              // macOS - Scottish English
     ];
     
     let selectedVoice = voices.find(voice => 
       preferredVoiceNames.some(name => voice.name.includes(name))
     );
     
-    // Fallback: First available English voice
+    // Fallback: Look for 'natural' or 'neural' in voice name
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes('natural') ||
+        voice.name.toLowerCase().includes('neural')
+      );
+    }
+    
+    // Final fallback: First available English voice
     if (!selectedVoice) {
       selectedVoice = voices.find(voice => 
         voice.lang.includes('en')
-      ) || voices[0]; // Absolute fallback to first voice
+      ) || voices[0];
     }
     
     if (selectedVoice) {

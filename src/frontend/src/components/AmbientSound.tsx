@@ -216,13 +216,17 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
   return (
     <button
       onClick={handleClick}
-      className="fixed bottom-8 right-8 z-50 p-4 bg-white/10 backdrop-blur-md rounded-full hover:bg-white/20 transition-all shadow-lg border border-white/20"
+      className={`fixed bottom-8 right-8 z-50 p-4 backdrop-blur-md rounded-full transition-all shadow-lg border ${
+        needsInteraction || !isPlaying
+          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-white/40 animate-pulse hover:from-indigo-500 hover:to-purple-500'
+          : 'bg-white/10 border-white/20 hover:bg-white/20'
+      }`}
       aria-label={needsInteraction || !isPlaying ? "Enable ambient sound" : isMuted ? "Unmute sound" : "Mute sound"}
     >
       {needsInteraction || !isPlaying ? (
         <div className="flex items-center gap-2">
           <Volume2 className="w-6 h-6" />
-          <span className="text-sm font-medium">Enable Sound</span>
+          <span className="text-sm font-medium">🎵 Click to Enable Sound</span>
         </div>
       ) : isMuted ? (
         <VolumeX className="w-6 h-6" />

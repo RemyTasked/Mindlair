@@ -110,7 +110,7 @@ export default function FocusScene() {
     try {
       await api.post(`/api/focus-scene/${userId}/${meetingId}/complete`, {
         breathingExerciseCompleted: breathingCompleted,
-        reflectionNotes: reflectionNotes || undefined,
+        intention: reflectionNotes || undefined, // User's stated focus for the meeting
         mindState: mindState || undefined,
       });
       setCurrentPhase('complete');
