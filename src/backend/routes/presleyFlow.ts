@@ -87,11 +87,20 @@ router.get(
     const morningFlowEnabled = (user as any).preferences?.enableMorningFlow !== false;
     const eveningFlowEnabled = (user as any).preferences?.enableEveningFlow !== false;
     
-    // Determine if flow is available based on time and preferences
-    const isAvailable = (isMorningWindow && morningFlowEnabled) || (isEveningWindow && eveningFlowEnabled);
+    // CRITICAL: Evening flow requires BOTH time window AND meetings to be done
+    // Don't just check isEveningWindow - check the actual conditions
+    let flowTypeAvailable: 'morning' | 'evening' | null = null;
     
-    if (!isAvailable) {
-      return res.json({ available: false });
+    if (isMorningWindow && morningFlowEnabled) {
+      flowTypeAvailable = 'morning';
+    } else if (eveningFlowEnabled) {
+      // For evening, we need to check if meetings are done BEFORE allowing access
+      // This check happens below, so we mark it as potentially available
+      flowTypeAvailable = 'evening';
+    }
+    
+    if (!flowTypeAvailable) {
+      return res.json({ available: false, reason: 'No flow type available at this time' });
     }
 
     // For morning: Check today's meetings
@@ -138,8 +147,27 @@ router.get(
       }
     }
     
-    // CRITICAL: Lock evening flow until ALL today's meetings are done
-    if (isEveningWindow) {
+    // CRITICAL: Lock evening flow until BOTH conditions met:
+    // 1. It's past the evening flow time (e.g., 6 PM)
+    // 2. ALL today's meetings are done
+    if (flowTypeAvailable === 'evening') {
+      // First check: Is it actually evening time yet?
+      if (!isEveningWindow) {
+        logger.info('Evening flow locked - not evening time yet', {
+          userId,
+          currentHour,
+          eveningFlowHour,
+          hoursUntilEvening: eveningFlowHour - currentHour,
+        });
+        return res.json({ 
+          available: false,
+          reason: `Evening flow is only available after ${eveningFlowHour}:00 (${eveningFlowHour > 12 ? eveningFlowHour - 12 : eveningFlowHour} PM)`,
+          locked: true,
+          unlockTime: `${eveningFlowHour}:00`,
+        });
+      }
+      
+      // Second check: Are all meetings done?
       const todayMeetings = await prisma.meeting.findMany({
         where: {
           userId,
@@ -150,7 +178,6 @@ router.get(
         },
       });
       
-      // Check if there are any meetings today that haven't finished yet
       if (todayMeetings.length > 0) {
         const lastMeeting = todayMeetings[todayMeetings.length - 1];
         const lastMeetingEnd = new Date(lastMeeting.endTime);
