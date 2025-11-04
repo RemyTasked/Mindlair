@@ -102,7 +102,7 @@ class PushNotificationService {
       // Subscribe to push notifications
       const subscription = await this.registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(publicKey),
+        applicationServerKey: this.urlBase64ToUint8Array(publicKey) as BufferSource,
       });
 
       console.log('Push subscription created:', subscription);
@@ -178,7 +178,7 @@ class PushNotificationService {
   async isSubscribed(): Promise<boolean> {
     try {
       if (!this.registration) {
-        this.registration = await navigator.serviceWorker.getRegistration();
+        this.registration = (await navigator.serviceWorker.getRegistration()) || null;
       }
 
       if (!this.registration) {
