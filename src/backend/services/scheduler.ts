@@ -1,5 +1,4 @@
 import cron from 'node-cron';
-import { PrismaClient } from '@prisma/client';
 import { googleCalendarService } from './calendar/googleCalendar';
 import { outlookCalendarService } from './calendar/outlookCalendar';
 import { promptGenerator } from './ai/promptGenerator';
@@ -9,8 +8,8 @@ import { smsService } from './delivery/smsService';
 import { pushNotificationService } from './delivery/pushNotificationService';
 import { logger } from '../utils/logger';
 import { analyzeMindStatePatterns } from './ai/mindStateAnalyzer';
+import { prisma } from '../utils/prisma';
 
-const prisma = new PrismaClient();
 
 export function startScheduler() {
   // Check for upcoming meetings every minute

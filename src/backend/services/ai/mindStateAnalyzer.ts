@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../utils/prisma';
 
-const prisma = new PrismaClient();
 
 export interface MindStatePattern {
   // Overall patterns

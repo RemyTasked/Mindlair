@@ -1,9 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const webpush = require('web-push');
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../utils/prisma';
 
-const prisma = new PrismaClient();
 
 // Configure web-push with VAPID keys
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';

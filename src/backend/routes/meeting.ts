@@ -1,10 +1,9 @@
 import express, { Request } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
+import { prisma } from '../utils/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Get upcoming meetings
 router.get(

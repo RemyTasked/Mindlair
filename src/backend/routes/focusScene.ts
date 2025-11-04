@@ -1,13 +1,12 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { z } from 'zod';
 import { logger } from '../utils/logger';
 import { aiService } from '../services/ai/aiService';
 import { analyzeMindStatePatterns } from '../services/ai/mindStateAnalyzer';
+import { prisma } from '../utils/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Get focus scene data
 router.get(

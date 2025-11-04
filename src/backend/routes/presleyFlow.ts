@@ -1,11 +1,10 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { PromptGenerator } from '../services/ai/promptGenerator';
 import { logger } from '../utils/logger';
+import { prisma } from '../utils/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 const promptGenerator = new PromptGenerator();
 
 // IMPORTANT: More specific routes must come BEFORE parameterized routes

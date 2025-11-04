@@ -4,13 +4,12 @@ import { PromptGenerator } from '../services/ai/promptGenerator';
 import { aiService } from '../services/ai/aiService';
 import { emailService } from '../services/delivery/emailService';
 import axios from 'axios';
-import { PrismaClient } from '@prisma/client';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { logger } from '../utils/logger';
+import { prisma } from '../utils/prisma';
 
 const router = express.Router();
 const promptGenerator = new PromptGenerator();
-const prisma = new PrismaClient();
 
 /**
  * Test endpoint to verify AI API integration
