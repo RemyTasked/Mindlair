@@ -69,7 +69,6 @@ model UserPreferences {
   enableDailyWrapUp    Boolean @default(true)
   enableFocusScene     Boolean @default(true)
   enableAdaptiveTiming Boolean @default(false)
-  enablePresleyFlow    Boolean @default(true)  // Evening mental rehearsal
   
   // Sound preferences
   enableFocusSound     Boolean @default(true)
