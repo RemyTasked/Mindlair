@@ -2,7 +2,7 @@
 FROM node:18-slim
 
 # Build argument to bust cache when needed
-ARG CACHEBUST=3
+ARG CACHEBUST=4
 
 # Install OpenSSL, PostgreSQL client, and other dependencies for Prisma
 RUN apt-get update -y && \
@@ -23,6 +23,9 @@ RUN cd src/frontend && npm ci
 # Copy application code (with cache buster)
 RUN echo "Cache bust: $CACHEBUST"
 COPY . .
+
+# Force clean Prisma Client cache
+RUN rm -rf node_modules/.prisma node_modules/@prisma/client
 
 # Generate Prisma Client FIRST (before building)
 RUN npx prisma generate
