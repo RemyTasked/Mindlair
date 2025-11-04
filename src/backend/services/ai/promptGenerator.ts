@@ -378,7 +378,11 @@ Return as JSON:
       // Ensure meeting previews match the input
       parsed.meetingPreviews = meetings.map((m, i) => ({
         title: m.title,
-        time: m.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        time: m.startTime.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          timeZone: 'America/New_York' // TODO: Get from user preferences
+        }),
         focusCue: parsed.meetingPreviews?.[i]?.focusCue || `Bring clarity and presence to this ${m.meetingType || 'meeting'}.`,
       }));
 
@@ -391,7 +395,11 @@ Return as JSON:
         openingScene: "Tomorrow's script is ready. You'll move through each scene with intention and ease.",
         meetingPreviews: meetings.map(m => ({
           title: m.title,
-          time: m.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+          time: m.startTime.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            timeZone: 'America/New_York' // TODO: Get from user preferences
+          }),
           focusCue: `Bring your full presence and clarity to this moment.`,
         })),
         mindsetTheme: "Tomorrow calls for focus and authentic connection. Trust your preparation.",
