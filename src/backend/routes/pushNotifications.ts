@@ -1,6 +1,6 @@
 import express from 'express';
 import { pushNotificationService } from '../services/delivery/pushNotificationService';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
  * GET /api/push/public-key
  * Get VAPID public key for frontend
  */
-router.get('/public-key', (req, res) => {
+router.get('/public-key', (_req, res) => {
   try {
     const publicKey = pushNotificationService.getPublicKey();
     
@@ -19,10 +19,10 @@ router.get('/public-key', (req, res) => {
       });
     }
 
-    res.json({ publicKey });
+    return res.json({ publicKey });
   } catch (error: any) {
     logger.error('Error getting VAPID public key', { error: error.message });
-    res.status(500).json({ error: 'Failed to get public key' });
+    return res.status(500).json({ error: 'Failed to get public key' });
   }
 });
 
@@ -30,9 +30,9 @@ router.get('/public-key', (req, res) => {
  * POST /api/push/subscribe
  * Subscribe to push notifications
  */
-router.post('/subscribe', authenticateToken, async (req, res) => {
+router.post('/subscribe', authenticate, async (req, res) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const { subscription } = req.body;
 
     if (!userId) {
@@ -52,15 +52,15 @@ router.post('/subscribe', authenticateToken, async (req, res) => {
 
     if (success) {
       logger.info('User subscribed to push notifications', { userId });
-      res.json({ success: true, message: 'Subscribed to push notifications' });
+      return res.json({ success: true, message: 'Subscribed to push notifications' });
     } else {
-      res.status(500).json({ error: 'Failed to subscribe' });
+      return res.status(500).json({ error: 'Failed to subscribe' });
     }
   } catch (error: any) {
     logger.error('Error subscribing to push notifications', {
       error: error.message,
     });
-    res.status(500).json({ error: 'Failed to subscribe' });
+    return res.status(500).json({ error: 'Failed to subscribe' });
   }
 });
 
@@ -68,7 +68,7 @@ router.post('/subscribe', authenticateToken, async (req, res) => {
  * POST /api/push/unsubscribe
  * Unsubscribe from push notifications
  */
-router.post('/unsubscribe', authenticateToken, async (req, res) => {
+router.post('/unsubscribe', authenticate, async (req, res) => {
   try {
     const { endpoint } = req.body;
 
@@ -80,15 +80,15 @@ router.post('/unsubscribe', authenticateToken, async (req, res) => {
 
     if (success) {
       logger.info('User unsubscribed from push notifications', { endpoint });
-      res.json({ success: true, message: 'Unsubscribed from push notifications' });
+      return res.json({ success: true, message: 'Unsubscribed from push notifications' });
     } else {
-      res.status(500).json({ error: 'Failed to unsubscribe' });
+      return res.status(500).json({ error: 'Failed to unsubscribe' });
     }
   } catch (error: any) {
     logger.error('Error unsubscribing from push notifications', {
       error: error.message,
     });
-    res.status(500).json({ error: 'Failed to unsubscribe' });
+    return res.status(500).json({ error: 'Failed to unsubscribe' });
   }
 });
 
@@ -96,9 +96,9 @@ router.post('/unsubscribe', authenticateToken, async (req, res) => {
  * POST /api/push/test
  * Send a test notification (for testing purposes)
  */
-router.post('/test', authenticateToken, async (req, res) => {
+router.post('/test', authenticate, async (req, res) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -113,13 +113,13 @@ router.post('/test', authenticateToken, async (req, res) => {
     });
 
     if (success) {
-      res.json({ success: true, message: 'Test notification sent' });
+      return res.json({ success: true, message: 'Test notification sent' });
     } else {
-      res.status(500).json({ error: 'Failed to send test notification' });
+      return res.status(500).json({ error: 'Failed to send test notification' });
     }
   } catch (error: any) {
     logger.error('Error sending test notification', { error: error.message });
-    res.status(500).json({ error: 'Failed to send test notification' });
+    return res.status(500).json({ error: 'Failed to send test notification' });
   }
 });
 
