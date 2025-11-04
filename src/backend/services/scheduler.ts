@@ -6,6 +6,7 @@ import { promptGenerator } from './ai/promptGenerator';
 import { emailService } from './delivery/emailService';
 import { slackService } from './delivery/slackService';
 import { smsService } from './delivery/smsService';
+import { pushNotificationService } from './delivery/pushNotificationService';
 import { logger } from '../utils/logger';
 import { analyzeMindStatePatterns } from './ai/mindStateAnalyzer';
 
@@ -392,6 +393,18 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         );
       }
 
+      if (delivery?.pushEnabled) {
+        await pushNotificationService.sendPreMeetingCue(
+          user.id,
+          event.summary,
+          cueMessage,
+          focusSceneUrl
+        );
+        logger.info('✅ Push notification sent successfully', {
+          userId: user.id,
+        });
+      }
+
       logger.info('Pre-meeting cue sent', {
         userId: user.id,
         meetingId: meeting.id,
@@ -509,6 +522,14 @@ async function sendDailyWrapUps() {
           );
         }
 
+        if (user.deliverySettings?.pushEnabled) {
+          await pushNotificationService.sendDailyWrapUp(
+            user.id,
+            wrapUpMessage,
+            stats
+          );
+        }
+
         // Store daily reflection
         await prisma.dailyReflection.upsert({
           where: {
@@ -588,6 +609,15 @@ async function sendPostMeetingInsights() {
           meeting.startTime,
           ratingUrl
         );
+
+        // Send push notification if enabled
+        if (meeting.user.deliverySettings?.pushEnabled) {
+          await pushNotificationService.sendPostMeetingInsight(
+            meeting.userId,
+            meeting.title,
+            ratingUrl
+          );
+        }
 
         if (sent) {
           await prisma.meeting.update({
@@ -702,6 +732,20 @@ async function sendPresleyFlowSessions() {
           );
         }
 
+        // Send via push notification if enabled
+        if (user.deliverySettings?.pushEnabled) {
+          await pushNotificationService.sendPresleyFlowNotification(
+            user.id,
+            presleyFlowUrl,
+            tomorrowMeetings.length,
+            tomorrow.toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            })
+          );
+        }
+
         if (emailSent) {
           logger.info('Presley Flow notification sent', {
             userId: user.id,
@@ -786,6 +830,18 @@ async function sendMorningRecaps() {
           await smsService.sendMorningRecap(
             user.deliverySettings.phoneNumber,
             recapMessage
+          );
+        }
+
+        // Send via push notification if enabled
+        if (user.deliverySettings?.pushEnabled) {
+          await pushNotificationService.sendMorningRecap(
+            user.id,
+            recapMessage,
+            firstMeeting.startTime.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+            })
           );
         }
 
@@ -885,6 +941,11 @@ async function sendWellnessReminders() {
 
         // Send the reminder
         const sent = await emailService.sendWellnessReminder(user.email, type, message);
+
+        // Send push notification if enabled
+        if (user.deliverySettings?.pushEnabled) {
+          await pushNotificationService.sendWellnessReminder(user.id, type, message);
+        }
 
         if (sent) {
           // Create a wellness check-in record

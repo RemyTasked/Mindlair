@@ -31,6 +31,9 @@ model User {
 
   // Delivery Settings
   deliverySettings DeliverySettings?
+  
+  // Push Notifications
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -102,6 +105,7 @@ model DeliverySettings {
   emailEnabled   Boolean @default(true)
   slackEnabled   Boolean @default(false)
   smsEnabled     Boolean @default(false)
+  pushEnabled    Boolean @default(true)  // Web push notifications
   
   // Contact info
   phoneNumber    String?
@@ -260,5 +264,21 @@ model PresleyFlowSession {
   @@unique([userId, date, flowType])
   @@index([userId, date])
   @@map("presley_flow_sessions")
+}
+
+model PushSubscription {
+  id         String   @id @default(uuid())
+  userId     String
+  endpoint   String   @unique // Push service endpoint URL
+  p256dh     String   // Encryption key
+  auth       String   // Authentication secret
+  userAgent  String?  // Browser/device info
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 

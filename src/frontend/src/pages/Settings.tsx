@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { ArrowLeft, Save } from 'lucide-react';
+import { PushNotificationManager } from '../components/PushNotificationManager';
 
 interface Preferences {
   tone: 'executive' | 'cinematic' | 'balanced' | 'calm';
@@ -23,6 +24,7 @@ interface DeliverySettings {
   emailEnabled: boolean;
   slackEnabled: boolean;
   smsEnabled: boolean;
+  pushEnabled: boolean;
   phoneNumber?: string;
   slackWebhookUrl?: string;
 }
@@ -48,6 +50,7 @@ export default function Settings() {
     emailEnabled: true,
     slackEnabled: false,
     smsEnabled: false,
+    pushEnabled: true,
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -502,6 +505,15 @@ export default function Settings() {
                     className="mt-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 )}
+              </div>
+
+              {/* Push Notifications */}
+              <div className="border-t pt-6">
+                <PushNotificationManager
+                  token={localStorage.getItem('meetcute_token') || ''}
+                  enabled={delivery.pushEnabled}
+                  onToggle={(enabled) => setDelivery({ ...delivery, pushEnabled: enabled })}
+                />
               </div>
 
               <div>
