@@ -900,8 +900,19 @@ async function sendWellnessReminders() {
 
     for (const user of users) {
       try {
-        // Check if email is enabled
-        if (!user.deliverySettings?.emailEnabled) continue;
+        // Check if ANY delivery method is enabled
+        const hasDeliveryMethod = 
+          user.deliverySettings?.emailEnabled || 
+          user.deliverySettings?.pushEnabled ||
+          user.deliverySettings?.smsEnabled;
+          
+        if (!hasDeliveryMethod) {
+          logger.info('⏭️ Skipping wellness reminder - no delivery methods enabled', {
+            userId: user.id,
+            email: user.email,
+          });
+          continue;
+        }
 
         const frequency = user.preferences?.wellnessReminderFrequency || 3; // Default: every 3 hours
         
@@ -912,8 +923,21 @@ async function sendWellnessReminders() {
           : frequency + 1; // If no check-ins, send one
 
         if (hoursSinceLastCheckIn < frequency) {
+          logger.info('⏭️ Skipping wellness reminder - too soon', {
+            userId: user.id,
+            hoursSinceLastCheckIn: hoursSinceLastCheckIn.toFixed(2),
+            frequency,
+            nextReminderIn: (frequency - hoursSinceLastCheckIn).toFixed(2) + ' hours',
+          });
           continue; // Too soon for next reminder
         }
+        
+        logger.info('📬 Sending wellness reminder', {
+          userId: user.id,
+          email: user.email,
+          hoursSinceLastCheckIn: hoursSinceLastCheckIn.toFixed(2),
+          frequency,
+        });
 
         // Analyze mind state patterns to personalize the reminder
         const patterns = await analyzeMindStatePatterns(user.id);
@@ -938,12 +962,36 @@ async function sendWellnessReminders() {
           message = "Take a brief pause. Notice your breath, your body, this moment. You're doing great.";
         }
 
-        // Send the reminder
-        const sent = await emailService.sendWellnessReminder(user.email, type, message);
+        // Send the reminder via enabled channels
+        let sent = false;
+        
+        // Send via email if enabled
+        if (user.deliverySettings?.emailEnabled) {
+          sent = await emailService.sendWellnessReminder(user.email, type, message);
+          logger.info('📧 Wellness reminder sent via email', {
+            userId: user.id,
+            type,
+          });
+        }
 
         // Send push notification if enabled
         if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushWellnessReminders) {
           await pushNotificationService.sendWellnessReminder(user.id, type, message);
+          sent = true; // Mark as sent if push succeeds
+          logger.info('📱 Wellness reminder sent via push', {
+            userId: user.id,
+            type,
+          });
+        }
+        
+        // Send via SMS if enabled
+        if (user.deliverySettings?.smsEnabled && user.deliverySettings?.phoneNumber) {
+          await smsService.sendWellnessReminder(user.deliverySettings.phoneNumber, type, message);
+          sent = true;
+          logger.info('📲 Wellness reminder sent via SMS', {
+            userId: user.id,
+            type,
+          });
         }
 
         if (sent) {
@@ -956,10 +1004,14 @@ async function sendWellnessReminders() {
             },
           });
 
-          logger.info('Wellness reminder sent', {
+          logger.info('✅ Wellness reminder sent successfully', {
             userId: user.id,
             type,
             stressFrequency: patterns.stressFrequency,
+          });
+        } else {
+          logger.warn('⚠️ Wellness reminder not sent - no delivery methods succeeded', {
+            userId: user.id,
           });
         }
       } catch (error: any) {
