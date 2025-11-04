@@ -35,6 +35,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [presleyFlow, setPresleyFlow] = useState<PresleyFlow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [eveningFlowTime, setEveningFlowTime] = useState<string>('18:00'); // Default 6 PM
 
   useEffect(() => {
     loadUserData();
@@ -98,6 +99,11 @@ export default function Dashboard() {
       setMeetings(meetingsResponse.data.meetings);
       setStats(statsResponse.data.stats);
       setPresleyFlow(presleyData);
+      
+      // Extract evening flow time from user preferences
+      const userEveningFlowTime = userResponse.data.user?.preferences?.eveningFlowTime || '18:00';
+      setEveningFlowTime(userEveningFlowTime);
+      
       setLoading(false);
     } catch (error: any) {
       console.error('❌ Error loading user data:', error);
@@ -228,17 +234,34 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="space-y-6">
-              {groupMeetingsByDay(meetings).map(({ date, meetings: dayMeetings }) => (
+              {groupMeetingsByDay(meetings, eveningFlowTime).map(({ date, meetings: dayMeetings, isLocked }) => (
                 <div key={date}>
                   <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <Calendar className="w-5 h-5" />
                     {date}
+                    {isLocked && (
+                      <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                        🔒 Unlocks at evening flow
+                      </span>
+                    )}
                   </h3>
-                  <div className="space-y-3">
-                    {dayMeetings.map((meeting) => (
-                      <MeetingCard key={meeting.id} meeting={meeting} />
-                    ))}
-                  </div>
+                  {isLocked ? (
+                    <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-200 text-center">
+                      <div className="text-4xl mb-3">🌙</div>
+                      <p className="text-gray-700 font-medium mb-2">
+                        Tomorrow's meetings are hidden until evening flow
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Focus on today! Tomorrow's schedule unlocks at {formatEveningTime(eveningFlowTime)} for your mental rehearsal.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {dayMeetings.map((meeting) => (
+                        <MeetingCard key={meeting.id} meeting={meeting} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -262,23 +285,37 @@ export default function Dashboard() {
   );
 }
 
-function groupMeetingsByDay(meetings: Meeting[]): { date: string; meetings: Meeting[] }[] {
-  const groups: { [key: string]: Meeting[] } = {};
+function groupMeetingsByDay(meetings: Meeting[], eveningFlowTime: string): { date: string; meetings: Meeting[]; isLocked: boolean }[] {
+  const groups: { [key: string]: { meetings: Meeting[]; isLocked: boolean } } = {};
   const now = new Date();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  // Parse evening flow time (format: "HH:mm")
+  const [eveningHour, eveningMinute] = eveningFlowTime.split(':').map(Number);
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  const currentTimeInMinutes = currentHour * 60 + currentMinute;
+  const eveningTimeInMinutes = eveningHour * 60 + eveningMinute;
+  
+  // Check if we're in the evening flow window (after evening flow time)
+  const isEveningFlowTime = currentTimeInMinutes >= eveningTimeInMinutes;
 
   meetings.forEach((meeting) => {
     const meetingDate = new Date(meeting.startTime);
     meetingDate.setHours(0, 0, 0, 0);
     
     let dateLabel: string;
+    let isLocked = false;
+    
     if (meetingDate.getTime() === today.getTime()) {
       dateLabel = 'Today';
+      isLocked = false; // Today's meetings are never locked
     } else if (meetingDate.getTime() === tomorrow.getTime()) {
       dateLabel = 'Tomorrow';
+      isLocked = !isEveningFlowTime; // Lock tomorrow's meetings until evening flow time
     } else {
       dateLabel = meetingDate.toLocaleDateString('en-US', {
         weekday: 'long',
@@ -288,12 +325,23 @@ function groupMeetingsByDay(meetings: Meeting[]): { date: string; meetings: Meet
     }
 
     if (!groups[dateLabel]) {
-      groups[dateLabel] = [];
+      groups[dateLabel] = { meetings: [], isLocked };
     }
-    groups[dateLabel].push(meeting);
+    groups[dateLabel].meetings.push(meeting);
   });
 
-  return Object.entries(groups).map(([date, meetings]) => ({ date, meetings }));
+  return Object.entries(groups).map(([date, { meetings, isLocked }]) => ({ 
+    date, 
+    meetings,
+    isLocked 
+  }));
+}
+
+function formatEveningTime(timeString: string): string {
+  const [hour, minute] = timeString.split(':').map(Number);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+  return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
 }
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
