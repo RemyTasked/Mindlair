@@ -63,9 +63,9 @@ class PushNotificationService {
               p256dh: subscription.p256dh,
               auth: subscription.auth,
             },
-          };
+          } as any;
 
-          await webpush.sendNotification(pushSubscription, notificationPayload);
+          await webpush.sendNotification(pushSubscription as any, notificationPayload);
           successCount++;
           
           logger.info('Push notification sent successfully', {
