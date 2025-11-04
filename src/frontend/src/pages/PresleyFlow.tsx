@@ -21,7 +21,7 @@ interface PresleyFlowData {
   dailyOutcomes?: string; // AI summary of today's meetings (evening only)
 }
 
-type Phase = 'opening' | 'wrapup' | 'reflection' | 'lineup' | 'mindset' | 'visualization' | 'closing' | 'complete';
+type Phase = 'opening' | 'wrapup' | 'reflection' | 'lineup' | 'mindset' | 'visualization' | 'unwind-breathing' | 'extended-visualization' | 'closing' | 'complete';
 
 export default function PresleyFlow() {
   const { userId, date } = useParams();
@@ -518,10 +518,230 @@ export default function PresleyFlow() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 30 }}
-                onClick={() => setCurrentPhase('closing')}
+                onClick={() => {
+                  // Evening flows get extended unwind breathing + visualization
+                  if (flowData.timeOfDay === 'evening') {
+                    setCurrentPhase('unwind-breathing');
+                  } else {
+                    setCurrentPhase('closing');
+                  }
+                }}
                 className="mt-12 px-8 py-4 bg-white/10 hover:bg-white/20 rounded-full font-semibold transition-all"
               >
-                Continue →
+                {flowData.timeOfDay === 'evening' ? 'Begin Evening Unwind →' : 'Continue →'}
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Evening Unwind Breathing */}
+        {currentPhase === 'unwind-breathing' && (
+          <motion.div
+            key="unwind-breathing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-8 relative z-10"
+          >
+            <div className="max-w-3xl w-full text-center">
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="text-4xl font-bold mb-6"
+              >
+                🌙 Evening Unwind
+              </motion.h2>
+              
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-lg text-purple-200 mb-12 max-w-2xl mx-auto"
+              >
+                Let's release the day's tension with a longer, deeper breathing exercise. 
+                Allow yourself to fully relax and prepare for restful sleep.
+              </motion.p>
+
+              {/* Extended Breathing Circle - Slower, Longer */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.4, 1],
+                }}
+                transition={{
+                  duration: 12, // Longer breath cycles (was 6)
+                  repeat: 8,    // More cycles for deeper relaxation
+                  ease: "easeInOut",
+                }}
+                className="mx-auto w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-purple-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
+              >
+                {/* Pulsing inner glow */}
+                <motion.div
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [0.3, 0.6, 0.3],
+                  }}
+                  transition={{
+                    duration: 12,
+                    repeat: 8,
+                    ease: "easeInOut",
+                  }}
+                  className="absolute inset-0 bg-gradient-to-br from-blue-400/30 to-purple-400/30 rounded-full"
+                />
+                
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    duration: 12,
+                    repeat: 8,
+                    ease: "easeInOut",
+                  }}
+                  className="text-7xl z-10"
+                >
+                  🌊
+                </motion.div>
+              </motion.div>
+
+              {/* Breathing Instructions */}
+              <motion.div
+                animate={{
+                  opacity: [0.6, 1, 0.6],
+                }}
+                transition={{
+                  duration: 12,
+                  repeat: 8,
+                  ease: "easeInOut",
+                }}
+                className="text-2xl font-light text-purple-100 mb-8"
+              >
+                Breathe deeply... Release... Relax...
+              </motion.div>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="text-sm text-purple-300 mb-8"
+              >
+                8 slow breath cycles • 12 seconds each • Total: ~2 minutes
+              </motion.p>
+
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 96 }} // After 8 cycles * 12 seconds
+                onClick={() => setCurrentPhase('extended-visualization')}
+                className="px-8 py-4 bg-white/10 hover:bg-white/20 rounded-full font-semibold transition-all"
+              >
+                Continue to Visualization →
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Extended Evening Visualization */}
+        {currentPhase === 'extended-visualization' && (
+          <motion.div
+            key="extended-visualization"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-8 relative z-10"
+          >
+            <div className="max-w-3xl w-full text-center">
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="text-4xl font-bold mb-6"
+              >
+                ✨ Extended Visualization
+              </motion.h2>
+              
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-lg text-purple-200 mb-12 max-w-2xl mx-auto"
+              >
+                Now, see yourself in tomorrow's meetings. Confident, calm, and in control. 
+                Watch yourself succeed with clarity and grace.
+              </motion.p>
+
+              {/* Larger, More Immersive Visualization Circle */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.25, 1],
+                  rotate: [0, 180, 360],
+                }}
+                transition={{
+                  duration: 20,
+                  repeat: 3,
+                  ease: "linear",
+                }}
+                className="mx-auto w-96 h-96 rounded-full bg-gradient-to-br from-purple-600/30 via-indigo-600/30 to-pink-600/30 backdrop-blur-xl border-4 border-purple-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
+              >
+                {/* Animated gradient overlay */}
+                <motion.div
+                  animate={{
+                    opacity: [0.2, 0.5, 0.2],
+                    scale: [1, 1.5, 1],
+                  }}
+                  transition={{
+                    duration: 10,
+                    repeat: 6,
+                    ease: "easeInOut",
+                  }}
+                  className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full"
+                />
+                
+                <motion.div
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    rotate: [0, -360, 0],
+                  }}
+                  transition={{
+                    duration: 20,
+                    repeat: 3,
+                    ease: "easeInOut",
+                  }}
+                  className="text-8xl z-10"
+                >
+                  🌟
+                </motion.div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="space-y-6 text-xl leading-relaxed text-purple-100 max-w-2xl mx-auto mb-12"
+              >
+                <p>
+                  You walk into each meeting feeling prepared and confident...
+                </p>
+                <p>
+                  You communicate clearly, listen deeply, and contribute meaningfully...
+                </p>
+                <p>
+                  You handle challenges with calm and creativity...
+                </p>
+                <p>
+                  You leave each meeting feeling accomplished and energized...
+                </p>
+                <p className="text-purple-200 font-semibold">
+                  Tomorrow is already a success. You've got this. 🌙
+                </p>
+              </motion.div>
+
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 60 }} // After ~1 minute of visualization
+                onClick={() => setCurrentPhase('closing')}
+                className="px-8 py-4 bg-gradient-to-r from-purple-600/80 to-indigo-600/80 hover:from-purple-600 hover:to-indigo-600 rounded-full font-semibold transition-all shadow-lg"
+              >
+                Complete Evening Flow →
               </motion.button>
             </div>
           </motion.div>
