@@ -1,6 +1,9 @@
 # Use Node.js 18 on Debian (better Prisma compatibility)
 FROM node:18-slim
 
+# Build argument to bust cache when needed
+ARG CACHEBUST=1
+
 # Install OpenSSL, PostgreSQL client, and other dependencies for Prisma
 RUN apt-get update -y && \
     apt-get install -y openssl libssl-dev ca-certificates postgresql-client && \
@@ -17,7 +20,8 @@ COPY src/frontend/package*.json ./src/frontend/
 RUN npm ci
 RUN cd src/frontend && npm ci
 
-# Copy application code
+# Copy application code (with cache buster)
+RUN echo "Cache bust: $CACHEBUST"
 COPY . .
 
 # Build application
