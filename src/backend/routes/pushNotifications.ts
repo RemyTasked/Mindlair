@@ -1,6 +1,6 @@
 import express from 'express';
 import { pushNotificationService } from '../services/delivery/pushNotificationService';
-import { authenticate } from '../middleware/auth';
+import { authenticate, AuthRequest } from '../middleware/auth';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
@@ -30,7 +30,7 @@ router.get('/public-key', (_req, res) => {
  * POST /api/push/subscribe
  * Subscribe to push notifications
  */
-router.post('/subscribe', authenticate, async (req, res) => {
+router.post('/subscribe', authenticate, async (req: AuthRequest, res) => {
   try {
     const userId = req.user?.id;
     const { subscription } = req.body;
@@ -96,7 +96,7 @@ router.post('/unsubscribe', authenticate, async (req, res) => {
  * POST /api/push/test
  * Send a test notification (for testing purposes)
  */
-router.post('/test', authenticate, async (req, res) => {
+router.post('/test', authenticate, async (req: AuthRequest, res) => {
   try {
     const userId = req.user?.id;
 
