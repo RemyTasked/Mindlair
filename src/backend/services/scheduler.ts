@@ -984,15 +984,11 @@ async function sendWellnessReminders() {
           });
         }
         
-        // Send via SMS if enabled
-        if (user.deliverySettings?.smsEnabled && user.deliverySettings?.phoneNumber) {
-          await smsService.sendWellnessReminder(user.deliverySettings.phoneNumber, type, message);
-          sent = true;
-          logger.info('📲 Wellness reminder sent via SMS', {
-            userId: user.id,
-            type,
-          });
-        }
+        // TODO: SMS wellness reminders not yet implemented
+        // if (user.deliverySettings?.smsEnabled && user.deliverySettings?.phoneNumber) {
+        //   await smsService.sendWellnessReminder(user.deliverySettings.phoneNumber, type, message);
+        //   sent = true;
+        // }
 
         if (sent) {
           // Create a wellness check-in record
