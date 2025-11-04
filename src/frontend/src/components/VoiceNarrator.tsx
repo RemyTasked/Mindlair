@@ -61,31 +61,29 @@ export default function VoiceNarrator({
     utterance.pitch = 1.0;
     utterance.volume = 0.9;
 
-    // Try to use a calm, professional female voice
+    // Try to use a calm, professional voice
     const voices = window.speechSynthesis.getVoices();
     
-    // Priority order for female voices (calm, professional)
+    // Priority order for calm, professional voices
     const preferredVoiceNames = [
-      'Samantha',           // macOS - warm, professional female
-      'Karen',              // macOS - Australian English female
-      'Moira',              // macOS - Irish English female
-      'Microsoft Zira',     // Windows - US English female
+      'Samantha',           // macOS - warm, professional
+      'Karen',              // macOS - Australian English
+      'Moira',              // macOS - Irish English
+      'Microsoft Zira',     // Windows - US English
       'Google US English Female', // Chrome
       'Google UK English Female', // Chrome
-      'Fiona',              // macOS - Scottish English female
+      'Fiona',              // macOS - Scottish English
     ];
     
     let selectedVoice = voices.find(voice => 
       preferredVoiceNames.some(name => voice.name.includes(name))
     );
     
-    // Fallback: Any female voice
+    // Fallback: First available English voice
     if (!selectedVoice) {
       selectedVoice = voices.find(voice => 
-        voice.name.toLowerCase().includes('female') ||
-        voice.name.includes('Woman') ||
-        !voice.name.toLowerCase().includes('male') // Exclude male voices
-      );
+        voice.lang.includes('en')
+      ) || voices[0]; // Absolute fallback to first voice
     }
     
     if (selectedVoice) {

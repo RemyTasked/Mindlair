@@ -25,6 +25,12 @@ interface DeliverySettings {
   slackEnabled: boolean;
   smsEnabled: boolean;
   pushEnabled: boolean;
+  pushPreMeetingCues: boolean;
+  pushPresleyFlow: boolean;
+  pushWellnessReminders: boolean;
+  pushMeetingInsights: boolean;
+  pushMorningRecap: boolean;
+  pushDailyWrapUp: boolean;
   phoneNumber?: string;
   slackWebhookUrl?: string;
 }
@@ -51,6 +57,12 @@ export default function Settings() {
     slackEnabled: false,
     smsEnabled: false,
     pushEnabled: true,
+    pushPreMeetingCues: true,
+    pushPresleyFlow: true,
+    pushWellnessReminders: true,
+    pushMeetingInsights: true,
+    pushMorningRecap: true,
+    pushDailyWrapUp: true,
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -303,7 +315,7 @@ export default function Settings() {
 
               <Toggle
                 label="Enable Voice Narration"
-                description="Soothing female voice guides you through focus flows"
+                description="Soothing voice guides you through focus flows"
                 checked={preferences.enableVoiceNarration}
                 onChange={(checked) =>
                   setPreferences({ ...preferences, enableVoiceNarration: checked })
@@ -313,7 +325,7 @@ export default function Settings() {
               {preferences.enableVoiceNarration && (
                 <div className="bg-indigo-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    <strong>🎙️ Voice Narration</strong> provides a calm, professional female voice that walks you 
+                    <strong>🎙️ Voice Narration</strong> provides a calm, professional voice that walks you 
                     through each phase of your focus session. The ambient sound automatically dims when the voice 
                     speaks. You can toggle voice on/off at any time during a flow using the button in the top-right corner.
                   </p>
@@ -514,6 +526,67 @@ export default function Settings() {
                   enabled={delivery.pushEnabled}
                   onToggle={(enabled) => setDelivery({ ...delivery, pushEnabled: enabled })}
                 />
+                
+                {/* Granular push notification preferences */}
+                {delivery.pushEnabled && (
+                  <div className="mt-6 pl-6 space-y-4 border-l-2 border-indigo-200">
+                    <p className="text-sm font-medium text-gray-700 mb-4">Choose which notifications to receive:</p>
+                    
+                    <Toggle
+                      label="Pre-Meeting Focus Sessions"
+                      description="Alerts for upcoming meeting focus flows"
+                      checked={delivery.pushPreMeetingCues}
+                      onChange={(checked) =>
+                        setDelivery({ ...delivery, pushPreMeetingCues: checked })
+                      }
+                    />
+                    
+                    <Toggle
+                      label="Presley Flow (Morning & Evening)"
+                      description="Morning prep and evening mental rehearsal notifications"
+                      checked={delivery.pushPresleyFlow}
+                      onChange={(checked) =>
+                        setDelivery({ ...delivery, pushPresleyFlow: checked })
+                      }
+                    />
+                    
+                    <Toggle
+                      label="Wellness Reminders"
+                      description="Periodic wellness check-ins throughout the day"
+                      checked={delivery.pushWellnessReminders}
+                      onChange={(checked) =>
+                        setDelivery({ ...delivery, pushWellnessReminders: checked })
+                      }
+                    />
+                    
+                    <Toggle
+                      label="Meeting Insights"
+                      description="Post-meeting reflection and insights"
+                      checked={delivery.pushMeetingInsights}
+                      onChange={(checked) =>
+                        setDelivery({ ...delivery, pushMeetingInsights: checked })
+                      }
+                    />
+                    
+                    <Toggle
+                      label="Morning Recap"
+                      description="Early morning summary of today's meetings"
+                      checked={delivery.pushMorningRecap}
+                      onChange={(checked) =>
+                        setDelivery({ ...delivery, pushMorningRecap: checked })
+                      }
+                    />
+                    
+                    <Toggle
+                      label="Daily Wrap-Up"
+                      description="Evening summary of completed meetings"
+                      checked={delivery.pushDailyWrapUp}
+                      onChange={(checked) =>
+                        setDelivery({ ...delivery, pushDailyWrapUp: checked })
+                      }
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

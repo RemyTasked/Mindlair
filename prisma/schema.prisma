@@ -105,7 +105,15 @@ model DeliverySettings {
   emailEnabled   Boolean @default(true)
   slackEnabled   Boolean @default(false)
   smsEnabled     Boolean @default(false)
-  pushEnabled    Boolean @default(true)  // Web push notifications
+  pushEnabled    Boolean @default(true)  // Master toggle for web push notifications
+  
+  // Granular push notification preferences (only applies if pushEnabled is true)
+  pushPreMeetingCues      Boolean @default(true)  // Pre-meeting focus session alerts
+  pushPresleyFlow         Boolean @default(true)  // Morning/evening Presley Flow alerts
+  pushWellnessReminders   Boolean @default(true)  // Wellness check-in reminders
+  pushMeetingInsights     Boolean @default(true)  // Post-meeting insights
+  pushMorningRecap        Boolean @default(true)  // Morning recap notifications
+  pushDailyWrapUp         Boolean @default(true)  // Evening wrap-up notifications
   
   // Contact info
   phoneNumber    String?

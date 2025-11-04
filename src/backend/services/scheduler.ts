@@ -392,7 +392,7 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         );
       }
 
-      if (delivery?.pushEnabled) {
+      if (delivery?.pushEnabled && delivery?.pushPreMeetingCues) {
         await pushNotificationService.sendPreMeetingCue(
           user.id,
           event.summary,
@@ -521,7 +521,7 @@ async function sendDailyWrapUps() {
           );
         }
 
-        if (user.deliverySettings?.pushEnabled) {
+        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushDailyWrapUp) {
           await pushNotificationService.sendDailyWrapUp(
             user.id,
             wrapUpMessage,
@@ -732,7 +732,7 @@ async function sendPresleyFlowSessions() {
         }
 
         // Send via push notification if enabled
-        if (user.deliverySettings?.pushEnabled) {
+        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushPresleyFlow) {
           await pushNotificationService.sendPresleyFlowNotification(
             user.id,
             presleyFlowUrl,
@@ -833,7 +833,7 @@ async function sendMorningRecaps() {
         }
 
         // Send via push notification if enabled
-        if (user.deliverySettings?.pushEnabled) {
+        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushMorningRecap) {
           await pushNotificationService.sendMorningRecap(
             user.id,
             recapMessage,
@@ -942,7 +942,7 @@ async function sendWellnessReminders() {
         const sent = await emailService.sendWellnessReminder(user.email, type, message);
 
         // Send push notification if enabled
-        if (user.deliverySettings?.pushEnabled) {
+        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushWellnessReminders) {
           await pushNotificationService.sendWellnessReminder(user.id, type, message);
         }
 
