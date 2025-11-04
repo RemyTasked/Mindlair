@@ -1,4 +1,5 @@
-import * as webpush from 'web-push';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const webpush = require('web-push');
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../../utils/logger';
 
@@ -63,9 +64,9 @@ class PushNotificationService {
               p256dh: subscription.p256dh,
               auth: subscription.auth,
             },
-          } as any;
+          };
 
-          await webpush.sendNotification(pushSubscription as any, notificationPayload);
+          await webpush.sendNotification(pushSubscription, notificationPayload);
           successCount++;
           
           logger.info('Push notification sent successfully', {
