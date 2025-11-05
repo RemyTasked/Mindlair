@@ -317,11 +317,8 @@ function groupMeetingsByDay(meetings: Meeting[], eveningFlowTime: string): { dat
       dateLabel = 'Tomorrow';
       isLocked = !isEveningFlowTime; // Lock tomorrow's meetings until evening flow time
     } else {
-      dateLabel = meetingDate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-      });
+      // SKIP meetings beyond tomorrow - don't show them at all
+      return;
     }
 
     if (!groups[dateLabel]) {
