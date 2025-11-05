@@ -682,39 +682,6 @@ export default function Settings() {
           {/* Account Management */}
           <Section title="Account Management">
             <div className="space-y-6">
-              {/* User ID for debugging */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-blue-900 mb-2">🔍 Debug Info</h3>
-                <p className="text-xs text-blue-700 mb-2">Your User ID (for support):</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-xs font-mono text-blue-900 overflow-x-auto">
-                    {localStorage.getItem('userId') || 'Not found'}
-                  </code>
-                  <button
-                    onClick={() => {
-                      const userId = localStorage.getItem('userId');
-                      if (userId) {
-                        navigator.clipboard.writeText(userId);
-                        alert('User ID copied to clipboard!');
-                      }
-                    }}
-                    className="px-3 py-2 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors whitespace-nowrap"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <p className="text-xs text-blue-600 mt-2">
-                  Use this to check your email settings: 
-                  <a 
-                    href={`/api/test/email/${localStorage.getItem('userId')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline ml-1 hover:text-blue-800"
-                  >
-                    Test Email Setup
-                  </a>
-                </p>
-              </div>
 
               {/* Connected Calendars */}
               <div>
