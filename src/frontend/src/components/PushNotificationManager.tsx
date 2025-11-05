@@ -156,14 +156,24 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
       </div>
 
       {enabled && isSubscribed && (
-        <div className="ml-8">
-          <button
-            onClick={handleTestNotification}
-            disabled={isLoading}
-            className="text-sm text-indigo-600 hover:text-indigo-700 underline disabled:opacity-50"
-          >
-            {isLoading ? 'Sending...' : 'Send Test Notification'}
-          </button>
+        <div className="ml-8 mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-indigo-900 mb-1">
+                ✅ Push Notifications Enabled
+              </p>
+              <p className="text-xs text-indigo-700">
+                Test your notifications to make sure they're working
+              </p>
+            </div>
+            <button
+              onClick={handleTestNotification}
+              disabled={isLoading}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-sm shadow-sm hover:shadow-md"
+            >
+              {isLoading ? 'Sending...' : '🧪 Send Test'}
+            </button>
+          </div>
         </div>
       )}
 
