@@ -163,7 +163,8 @@ export default function FocusScene() {
       case 'ai-message':
         return aiMessage;
       case 'breathing':
-        return 'Follow the breathing guide. Breathe slowly and deeply, letting each breath ground you in this moment.';
+        // Return intro text once, then the breathing component handles prompts
+        return 'Now, let\'s begin your breathing exercise. Follow the visual guide and listen to the prompts. Breathe slowly and deeply, letting each breath ground you in this moment.';
       case 'reflection':
         return 'As you prepare to enter your meeting, take a moment to set your intention. What do you want to bring to this conversation?';
       case 'complete':
@@ -175,8 +176,8 @@ export default function FocusScene() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
-      {/* Voice Narration */}
-      {meeting && (currentPhase === 'intro' || currentPhase === 'mindstate' || currentPhase === 'ai-message' || currentPhase === 'reflection' || currentPhase === 'complete') && (
+      {/* Voice Narration - Active in ALL phases */}
+      {meeting && (
         <VoiceNarrator
           text={getNarrationText()}
           enabled={voiceEnabled}
