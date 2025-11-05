@@ -720,6 +720,66 @@ router.get('/version', asyncHandler(async (_req, res) => {
 }));
 
 /**
+ * Test email delivery for a user
+ * GET /api/test/email/:userId
+ */
+router.get(
+  '/email/:userId',
+  asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        preferences: true,
+        deliverySettings: true,
+      },
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Check SendGrid configuration
+    const sendgridConfigured = !!(process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL);
+    
+    return res.json({
+      userId: user.id,
+      email: user.email,
+      sendgridStatus: {
+        apiKeyConfigured: !!process.env.SENDGRID_API_KEY,
+        fromEmailConfigured: !!process.env.SENDGRID_FROM_EMAIL,
+        fromEmail: process.env.SENDGRID_FROM_EMAIL || '❌ Not set',
+        fromName: process.env.SENDGRID_FROM_NAME || 'Meet Cute',
+        fullyConfigured: sendgridConfigured,
+      },
+      deliverySettings: {
+        emailEnabled: user.deliverySettings?.emailEnabled ?? false,
+        smsEnabled: user.deliverySettings?.smsEnabled ?? false,
+        pushEnabled: user.deliverySettings?.pushEnabled ?? false,
+      },
+      flowPreferences: {
+        enableMorningFlow: user.preferences?.enableMorningFlow ?? true,
+        enableEveningFlow: user.preferences?.enableEveningFlow ?? true,
+        enableDailyWrapUp: user.preferences?.enableDailyWrapUp ?? true,
+        enableWellnessReminders: user.preferences?.enableWellnessReminders ?? false,
+        morningFlowTime: user.preferences?.morningFlowTime || '06:00',
+        eveningFlowTime: user.preferences?.eveningFlowTime || '18:00',
+      },
+      diagnosis: {
+        canReceiveEmails: sendgridConfigured && (user.deliverySettings?.emailEnabled ?? false),
+        canReceiveFlows: (user.preferences?.enableMorningFlow || user.preferences?.enableEveningFlow) ?? false,
+        issues: [
+          ...(!sendgridConfigured ? ['❌ SendGrid not configured on Railway'] : []),
+          ...(!(user.deliverySettings?.emailEnabled) ? ['❌ Email delivery disabled in settings'] : []),
+          ...(!(user.preferences?.enableMorningFlow) && !(user.preferences?.enableEveningFlow) ? ['❌ Both morning and evening flows disabled'] : []),
+        ],
+      },
+    });
+  })
+);
+
+/**
  * Test push notifications for a user
  * GET /api/test/push/:userId
  */
