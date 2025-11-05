@@ -3,6 +3,7 @@ import { asyncHandler } from '../middleware/errorHandler';
 import { PromptGenerator } from '../services/ai/promptGenerator';
 import { aiService } from '../services/ai/aiService';
 import { emailService } from '../services/delivery/emailService';
+import { pushNotificationService } from '../services/delivery/pushNotificationService';
 import axios from 'axios';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { logger } from '../utils/logger';
@@ -717,6 +718,125 @@ router.get('/version', asyncHandler(async (_req, res) => {
     status: schemaFields.hasOldFields ? '❌ RUNNING OLD CODE' : '✅ RUNNING NEW CODE',
   });
 }));
+
+/**
+ * Test push notifications for a user
+ * GET /api/test/push/:userId
+ */
+router.get(
+  '/push/:userId',
+  asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    // Get user and their push subscriptions
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        deliverySettings: true,
+        pushSubscriptions: true,
+      },
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const subscriptions = user.pushSubscriptions || [];
+    
+    // Check browser support
+    const browserInfo = {
+      userAgent: req.headers['user-agent'] || 'unknown',
+      isChrome: (req.headers['user-agent'] || '').includes('Chrome'),
+      isFirefox: (req.headers['user-agent'] || '').includes('Firefox'),
+      isSafari: (req.headers['user-agent'] || '').includes('Safari') && !(req.headers['user-agent'] || '').includes('Chrome'),
+      isEdge: (req.headers['user-agent'] || '').includes('Edg'),
+    };
+    
+    return res.json({
+      userId: user.id,
+      email: user.email,
+      pushEnabled: user.deliverySettings?.pushEnabled || false,
+      subscriptionCount: subscriptions.length,
+      subscriptions: subscriptions.map(sub => ({
+        id: sub.id,
+        endpoint: sub.endpoint.substring(0, 50) + '...',
+        userAgent: sub.userAgent,
+        createdAt: sub.createdAt,
+      })),
+      granularSettings: {
+        pushPreMeetingCues: user.deliverySettings?.pushPreMeetingCues ?? true,
+        pushPresleyFlow: user.deliverySettings?.pushPresleyFlow ?? true,
+        pushWellnessReminders: user.deliverySettings?.pushWellnessReminders ?? true,
+        pushMeetingInsights: user.deliverySettings?.pushMeetingInsights ?? true,
+        pushMorningRecap: user.deliverySettings?.pushMorningRecap ?? true,
+        pushDailyWrapUp: user.deliverySettings?.pushDailyWrapUp ?? true,
+      },
+      browserInfo,
+      vapidPublicKey: process.env.VAPID_PUBLIC_KEY ? '✅ Set' : '❌ Missing',
+      vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ? '✅ Set' : '❌ Missing',
+      vapidEmail: process.env.VAPID_EMAIL || '❌ Missing',
+    });
+  })
+);
+
+/**
+ * Send a test push notification to a user
+ * POST /api/test/push/:userId/send
+ */
+router.post(
+  '/push/:userId/send',
+  asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { title, body } = req.body;
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        pushSubscriptions: true,
+      },
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    if (!user.pushSubscriptions || user.pushSubscriptions.length === 0) {
+      return res.status(400).json({ 
+        error: 'No push subscriptions found',
+        message: 'User needs to enable push notifications in Settings first',
+      });
+    }
+    
+    try {
+      // Send test notification
+      await pushNotificationService.sendToUser(
+        userId,
+        title || '🧪 Test Notification',
+        body || 'This is a test push notification from Meet Cute!',
+        '/dashboard'
+      );
+      
+      logger.info('Test push notification sent', { userId });
+      
+      return res.json({
+        success: true,
+        message: 'Test notification sent successfully',
+        sentTo: user.pushSubscriptions.length,
+        subscriptions: user.pushSubscriptions.map(sub => ({
+          endpoint: sub.endpoint.substring(0, 50) + '...',
+          userAgent: sub.userAgent,
+        })),
+      });
+    } catch (error: any) {
+      logger.error('Failed to send test push notification', { userId, error });
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+        details: error.stack,
+      });
+    }
+  })
+);
 
 export default router;
 
