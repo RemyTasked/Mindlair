@@ -144,6 +144,7 @@ model Meeting {
   // Meeting metadata
   meetingType     String?   // Inferred type: "one-on-one", "team", "client", etc.
   isOrganizer     Boolean   @default(false) // Is user the meeting organizer/host?
+  attendeeCount   Int       @default(0)     // Number of attendees in the meeting
   isBackToBack    Boolean   @default(false)
   
   // Cue delivery

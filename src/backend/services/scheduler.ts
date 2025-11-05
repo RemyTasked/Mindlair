@@ -298,6 +298,8 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
       ? `${process.env.BASE_URL}/focus/${user.id}/${event.id}`
       : undefined;
 
+    const attendeeCount = event.attendees?.length || 0;
+
     const meeting = await prisma.meeting.upsert({
       where: {
         userId_calendarEventId: {
@@ -313,6 +315,7 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         startTime: event.start,
         endTime: event.end,
         attendees: event.attendees,
+        attendeeCount,
         location: event.location,
         meetingLink: event.hangoutLink,
         meetingType,
@@ -330,6 +333,7 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         startTime: event.start,
         endTime: event.end,
         attendees: event.attendees,
+        attendeeCount,
         location: event.location,
         meetingLink: event.hangoutLink,
         isOrganizer: event.isOrganizer || false,

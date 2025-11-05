@@ -44,7 +44,7 @@ router.post(
   '/sync',
   authenticate,
   asyncHandler(async (req: Request, res) => {
-    const userId = req.userId;
+    const userId = req.userId!; // authenticate middleware ensures this exists
 
     try {
       logger.info('📲 Manual meeting sync requested', { userId });
@@ -191,6 +191,9 @@ router.post(
         });
         const isBackToBack = previousMeetings.length > 0;
 
+        // Calculate attendee count
+        const attendeeCount = event.attendees?.length || 0;
+
         // Upsert meeting to database
         await prisma.meeting.upsert({
           where: {
@@ -207,6 +210,7 @@ router.post(
             startTime: event.start,
             endTime: event.end,
             attendees: event.attendees || [],
+            attendeeCount,
             location: event.location || null,
             meetingLink: event.hangoutLink || null,
             meetingType: meetingType || null,
@@ -220,6 +224,7 @@ router.post(
             startTime: event.start,
             endTime: event.end,
             attendees: event.attendees || [],
+            attendeeCount,
             location: event.location || null,
             meetingLink: event.hangoutLink || null,
             meetingType: meetingType || null,
