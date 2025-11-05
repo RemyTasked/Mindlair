@@ -4,6 +4,7 @@ import { PromptGenerator } from '../services/ai/promptGenerator';
 import { aiService } from '../services/ai/aiService';
 import { emailService } from '../services/delivery/emailService';
 import { pushNotificationService } from '../services/delivery/pushNotificationService';
+import { authenticate } from '../middleware/auth';
 import axios from 'axios';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { logger } from '../utils/logger';
@@ -798,31 +799,11 @@ router.post(
     }
     
     try {
-      const emailSent = await emailService.sendEmail(
+      // Use the morning recap method as a simple test email
+      const emailSent = await emailService.sendMorningRecap(
         user.email,
-        '🧪 Test Email from Meet Cute',
-        'This is a test email to verify your email notifications are working correctly!',
-        `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #667eea;">🧪 Test Email Successful!</h2>
-            <p style="font-size: 16px; color: #333;">
-              Great news! Your email notifications are working correctly.
-            </p>
-            <p style="font-size: 14px; color: #666;">
-              You'll receive emails for:
-            </p>
-            <ul style="font-size: 14px; color: #666;">
-              <li>📧 Pre-meeting focus cues (10 minutes before meetings)</li>
-              <li>🌅 Morning flow (6 AM by default)</li>
-              <li>🌙 Evening mental rehearsal (6 PM by default)</li>
-              <li>✨ Daily wrap-ups</li>
-              <li>🧘 Wellness reminders</li>
-            </ul>
-            <p style="font-size: 14px; color: #999; margin-top: 30px;">
-              Sent from Meet Cute - Your AI-powered meeting preparation platform
-            </p>
-          </div>
-        `
+        '🧪 This is a test email from Meet Cute! Your email notifications are working correctly. You\'ll receive emails for pre-meeting focus cues, morning flows, evening mental rehearsals, daily wrap-ups, and wellness reminders.',
+        undefined
       );
       
       if (emailSent) {
