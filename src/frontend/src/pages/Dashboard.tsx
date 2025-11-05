@@ -222,9 +222,44 @@ export default function Dashboard() {
 
         {/* Upcoming Meetings */}
         <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-            Upcoming Meetings (Next 2 Days)
-          </h2>
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold">
+              Upcoming Meetings (Next 2 Days)
+            </h2>
+            <button
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  
+                  // Trigger calendar sync on backend
+                  const token = localStorage.getItem('meetcute_token');
+                  if (!token) return;
+                  
+                  const syncResponse = await api.post('/api/meetings/sync', {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  
+                  console.log('🔄 Calendar sync result:', syncResponse.data);
+                  
+                  // Reload dashboard data to show new meetings
+                  await loadUserData();
+                } catch (error: any) {
+                  console.error('Error refreshing meetings:', error);
+                  alert('Failed to sync calendar: ' + (error.response?.data?.error || error.message));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50"
+              title="Refresh meetings from calendar"
+            >
+              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span className="hidden sm:inline">{loading ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          </div>
 
           {meetings.length === 0 ? (
             <div className="text-center py-8 sm:py-12 text-gray-500">
