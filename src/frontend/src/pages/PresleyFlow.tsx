@@ -126,7 +126,7 @@ export default function PresleyFlow() {
       case 'wrapup':
         return flowData.dailyOutcomes || '';
       case 'lineup':
-        return `Here's your lineup for ${flowData.timeOfDay === 'morning' ? 'today' : 'tomorrow'}. ${flowData.meetingPreviews.map((m, i) => `At ${m.time}, you have ${m.title}.`).join(' ')}`;
+        return `Here's your lineup for ${flowData.timeOfDay === 'morning' ? 'today' : 'tomorrow'}. ${flowData.meetingPreviews.map((m) => `At ${m.time}, you have ${m.title}.`).join(' ')}`;
       case 'mindset':
         return flowData.mindsetTheme;
       case 'visualization':
