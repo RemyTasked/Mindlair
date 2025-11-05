@@ -256,10 +256,21 @@ export default function Dashboard() {
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div 
+                      className="space-y-3 max-h-[600px] overflow-y-auto pr-2"
+                      style={{
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: '#cbd5e0 #f7fafc'
+                      }}
+                    >
                       {dayMeetings.map((meeting) => (
                         <MeetingCard key={meeting.id} meeting={meeting} />
                       ))}
+                      {dayMeetings.length > 5 && (
+                        <div className="text-center text-sm text-gray-500 pt-2 border-t mt-2">
+                          📅 {dayMeetings.length} meetings total
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
