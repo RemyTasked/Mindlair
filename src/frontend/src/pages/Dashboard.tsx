@@ -113,9 +113,17 @@ export default function Dashboard() {
         status: error.response?.status,
         statusText: error.response?.statusText,
       });
-      console.log('🔄 Removing token and redirecting to landing page');
-      localStorage.removeItem('meetcute_token');
-      navigate('/');
+      
+      // Only redirect to landing page if it's an authentication error (401)
+      // For other errors (network issues, etc.), keep user on dashboard
+      if (error.response?.status === 401) {
+        console.log('🔄 Authentication error - removing token and redirecting');
+        localStorage.removeItem('meetcute_token');
+        navigate('/');
+      } else {
+        console.log('⚠️ Non-auth error - staying on dashboard, user can retry');
+        setLoading(false);
+      }
     }
   };
 
@@ -358,12 +366,12 @@ function groupMeetingsByDay(meetings: Meeting[], eveningFlowTime: string): { dat
     
     if (meetingDate.getTime() === today.getTime()) {
       dateLabel = 'Today';
-      isLocked = false; // Today's meetings are never locked
+      isLocked = false; // Today's meetings are ALWAYS visible, even after evening flow
     } else if (meetingDate.getTime() === tomorrow.getTime()) {
       dateLabel = 'Tomorrow';
       isLocked = !isEveningFlowTime; // Lock tomorrow's meetings until evening flow time
     } else {
-      // SKIP meetings beyond tomorrow - don't show them at all
+      // Skip meetings beyond tomorrow
       return;
     }
 
