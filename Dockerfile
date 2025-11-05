@@ -24,19 +24,12 @@ RUN cd src/frontend && npm ci
 RUN echo "Cache bust: $CACHEBUST"
 COPY . .
 
-# CRITICAL: Delete node_modules entirely and reinstall to ensure clean Prisma Client
-RUN rm -rf node_modules && \
-    npm ci && \
-    echo "✅ Fresh node_modules installed"
-
-# Generate Prisma Client with the NEW schema
+# Generate Prisma Client (don't reinstall everything)
 RUN npx prisma generate --schema=./prisma/schema.prisma && \
-    echo "✅ Prisma Client generated" && \
-    ls -la node_modules/@prisma/client/ | head -20
+    echo "✅ Prisma Client generated"
 
 # Build application (will use the generated Prisma Client)
-RUN npm run build
-RUN cd src/frontend && npm run build
+RUN npm run build && cd src/frontend && npm run build
 
 # Expose port
 EXPOSE 3000
