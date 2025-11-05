@@ -809,12 +809,12 @@ router.post(
     
     try {
       // Send test notification
-      await pushNotificationService.sendToUser(
-        userId,
-        title || '🧪 Test Notification',
-        body || 'This is a test push notification from Meet Cute!',
-        '/dashboard'
-      );
+      await pushNotificationService.sendToUser(userId, {
+        title: title || '🧪 Test Notification',
+        body: body || 'This is a test push notification from Meet Cute!',
+        url: '/dashboard',
+        icon: '/logo.png',
+      });
       
       logger.info('Test push notification sent', { userId });
       
