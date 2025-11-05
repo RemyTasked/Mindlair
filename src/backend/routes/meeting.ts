@@ -80,16 +80,30 @@ router.post(
                 account.refreshToken!
               );
               
-              if (tokens.access_token) {
-                const expiresInSeconds = typeof tokens.expires_in === 'number' 
-                  ? tokens.expires_in 
-                  : 3600;
+              // Google returns expiry_date as absolute timestamp (ms)
+              let expiresAt = new Date();
+              if (tokens.expiry_date) {
+                const expiryTimestamp = Number(tokens.expiry_date);
+                const maxExpiry = Date.now() + 86400 * 1000; // 24 hours from now
+                const minExpiry = Date.now() + 60 * 1000; // 1 minute from now
                 
+                if (expiryTimestamp > minExpiry && expiryTimestamp < maxExpiry) {
+                  expiresAt = new Date(expiryTimestamp);
+                } else {
+                  // If invalid, default to 1 hour from now
+                  expiresAt = new Date(Date.now() + 3600 * 1000);
+                }
+              } else {
+                // Default to 1 hour
+                expiresAt = new Date(Date.now() + 3600 * 1000);
+              }
+              
+              if (tokens.access_token) {
                 await prisma.calendarAccount.update({
                   where: { id: account.id },
                   data: {
                     accessToken: tokens.access_token,
-                    expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
+                    expiresAt,
                   },
                 });
                 account.accessToken = tokens.access_token;
