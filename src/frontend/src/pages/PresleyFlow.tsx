@@ -125,16 +125,22 @@ export default function PresleyFlow() {
         return flowData.openingScene;
       case 'wrapup':
         return flowData.dailyOutcomes || '';
+      case 'reflection':
+        return 'Take a moment to reflect on today. How did you show up in your meetings? What did you learn? What are you proud of? Your reflections help you grow.';
       case 'lineup':
         return `Here's your lineup for ${flowData.timeOfDay === 'morning' ? 'today' : 'tomorrow'}. ${flowData.meetingPreviews.map((m) => `At ${m.time}, you have ${m.title}.`).join(' ')}`;
       case 'mindset':
         return flowData.mindsetTheme;
       case 'visualization':
         return flowData.visualizationScript;
+      case 'unwind-breathing':
+        return 'Now, let\'s unwind with a calming breathing exercise. This will help you release any tension from the day and prepare your mind for rest. Follow the gentle rhythm, breathing slowly and deeply.';
       case 'extended-visualization':
         return 'See yourself in tomorrow\'s meetings. Confident, calm, and in control. You walk into each meeting feeling prepared. You communicate clearly, listen deeply, and contribute meaningfully. You handle challenges with calm and creativity. Tomorrow is already a success.';
       case 'closing':
         return flowData.closingMessage;
+      case 'complete':
+        return 'Well done. You are prepared and at peace. Rest well.';
       default:
         return '';
     }
@@ -142,12 +148,13 @@ export default function PresleyFlow() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white overflow-hidden">
-      {/* Voice Narrator */}
+      {/* Voice Narrator - Reads all phase text automatically */}
       <VoiceNarrator
         text={getNarrationText()}
         enabled={voiceEnabled}
         onToggle={() => setVoiceEnabled(!voiceEnabled)}
         onSpeaking={setIsVoiceSpeaking}
+        autoPlay={true}
       />
       
       {/* Ambient Sound - meditation bell/calm for Presley Flow, dims when voice speaks */}
