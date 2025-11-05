@@ -212,14 +212,25 @@ export default function Settings() {
             </div>
             
             {/* Save Button in Header */}
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
-            >
-              <Save className="w-5 h-5" />
-              {saving ? 'Saving...' : 'Save Settings'}
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
+              >
+                <Save className="w-5 h-5" />
+                {saving ? 'Saving...' : 'Save Settings'}
+              </button>
+              {message && (
+                <span
+                  className={`text-sm font-medium ${
+                    message.includes('success') ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {message}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </header>
