@@ -799,6 +799,27 @@ router.post(
     }
     
     try {
+      // Check if SendGrid is configured
+      const sendgridConfigured = !!(
+        process.env.SENDGRID_API_KEY && 
+        process.env.SENDGRID_API_KEY.startsWith('SG.')
+      );
+      
+      if (!sendgridConfigured) {
+        logger.warn('SendGrid not configured for test email', { userId });
+        return res.status(400).json({
+          error: 'Email service not configured',
+          message: 'SendGrid API key is missing or invalid. Please check SENDGRID_API_KEY environment variable.',
+          configured: false,
+        });
+      }
+      
+      logger.info('Attempting to send test email', { 
+        userId, 
+        email: user.email,
+        fromEmail: process.env.SENDGRID_FROM_EMAIL,
+      });
+      
       // Use the morning recap method as a simple test email
       const emailSent = await emailService.sendMorningRecap(
         user.email,
@@ -811,18 +832,26 @@ router.post(
         return res.json({
           success: true,
           message: `Test email sent to ${user.email}`,
+          configured: true,
         });
       } else {
+        logger.error('Email service returned false', { userId, email: user.email });
         return res.status(500).json({
           error: 'Failed to send test email',
-          message: 'Check server logs for details',
+          message: 'Email service returned false. Check server logs for SendGrid errors.',
+          configured: true,
         });
       }
     } catch (error: any) {
-      logger.error('Error sending test email', { userId, error: error.message });
+      logger.error('Error sending test email', { 
+        userId, 
+        error: error.message,
+        stack: error.stack,
+      });
       return res.status(500).json({
         error: 'Failed to send test email',
         message: error.message,
+        details: error.response?.body?.errors || error.stack,
       });
     }
   })
