@@ -79,14 +79,21 @@ router.post(
               const tokens = await googleCalendarService.refreshAccessToken(
                 account.refreshToken!
               );
-              await prisma.calendarAccount.update({
-                where: { id: account.id },
-                data: {
-                  accessToken: tokens.access_token,
-                  expiresAt: new Date(Date.now() + tokens.expires_in * 1000),
-                },
-              });
-              account.accessToken = tokens.access_token!;
+              
+              if (tokens.access_token) {
+                const expiresInSeconds = typeof tokens.expires_in === 'number' 
+                  ? tokens.expires_in 
+                  : 3600;
+                
+                await prisma.calendarAccount.update({
+                  where: { id: account.id },
+                  data: {
+                    accessToken: tokens.access_token,
+                    expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
+                  },
+                });
+                account.accessToken = tokens.access_token;
+              }
             }
 
             events = await googleCalendarService.getUpcomingEvents(
@@ -182,10 +189,10 @@ router.post(
             title: event.summary,
             startTime: event.start,
             endTime: event.end,
-            meetingType,
+            meetingType: meetingType || undefined,
             isBackToBack,
-            attendeeCount: event.attendees.length,
-            isOrganizer: event.isOrganizer,
+            attendeeCount: event.attendees?.length || 0,
+            isOrganizer: event.isOrganizer || false,
           },
           create: {
             userId,
@@ -193,10 +200,10 @@ router.post(
             title: event.summary,
             startTime: event.start,
             endTime: event.end,
-            meetingType,
+            meetingType: meetingType || undefined,
             isBackToBack,
-            attendeeCount: event.attendees.length,
-            isOrganizer: event.isOrganizer,
+            attendeeCount: event.attendees?.length || 0,
+            isOrganizer: event.isOrganizer || false,
             cueDelivered: false,
           },
         });
