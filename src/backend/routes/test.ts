@@ -780,6 +780,74 @@ router.get(
 );
 
 /**
+ * Send a test email to the authenticated user
+ * POST /api/test/email/send
+ */
+router.post(
+  '/email/send',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = (req as any).userId;
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    try {
+      const emailSent = await emailService.sendEmail(
+        user.email,
+        '🧪 Test Email from Meet Cute',
+        'This is a test email to verify your email notifications are working correctly!',
+        `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #667eea;">🧪 Test Email Successful!</h2>
+            <p style="font-size: 16px; color: #333;">
+              Great news! Your email notifications are working correctly.
+            </p>
+            <p style="font-size: 14px; color: #666;">
+              You'll receive emails for:
+            </p>
+            <ul style="font-size: 14px; color: #666;">
+              <li>📧 Pre-meeting focus cues (10 minutes before meetings)</li>
+              <li>🌅 Morning flow (6 AM by default)</li>
+              <li>🌙 Evening mental rehearsal (6 PM by default)</li>
+              <li>✨ Daily wrap-ups</li>
+              <li>🧘 Wellness reminders</li>
+            </ul>
+            <p style="font-size: 14px; color: #999; margin-top: 30px;">
+              Sent from Meet Cute - Your AI-powered meeting preparation platform
+            </p>
+          </div>
+        `
+      );
+      
+      if (emailSent) {
+        logger.info('Test email sent successfully', { userId, email: user.email });
+        return res.json({
+          success: true,
+          message: `Test email sent to ${user.email}`,
+        });
+      } else {
+        return res.status(500).json({
+          error: 'Failed to send test email',
+          message: 'Check server logs for details',
+        });
+      }
+    } catch (error: any) {
+      logger.error('Error sending test email', { userId, error: error.message });
+      return res.status(500).json({
+        error: 'Failed to send test email',
+        message: error.message,
+      });
+    }
+  })
+);
+
+/**
  * Test push notifications for a user
  * GET /api/test/push/:userId
  */

@@ -37,6 +37,7 @@ interface DeliverySettings {
 
 export default function Settings() {
   const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState<string>('');
   const [preferences, setPreferences] = useState<Preferences>({
     tone: 'balanced',
     alertMinutesBefore: 10,
@@ -81,6 +82,9 @@ export default function Settings() {
 
       const response = await api.get('/api/user/profile');
       
+      if (response.data.user.email) {
+        setUserEmail(response.data.user.email);
+      }
       if (response.data.user.preferences) {
         setPreferences(response.data.user.preferences);
       }
@@ -512,14 +516,52 @@ export default function Settings() {
           {/* Delivery Methods */}
           <Section title="Delivery Methods">
             <div className="space-y-6">
-              <Toggle
-                label="Email"
-                description="Receive cues via email"
-                checked={delivery.emailEnabled}
-                onChange={(checked) =>
-                  setDelivery({ ...delivery, emailEnabled: checked })
-                }
-              />
+              <div>
+                <Toggle
+                  label="Email"
+                  description="Receive cues via email"
+                  checked={delivery.emailEnabled}
+                  onChange={(checked) =>
+                    setDelivery({ ...delivery, emailEnabled: checked })
+                  }
+                />
+                {delivery.emailEnabled && (
+                  <div className="ml-8 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-900 mb-1">
+                          ✅ Email Notifications Enabled
+                        </p>
+                        <p className="text-xs text-green-700">
+                          Test your email delivery to make sure it's working
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const token = localStorage.getItem('meetcute_token');
+                            if (!token) return;
+                            
+                            setSaving(true);
+                            await api.post('/api/test/email/send', {}, {
+                              headers: { Authorization: `Bearer ${token}` }
+                            });
+                            alert('✅ Test email sent! Check your inbox at ' + userEmail);
+                          } catch (error: any) {
+                            alert('❌ Failed to send test email: ' + (error.response?.data?.error || error.message));
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                        disabled={saving}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-sm shadow-sm hover:shadow-md whitespace-nowrap"
+                      >
+                        {saving ? 'Sending...' : '📧 Send Test'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div>
                 <Toggle
@@ -640,6 +682,40 @@ export default function Settings() {
           {/* Account Management */}
           <Section title="Account Management">
             <div className="space-y-6">
+              {/* User ID for debugging */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-blue-900 mb-2">🔍 Debug Info</h3>
+                <p className="text-xs text-blue-700 mb-2">Your User ID (for support):</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-xs font-mono text-blue-900 overflow-x-auto">
+                    {localStorage.getItem('userId') || 'Not found'}
+                  </code>
+                  <button
+                    onClick={() => {
+                      const userId = localStorage.getItem('userId');
+                      if (userId) {
+                        navigator.clipboard.writeText(userId);
+                        alert('User ID copied to clipboard!');
+                      }
+                    }}
+                    className="px-3 py-2 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors whitespace-nowrap"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  Use this to check your email settings: 
+                  <a 
+                    href={`/api/test/email/${localStorage.getItem('userId')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline ml-1 hover:text-blue-800"
+                  >
+                    Test Email Setup
+                  </a>
+                </p>
+              </div>
+
               {/* Connected Calendars */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Connected Calendars</h3>
