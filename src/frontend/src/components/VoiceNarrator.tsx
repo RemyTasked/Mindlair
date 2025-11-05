@@ -56,31 +56,37 @@ export default function VoiceNarrator({
     const utterance = new SpeechSynthesisUtterance(text);
     utteranceRef.current = utterance;
 
-    // Configure voice settings for natural, conversational narration
-    // Add natural pauses by inserting commas and periods in the text
+    // Configure voice settings for warm, nurturing, professional narration
+    // Add natural pauses and breathing space
     const naturalText = text
-      .replace(/\. /g, '... ') // Longer pauses after sentences
-      .replace(/\, /g, ',, '); // Slight pauses after commas
+      .replace(/\. /g, '. ... ')    // Longer, natural pause after sentences (breathing space)
+      .replace(/\? /g, '? ... ')    // Pause after questions for reflection
+      .replace(/\! /g, '! ... ')    // Pause after exclamations for emphasis
+      .replace(/\, /g, ', ,, ')     // Brief pause after commas (natural rhythm)
+      .replace(/: /g, ': ,, ')      // Slight pause after colons
+      .replace(/\n/g, ' ... ');     // Pause at line breaks
     
     utterance.text = naturalText;
-    utterance.rate = 0.92; // Slightly slower for more natural flow (was 0.95)
-    utterance.pitch = 1.08; // Higher pitch for warmth and less robotic
-    utterance.volume = 0.8; // Quieter for calm, gentle presence
+    utterance.rate = 0.85; // Much slower, calm, meditative pace (was 0.92)
+    utterance.pitch = 1.15; // Warmer, more soothing pitch (was 1.08)
+    utterance.volume = 0.75; // Softer, more intimate volume (was 0.8)
 
-    // Try to use a natural, conversational voice
+    // Try to use the most natural, calm, nurturing voice available
     const voices = window.speechSynthesis.getVoices();
     
-    // Priority order for most natural-sounding voices
+    // Priority order for calm, nurturing, professional voices
     const preferredVoiceNames = [
-      'Samantha',           // macOS - Most natural, warm voice
-      'Ava',                // macOS - Natural, clear
-      'Allison',            // macOS - Professional, natural
-      'Susan',              // macOS - Warm, conversational
-      'Karen',              // macOS - Australian English, natural
-      'Google US English',  // Chrome - Neural voice (more natural)
-      'Microsoft Aria Online (Natural)', // Windows - Neural voice
-      'Microsoft Jenny Online (Natural)', // Windows - Neural voice
-      'Google UK English Female', // Chrome
+      'Samantha',                           // macOS - Most natural, warm, nurturing
+      'Ava',                                // macOS - Soft, clear, professional
+      'Allison',                            // macOS - Calm, professional
+      'Serena',                             // macOS - Soothing, gentle
+      'Susan',                              // macOS - Warm, conversational
+      'Fiona',                              // macOS - Scottish, very natural
+      'Microsoft Aria Online (Natural)',    // Windows - Neural, very human-like
+      'Microsoft Jenny Online (Natural)',   // Windows - Neural, warm
+      'Microsoft Michelle Online (Natural)',// Windows - Neural, professional
+      'Google US English',                  // Chrome - Neural (premium quality)
+      'Google UK English Female',           // Chrome - Natural British accent
     ];
     
     let selectedVoice = voices.find(voice => 
