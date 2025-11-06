@@ -928,18 +928,9 @@ async function sendWellnessReminders() {
 
     for (const user of users) {
       try {
-        // Stop wellness reminders before evening flow time (save that time for wrap-up)
+        // Get user's evening flow time to determine work hours
         const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
         const [eveningHour] = eveningFlowTime.split(':').map(Number);
-        
-        if (currentHour >= eveningHour) {
-          logger.info('⏭️ Skipping wellness reminder - after evening flow time', {
-            userId: user.id,
-            currentHour,
-            eveningHour,
-          });
-          continue; // Don't send wellness reminders after evening flow time
-        }
         
         // Check if ANY delivery method is enabled
         const hasDeliveryMethod = 
@@ -1016,7 +1007,7 @@ async function sendWellnessReminders() {
             message = "Weekend night: Rest well. You're recharging for the week ahead, but there's no pressure. Just be. 🌙";
           }
         } else {
-          // Weekday reminders: Focus on performance and stress management
+          // Weekday reminders: Use evening flow time to determine work vs. personal time
           if (currentHour >= 0 && currentHour < 5) {
             // Late night / very early morning (12am-5am): Sleep reminder
             type = 'sleep';
@@ -1038,12 +1029,12 @@ async function sendWellnessReminders() {
             // Midday (12pm-2pm): Energy check
             type = 'walk';
             message = "Midday reset: Step away from your screen. A short walk or stretch can refresh your afternoon energy.";
-          } else if (currentHour >= 14 && currentHour < 17) {
-            // Afternoon (2pm-5pm): Combat afternoon slump
+          } else if (currentHour >= 14 && currentHour < eveningHour) {
+            // Afternoon (2pm until evening flow): Combat afternoon slump - WORK HOURS
             type = 'walk';
             message = "Afternoon energy dip? Movement is medicine. A 5-minute walk can boost your focus and mood.";
-          } else if (currentHour >= 17 && currentHour < 21) {
-            // Evening (5pm-9pm): Wind down
+          } else if (currentHour >= eveningHour && currentHour < 21) {
+            // After evening flow until 9pm: Wind down - PERSONAL TIME
             if (patterns.recentTrend === 'worsening') {
               type = 'breathing';
               message = "End-of-day check-in: Your stress has been building. Let's release some tension with deep breathing.";
