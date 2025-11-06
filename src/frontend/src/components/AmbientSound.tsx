@@ -15,7 +15,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
   const [isPlaying, setIsPlaying] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(true);
 
-  const initializeAudio = () => {
+  const initializeAudio = async () => {
     if (!enabled || soundType === 'none') {
       console.log('🔇 Audio disabled or sound type is none');
       return;
@@ -32,6 +32,14 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
       const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
 
+      // Resume audio context if suspended (required by browsers)
+      if (audioContext.state === 'suspended') {
+        console.log('🔓 Resuming suspended audio context...');
+        await audioContext.resume();
+      }
+
+      console.log('🎵 Audio context state:', audioContext.state);
+
       // Create gain node for volume control
       const gainNode = audioContext.createGain();
       gainNode.gain.value = 0.3; // Start at 30% volume
@@ -43,7 +51,10 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
 
       setIsPlaying(true);
       setNeedsInteraction(false);
-      console.log('✅ Ambient sound started successfully!');
+      console.log('✅ Ambient sound started successfully!', { 
+        state: audioContext.state,
+        soundType 
+      });
     } catch (error: any) {
       console.error('❌ Error initializing audio:', error);
       setNeedsInteraction(true);
@@ -227,22 +238,28 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-8 right-8 z-50 p-4 backdrop-blur-md rounded-full transition-all shadow-lg border ${
+      className={`fixed bottom-8 right-8 z-50 p-4 backdrop-blur-md rounded-full transition-all shadow-2xl border-2 ${
         needsInteraction || !isPlaying
-          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-white/40 animate-pulse hover:from-indigo-500 hover:to-purple-500'
-          : 'bg-white/10 border-white/20 hover:bg-white/20'
+          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-white/60 animate-pulse hover:from-indigo-500 hover:to-purple-500 hover:scale-110'
+          : isMuted
+          ? 'bg-gray-600 text-white border-gray-400 hover:bg-gray-500 hover:scale-110'
+          : 'bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:scale-110'
       }`}
       aria-label={needsInteraction || !isPlaying ? "Enable ambient sound" : isMuted ? "Unmute sound" : "Mute sound"}
+      title={needsInteraction || !isPlaying ? "Click to enable calming sounds" : isMuted ? "Click to unmute" : "Click to mute"}
     >
       {needsInteraction || !isPlaying ? (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-white">
           <Volume2 className="w-6 h-6" />
-          <span className="text-sm font-medium">🎵 Click to Enable Sound</span>
+          <span className="text-sm font-bold whitespace-nowrap">🎵 Enable Sound</span>
         </div>
       ) : isMuted ? (
         <VolumeX className="w-6 h-6" />
       ) : (
-        <Volume2 className="w-6 h-6" />
+        <div className="flex items-center gap-2">
+          <Volume2 className="w-6 h-6" />
+          <span className="text-xs font-medium">Playing</span>
+        </div>
       )}
     </button>
   );
