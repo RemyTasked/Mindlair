@@ -1,4 +1,5 @@
 import cron from 'node-cron';
+import moment from 'moment-timezone';
 import { prisma } from '../utils/prisma';
 import { googleCalendarService } from './calendar/googleCalendar';
 import { outlookCalendarService } from './calendar/outlookCalendar';
@@ -10,6 +11,19 @@ import { pushNotificationService } from './delivery/pushNotificationService';
 import { logger } from '../utils/logger';
 import { analyzeMindStatePatterns } from './ai/mindStateAnalyzer';
 
+/**
+ * Get the current hour in the user's timezone
+ */
+function getUserCurrentHour(userTimezone: string): number {
+  return moment().tz(userTimezone).hour();
+}
+
+/**
+ * Get the current day of week in the user's timezone (0 = Sunday, 6 = Saturday)
+ */
+function getUserDayOfWeek(userTimezone: string): number {
+  return moment().tz(userTimezone).day();
+}
 
 export function startScheduler() {
   // Check for upcoming meetings every minute
@@ -434,11 +448,6 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
 
 async function sendDailyWrapUps() {
   try {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     const users = await prisma.user.findMany({
       where: {
         preferences: {
@@ -453,6 +462,10 @@ async function sendDailyWrapUps() {
 
     for (const user of users) {
       try {
+        // Get current hour in USER'S timezone
+        const userTimezone = user.timezone || 'America/New_York';
+        const currentHour = getUserCurrentHour(userTimezone);
+        
         // Only send at user's evening flow time
         const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
         const [eveningHour] = eveningFlowTime.split(':').map(Number);
@@ -460,6 +473,9 @@ async function sendDailyWrapUps() {
         if (currentHour !== eveningHour) {
           continue; // Skip if not the user's evening time
         }
+        
+        // Get today in user's timezone
+        const today = moment().tz(userTimezone).startOf('day').toDate();
         // Get today's stats
         const meetings = await prisma.meeting.findMany({
           where: {
@@ -666,9 +682,6 @@ async function sendPostMeetingInsights() {
 
 async function sendPresleyFlowSessions() {
   try {
-    const now = new Date();
-    const currentHour = now.getHours();
-
     // Get all users with Presley Flow enabled
     const users = await prisma.user.findMany({
       where: {
@@ -685,6 +698,11 @@ async function sendPresleyFlowSessions() {
 
     for (const user of users) {
       try {
+        // Get current hour in USER'S timezone
+        const userTimezone = user.timezone || 'America/New_York';
+        const currentHour = getUserCurrentHour(userTimezone);
+        const now = moment().tz(userTimezone).toDate();
+        
         // Check if it's the user's configured morning OR evening flow time
         const morningFlowTime = user.preferences?.morningFlowTime || '06:00';
         const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
@@ -899,9 +917,6 @@ async function sendMorningRecaps() {
 
 async function sendWellnessReminders() {
   try {
-    const now = new Date();
-    const currentHour = now.getHours();
-
     // Get users with wellness reminders enabled
     const users = await prisma.user.findMany({
       where: {
@@ -915,7 +930,7 @@ async function sendWellnessReminders() {
         wellnessCheckIns: {
           where: {
             createdAt: {
-              gte: new Date(now.getTime() - 24 * 60 * 60 * 1000), // Last 24 hours
+              gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
             },
           },
           orderBy: {
@@ -928,6 +943,12 @@ async function sendWellnessReminders() {
 
     for (const user of users) {
       try {
+        // Get current hour in USER'S timezone
+        const userTimezone = user.timezone || 'America/New_York';
+        const currentHour = getUserCurrentHour(userTimezone);
+        const dayOfWeek = getUserDayOfWeek(userTimezone);
+        const now = moment().tz(userTimezone).toDate();
+        
         // Get user's evening flow time to determine work hours
         const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
         const [eveningHour] = eveningFlowTime.split(':').map(Number);
@@ -979,7 +1000,6 @@ async function sendWellnessReminders() {
         let message: string;
 
         // Check if it's the weekend (Saturday = 6, Sunday = 0)
-        const dayOfWeek = now.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
         if (isWeekend) {

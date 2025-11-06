@@ -8,6 +8,7 @@ import { PostMeetingReflection, ReflectionData } from '../components/PostMeeting
 import AmbientSound from '../components/AmbientSound';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
+import { getUserTimezone } from '../utils/timezone';
 
 interface Meeting {
   id: string;
@@ -138,6 +139,21 @@ export default function Dashboard() {
         meetingsCount: meetingsResponse.data.meetings?.length,
         presleyFlowAvailable: presleyData.available,
       });
+
+      // Detect and update user's timezone if it has changed
+      const detectedTimezone = getUserTimezone();
+      const savedTimezone = userResponse.data.user.timezone;
+      
+      if (detectedTimezone !== savedTimezone) {
+        console.log('🌍 Timezone changed, updating:', {
+          old: savedTimezone,
+          new: detectedTimezone,
+        });
+        // Update timezone in background (don't block UI)
+        api.patch('/api/user/timezone', { timezone: detectedTimezone })
+          .then(() => console.log('✅ Timezone updated'))
+          .catch(err => console.warn('⚠️ Failed to update timezone:', err));
+      }
 
       // Cache user profile for entire session
       localStorage.setItem('meetcute_profile_cache', JSON.stringify(userResponse.data.user));

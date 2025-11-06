@@ -216,5 +216,25 @@ router.delete(
   })
 );
 
+// Update user timezone
+router.patch(
+  '/timezone',
+  authenticate,
+  asyncHandler(async (req: Request, res) => {
+    const timezoneSchema = z.object({
+      timezone: z.string().min(1, 'Timezone is required'),
+    });
+
+    const { timezone } = timezoneSchema.parse(req.body);
+
+    await prisma.user.update({
+      where: { id: req.userId },
+      data: { timezone },
+    });
+
+    res.json({ message: 'Timezone updated successfully', timezone });
+  })
+);
+
 export default router;
 
