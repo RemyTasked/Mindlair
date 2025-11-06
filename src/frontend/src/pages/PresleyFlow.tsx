@@ -119,6 +119,7 @@ export default function PresleyFlow() {
       <AmbientSound 
         soundType="calm-ocean" 
         enabled={true}
+        stopOnNavigation={false}
       />
       
       {/* Ambient background stars */}

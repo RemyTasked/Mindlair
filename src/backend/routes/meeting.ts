@@ -281,15 +281,50 @@ router.post(
         syncedCount++;
       }
 
+      // Delete meetings that no longer exist in the calendar
+      // Get all calendar event IDs from the fetched events
+      const calendarEventIds = allEvents.map(event => event.id);
+      
+      // Find meetings in our database that are in the time range but NOT in the calendar anymore
+      const meetingsToDelete = await prisma.meeting.findMany({
+        where: {
+          userId,
+          startTime: { gte: startTime, lte: endTime },
+          calendarEventId: {
+            notIn: calendarEventIds.length > 0 ? calendarEventIds : ['__no_events__'], // Avoid empty array issue
+          },
+        },
+      });
+
+      let deletedCount = 0;
+      if (meetingsToDelete.length > 0) {
+        logger.info('🗑️ Deleting meetings removed from calendar', {
+          userId,
+          deleteCount: meetingsToDelete.length,
+          deletedMeetings: meetingsToDelete.map(m => ({ id: m.id, title: m.title })),
+        });
+
+        await prisma.meeting.deleteMany({
+          where: {
+            id: {
+              in: meetingsToDelete.map(m => m.id),
+            },
+          },
+        });
+        deletedCount = meetingsToDelete.length;
+      }
+
       logger.info('✅ Manual meeting sync completed', {
         userId,
         syncedCount,
+        deletedCount,
       });
 
       return res.json({
         success: true,
         syncedCount,
-        message: `Synced ${syncedCount} meetings from your calendar`,
+        deletedCount,
+        message: `Synced ${syncedCount} meetings${deletedCount > 0 ? `, removed ${deletedCount} deleted meetings` : ''} from your calendar`,
       });
     } catch (error: any) {
       logger.error('❌ Manual meeting sync failed', {

@@ -43,6 +43,7 @@ export default function WindingDown() {
       <AmbientSound
         soundType={sessionData?.focusSoundType || 'calm-ocean'}
         enabled={sessionData?.enableFocusSound !== false}
+        stopOnNavigation={false}
       />
 
       {/* Content */}

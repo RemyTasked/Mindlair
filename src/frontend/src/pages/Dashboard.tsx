@@ -33,6 +33,7 @@ interface PresleyFlow {
   meetingCount?: number;
   presleyFlowUrl?: string;
   date?: string;
+  flowType?: 'morning' | 'evening';
 }
 
 export default function Dashboard() {
@@ -384,7 +385,7 @@ export default function Dashboard() {
                   Mental Rehearsal
                 </h3>
                 <p className="text-xs sm:text-sm text-purple-600 font-medium">
-                  {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} today
+                  {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} {presleyFlow.flowType === 'evening' ? 'tomorrow' : 'today'}
                 </p>
               </div>
             </div>

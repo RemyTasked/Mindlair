@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Volume2, VolumeX } from 'lucide-react';
 
 interface AmbientSoundProps {
   soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
   enabled: boolean;
   dimVolume?: boolean; // Dim volume when voice is speaking
+  stopOnNavigation?: boolean; // Stop sound when navigating away from current page
 }
 
-export default function AmbientSound({ soundType, enabled, dimVolume = false }: AmbientSoundProps) {
+export default function AmbientSound({ soundType, enabled, dimVolume = false, stopOnNavigation = true }: AmbientSoundProps) {
+  const location = useLocation();
   const audioContextRef = useRef<AudioContext | null>(null);
   const oscillatorsRef = useRef<OscillatorNode[]>([]);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -200,6 +203,16 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
 
     setIsPlaying(false);
   };
+
+  // Stop audio when navigating away (if stopOnNavigation is true)
+  useEffect(() => {
+    if (stopOnNavigation) {
+      return () => {
+        console.log('🚪 Navigation detected - stopping dashboard ambient sound');
+        stopAudio();
+      };
+    }
+  }, [location.pathname, stopOnNavigation]);
 
   useEffect(() => {
     if (!enabled || soundType === 'none') {

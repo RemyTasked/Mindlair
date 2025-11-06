@@ -158,6 +158,7 @@ export default function FocusScene() {
         <AmbientSound
           soundType={meeting?.soundPreferences?.soundType || 'calm-ocean'}
           enabled={meeting?.soundPreferences?.enabled ?? true}
+          stopOnNavigation={false}
         />
       )}
       
