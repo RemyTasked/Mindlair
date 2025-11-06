@@ -2,7 +2,7 @@
 FROM node:18-slim
 
 # Build argument to bust cache when needed
-ARG CACHEBUST=16
+ARG CACHEBUST=17
 
 # Install OpenSSL, PostgreSQL client, and other dependencies for Prisma
 RUN apt-get update -y && \

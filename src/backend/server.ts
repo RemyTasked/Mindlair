@@ -1,5 +1,6 @@
-// Meet Cute Backend Server - v1.6.0
-// Includes: Director's Insights, Post-Meeting Reflections, AI Emotional Analysis
+// Meet Cute Backend Server - v1.6.1
+// Includes: Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis
+// TypeScript build fixes applied
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
