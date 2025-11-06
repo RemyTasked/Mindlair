@@ -506,6 +506,9 @@ export default function Dashboard() {
         soundType={ambientSoundType}
         enabled={true}
       />
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 }
@@ -656,9 +659,6 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
         )}
       </div>
     </div>
-
-    {/* PWA Install Prompt */}
-    <PWAInstallPrompt />
   );
 }
 

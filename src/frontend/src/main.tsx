@@ -15,10 +15,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 // Register service worker for PWA functionality
 serviceWorkerRegistration.register({
-  onSuccess: (registration) => {
+  onSuccess: () => {
     console.log('🎬 PWA: App is ready for offline use!');
   },
-  onUpdate: (registration) => {
+  onUpdate: () => {
     console.log('🎬 PWA: New version available! Refresh to update.');
     // Optional: Show a toast notification to user
     if (confirm('New version of Meet Cute is available! Refresh to update?')) {
