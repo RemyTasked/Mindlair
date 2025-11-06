@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
-import { asyncHandler } from '../middleware/asyncHandler';
-import { AppError } from '../middleware/errorHandler';
+import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import moment from 'moment-timezone';
 
