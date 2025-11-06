@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../lib/api';
+import api from '../utils/api';
 import AmbientSound from '../components/AmbientSound';
-import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 
 type Phase = 'opening' | 'breathing' | 'visualization' | 'closing' | 'complete';
 
