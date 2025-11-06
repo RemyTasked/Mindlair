@@ -18,6 +18,10 @@ interface Preferences {
   enableEveningFlow: boolean;
   enableWellnessReminders: boolean;
   wellnessReminderFrequency: number;
+  enableReflections: boolean;
+  privateReflectionMode: boolean;
+  reflectionDataSharing: boolean;
+  storeReflectionText: boolean;
 }
 
 interface DeliverySettings {
@@ -52,6 +56,10 @@ export default function Settings() {
     enableEveningFlow: true,
     enableWellnessReminders: true,
     wellnessReminderFrequency: 3,
+    enableReflections: true,
+    privateReflectionMode: false,
+    reflectionDataSharing: false,
+    storeReflectionText: true,
   });
   const [delivery, setDelivery] = useState<DeliverySettings>({
     emailEnabled: true,
@@ -495,6 +503,83 @@ export default function Settings() {
                       </ul>
                     </div>
                   </div>
+                </div>
+              )}
+            </div>
+          </Section>
+
+          {/* Privacy & Reflection Settings */}
+          <Section title="Privacy & Reflection Settings">
+            <div className="space-y-6">
+              {/* Privacy Notice */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-blue-900 mb-1">Your Data, Your Control</h4>
+                    <p className="text-sm text-blue-800 leading-relaxed">
+                      All reflection data is stored securely and encrypted. You control what's stored, 
+                      how it's analyzed, and whether it's used for insights. No meeting content is ever 
+                      analyzed without your explicit consent.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Toggle
+                label="Enable Post-Meeting Reflections"
+                description="Show reflection prompts after meetings to capture your emotional state"
+                checked={preferences.enableReflections}
+                onChange={(checked) =>
+                  setPreferences({ ...preferences, enableReflections: checked })
+                }
+              />
+
+              {preferences.enableReflections && (
+                <div className="ml-6 space-y-4 border-l-2 border-gray-200 pl-6">
+                  <Toggle
+                    label="Private Reflection Mode"
+                    description="Only show high-level trends (energy, ratings). Hide specific words and text from insights."
+                    checked={preferences.privateReflectionMode}
+                    onChange={(checked) =>
+                      setPreferences({ ...preferences, privateReflectionMode: checked })
+                    }
+                  />
+
+                  <Toggle
+                    label="Store Reflection Text"
+                    description="Save your one-word descriptions for personalized insights. Disable to only store ratings."
+                    checked={preferences.storeReflectionText}
+                    onChange={(checked) =>
+                      setPreferences({ ...preferences, storeReflectionText: checked })
+                    }
+                  />
+
+                  <Toggle
+                    label="Share Anonymized Data"
+                    description="Help improve Meet Cute by sharing anonymized reflection patterns (no personal info or meeting content)"
+                    checked={preferences.reflectionDataSharing}
+                    onChange={(checked) =>
+                      setPreferences({ ...preferences, reflectionDataSharing: checked })
+                    }
+                  />
+
+                  {preferences.privateReflectionMode && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2">
+                        <span className="text-2xl">🔒</span>
+                        <div>
+                          <h5 className="font-semibold text-purple-900 mb-1">Private Mode Active</h5>
+                          <p className="text-sm text-purple-800">
+                            Director's Insights will show trends like "energy rising" or "mostly positive meetings" 
+                            but won't display specific words or individual reflection details.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

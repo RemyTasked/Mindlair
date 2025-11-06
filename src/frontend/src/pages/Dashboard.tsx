@@ -264,6 +264,7 @@ export default function Dashboard() {
         <DirectorsInsights 
           hasReflectionData={reflectionInsights?.hasData || false}
           recentReflections={reflectionInsights?.recentReflections || []}
+          privateMode={reflectionInsights?.privateMode || false}
           meetingStats={reflectionInsights?.stats || undefined}
         />
 

@@ -24,6 +24,23 @@ router.post('/:meetingId', authenticate, async (req: Request, res: Response): Pr
       return;
     }
 
+    // Get user preferences to check privacy settings
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { preferences: true }
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check if reflections are enabled
+    if (user.preferences?.enableReflections === false) {
+      res.status(403).json({ error: 'Reflections are disabled in your settings' });
+      return;
+    }
+
     // Verify meeting belongs to user
     const meeting = await prisma.meeting.findFirst({
       where: {
@@ -37,9 +54,14 @@ router.post('/:meetingId', authenticate, async (req: Request, res: Response): Pr
       return;
     }
 
-    // Analyze emotional tone using AI if oneWord is provided
+    // Respect privacy settings for text storage
+    const shouldStoreText = user.preferences?.storeReflectionText !== false;
+    const finalOneWord = shouldStoreText ? oneWord : null;
+    const finalNotes = shouldStoreText ? notes : null;
+
+    // Analyze emotional tone using AI if oneWord is provided and user allows it
     let emotionalTone = null;
-    if (oneWord && process.env.OPENAI_API_KEY) {
+    if (oneWord && shouldStoreText && process.env.OPENAI_API_KEY) {
       try {
         const completion = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
@@ -64,13 +86,13 @@ router.post('/:meetingId', authenticate, async (req: Request, res: Response): Pr
       }
     }
 
-    // Update meeting with reflection
+    // Update meeting with reflection (respecting privacy settings)
     const updatedMeeting = await prisma.meeting.update({
       where: { id: meetingId },
       data: {
         reflectionRating: rating,
-        reflectionOneWord: oneWord || null,
-        reflectionNotes: notes || null,
+        reflectionOneWord: finalOneWord,
+        reflectionNotes: finalNotes,
         reflectionEmotionalTone: emotionalTone,
         reflectionCapturedAt: new Date()
       }
@@ -80,8 +102,9 @@ router.post('/:meetingId', authenticate, async (req: Request, res: Response): Pr
       meetingId,
       userId,
       rating,
-      hasOneWord: !!oneWord,
-      emotionalTone
+      hasOneWord: !!finalOneWord,
+      emotionalTone,
+      privacyMode: !shouldStoreText
     });
 
     res.json({
@@ -108,6 +131,14 @@ router.get('/insights', authenticate, async (req: Request, res: Response): Promi
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
+
+    // Get user preferences to check privacy settings
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { preferences: true }
+    });
+
+    const privateMode = user?.preferences?.privateReflectionMode === true;
 
     // Get recent meetings with reflections
     const recentMeetings = await prisma.meeting.findMany({
@@ -147,18 +178,21 @@ router.get('/insights', authenticate, async (req: Request, res: Response): Promi
       averageRating = 'neutral';
     }
 
-    // Find most common word
-    const words = recentMeetings
-      .filter(m => m.reflectionOneWord)
-      .map(m => m.reflectionOneWord!.toLowerCase());
-    
-    const wordCounts = words.reduce((acc, word) => {
-      acc[word] = (acc[word] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    // Find most common word (only if not in private mode)
+    let mostCommonWord: string | null = null;
+    if (!privateMode) {
+      const words = recentMeetings
+        .filter(m => m.reflectionOneWord)
+        .map(m => m.reflectionOneWord!.toLowerCase());
+      
+      const wordCounts = words.reduce((acc, word) => {
+        acc[word] = (acc[word] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
-    const mostCommonWord = Object.entries(wordCounts)
-      .sort(([, a], [, b]) => b - a)[0]?.[0] || null;
+      mostCommonWord = Object.entries(wordCounts)
+        .sort(([, a], [, b]) => b - a)[0]?.[0] || null;
+    }
 
     // Detect energy trend (last 3 vs previous 3)
     let energyTrend: string | null = null;
@@ -189,21 +223,24 @@ router.get('/insights', authenticate, async (req: Request, res: Response): Promi
 
     res.json({
       hasData: true,
+      privateMode, // Let frontend know if we're in private mode
       stats: {
         totalMeetings: totalReflections,
         averageRating,
-        mostCommonWord,
+        mostCommonWord: privateMode ? null : mostCommonWord, // Hide in private mode
         energyTrend,
         ratingCounts
       },
-      recentReflections: recentMeetings.slice(0, 5).map(m => ({
-        id: m.id,
-        title: m.title,
-        rating: m.reflectionRating,
-        oneWord: m.reflectionOneWord,
-        emotionalTone: m.reflectionEmotionalTone,
-        capturedAt: m.reflectionCapturedAt
-      }))
+      recentReflections: privateMode 
+        ? [] // Don't return individual reflections in private mode
+        : recentMeetings.slice(0, 5).map(m => ({
+            id: m.id,
+            title: m.title,
+            rating: m.reflectionRating,
+            oneWord: m.reflectionOneWord,
+            emotionalTone: m.reflectionEmotionalTone,
+            capturedAt: m.reflectionCapturedAt
+          }))
     });
   } catch (error: any) {
     logger.error('Error fetching reflection insights', { error: error.message });

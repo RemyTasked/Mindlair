@@ -77,6 +77,12 @@ model UserPreferences {
   
   // Presley Flow preferences
   morningFlowTime      String  @default("06:00") // Time when morning flow becomes available (HH:mm format)
+  
+  // Privacy & Reflection preferences
+  enableReflections         Boolean @default(true)   // Enable post-meeting reflection prompts
+  privateReflectionMode     Boolean @default(false)  // Private mode: only show trends, no raw text/words
+  reflectionDataSharing     Boolean @default(false)  // Allow anonymized data for product improvements
+  storeReflectionText       Boolean @default(true)   // Store one-word descriptions (can be disabled)
   eveningFlowTime      String  @default("18:00") // Time when evening flow becomes available (HH:mm format)
   enableMorningFlow    Boolean @default(true)  // Enable morning prep/recap
   enableEveningFlow    Boolean @default(true)  // Enable evening wrap-up + mental rehearsal
