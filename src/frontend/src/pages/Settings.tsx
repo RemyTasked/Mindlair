@@ -81,6 +81,12 @@ export default function Settings() {
     teamName?: string;
     channelName?: string;
   } | null>(null);
+  const [calendarAccounts, setCalendarAccounts] = useState<Array<{
+    id: string;
+    provider: string;
+    email: string;
+    createdAt: string;
+  }>>([]);
 
   useEffect(() => {
     loadSettings();
@@ -149,6 +155,9 @@ export default function Settings() {
       }
       if (response.data.user.deliverySettings) {
         setDelivery(response.data.user.deliverySettings);
+      }
+      if (response.data.user.calendarAccounts) {
+        setCalendarAccounts(response.data.user.calendarAccounts);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -877,25 +886,41 @@ export default function Settings() {
               {/* Connected Calendars */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Connected Calendars</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
-                        G
+                {calendarAccounts.length > 0 ? (
+                  <div className="space-y-3">
+                    {calendarAccounts.map((account) => (
+                      <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold ${
+                            account.provider === 'google' 
+                              ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
+                              : 'bg-gradient-to-br from-blue-400 to-blue-600'
+                          }`}>
+                            {account.provider === 'google' ? 'G' : 'M'}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {account.provider === 'google' ? 'Google Calendar' : 'Microsoft Outlook'}
+                            </p>
+                            <p className="text-sm text-gray-600 font-medium">{account.email}</p>
+                            <p className="text-xs text-gray-500">Syncing meetings automatically</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDisconnectCalendar(account.provider)}
+                          className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                        >
+                          Disconnect
+                        </button>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Google Calendar</p>
-                        <p className="text-sm text-gray-500">Syncing meetings automatically</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDisconnectCalendar('google')}
-                      className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
-                    >
-                      Disconnect
-                    </button>
+                    ))}
                   </div>
-                </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-lg text-center">
+                    <p className="text-gray-600">No calendars connected</p>
+                    <p className="text-sm text-gray-500 mt-1">Connect a calendar to start syncing meetings</p>
+                  </div>
+                )}
                 <p className="mt-3 text-sm text-gray-500">
                   Disconnecting will remove all synced meetings and stop future syncing.
                 </p>

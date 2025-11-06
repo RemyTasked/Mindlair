@@ -9,6 +9,46 @@ import { logger } from '../utils/logger';
 
 const router = express.Router();
 
+// Check calendar account status
+router.get(
+  '/calendar-status',
+  authenticate,
+  asyncHandler(async (req: Request, res) => {
+    const userId = req.userId;
+    
+    const accounts = await prisma.calendarAccount.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        provider: true,
+        email: true,
+        expiresAt: true,
+        createdAt: true,
+      },
+    });
+
+    const now = new Date();
+    const accountsWithStatus = accounts.map(account => ({
+      ...account,
+      tokenExpired: account.expiresAt ? new Date(account.expiresAt) < now : null,
+      expiresIn: account.expiresAt 
+        ? Math.round((new Date(account.expiresAt).getTime() - now.getTime()) / 1000 / 60) + ' minutes'
+        : 'no expiry set',
+    }));
+
+    logger.info('📊 Calendar account status check', {
+      userId,
+      accountCount: accounts.length,
+      accounts: accountsWithStatus,
+    });
+
+    return res.json({
+      accounts: accountsWithStatus,
+      hasAccounts: accounts.length > 0,
+    });
+  })
+);
+
 // Get upcoming meetings
 router.get(
   '/',
@@ -148,11 +188,16 @@ router.post(
             allEvents.push(...events);
           }
         } catch (error: any) {
-          logger.error('Error fetching calendar events during manual sync', {
+          logger.error('❌ Error fetching calendar events during manual sync', {
             userId,
             provider: account.provider,
+            accountEmail: account.email,
             error: error.message,
+            errorStack: error.stack,
+            errorResponse: error.response?.data,
+            tokenExpired: account.expiresAt ? new Date(account.expiresAt) < now : 'no expiry set',
           });
+          // Don't throw - continue with other accounts
         }
       }
 
@@ -250,10 +295,13 @@ router.post(
       logger.error('❌ Manual meeting sync failed', {
         userId,
         error: error.message,
+        errorStack: error.stack,
+        errorDetails: error.response?.data || error.toString(),
       });
       return res.status(500).json({
         error: 'Failed to sync meetings',
         message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       });
     }
   })
