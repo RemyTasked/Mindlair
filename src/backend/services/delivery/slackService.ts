@@ -1,11 +1,70 @@
 import { logger } from '../../utils/logger';
 
 export class SlackService {
+  /**
+   * Send message using OAuth token (preferred) or webhook URL (legacy)
+   */
+  private async sendSlackMessage(
+    accessToken: string | null,
+    channelId: string | null,
+    webhookUrl: string | null,
+    blocks: any[]
+  ): Promise<boolean> {
+    try {
+      // Prefer OAuth token over webhook
+      if (accessToken && channelId) {
+        const response = await fetch('https://slack.com/api/chat.postMessage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            channel: channelId,
+            blocks,
+          }),
+        });
+
+        const data = await response.json();
+        
+        if (!data.ok) {
+          throw new Error(`Slack API error: ${data.error}`);
+        }
+        
+        return true;
+      }
+      
+      // Fallback to webhook
+      if (webhookUrl) {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ blocks }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Slack webhook failed: ${response.statusText}`);
+        }
+        
+        return true;
+      }
+      
+      throw new Error('No Slack credentials available');
+    } catch (error: any) {
+      logger.error('Error sending Slack message', { error: error.message });
+      return false;
+    }
+  }
+
   async sendPreMeetingCue(
-    webhookUrl: string,
+    webhookUrl: string | null,
     meetingTitle: string,
     cueMessage: string,
-    focusSceneUrl?: string
+    focusSceneUrl?: string,
+    accessToken?: string | null,
+    channelId?: string | null
   ): Promise<boolean> {
     try {
       const blocks = [
@@ -51,22 +110,20 @@ export class SlackService {
         } as any);
       }
 
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ blocks }),
-      });
+      const success = await this.sendSlackMessage(
+        accessToken || null,
+        channelId || null,
+        webhookUrl,
+        blocks
+      );
 
-      if (!response.ok) {
-        throw new Error(`Slack webhook failed: ${response.statusText}`);
+      if (success) {
+        logger.info('Pre-meeting cue sent to Slack', { meetingTitle });
       }
-
-      logger.info('Pre-meeting cue sent to Slack', { meetingTitle });
-      return true;
+      
+      return success;
     } catch (error: any) {
-      logger.error('Error sending Slack message', {
+      logger.error('Error sending pre-meeting cue to Slack', {
         error: error.message,
       });
       return false;
@@ -74,13 +131,15 @@ export class SlackService {
   }
 
   async sendDailyWrapUp(
-    webhookUrl: string,
+    webhookUrl: string | null,
     wrapUpMessage: string,
     stats: {
       totalMeetings: number;
       scenesCompleted: number;
       focusSessionsOpened: number;
-    }
+    },
+    accessToken?: string | null,
+    channelId?: string | null
   ): Promise<boolean> {
     try {
       const blocks = [
@@ -118,20 +177,18 @@ export class SlackService {
         },
       ];
 
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ blocks }),
-      });
+      const success = await this.sendSlackMessage(
+        accessToken || null,
+        channelId || null,
+        webhookUrl,
+        blocks
+      );
 
-      if (!response.ok) {
-        throw new Error(`Slack webhook failed: ${response.statusText}`);
+      if (success) {
+        logger.info('Daily wrap-up sent to Slack');
       }
-
-      logger.info('Daily wrap-up sent to Slack');
-      return true;
+      
+      return success;
     } catch (error: any) {
       logger.error('Error sending Slack daily wrap-up', {
         error: error.message,

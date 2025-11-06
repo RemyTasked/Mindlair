@@ -378,12 +378,14 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         });
       }
 
-      if (delivery?.slackEnabled && delivery?.slackWebhookUrl) {
+      if (delivery?.slackEnabled && (delivery?.slackAccessToken || delivery?.slackWebhookUrl)) {
         await slackService.sendPreMeetingCue(
-          delivery.slackWebhookUrl,
+          delivery.slackWebhookUrl || null,
           event.summary,
           cueMessage,
-          focusSceneUrl
+          focusSceneUrl,
+          delivery.slackAccessToken || null,
+          delivery.slackChannelId || null
         );
       }
 
@@ -516,12 +518,14 @@ async function sendDailyWrapUps() {
 
         if (
           user.deliverySettings?.slackEnabled &&
-          user.deliverySettings?.slackWebhookUrl
+          (user.deliverySettings?.slackAccessToken || user.deliverySettings?.slackWebhookUrl)
         ) {
           await slackService.sendDailyWrapUp(
-            user.deliverySettings.slackWebhookUrl,
+            user.deliverySettings.slackWebhookUrl || null,
             wrapUpMessage,
-            stats
+            stats,
+            user.deliverySettings.slackAccessToken || null,
+            user.deliverySettings.slackChannelId || null
           );
         }
 

@@ -116,9 +116,16 @@ model DeliverySettings {
   pushDailyWrapUp         Boolean @default(true)  // Evening wrap-up notifications
   
   // Contact info
-  phoneNumber    String?
-  slackUserId    String?
-  slackWebhookUrl String?
+  phoneNumber     String?
+  slackWebhookUrl String? // Legacy webhook support
+  
+  // Slack OAuth tokens (preferred method)
+  slackAccessToken  String? // OAuth access token
+  slackTeamId       String? // Slack workspace ID
+  slackTeamName     String? // Slack workspace name
+  slackChannelId    String? // Channel where notifications go
+  slackChannelName  String? // Channel name for display
+  slackUserId       String? // Slack user ID who authorized
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

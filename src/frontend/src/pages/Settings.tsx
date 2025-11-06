@@ -67,10 +67,60 @@ export default function Settings() {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [slackStatus, setSlackStatus] = useState<{
+    connected: boolean;
+    teamName?: string;
+    channelName?: string;
+  } | null>(null);
 
   useEffect(() => {
     loadSettings();
+    loadSlackStatus();
   }, []);
+
+  const loadSlackStatus = async () => {
+    try {
+      const token = localStorage.getItem('meetcute_token');
+      if (!token) return;
+
+      const response = await api.get('/api/slack/status', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSlackStatus(response.data);
+    } catch (error) {
+      console.error('Error loading Slack status:', error);
+    }
+  };
+
+  const getSlackAuthUrl = () => {
+    const clientId = 'YOUR_SLACK_CLIENT_ID'; // This will be set via env var
+    const redirectUri = encodeURIComponent(`${window.location.origin}/api/slack/oauth/callback`);
+    const token = localStorage.getItem('meetcute_token');
+    const userId = token; // Use token as state for security
+    const scopes = 'incoming-webhook,chat:write';
+    
+    return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${redirectUri}&state=${userId}`;
+  };
+
+  const handleDisconnectSlack = async () => {
+    try {
+      const token = localStorage.getItem('meetcute_token');
+      if (!token) return;
+
+      await api.post('/api/slack/disconnect', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSlackStatus({ connected: false });
+      setMessage('Slack disconnected successfully');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error disconnecting Slack:', error);
+      setMessage('Failed to disconnect Slack');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -564,37 +614,63 @@ export default function Settings() {
               </div>
 
               <div>
-                <Toggle
-                  label="Slack"
-                  description="Receive cues in Slack"
-                  checked={delivery.slackEnabled}
-                  onChange={(checked) =>
-                    setDelivery({ ...delivery, slackEnabled: checked })
-                  }
-                />
-                {delivery.slackEnabled && (
-                  <div className="mt-3 space-y-3">
-                    <input
-                      type="url"
-                      placeholder="Slack Webhook URL (https://hooks.slack.com/services/...)"
-                      value={delivery.slackWebhookUrl || ''}
-                      onChange={(e) =>
-                        setDelivery({ ...delivery, slackWebhookUrl: e.target.value })
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                    <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <span className="text-lg">💡</span>
-                      <div className="text-sm text-blue-900">
-                        <p className="font-medium mb-1">Need a webhook URL?</p>
-                        <p className="text-blue-700 mb-2">
-                          1. Go to <a href="https://api.slack.com/apps" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-900">api.slack.com/apps</a>
-                        </p>
-                        <p className="text-blue-700 mb-2">
-                          2. Create a new app → Enable "Incoming Webhooks"
-                        </p>
-                        <p className="text-blue-700">
-                          3. Add webhook to your workspace → Copy the URL here
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-base font-semibold text-gray-900">Slack</h3>
+                    <p className="text-sm text-gray-600">Receive cues in Slack</p>
+                  </div>
+                  {slackStatus?.connected ? (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                      ✓ Connected
+                    </span>
+                  ) : null}
+                </div>
+
+                {slackStatus?.connected ? (
+                  <div className="space-y-3">
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                          <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-green-900">
+                            {slackStatus.teamName || 'Slack Workspace'}
+                          </p>
+                          <p className="text-sm text-green-700">
+                            Notifications sent to #{slackStatus.channelName || 'channel'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={handleDisconnectSlack}
+                      className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Disconnect Slack
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <a
+                      href={getSlackAuthUrl()}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#4A154B] hover:bg-[#611f69] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                      </svg>
+                      Add to Slack
+                    </a>
+                    
+                    <div className="flex items-start gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                      <span className="text-lg">✨</span>
+                      <div className="text-sm text-purple-900">
+                        <p className="font-medium mb-1">One-Click Setup</p>
+                        <p className="text-purple-700">
+                          Click "Add to Slack" to connect your workspace. You'll choose which channel receives notifications.
                         </p>
                       </div>
                     </div>
