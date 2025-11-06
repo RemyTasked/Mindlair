@@ -676,54 +676,68 @@ async function sendPresleyFlowSessions() {
 
     for (const user of users) {
       try {
-        // Check if it's the user's configured evening flow time
+        // Check if it's the user's configured morning OR evening flow time
+        const morningFlowTime = user.preferences?.morningFlowTime || '06:00';
         const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
-        const [targetHour] = eveningFlowTime.split(':').map(Number);
+        const [morningHour] = morningFlowTime.split(':').map(Number);
+        const [eveningHour] = eveningFlowTime.split(':').map(Number);
 
         // Only proceed if it's the right hour (we run every hour)
-        if (currentHour !== targetHour) continue;
+        const isMorningTime = currentHour === morningHour && user.preferences?.enableMorningFlow;
+        const isEveningTime = currentHour === eveningHour && user.preferences?.enableEveningFlow;
         
-        // Check if evening flow is enabled
-        if (!user.preferences?.enableEveningFlow) continue;
+        if (!isMorningTime && !isEveningTime) continue;
 
         // Only send if email is enabled
         if (!user.deliverySettings?.emailEnabled) continue;
 
-        // Check if there are meetings tomorrow
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
-        const endOfTomorrow = new Date(tomorrow);
-        endOfTomorrow.setHours(23, 59, 59, 999);
+        // Determine which day to check for meetings
+        let targetDate = new Date(now);
+        let dateLabel = '';
+        
+        if (isMorningTime) {
+          // Morning flow: check TODAY's meetings
+          targetDate.setHours(0, 0, 0, 0);
+          dateLabel = 'today';
+        } else {
+          // Evening flow: check TOMORROW's meetings
+          targetDate.setDate(targetDate.getDate() + 1);
+          targetDate.setHours(0, 0, 0, 0);
+          dateLabel = 'tomorrow';
+        }
+        
+        const endOfTargetDate = new Date(targetDate);
+        endOfTargetDate.setHours(23, 59, 59, 999);
 
-        const tomorrowMeetings = await prisma.meeting.findMany({
+        const meetings = await prisma.meeting.findMany({
           where: {
             userId: user.id,
             startTime: {
-              gte: tomorrow,
-              lte: endOfTomorrow,
+              gte: targetDate,
+              lte: endOfTargetDate,
             },
           },
           orderBy: { startTime: 'asc' },
         });
 
-        if (tomorrowMeetings.length === 0) {
-          logger.info('No meetings tomorrow, skipping Presley Flow', {
+        if (meetings.length === 0) {
+          logger.info(`No meetings ${dateLabel}, skipping Presley Flow`, {
             userId: user.id,
+            flowType: isMorningTime ? 'morning' : 'evening',
           });
           continue;
         }
 
         // Generate Presley Flow URL
-        const tomorrowDateStr = tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD
-        const presleyFlowUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/presley-flow/${user.id}/${tomorrowDateStr}`;
+        const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        const presleyFlowUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/presley-flow/${user.id}/${targetDateStr}`;
 
         // Send via email
         const emailSent = await emailService.sendPresleyFlowNotification(
           user.email,
           presleyFlowUrl,
-          tomorrowMeetings.length,
-          tomorrow.toLocaleDateString('en-US', {
+          meetings.length,
+          targetDate.toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'short',
             day: 'numeric',
@@ -735,7 +749,7 @@ async function sendPresleyFlowSessions() {
           await smsService.sendPresleyFlowNotification(
             user.deliverySettings.phoneNumber,
             presleyFlowUrl,
-            tomorrowMeetings.length
+            meetings.length
           );
         }
 
@@ -744,8 +758,8 @@ async function sendPresleyFlowSessions() {
           await pushNotificationService.sendPresleyFlowNotification(
             user.id,
             presleyFlowUrl,
-            tomorrowMeetings.length,
-            tomorrow.toLocaleDateString('en-US', {
+            meetings.length,
+            targetDate.toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'short',
               day: 'numeric',
@@ -754,9 +768,11 @@ async function sendPresleyFlowSessions() {
         }
 
         if (emailSent) {
-          logger.info('Presley Flow notification sent', {
+          logger.info('✅ Presley Flow notification sent', {
             userId: user.id,
-            meetingCount: tomorrowMeetings.length,
+            flowType: isMorningTime ? 'morning' : 'evening',
+            targetDate: dateLabel,
+            meetingCount: meetings.length,
           });
         }
       } catch (error: any) {
@@ -877,11 +893,6 @@ async function sendWellnessReminders() {
     const now = new Date();
     const currentHour = now.getHours();
 
-    // Only send during working hours (9 AM - 6 PM)
-    if (currentHour < 9 || currentHour >= 18) {
-      return;
-    }
-
     // Get users with wellness reminders enabled
     const users = await prisma.user.findMany({
       where: {
@@ -950,24 +961,79 @@ async function sendWellnessReminders() {
         // Analyze mind state patterns to personalize the reminder
         const patterns = await analyzeMindStatePatterns(user.id);
         
-        // Determine reminder type based on patterns and time of day
-        let type: 'breathing' | 'walk' | 'mindful_moment';
+        // Determine reminder type based on time of day and patterns
+        let type: 'breathing' | 'walk' | 'mindful_moment' | 'sleep' | 'morning_energy';
         let message: string;
 
-        if (patterns.stressFrequency > 50 || patterns.recentTrend === 'worsening') {
-          // High stress users get more breathing reminders
-          type = currentHour < 12 ? 'breathing' : currentHour < 15 ? 'walk' : 'breathing';
-          message = patterns.stressFrequency > 50
-            ? "You've been experiencing high stress before meetings lately. Take a moment to reset with some deep breaths."
-            : "Your stress levels have been climbing. Let's pause and breathe together.";
-        } else if (currentHour >= 14 && currentHour < 16) {
-          // Afternoon slump - suggest a walk
-          type = 'walk';
-          message = "Afternoon energy dip? A quick walk can refresh your mind and boost your focus.";
+        // Check if it's the weekend (Saturday = 6, Sunday = 0)
+        const dayOfWeek = now.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        if (isWeekend) {
+          // Weekend-specific reminders: Focus on recharging, fun, and letting go
+          if (currentHour >= 0 && currentHour < 5) {
+            type = 'sleep';
+            message = "Late night adventures are fun, but rest is important too. Your body will thank you. 🌙";
+          } else if (currentHour >= 5 && currentHour < 9) {
+            type = 'morning_energy';
+            message = "Weekend morning! No rush today. Take your time waking up and do something that brings you joy. ☀️";
+          } else if (currentHour >= 9 && currentHour < 12) {
+            type = 'mindful_moment';
+            message = "It's the weekend. Let go of last week's stress. What would feel good right now? A hobby? Time with loved ones? 🎨";
+          } else if (currentHour >= 12 && currentHour < 15) {
+            type = 'walk';
+            message = "Weekend midday: Get outside if you can. Nature, fresh air, and movement are the best recharge. 🌳";
+          } else if (currentHour >= 15 && currentHour < 18) {
+            type = 'mindful_moment';
+            message = "Weekend afternoon: This is YOUR time. Do something purely for fun or relaxation. You've earned it. 🎉";
+          } else if (currentHour >= 18 && currentHour < 21) {
+            type = 'mindful_moment';
+            message = "Weekend evening: Enjoy this moment. Connect with people you love, or savor some peaceful alone time. 💫";
+          } else {
+            type = 'sleep';
+            message = "Weekend night: Rest well. You're recharging for the week ahead, but there's no pressure. Just be. 🌙";
+          }
         } else {
-          // General mindful moment
-          type = 'mindful_moment';
-          message = "Take a brief pause. Notice your breath, your body, this moment. You're doing great.";
+          // Weekday reminders: Focus on performance and stress management
+          if (currentHour >= 0 && currentHour < 5) {
+            // Late night / very early morning (12am-5am): Sleep reminder
+            type = 'sleep';
+            message = "It's late. Your body needs rest to perform at its best tomorrow. Consider winding down and getting some sleep. 🌙";
+          } else if (currentHour >= 5 && currentHour < 7) {
+            // Early morning (5am-7am): Gentle wake-up
+            type = 'morning_energy';
+            message = "Good morning! Start your day with intention. Take 3 deep breaths and set a positive tone for the day ahead. ☀️";
+          } else if (currentHour >= 7 && currentHour < 12) {
+            // Morning (7am-12pm): Focus on preparation
+            if (patterns.stressFrequency > 50) {
+              type = 'breathing';
+              message = "Morning check-in: You've had some stressful meetings lately. Take a moment to center yourself before the day unfolds.";
+            } else {
+              type = 'mindful_moment';
+              message = "Morning pause: Notice how you're feeling right now. Carry this awareness into your day.";
+            }
+          } else if (currentHour >= 12 && currentHour < 14) {
+            // Midday (12pm-2pm): Energy check
+            type = 'walk';
+            message = "Midday reset: Step away from your screen. A short walk or stretch can refresh your afternoon energy.";
+          } else if (currentHour >= 14 && currentHour < 17) {
+            // Afternoon (2pm-5pm): Combat afternoon slump
+            type = 'walk';
+            message = "Afternoon energy dip? Movement is medicine. A 5-minute walk can boost your focus and mood.";
+          } else if (currentHour >= 17 && currentHour < 21) {
+            // Evening (5pm-9pm): Wind down
+            if (patterns.recentTrend === 'worsening') {
+              type = 'breathing';
+              message = "End-of-day check-in: Your stress has been building. Let's release some tension with deep breathing.";
+            } else {
+              type = 'mindful_moment';
+              message = "Evening reflection: Take a moment to acknowledge what you accomplished today. You did well.";
+            }
+          } else {
+            // Night (9pm-12am): Prepare for rest
+            type = 'sleep';
+            message = "Winding down? Start preparing your mind and body for rest. Tomorrow is a new day. 🌙";
+          }
         }
 
         // Send the reminder via enabled channels

@@ -82,27 +82,61 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
       whiteNoise.buffer = noiseBuffer;
       whiteNoise.loop = true;
 
-      // Filter for different sounds
+      // Filter for different sounds - each type gets distinct characteristics
       const filter = audioContext.createBiquadFilter();
       
       if (type === 'calm-ocean') {
+        // Ocean: Deep, rolling waves (low frequency rumble)
         filter.type = 'lowpass';
-        filter.frequency.value = 800;
-        filter.Q.value = 0.5;
+        filter.frequency.value = 400;  // Lower for deeper ocean sound
+        filter.Q.value = 0.3;           // Smooth rolloff
+        
+        // Add gentle modulation for wave-like effect
+        const lfo = audioContext.createOscillator();
+        lfo.frequency.value = 0.2; // Slow modulation (5 seconds per wave)
+        const lfoGain = audioContext.createGain();
+        lfoGain.gain.value = 100; // Modulation depth
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        lfo.start();
+        
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        whiteNoise.start();
+        
+        oscillatorsRef.current = [whiteNoise as any, lfo as any];
       } else if (type === 'rain') {
+        // Rain: Mid-high frequency, crisp droplets
         filter.type = 'bandpass';
-        filter.frequency.value = 1200;
-        filter.Q.value = 1;
-      } else {
-        filter.type = 'lowpass';
-        filter.frequency.value = 2000;
+        filter.frequency.value = 2000;  // Higher for rain patter sound
+        filter.Q.value = 2;              // Sharper, more defined
+        
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        whiteNoise.start();
+        
+        oscillatorsRef.current = [whiteNoise as any];
+      } else if (type === 'white-noise') {
+        // White noise: Broad spectrum for focus/masking
+        filter.type = 'highpass';
+        filter.frequency.value = 200;    // Remove very low rumble
+        filter.Q.value = 0.5;
+        
+        // Add second filter for shaping
+        const filter2 = audioContext.createBiquadFilter();
+        filter2.type = 'lowpass';
+        filter2.frequency.value = 8000;  // Remove harsh highs
+        filter2.Q.value = 0.5;
+        
+        whiteNoise.connect(filter);
+        filter.connect(filter2);
+        filter2.connect(gainNode);
+        whiteNoise.start();
+        
+        oscillatorsRef.current = [whiteNoise as any];
       }
 
-      whiteNoise.connect(filter);
-      filter.connect(gainNode);
-      whiteNoise.start();
-
-      oscillatorsRef.current = [whiteNoise as any];
+      // Note: This block only runs for noise-based sounds
     } else if (type === 'forest') {
       // Forest sounds - layered low frequencies
       const frequencies = [100, 150, 200, 250];
