@@ -4,7 +4,6 @@ import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock } from 'lucide-react';
 import AmbientSound from '../components/AmbientSound';
-import VoiceNarrator from '../components/VoiceNarrator';
 
 interface PresleyFlowData {
   openingScene: string;
@@ -33,8 +32,6 @@ export default function PresleyFlow() {
   const [journalNote, setJournalNote] = useState('');
   const [performanceRating, setPerformanceRating] = useState<number | null>(null);
   const [improvementNotes, setImprovementNotes] = useState('');
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
 
   useEffect(() => {
     loadFlowData();
@@ -116,52 +113,12 @@ export default function PresleyFlow() {
     );
   }
 
-  // Get narration text based on current phase
-  const getNarrationText = (): string => {
-    if (!flowData) return '';
-    
-    switch (currentPhase) {
-      case 'opening':
-        return flowData.openingScene;
-      case 'wrapup':
-        return flowData.dailyOutcomes || '';
-      case 'reflection':
-        return 'Take a moment to reflect on today. How did you show up in your meetings? What did you learn? What are you proud of? Your reflections help you grow.';
-      case 'lineup':
-        return `Here's your lineup for ${flowData.timeOfDay === 'morning' ? 'today' : 'tomorrow'}. ${flowData.meetingPreviews.map((m) => `At ${m.time}, you have ${m.title}.`).join(' ')}`;
-      case 'mindset':
-        return flowData.mindsetTheme;
-      case 'visualization':
-        return flowData.visualizationScript;
-      case 'unwind-breathing':
-        return 'Now, let\'s unwind with a calming breathing exercise. This will help you release any tension from the day and prepare your mind for rest. Follow the gentle rhythm, breathing slowly and deeply.';
-      case 'extended-visualization':
-        return 'See yourself in tomorrow\'s meetings. Confident, calm, and in control. You walk into each meeting feeling prepared. You communicate clearly, listen deeply, and contribute meaningfully. You handle challenges with calm and creativity. Tomorrow is already a success.';
-      case 'closing':
-        return flowData.closingMessage;
-      case 'complete':
-        return 'Well done. You are prepared and at peace. Rest well.';
-      default:
-        return '';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white overflow-hidden">
-      {/* Voice Narrator - Reads all phase text automatically */}
-      <VoiceNarrator
-        text={getNarrationText()}
-        enabled={voiceEnabled}
-        onToggle={() => setVoiceEnabled(!voiceEnabled)}
-        onSpeaking={setIsVoiceSpeaking}
-        autoPlay={true}
-      />
-      
-      {/* Ambient Sound - calm ocean for Presley Flow morning ritual, dims when voice speaks */}
+      {/* Ambient Sound - calm ocean for Presley Flow morning ritual */}
       <AmbientSound 
         soundType="calm-ocean" 
-        enabled={true} 
-        dimVolume={isVoiceSpeaking}
+        enabled={true}
       />
       
       {/* Ambient background stars */}
