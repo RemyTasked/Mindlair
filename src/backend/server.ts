@@ -1,3 +1,5 @@
+// Meet Cute Backend Server - v1.5.0
+// Includes: Slack OAuth, Ambient Sound Fixes, Mobile Dashboard Improvements
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
