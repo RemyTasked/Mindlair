@@ -1,8 +1,10 @@
 # Use Node.js 18 on Debian (better Prisma compatibility)
 FROM node:18-slim
 
-# Build argument to bust cache when needed
-ARG CACHEBUST=17
+# Automatic cache busting using Railway's commit SHA
+# Railway automatically provides RAILWAY_GIT_COMMIT_SHA
+ARG RAILWAY_GIT_COMMIT_SHA=local
+ARG CACHEBUST=${RAILWAY_GIT_COMMIT_SHA}
 
 # Install OpenSSL, PostgreSQL client, and other dependencies for Prisma
 RUN apt-get update -y && \
@@ -20,8 +22,8 @@ COPY src/frontend/package*.json ./src/frontend/
 RUN npm ci
 RUN cd src/frontend && npm ci
 
-# Copy application code (with cache buster)
-RUN echo "Cache bust: $CACHEBUST"
+# Copy application code (with automatic cache buster)
+RUN echo "🔄 Building from commit: $CACHEBUST"
 COPY . .
 
 # Generate Prisma Client (don't reinstall everything)
