@@ -145,7 +145,22 @@ export default function Settings() {
         return;
       }
 
+      // Check for cached profile first (instant load)
+      const cachedProfile = localStorage.getItem('meetcute_profile_cache');
+      if (cachedProfile) {
+        const cached = JSON.parse(cachedProfile);
+        if (cached.email) setUserEmail(cached.email);
+        if (cached.preferences) setPreferences(cached.preferences);
+        if (cached.deliverySettings) setDelivery(cached.deliverySettings);
+        if (cached.calendarAccounts) setCalendarAccounts(cached.calendarAccounts);
+        console.log('✅ Using cached profile in Settings');
+      }
+
+      // Fetch fresh data in background
       const response = await api.get('/api/user/profile');
+      
+      // Update cache
+      localStorage.setItem('meetcute_profile_cache', JSON.stringify(response.data.user));
       
       if (response.data.user.email) {
         setUserEmail(response.data.user.email);

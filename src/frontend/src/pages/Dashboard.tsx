@@ -74,17 +74,27 @@ export default function Dashboard() {
         return;
       }
 
-      // Check for cached user profile (5 min cache)
+      // Check for cached user profile (session-based cache)
+      // Cache persists from sign-in until user logs out or closes browser
       const cachedProfile = localStorage.getItem('meetcute_profile_cache');
-      const cacheTimestamp = localStorage.getItem('meetcute_profile_cache_time');
-      const now = Date.now();
-      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+      const sessionActive = localStorage.getItem('meetcute_session_active');
 
-      if (cachedProfile && cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_DURATION) {
-        console.log('✅ Using cached profile data');
+      if (cachedProfile && sessionActive === 'true') {
+        console.log('✅ Using cached profile data (session cache)');
         const cached = JSON.parse(cachedProfile);
         setUser(cached);
         setEveningFlowTime(cached.preferences?.eveningFlowTime || '18:00');
+        
+        // Still refresh in background to catch any updates
+        api.get('/api/user/profile').then(response => {
+          const freshProfile = response.data.user;
+          localStorage.setItem('meetcute_profile_cache', JSON.stringify(freshProfile));
+          setUser(freshProfile);
+          setEveningFlowTime(freshProfile.preferences?.eveningFlowTime || '18:00');
+          console.log('🔄 Profile refreshed in background');
+        }).catch(err => {
+          console.warn('⚠️ Background profile refresh failed:', err);
+        });
       }
 
       console.log('📡 Making API calls to load user data...');
@@ -119,9 +129,9 @@ export default function Dashboard() {
         presleyFlowAvailable: presleyData.available,
       });
 
-      // Cache user profile for 5 minutes
+      // Cache user profile for entire session
       localStorage.setItem('meetcute_profile_cache', JSON.stringify(userResponse.data.user));
-      localStorage.setItem('meetcute_profile_cache_time', Date.now().toString());
+      localStorage.setItem('meetcute_session_active', 'true');
 
       // Set critical data immediately (fast render)
       setUser(userResponse.data.user);
@@ -176,7 +186,10 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
+    // Clear all session data on logout
     localStorage.removeItem('meetcute_token');
+    localStorage.removeItem('meetcute_profile_cache');
+    localStorage.removeItem('meetcute_session_active');
     navigate('/');
   };
 

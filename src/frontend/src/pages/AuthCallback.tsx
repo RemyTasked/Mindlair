@@ -28,6 +28,7 @@ export default function AuthCallback() {
     if (token) {
       try {
         localStorage.setItem('meetcute_token', token);
+        localStorage.setItem('meetcute_session_active', 'true'); // Mark session as active
         console.log('✅ Token stored in localStorage');
         
         // Verify token was stored
