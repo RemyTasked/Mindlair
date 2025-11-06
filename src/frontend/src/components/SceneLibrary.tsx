@@ -8,7 +8,6 @@ interface SceneLibraryProps {
 
 export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
   const [activeScene, setActiveScene] = useState<string | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(false);
 
   // Time-of-day aware content
   const journalingPrompts = {
@@ -52,23 +51,17 @@ export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
           </div>
           
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <AmbientSound 
-              soundType="meditation-bell"
-              enabled={soundEnabled}
-            />
+            <div className="text-center mb-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Click the sound button in the bottom right to enable calming meditation sounds
+              </p>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                <span className="text-2xl">👉</span>
+                <span className="text-sm font-medium text-blue-900">Look for the sound button →</span>
+              </div>
+            </div>
             
-            <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className={`w-full px-6 py-3 rounded-lg font-semibold transition-all ${
-                soundEnabled
-                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {soundEnabled ? '🔊 Sound Playing' : '🎵 Enable Sound'}
-            </button>
-            
-            <div className="mt-6 space-y-3 text-sm text-gray-600">
+            <div className="space-y-3 text-sm text-gray-600">
               <p className="flex items-start gap-2">
                 <span className="text-lg">🌊</span>
                 <span>Let tension melt away with each breath</span>
@@ -203,10 +196,7 @@ export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
               </div>
             </div>
             <button
-              onClick={() => {
-                setActiveScene(null);
-                setSoundEnabled(false);
-              }}
+              onClick={() => setActiveScene(null)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <X className="w-5 h-5 text-gray-600" />
@@ -217,6 +207,14 @@ export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
             {scene.content}
           </div>
         </div>
+        
+        {/* Render AmbientSound when Listen scene is active */}
+        {activeScene === 'listen' && (
+          <AmbientSound 
+            soundType="meditation-bell"
+            enabled={true}
+          />
+        )}
       </div>
     );
   }

@@ -252,7 +252,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl font-bold">
-              Upcoming Meetings (Next 2 Days)
+              Upcoming Meetings
             </h2>
             <button
               onClick={async () => {
@@ -292,7 +292,7 @@ export default function Dashboard() {
           {meetings.length === 0 ? (
             <div className="text-center py-8 sm:py-12 text-gray-500">
               <Calendar className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 opacity-50" />
-              <p className="text-base sm:text-lg">No upcoming meetings in the next 2 days</p>
+              <p className="text-base sm:text-lg">No upcoming meetings</p>
               <p className="text-sm mt-2">Meetings will appear here when they're scheduled</p>
             </div>
           ) : (
