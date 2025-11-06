@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { authenticate } from '../middleware/auth';
-import prisma from '../utils/prisma';
-import logger from '../utils/logger';
+import { prisma } from '../utils/prisma';
+import { logger } from '../utils/logger';
 import { OpenAI } from 'openai';
 
 const router = express.Router();
@@ -163,9 +163,9 @@ router.get('/insights', authenticate, async (req: Request, res: Response): Promi
 
     // Count ratings
     const ratingCounts = {
-      great: recentMeetings.filter(m => m.reflectionRating === 'great').length,
-      neutral: recentMeetings.filter(m => m.reflectionRating === 'neutral').length,
-      draining: recentMeetings.filter(m => m.reflectionRating === 'draining').length
+      great: recentMeetings.filter((m: any) => m.reflectionRating === 'great').length,
+      neutral: recentMeetings.filter((m: any) => m.reflectionRating === 'neutral').length,
+      draining: recentMeetings.filter((m: any) => m.reflectionRating === 'draining').length
     };
 
     // Determine average rating
@@ -182,16 +182,16 @@ router.get('/insights', authenticate, async (req: Request, res: Response): Promi
     let mostCommonWord: string | null = null;
     if (!privateMode) {
       const words = recentMeetings
-        .filter(m => m.reflectionOneWord)
-        .map(m => m.reflectionOneWord!.toLowerCase());
+        .filter((m: any) => m.reflectionOneWord)
+        .map((m: any) => m.reflectionOneWord!.toLowerCase());
       
-      const wordCounts = words.reduce((acc, word) => {
+      const wordCounts = words.reduce((acc: Record<string, number>, word: string) => {
         acc[word] = (acc[word] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
       mostCommonWord = Object.entries(wordCounts)
-        .sort(([, a], [, b]) => b - a)[0]?.[0] || null;
+        .sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0] || null;
     }
 
     // Detect energy trend (last 3 vs previous 3)
@@ -200,13 +200,13 @@ router.get('/insights', authenticate, async (req: Request, res: Response): Promi
       const recent3 = recentMeetings.slice(0, 3);
       const previous3 = recentMeetings.slice(3, 6);
 
-      const recentScore = recent3.reduce((sum, m) => {
+      const recentScore = recent3.reduce((sum: number, m: any) => {
         if (m.reflectionRating === 'great') return sum + 2;
         if (m.reflectionRating === 'neutral') return sum + 1;
         return sum;
       }, 0);
 
-      const previousScore = previous3.reduce((sum, m) => {
+      const previousScore = previous3.reduce((sum: number, m: any) => {
         if (m.reflectionRating === 'great') return sum + 2;
         if (m.reflectionRating === 'neutral') return sum + 1;
         return sum;
@@ -233,7 +233,7 @@ router.get('/insights', authenticate, async (req: Request, res: Response): Promi
       },
       recentReflections: privateMode 
         ? [] // Don't return individual reflections in private mode
-        : recentMeetings.slice(0, 5).map(m => ({
+        : recentMeetings.slice(0, 5).map((m: any) => ({
             id: m.id,
             title: m.title,
             rating: m.reflectionRating,
