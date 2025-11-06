@@ -232,13 +232,22 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false }: 
   };
 
   if (!enabled || soundType === 'none') {
+    console.log('🔇 AmbientSound not rendering:', { enabled, soundType });
     return null;
   }
+
+  console.log('🎵 AmbientSound rendering button:', { 
+    enabled, 
+    soundType, 
+    needsInteraction, 
+    isPlaying,
+    isMuted 
+  });
 
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-8 right-8 z-50 p-4 backdrop-blur-md rounded-full transition-all shadow-2xl border-2 ${
+      className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[9999] p-3 sm:p-4 backdrop-blur-md rounded-full transition-all shadow-2xl border-2 ${
         needsInteraction || !isPlaying
           ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-white/60 animate-pulse hover:from-indigo-500 hover:to-purple-500 hover:scale-110'
           : isMuted

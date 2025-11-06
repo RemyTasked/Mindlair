@@ -260,17 +260,15 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Director's Insights - Only show if has data, hidden on mobile when no data */}
-        {reflectionInsights?.hasData && (
-          <div className="mb-6 sm:mb-8">
-            <DirectorsInsights 
-              hasReflectionData={reflectionInsights?.hasData || false}
-              recentReflections={reflectionInsights?.recentReflections || []}
-              privateMode={reflectionInsights?.privateMode || false}
-              meetingStats={reflectionInsights?.stats || undefined}
-            />
-          </div>
-        )}
+        {/* Director's Insights - Always show (base insights for new users, AI insights when data available) */}
+        <div className="mb-6 sm:mb-8">
+          <DirectorsInsights 
+            hasReflectionData={reflectionInsights?.hasData || false}
+            recentReflections={reflectionInsights?.recentReflections || []}
+            privateMode={reflectionInsights?.privateMode || false}
+            meetingStats={reflectionInsights?.stats || undefined}
+          />
+        </div>
 
         {/* Scene Library - Show when no upcoming meetings (more compact on mobile) */}
         {meetings.length === 0 && (
