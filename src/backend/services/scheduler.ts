@@ -1138,8 +1138,6 @@ async function sendWellnessReminders() {
 
 async function sendWindingDownNotifications() {
   try {
-    const now = new Date();
-    
     const users = await prisma.user.findMany({
       where: {
         preferences: {

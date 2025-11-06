@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { AppError } from '../middleware/errorHandler';
@@ -12,7 +12,7 @@ const router = express.Router();
  */
 router.get(
   '/available/:userId',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     const user = await prisma.user.findUnique({
@@ -74,7 +74,7 @@ router.get(
  */
 router.get(
   '/:userId',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     const user = await prisma.user.findUnique({
