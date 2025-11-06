@@ -1,29 +1,44 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
-import FocusScene from './pages/FocusScene';
-import FocusSceneDemo from './pages/FocusSceneDemo';
-import Dashboard from './pages/Dashboard';
 import AuthCallback from './pages/AuthCallback';
-import Settings from './pages/Settings';
-import MeetingRating from './pages/MeetingRating';
-import PresleyFlow from './pages/PresleyFlow';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
+
+// Lazy load heavy routes
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Settings = lazy(() => import('./pages/Settings'));
+const FocusScene = lazy(() => import('./pages/FocusScene'));
+const FocusSceneDemo = lazy(() => import('./pages/FocusSceneDemo'));
+const PresleyFlow = lazy(() => import('./pages/PresleyFlow'));
+const MeetingRating = lazy(() => import('./pages/MeetingRating'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+
+// Loading component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+    <div className="text-center">
+      <div className="text-6xl mb-4 animate-bounce">🎬</div>
+      <h2 className="text-2xl font-semibold text-gray-800">Loading...</h2>
+    </div>
+  </div>
+);
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/focus/demo" element={<FocusSceneDemo />} />
-      <Route path="/focus/:userId/:meetingId" element={<FocusScene />} />
-      <Route path="/rate/:userId/:meetingId" element={<MeetingRating />} />
-      <Route path="/presley-flow/:userId/:date" element={<PresleyFlow />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/privacy" element={<Privacy />} />
-    </Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/focus/demo" element={<FocusSceneDemo />} />
+        <Route path="/focus/:userId/:meetingId" element={<FocusScene />} />
+        <Route path="/rate/:userId/:meetingId" element={<MeetingRating />} />
+        <Route path="/presley-flow/:userId/:date" element={<PresleyFlow />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+      </Routes>
+    </Suspense>
   );
 }
 

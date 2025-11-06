@@ -6,6 +6,7 @@ import SceneLibrary from '../components/SceneLibrary';
 import { DirectorsInsights } from '../components/DirectorsInsights';
 import { PostMeetingReflection, ReflectionData } from '../components/PostMeetingReflection';
 import AmbientSound from '../components/AmbientSound';
+import { DashboardSkeleton } from '../components/LoadingSkeleton';
 
 interface Meeting {
   id: string;
@@ -73,26 +74,33 @@ export default function Dashboard() {
         return;
       }
 
+      // Check for cached user profile (5 min cache)
+      const cachedProfile = localStorage.getItem('meetcute_profile_cache');
+      const cacheTimestamp = localStorage.getItem('meetcute_profile_cache_time');
+      const now = Date.now();
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+      if (cachedProfile && cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_DURATION) {
+        console.log('✅ Using cached profile data');
+        const cached = JSON.parse(cachedProfile);
+        setUser(cached);
+        setEveningFlowTime(cached.preferences?.eveningFlowTime || '18:00');
+      }
+
       console.log('📡 Making API calls to load user data...');
 
       // Fetch meetings for next 2 days
-      const now = new Date();
-      const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+      const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
 
-      const [userResponse, meetingsResponse, statsResponse, reflectionInsightsResponse] = await Promise.all([
+      // CRITICAL: Load user + meetings first (fast render)
+      const [userResponse, meetingsResponse] = await Promise.all([
         api.get('/api/user/profile'),
         api.get('/api/meetings', {
           params: {
-            startDate: now.toISOString(),
+            startDate: new Date().toISOString(),
             endDate: twoDaysFromNow.toISOString(),
           },
         }),
-        api.get('/api/user/stats', {
-          params: {
-            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        }),
-        api.get('/api/reflections/insights').catch(() => ({ data: { hasData: false, stats: null } })),
       ]);
 
       // Check for Presley Flow (non-critical - don't fail if it errors)
@@ -105,18 +113,20 @@ export default function Dashboard() {
         // Don't fail the whole dashboard load if Presley Flow check fails
       }
 
-      console.log('✅ API calls successful', {
+      console.log('✅ Critical data loaded', {
         userEmail: userResponse.data.user?.email,
         meetingsCount: meetingsResponse.data.meetings?.length,
-        totalMeetings: statsResponse.data.stats?.totalMeetings,
         presleyFlowAvailable: presleyData.available,
       });
 
+      // Cache user profile for 5 minutes
+      localStorage.setItem('meetcute_profile_cache', JSON.stringify(userResponse.data.user));
+      localStorage.setItem('meetcute_profile_cache_time', Date.now().toString());
+
+      // Set critical data immediately (fast render)
       setUser(userResponse.data.user);
       setMeetings(meetingsResponse.data.meetings);
-      setStats(statsResponse.data.stats);
       setPresleyFlow(presleyData);
-      setReflectionInsights(reflectionInsightsResponse.data);
       
       // Extract evening flow time from user preferences
       const userEveningFlowTime = userResponse.data.user?.preferences?.eveningFlowTime || '18:00';
@@ -125,7 +135,24 @@ export default function Dashboard() {
       // Check for recently ended meetings that need reflection
       checkForRecentlyEndedMeetings(meetingsResponse.data.meetings);
       
+      // Show UI now - load non-critical data in background
       setLoading(false);
+
+      // DEFERRED: Load stats and reflection insights in background (non-blocking)
+      Promise.all([
+        api.get('/api/user/stats', {
+          params: {
+            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+        }).catch(() => ({ data: { stats: null } })),
+        api.get('/api/reflections/insights').catch(() => ({ data: { hasData: false, stats: null } })),
+      ]).then(([statsResponse, reflectionInsightsResponse]) => {
+        console.log('✅ Background data loaded');
+        setStats(statsResponse.data.stats);
+        setReflectionInsights(reflectionInsightsResponse.data);
+      }).catch(err => {
+        console.warn('⚠️ Background data load failed (non-critical):', err);
+      });
     } catch (error: any) {
       console.error('❌ Error loading user data:', error);
       console.error('Error details:', {
@@ -197,11 +224,7 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-xl text-gray-600">Loading...</div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
