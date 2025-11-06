@@ -157,9 +157,9 @@ export default function PresleyFlow() {
         autoPlay={true}
       />
       
-      {/* Ambient Sound - meditation bell/calm for Presley Flow, dims when voice speaks */}
+      {/* Ambient Sound - calm ocean for Presley Flow morning ritual, dims when voice speaks */}
       <AmbientSound 
-        soundType="meditation-bell" 
+        soundType="calm-ocean" 
         enabled={true} 
         dimVolume={isVoiceSpeaking}
       />
