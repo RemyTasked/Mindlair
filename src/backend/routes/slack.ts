@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { prisma } from '../lib/prisma';
+import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -43,7 +43,7 @@ router.get('/oauth/callback', authenticate, async (req, res) => {
       }),
     });
 
-    const tokenData = await tokenResponse.json();
+    const tokenData: any = await tokenResponse.json();
 
     if (!tokenData.ok) {
       logger.error('Slack OAuth token exchange failed', { error: tokenData.error });
@@ -57,27 +57,27 @@ router.get('/oauth/callback', authenticate, async (req, res) => {
         userId: userId!,
         slackEnabled: true,
         slackAccessToken: tokenData.access_token,
-        slackTeamId: tokenData.team.id,
-        slackTeamName: tokenData.team.name,
-        slackChannelId: tokenData.incoming_webhook.channel_id,
-        slackChannelName: tokenData.incoming_webhook.channel,
-        slackUserId: tokenData.authed_user.id,
+        slackTeamId: tokenData.team?.id || null,
+        slackTeamName: tokenData.team?.name || null,
+        slackChannelId: tokenData.incoming_webhook?.channel_id || null,
+        slackChannelName: tokenData.incoming_webhook?.channel || null,
+        slackUserId: tokenData.authed_user?.id || null,
       },
       update: {
         slackEnabled: true,
         slackAccessToken: tokenData.access_token,
-        slackTeamId: tokenData.team.id,
-        slackTeamName: tokenData.team.name,
-        slackChannelId: tokenData.incoming_webhook.channel_id,
-        slackChannelName: tokenData.incoming_webhook.channel,
-        slackUserId: tokenData.authed_user.id,
+        slackTeamId: tokenData.team?.id || null,
+        slackTeamName: tokenData.team?.name || null,
+        slackChannelId: tokenData.incoming_webhook?.channel_id || null,
+        slackChannelName: tokenData.incoming_webhook?.channel || null,
+        slackUserId: tokenData.authed_user?.id || null,
       },
     });
 
     logger.info('Slack OAuth completed successfully', {
       userId,
-      teamId: tokenData.team.id,
-      channelId: tokenData.incoming_webhook.channel_id,
+      teamId: tokenData.team?.id,
+      channelId: tokenData.incoming_webhook?.channel_id,
     });
 
     // Redirect back to settings with success message
