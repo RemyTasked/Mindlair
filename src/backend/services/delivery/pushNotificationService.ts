@@ -232,13 +232,15 @@ class PushNotificationService {
    */
   async sendWellnessReminder(
     userId: string,
-    type: 'breathing' | 'walk' | 'mindful_moment',
+    type: 'breathing' | 'walk' | 'mindful_moment' | 'sleep' | 'morning_energy',
     message: string
   ): Promise<boolean> {
     const titles = {
       breathing: '🫁 Time for a Breathing Break',
       walk: '🚶 Take a Quick Walk',
       mindful_moment: '🧘 Mindful Moment',
+      sleep: '🌙 Time to Rest',
+      morning_energy: '☀️ Good Morning',
     };
 
     return this.sendToUser(userId, {

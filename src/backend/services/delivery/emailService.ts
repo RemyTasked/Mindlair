@@ -954,7 +954,7 @@ export class EmailService {
 
   async sendWellnessReminder(
     email: string,
-    type: 'breathing' | 'walk' | 'mindful_moment',
+    type: 'breathing' | 'walk' | 'mindful_moment' | 'sleep' | 'morning_energy',
     message: string
   ): Promise<boolean> {
     if (!this.isConfigured) {
@@ -967,12 +967,16 @@ export class EmailService {
         breathing: '🌬️',
         walk: '🚶',
         mindful_moment: '🧘',
+        sleep: '🌙',
+        morning_energy: '☀️',
       };
 
       const typeTitles = {
         breathing: 'Time to Breathe',
         walk: 'Take a Walk',
         mindful_moment: 'Mindful Moment',
+        sleep: 'Time to Rest',
+        morning_energy: 'Good Morning',
       };
 
       const msg = {
