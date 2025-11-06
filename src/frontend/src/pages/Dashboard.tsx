@@ -349,15 +349,13 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Scene Library - Show when no upcoming meetings (more compact on mobile) */}
-        {meetings.length === 0 && (
-          <div className="mb-6 sm:mb-8">
-            <SceneLibrary 
-              timeOfDay={getTimeOfDay()} 
-              onSoundTypeChange={setAmbientSoundType}
-            />
-          </div>
-        )}
+        {/* Scene Library - Always available for quick calm moments */}
+        <div className="mb-6 sm:mb-8">
+          <SceneLibrary 
+            timeOfDay={getTimeOfDay()} 
+            onSoundTypeChange={setAmbientSoundType}
+          />
+        </div>
 
         {/* Presley Flow Card - Compact on Mobile */}
         {presleyFlow?.available && (
