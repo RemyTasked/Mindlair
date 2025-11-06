@@ -53,10 +53,20 @@ export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
           
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <AmbientSound 
+              soundType="meditation-bell"
               enabled={soundEnabled}
-              onToggle={() => setSoundEnabled(!soundEnabled)}
-              autoStart={false}
             />
+            
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className={`w-full px-6 py-3 rounded-lg font-semibold transition-all ${
+                soundEnabled
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {soundEnabled ? '🔊 Sound Playing' : '🎵 Enable Sound'}
+            </button>
             
             <div className="mt-6 space-y-3 text-sm text-gray-600">
               <p className="flex items-start gap-2">

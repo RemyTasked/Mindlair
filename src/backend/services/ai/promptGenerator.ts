@@ -278,11 +278,12 @@ Generate the message now:`;
   }> {
     try {
       const meetingsSummary = meetings.map((m, i) => {
-        // Format time in user's local timezone (the Date object is in UTC, toLocaleTimeString handles conversion)
+        // Format time - don't specify timezone, let it use server/UTC time
+        // The Date object from DB is already in the correct timezone
         const timeStr = m.startTime.toLocaleTimeString('en-US', { 
           hour: 'numeric', 
           minute: '2-digit',
-          timeZone: 'America/New_York' // TODO: Get from user preferences
+          hour12: true
         });
         const duration = Math.round((m.endTime.getTime() - m.startTime.getTime()) / 60000);
         return `${i + 1}. ${m.title} - ${timeStr} (${duration} min, ${m.attendees.length} attendees)`;
@@ -381,7 +382,7 @@ Return as JSON:
         time: m.startTime.toLocaleTimeString('en-US', { 
           hour: 'numeric', 
           minute: '2-digit',
-          timeZone: 'America/New_York' // TODO: Get from user preferences
+          hour12: true
         }),
         focusCue: parsed.meetingPreviews?.[i]?.focusCue || `Bring clarity and presence to this ${m.meetingType || 'meeting'}.`,
       }));
@@ -398,7 +399,7 @@ Return as JSON:
           time: m.startTime.toLocaleTimeString('en-US', { 
             hour: 'numeric', 
             minute: '2-digit',
-            timeZone: 'America/New_York' // TODO: Get from user preferences
+            hour12: true
           }),
           focusCue: `Bring your full presence and clarity to this moment.`,
         })),
