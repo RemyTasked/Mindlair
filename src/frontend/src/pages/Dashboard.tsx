@@ -56,6 +56,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadUserData();
+
+    // Auto-refresh meetings every 5 minutes to catch new calendar events
+    const refreshInterval = setInterval(() => {
+      console.log('🔄 Auto-refreshing meetings...');
+      refreshMeetings();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Cleanup interval on unmount
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const loadUserData = async () => {
@@ -191,6 +200,39 @@ export default function Dashboard() {
     localStorage.removeItem('meetcute_profile_cache');
     localStorage.removeItem('meetcute_session_active');
     navigate('/');
+  };
+
+  // Refresh meetings in background (for auto-polling)
+  const refreshMeetings = async () => {
+    try {
+      const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+      
+      const meetingsResponse = await api.get('/api/meetings', {
+        params: {
+          startDate: new Date().toISOString(),
+          endDate: twoDaysFromNow.toISOString(),
+        },
+      });
+
+      const newMeetings = meetingsResponse.data.meetings;
+      
+      // Only update if meetings have changed
+      if (JSON.stringify(newMeetings) !== JSON.stringify(meetings)) {
+        console.log('✅ New meetings detected, updating...', {
+          oldCount: meetings.length,
+          newCount: newMeetings.length,
+        });
+        setMeetings(newMeetings);
+        
+        // Check for recently ended meetings that need reflection
+        checkForRecentlyEndedMeetings(newMeetings);
+      } else {
+        console.log('✅ No meeting changes detected');
+      }
+    } catch (error: any) {
+      console.warn('⚠️ Background meeting refresh failed:', error.message);
+      // Don't show error to user - this is a background operation
+    }
   };
 
   // Check for recently ended meetings that need reflection
