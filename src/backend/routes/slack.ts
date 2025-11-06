@@ -6,18 +6,25 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 // Slack OAuth callback
-router.get('/oauth/callback', authenticate, async (req, res) => {
+router.get('/oauth/callback', authenticate, async (req, res): Promise<void> => {
   try {
     const { code, state } = req.query;
     const userId = req.userId;
 
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     if (!code) {
-      return res.status(400).json({ error: 'Missing authorization code' });
+      res.status(400).json({ error: 'Missing authorization code' });
+      return;
     }
 
     // Verify state matches userId for security
     if (state !== userId) {
-      return res.status(400).json({ error: 'Invalid state parameter' });
+      res.status(400).json({ error: 'Invalid state parameter' });
+      return;
     }
 
     // Exchange code for access token
@@ -27,7 +34,8 @@ router.get('/oauth/callback', authenticate, async (req, res) => {
 
     if (!clientId || !clientSecret) {
       logger.error('Slack OAuth credentials not configured');
-      return res.status(500).json({ error: 'Slack integration not configured' });
+      res.status(500).json({ error: 'Slack integration not configured' });
+      return;
     }
 
     const tokenResponse = await fetch('https://slack.com/api/oauth.v2.access', {
@@ -47,7 +55,8 @@ router.get('/oauth/callback', authenticate, async (req, res) => {
 
     if (!tokenData.ok) {
       logger.error('Slack OAuth token exchange failed', { error: tokenData.error });
-      return res.status(400).json({ error: 'Failed to authorize with Slack' });
+      res.status(400).json({ error: 'Failed to authorize with Slack' });
+      return;
     }
 
     // Store Slack OAuth tokens
