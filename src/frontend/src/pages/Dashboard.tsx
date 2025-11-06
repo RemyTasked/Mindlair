@@ -7,6 +7,7 @@ import { DirectorsInsights } from '../components/DirectorsInsights';
 import { PostMeetingReflection, ReflectionData } from '../components/PostMeetingReflection';
 import AmbientSound from '../components/AmbientSound';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
+import PWAInstallPrompt from '../components/PWAInstallPrompt';
 
 interface Meeting {
   id: string;
@@ -655,6 +656,9 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
         )}
       </div>
     </div>
+
+    {/* PWA Install Prompt */}
+    <PWAInstallPrompt />
   );
 }
 

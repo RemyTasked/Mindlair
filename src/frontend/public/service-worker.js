@@ -1,77 +1,169 @@
 /* eslint-disable no-restricted-globals */
-// Service Worker for Push Notifications
 
+const CACHE_NAME = 'meetcute-v1';
+const RUNTIME_CACHE = 'meetcute-runtime';
+
+// Assets to cache on install
+const PRECACHE_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+];
+
+// Install event - cache critical assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating...');
-  event.waitUntil(self.clients.claim());
-});
-
-// Handle push notifications
-self.addEventListener('push', (event) => {
-  console.log('Push notification received:', event);
-
-  if (!event.data) {
-    console.log('Push event has no data');
-    return;
-  }
-
-  try {
-    const data = event.data.json();
-    console.log('Push notification data:', data);
-
-    const title = data.title || 'Meet Cute';
-    const options = {
-      body: data.body || 'You have a new notification',
-      icon: data.icon || '/logo.png',
-      badge: data.badge || '/logo.png',
-      tag: data.tag || 'default',
-      data: {
-        url: data.url || '/dashboard',
-        ...data.data,
-      },
-      requireInteraction: false,
-      vibrate: [200, 100, 200],
-    };
-
-    event.waitUntil(
-      self.registration.showNotification(title, options)
-    );
-  } catch (error) {
-    console.error('Error handling push notification:', error);
-  }
-});
-
-// Handle notification clicks
-self.addEventListener('notificationclick', (event) => {
-  console.log('Notification clicked:', event);
-
-  event.notification.close();
-
-  const urlToOpen = event.notification.data?.url || '/dashboard';
-
+  console.log('🎬 Service Worker: Installing...');
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Check if there's already a window open
-      for (const client of clientList) {
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      // If no window is open, open a new one
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(urlToOpen);
-      }
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('🎬 Service Worker: Caching app shell');
+      return cache.addAll(PRECACHE_ASSETS);
+    }).then(() => {
+      return self.skipWaiting();
     })
   );
 });
 
-// Handle notification close
-self.addEventListener('notificationclose', (event) => {
-  console.log('Notification closed:', event);
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('🎬 Service Worker: Activating...');
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
+            console.log('🎬 Service Worker: Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      return self.clients.claim();
+    })
+  );
 });
 
+// Fetch event - network first, fallback to cache
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip cross-origin requests
+  if (url.origin !== location.origin) {
+    return;
+  }
+
+  // API requests - network only (always fresh data)
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        return new Response(
+          JSON.stringify({ error: 'Offline - API unavailable' }),
+          {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      })
+    );
+    return;
+  }
+
+  // For navigation requests, use network first
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Clone and cache the response
+          const responseClone = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => {
+            cache.put(request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // Fallback to index.html for SPA routing
+            return caches.match('/index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // For other requests (CSS, JS, images), use cache first
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(request).then((response) => {
+        // Don't cache non-successful responses
+        if (!response || response.status !== 200 || response.type === 'error') {
+          return response;
+        }
+
+        // Clone and cache the response
+        const responseClone = response.clone();
+        caches.open(RUNTIME_CACHE).then((cache) => {
+          cache.put(request, responseClone);
+        });
+
+        return response;
+      });
+    })
+  );
+});
+
+// Background sync for offline actions (future enhancement)
+self.addEventListener('sync', (event) => {
+  console.log('🎬 Service Worker: Background sync triggered', event.tag);
+  if (event.tag === 'sync-reflections') {
+    event.waitUntil(syncReflections());
+  }
+});
+
+async function syncReflections() {
+  // Placeholder for syncing offline reflections when back online
+  console.log('🎬 Service Worker: Syncing offline reflections...');
+}
+
+// Push notifications (future enhancement)
+self.addEventListener('push', (event) => {
+  console.log('🎬 Service Worker: Push notification received', event);
+  
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'Meet Cute';
+  const options = {
+    body: data.body || 'You have a new notification',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-72x72.png',
+    vibrate: [200, 100, 200],
+    data: data.url || '/',
+    actions: [
+      { action: 'open', title: 'Open', icon: '/icons/icon-72x72.png' },
+      { action: 'close', title: 'Close', icon: '/icons/icon-72x72.png' },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  console.log('🎬 Service Worker: Notification clicked', event.action);
+  event.notification.close();
+
+  if (event.action === 'open') {
+    event.waitUntil(
+      clients.openWindow(event.notification.data)
+    );
+  }
+});

@@ -1,0 +1,42 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with rounded corners for iOS -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGradient)"/>
+  
+  <!-- Film reel icon (cinematic theme) -->
+  <g transform="translate(106, 106)">
+    <!-- Outer film frame -->
+    <rect x="50" y="50" width="200" height="200" rx="20" fill="none" stroke="url(#iconGradient)" stroke-width="12"/>
+    
+    <!-- Film perforations (left side) -->
+    <rect x="20" y="80" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
+    <rect x="20" y="130" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
+    <rect x="20" y="180" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
+    
+    <!-- Film perforations (right side) -->
+    <rect x="260" y="80" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
+    <rect x="260" y="130" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
+    <rect x="260" y="180" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
+    
+    <!-- Center play/focus symbol -->
+    <circle cx="150" cy="150" r="50" fill="url(#iconGradient)" opacity="0.9"/>
+    <path d="M 135 130 L 135 170 L 170 150 Z" fill="#6366f1"/>
+  </g>
+  
+  <!-- Subtle sparkle effect -->
+  <circle cx="400" cy="120" r="8" fill="white" opacity="0.6"/>
+  <circle cx="420" cy="140" r="4" fill="white" opacity="0.4"/>
+  <circle cx="100" cy="400" r="6" fill="white" opacity="0.5"/>
+</svg>
+
