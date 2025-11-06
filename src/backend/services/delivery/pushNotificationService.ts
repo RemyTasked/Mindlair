@@ -335,6 +335,26 @@ class PushNotificationService {
   }
 
   /**
+   * Send winding down notification
+   */
+  async sendWindingDownNotification(
+    userId: string,
+    windingDownUrl: string
+  ): Promise<boolean> {
+    return this.sendToUser(userId, {
+      title: '🌙 Time to Wind Down',
+      body: 'Your evening ritual awaits. Take a few minutes for deep breathing and relaxation.',
+      icon: '/logo.png',
+      url: windingDownUrl,
+      tag: 'winding-down',
+      data: {
+        type: 'winding-down',
+        windingDownUrl,
+      },
+    });
+  }
+
+  /**
    * Get VAPID public key for frontend
    */
   getPublicKey(): string {

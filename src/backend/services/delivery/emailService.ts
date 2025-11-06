@@ -1113,6 +1113,179 @@ export class EmailService {
     `;
   }
 
+  async sendWindingDownNotification(
+    email: string,
+    windingDownUrl: string
+  ): Promise<boolean> {
+    if (!this.isConfigured) {
+      logger.warn('Email service not configured, skipping winding down notification');
+      return false;
+    }
+
+    try {
+      const html = this.generateWindingDownHtml(windingDownUrl);
+
+      await sgMail.send({
+        to: email,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: '🌙 Time to Wind Down — Your evening ritual awaits',
+        text: `It's time to wind down and prepare for restful sleep. Take a few minutes for deep breathing and relaxation: ${windingDownUrl}`,
+        html,
+      });
+
+      logger.info('Winding down notification sent', { email });
+      return true;
+    } catch (error: any) {
+      logger.error('Error sending winding down notification', {
+        error: error.message,
+        email,
+      });
+      return false;
+    }
+  }
+
+  private generateWindingDownHtml(windingDownUrl: string): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      color: #ffffff;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      color: #ffffff;
+    }
+    .subtitle {
+      font-size: 18px;
+      color: #c7d2fe;
+      margin: 0;
+    }
+    .content {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .description {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #e0e7ff;
+      margin-bottom: 25px;
+    }
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+      transition: transform 0.2s;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.5);
+    }
+    .benefits {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+    }
+    .benefits h3 {
+      font-size: 18px;
+      margin: 0 0 15px 0;
+      color: #c7d2fe;
+    }
+    .benefits ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #e0e7ff;
+    }
+    .benefits li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 14px;
+      color: #a5b4fc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="icon">🌙</div>
+      <h1>Time to Wind Down</h1>
+      <p class="subtitle">Your evening ritual awaits</p>
+    </div>
+
+    <div class="content">
+      <p class="description">
+        The day is done. It's time to release tension, quiet your mind, and prepare your body for restful sleep.
+      </p>
+
+      <p class="description">
+        Take a few minutes for a guided breathing and relaxation session designed to help you transition from the day's energy to peaceful rest.
+      </p>
+
+      <a href="${windingDownUrl}" class="cta-button">
+        Begin Winding Down →
+      </a>
+
+      <div class="benefits">
+        <h3>🌟 What you'll experience:</h3>
+        <ul>
+          <li>Extended deep breathing exercises (12-second cycles)</li>
+          <li>Gentle visualization for releasing the day's tension</li>
+          <li>Calming ambient sounds to quiet your mind</li>
+          <li>Preparation for restful, restorative sleep</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">
+      Meet Cute · Rest well, dream big 💙
+    </div>
+  </div>
+</body>
+</html>
+    `;
+  }
+
   private getTimeAgo(date: Date): string {
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
     

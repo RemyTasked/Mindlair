@@ -56,6 +56,11 @@ export function startScheduler() {
     await sendWellnessReminders();
   });
 
+  // Send winding down notifications every hour (check user's winding down time)
+  cron.schedule('0 * * * *', async () => {
+    await sendWindingDownNotifications();
+  });
+
   logger.info('Scheduler initialized');
 }
 
@@ -1126,6 +1131,108 @@ async function sendWellnessReminders() {
     }
   } catch (error: any) {
     logger.error('Error in wellness reminders scheduler', {
+      error: error.message,
+    });
+  }
+}
+
+async function sendWindingDownNotifications() {
+  try {
+    const now = new Date();
+    
+    const users = await prisma.user.findMany({
+      where: {
+        preferences: {
+          enableWindingDown: true,
+        },
+      },
+      include: {
+        deliverySettings: true,
+        preferences: true,
+      },
+    });
+
+    for (const user of users) {
+      try {
+        // Get user's timezone and current hour
+        const userTimezone = user.timezone || 'America/New_York';
+        const currentHour = getUserCurrentHour(userTimezone);
+        
+        // Only send at user's winding down time
+        const windingDownTime = user.preferences?.windingDownTime || '21:00';
+        const [windingDownHour] = windingDownTime.split(':').map(Number);
+        
+        if (currentHour !== windingDownHour) {
+          continue; // Skip if not the user's winding down time
+        }
+        
+        // Check if ANY delivery method is enabled
+        const hasDeliveryMethod = 
+          user.deliverySettings?.emailEnabled || 
+          user.deliverySettings?.pushEnabled;
+        
+        if (!hasDeliveryMethod) {
+          logger.info('⏭️ Skipping winding down notification - no delivery methods enabled', {
+            userId: user.id,
+          });
+          continue;
+        }
+        
+        const windingDownUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/winding-down/${user.id}`;
+        
+        let sent = false;
+        
+        // Send via email if enabled
+        if (user.deliverySettings?.emailEnabled) {
+          try {
+            await emailService.sendWindingDownNotification(
+              user.email,
+              windingDownUrl
+            );
+            sent = true;
+          } catch (error: any) {
+            logger.error('Failed to send winding down email', {
+              userId: user.id,
+              error: error.message,
+            });
+          }
+        }
+        
+        // Send via push notification if enabled
+        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushWindingDown) {
+          try {
+            await pushNotificationService.sendWindingDownNotification(
+              user.id,
+              windingDownUrl
+            );
+            sent = true;
+          } catch (error: any) {
+            logger.error('Failed to send winding down push notification', {
+              userId: user.id,
+              error: error.message,
+            });
+          }
+        }
+        
+        if (sent) {
+          logger.info('✅ Winding down notification sent successfully', {
+            userId: user.id,
+            windingDownTime,
+          });
+        } else {
+          logger.warn('⚠️ Winding down notification not sent - no delivery methods succeeded', {
+            userId: user.id,
+          });
+        }
+      } catch (error: any) {
+        logger.error('Error sending winding down notification for user', {
+          userId: user.id,
+          error: error.message,
+        });
+      }
+    }
+  } catch (error: any) {
+    logger.error('Error in winding down notifications scheduler', {
       error: error.message,
     });
   }

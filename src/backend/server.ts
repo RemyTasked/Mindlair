@@ -1,6 +1,6 @@
-// Meet Cute Backend Server - v1.7.0
-// Includes: PWA Support, Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis
-// Latest: Progressive Web App implementation with offline support
+// Meet Cute Backend Server - v1.8.0
+// Includes: PWA Support, Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis, Winding Down Session
+// Latest: Separated winding down from evening flow + Fixed evening flow timing + Updated PWA icons with actual logo
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -25,6 +25,7 @@ import presleyFlowRoutes from './routes/presleyFlow';
 import pushNotificationRoutes from './routes/pushNotifications';
 import slackRoutes from './routes/slack';
 import reflectionRoutes from './routes/reflections';
+import windingDownRoutes from './routes/windingDown';
 import testRoutes from './routes/test';
 
 dotenv.config();
@@ -81,6 +82,7 @@ app.use('/api/presley-flow', presleyFlowRoutes);
 app.use('/api/push', pushNotificationRoutes);
 app.use('/api/slack', slackRoutes);
 app.use('/api/reflections', reflectionRoutes);
+app.use('/api/winding-down', windingDownRoutes);
 app.use('/api/test', testRoutes);
 
 // Serve static files from frontend build in production

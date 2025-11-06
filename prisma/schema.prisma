@@ -92,6 +92,10 @@ model UserPreferences {
   enableWellnessReminders Boolean @default(true)  // Enable daily wellness check-ins
   wellnessReminderFrequency Int @default(3)      // Hours between reminders (default: 3 hours)
   
+  // Winding Down session (separate from evening flow)
+  enableWindingDown    Boolean @default(true)   // Enable standalone winding down session
+  windingDownTime      String  @default("21:00") // Time for winding down session (HH:mm format, default: 9 PM)
+  
   // Adaptive learning data
   averageEarlyJoinMinutes Float? // How early user typically joins
   preferredAlertTime      Int?   // Learned optimal alert time
@@ -121,6 +125,7 @@ model DeliverySettings {
   pushMeetingInsights     Boolean @default(true)  // Post-meeting insights
   pushMorningRecap        Boolean @default(true)  // Morning recap notifications
   pushDailyWrapUp         Boolean @default(true)  // Evening wrap-up notifications
+  pushWindingDown         Boolean @default(true)  // Winding down session notifications
   
   // Contact info
   phoneNumber     String?

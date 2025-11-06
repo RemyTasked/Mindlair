@@ -16,6 +16,8 @@ interface Preferences {
   eveningFlowTime: string;
   enableMorningFlow: boolean;
   enableEveningFlow: boolean;
+  enableWindingDown: boolean;
+  windingDownTime: string;
   enableWellnessReminders: boolean;
   wellnessReminderFrequency: number;
   enableReflections: boolean;
@@ -55,6 +57,8 @@ export default function Settings() {
     eveningFlowTime: '18:00',
     enableMorningFlow: true,
     enableEveningFlow: true,
+    enableWindingDown: true,
+    windingDownTime: '21:00',
     enableWellnessReminders: true,
     wellnessReminderFrequency: 3,
     enableReflections: true,
@@ -516,17 +520,45 @@ export default function Settings() {
                 </div>
               )}
 
-              {(preferences.enableMorningFlow || preferences.enableEveningFlow) && (
+              <Toggle
+                label="Enable Winding Down Session"
+                description="Standalone deep breathing & relaxation before bed (default: 9:00 PM)"
+                checked={preferences.enableWindingDown}
+                onChange={(checked) =>
+                  setPreferences({ ...preferences, enableWindingDown: checked })
+                }
+              />
+
+              {preferences.enableWindingDown && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Winding Down Time
+                  </label>
+                  <input
+                    type="time"
+                    value={preferences.windingDownTime}
+                    onChange={(e) =>
+                      setPreferences({ ...preferences, windingDownTime: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    Winding down session becomes available at this time (default: 9:00 PM)
+                  </p>
+                </div>
+              )}
+
+              {(preferences.enableMorningFlow || preferences.enableEveningFlow || preferences.enableWindingDown) && (
 
                 <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border border-purple-200">
                   <div className="flex items-start gap-4">
                     <div className="text-4xl">🎬</div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-2">
-                        What is Presley Flow?
+                        Daily Rituals Explained
                       </h3>
                       <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                        A two-part daily ritual to frame your day with intention and reflection.
+                        Three distinct rituals to frame your day with intention, reflection, and rest.
                       </p>
                       <ul className="text-sm text-gray-600 space-y-2">
                         <li>
@@ -534,6 +566,9 @@ export default function Settings() {
                         </li>
                         <li>
                           <strong>🌙 Evening Flow:</strong> Reflect on today's outcomes, then mentally rehearse tomorrow's meetings
+                        </li>
+                        <li>
+                          <strong>✨ Winding Down:</strong> Standalone deep breathing & visualization to prepare for restful sleep (separate from evening flow)
                         </li>
                         <li>• Guided visualization & breathing</li>
                         <li>• Takes 3-7 minutes per session</li>

@@ -93,9 +93,9 @@ router.get(
     
     if (isMorningWindow && morningFlowEnabled) {
       flowTypeAvailable = 'morning';
-    } else if (eveningFlowEnabled) {
-      // For evening, we need to check if meetings are done BEFORE allowing access
-      // This check happens below, so we mark it as potentially available
+    } else if (isEveningWindow && eveningFlowEnabled) {
+      // FIXED: Only mark evening as available if we're ACTUALLY in the evening window
+      // This prevents showing evening flow before the configured time
       flowTypeAvailable = 'evening';
     }
     
