@@ -1,12 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Headphones, Heart, BookOpen, Sparkles, Play, X } from 'lucide-react';
 
 interface SceneLibraryProps {
   timeOfDay: 'morning' | 'afternoon' | 'evening';
+  onSoundTypeChange: (soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none') => void;
 }
 
-export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
+export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibraryProps) {
   const [activeScene, setActiveScene] = useState<string | null>(null);
+
+  // Change sound type based on active scene
+  useEffect(() => {
+    if (activeScene === 'listen') {
+      onSoundTypeChange('calm-ocean'); // Relaxing ocean waves
+    } else if (activeScene === 'focus') {
+      onSoundTypeChange('white-noise'); // Focus-enhancing white noise
+    } else if (activeScene === 'reflect') {
+      onSoundTypeChange('rain'); // Gentle rain for contemplation
+    } else {
+      onSoundTypeChange('calm-ocean'); // Default calming sound
+    }
+  }, [activeScene, onSoundTypeChange]);
 
   // Time-of-day aware content
   const journalingPrompts = {
@@ -36,27 +50,27 @@ export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
       emoji: '🎧',
       title: 'Listen',
       subtitle: '30-second reset',
-      description: 'Calming soundscape to center yourself',
+      description: 'Calming ocean waves to center yourself',
       gradient: 'from-blue-500 to-cyan-500',
       bgGradient: 'from-blue-50 to-cyan-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
-            <div className="text-6xl mb-4">🎧</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Calm Reset</h3>
+            <div className="text-6xl mb-4">🌊</div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Ocean Calm</h3>
             <p className="text-gray-600 mb-6">
-              Close your eyes. Breathe deeply. Let the sounds wash over you.
+              Close your eyes. Breathe deeply. Let the gentle waves wash over you.
             </p>
           </div>
           
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <div className="text-center mb-6">
               <p className="text-sm text-gray-600 mb-4">
-                Click the sound button in the bottom right to enable calming meditation sounds
+                Click the sound button in the bottom right to hear calming ocean waves
               </p>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
-                <span className="text-2xl">👉</span>
-                <span className="text-sm font-medium text-blue-900">Look for the sound button →</span>
+                <span className="text-2xl">🌊</span>
+                <span className="text-sm font-medium text-blue-900">Ocean sounds will play →</span>
               </div>
             </div>
             
@@ -88,7 +102,7 @@ export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
       emoji: '🧘',
       title: 'Focus',
       subtitle: '2-minute calm scene',
-      description: 'Guided breathing to reset your mind',
+      description: 'White noise + breathing to enhance concentration',
       gradient: 'from-purple-500 to-pink-500',
       bgGradient: 'from-purple-50 to-pink-50',
       content: (
@@ -131,7 +145,7 @@ export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
       emoji: '🪞',
       title: 'Reflect',
       subtitle: 'Quick journaling',
-      description: 'A moment to check in with yourself',
+      description: 'Gentle rain sounds + AI prompt for contemplation',
       gradient: 'from-amber-500 to-orange-500',
       bgGradient: 'from-amber-50 to-orange-50',
       content: (
