@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { Calendar, Settings as SettingsIcon, TrendingUp } from 'lucide-react';
+import SceneLibrary from '../components/SceneLibrary';
+import InsightCards from '../components/InsightCards';
 
 interface Meeting {
   id: string;
@@ -36,6 +38,14 @@ export default function Dashboard() {
   const [presleyFlow, setPresleyFlow] = useState<PresleyFlow | null>(null);
   const [loading, setLoading] = useState(true);
   const [eveningFlowTime, setEveningFlowTime] = useState<string>('18:00'); // Default 6 PM
+  
+  // Determine time of day for Scene Library
+  const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 18) return 'afternoon';
+    return 'evening';
+  };
 
   useEffect(() => {
     loadUserData();
@@ -196,6 +206,16 @@ export default function Dashboard() {
             value={stats?.totalFocusSessions || 0}
           />
         </div>
+
+        {/* Insight Cards - Always show */}
+        <InsightCards hasData={meetings.length > 0 || (stats?.totalMeetings || 0) > 0} />
+
+        {/* Scene Library - Show when no upcoming meetings */}
+        {meetings.length === 0 && (
+          <div className="mb-8">
+            <SceneLibrary timeOfDay={getTimeOfDay()} />
+          </div>
+        )}
 
         {/* Presley Flow Card */}
         {presleyFlow?.available && (
