@@ -43,8 +43,6 @@ export default function Dashboard() {
   const [reflectionInsights, setReflectionInsights] = useState<any>(null);
   const [showReflectionModal, setShowReflectionModal] = useState(false);
   const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
-  const [ambientSoundEnabled, setAmbientSoundEnabled] = useState(false);
-  const [ambientSoundType, setAmbientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none'>('meditation-bell');
   
   // Determine time of day for Scene Library
   const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
@@ -426,8 +424,8 @@ export default function Dashboard() {
 
       {/* Global Ambient Sound - Always available */}
       <AmbientSound
-        soundType={ambientSoundType}
-        enabled={ambientSoundEnabled}
+        soundType="meditation-bell"
+        enabled={true}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, ChevronDown, ChevronUp } from 'lucide-react';
 import { PushNotificationManager } from '../components/PushNotificationManager';
 
 interface Preferences {
@@ -42,6 +42,7 @@ interface DeliverySettings {
 export default function Settings() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>('');
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['basic'])); // Only 'basic' expanded by default
   const [preferences, setPreferences] = useState<Preferences>({
     tone: 'balanced',
     alertMinutesBefore: 10,
@@ -152,6 +153,18 @@ export default function Settings() {
     } catch (error) {
       console.error('Error loading settings:', error);
     }
+  };
+
+  const toggleSection = (id: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
   };
 
   const handleSave = async () => {
@@ -297,10 +310,10 @@ export default function Settings() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-12 max-w-3xl">
-        <div className="space-y-8">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 max-w-3xl">
+        <div className="space-y-4 sm:space-y-6">
           {/* Preferences */}
-          <Section title="Preferences">
+          <Section title="Preferences" id="basic" isExpanded={expandedSections.has('basic')} onToggle={toggleSection}>
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -363,7 +376,7 @@ export default function Settings() {
           </Section>
 
           {/* Focus Sound Settings */}
-          <Section title="Focus Sound">
+          <Section title="Focus Sound" id="sound" isExpanded={expandedSections.has('sound')} onToggle={toggleSection}>
             <div className="space-y-6">
               <Toggle
                 label="Enable Ambient Sound"
@@ -421,7 +434,7 @@ export default function Settings() {
           </Section>
 
           {/* Presley Flow Settings */}
-          <Section title="Presley Flow">
+          <Section title="Presley Flow" id="presley" isExpanded={expandedSections.has('presley')} onToggle={toggleSection}>
             <div className="space-y-6">
               <Toggle
                 label="Enable Morning Flow"
@@ -509,7 +522,7 @@ export default function Settings() {
           </Section>
 
           {/* Privacy & Reflection Settings */}
-          <Section title="Privacy & Reflection Settings">
+          <Section title="Privacy & Reflection Settings" id="privacy" isExpanded={expandedSections.has('privacy')} onToggle={toggleSection}>
             <div className="space-y-6">
               {/* Privacy Notice */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -586,7 +599,7 @@ export default function Settings() {
           </Section>
 
           {/* Wellness Reminders */}
-          <Section title="Wellness Reminders">
+          <Section title="Wellness Reminders" id="wellness" isExpanded={expandedSections.has('wellness')} onToggle={toggleSection}>
             <div className="space-y-6">
               <Toggle
                 label="Enable Wellness Reminders"
@@ -649,7 +662,7 @@ export default function Settings() {
           </Section>
 
           {/* Delivery Methods */}
-          <Section title="Delivery Methods">
+          <Section title="Delivery Methods" id="delivery" isExpanded={expandedSections.has('delivery')} onToggle={toggleSection}>
             <div className="space-y-6">
               <div>
                 <Toggle
@@ -858,7 +871,7 @@ export default function Settings() {
           </Section>
 
           {/* Account Management */}
-          <Section title="Account Management">
+          <Section title="Account Management" id="account" isExpanded={expandedSections.has('account')} onToggle={toggleSection}>
             <div className="space-y-6">
 
               {/* Connected Calendars */}
@@ -924,11 +937,37 @@ export default function Settings() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ 
+  title, 
+  children, 
+  id, 
+  isExpanded, 
+  onToggle 
+}: { 
+  title: string; 
+  children: React.ReactNode;
+  id: string;
+  isExpanded: boolean;
+  onToggle: (id: string) => void;
+}) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8">
-      <h2 className="text-2xl font-bold mb-6">{title}</h2>
-      {children}
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
+      <button
+        onClick={() => onToggle(id)}
+        className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition-colors"
+      >
+        <h2 className="text-lg sm:text-2xl font-bold">{title}</h2>
+        {isExpanded ? (
+          <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+        ) : (
+          <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+        )}
+      </button>
+      {isExpanded && (
+        <div className="p-4 sm:p-8 pt-0 sm:pt-0 border-t border-gray-100">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
