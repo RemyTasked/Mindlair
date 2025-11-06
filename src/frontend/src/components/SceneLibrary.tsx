@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Headphones, Heart, BookOpen, Sparkles, Play, X } from 'lucide-react';
-import AmbientSound from './AmbientSound';
 
 interface SceneLibraryProps {
   timeOfDay: 'morning' | 'afternoon' | 'evening';
@@ -207,14 +206,6 @@ export default function SceneLibrary({ timeOfDay }: SceneLibraryProps) {
             {scene.content}
           </div>
         </div>
-        
-        {/* Render AmbientSound when Listen scene is active */}
-        {activeScene === 'listen' && (
-          <AmbientSound 
-            soundType="meditation-bell"
-            enabled={true}
-          />
-        )}
       </div>
     );
   }

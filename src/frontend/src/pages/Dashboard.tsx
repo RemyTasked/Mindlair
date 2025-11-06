@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { Calendar, Settings as SettingsIcon, TrendingUp } from 'lucide-react';
 import SceneLibrary from '../components/SceneLibrary';
-import InsightCards from '../components/InsightCards';
 import { DirectorsInsights } from '../components/DirectorsInsights';
 import { PostMeetingReflection, ReflectionData } from '../components/PostMeetingReflection';
+import AmbientSound from '../components/AmbientSound';
 
 interface Meeting {
   id: string;
@@ -43,6 +43,8 @@ export default function Dashboard() {
   const [reflectionInsights, setReflectionInsights] = useState<any>(null);
   const [showReflectionModal, setShowReflectionModal] = useState(false);
   const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
+  const [ambientSoundEnabled, setAmbientSoundEnabled] = useState(false);
+  const [ambientSoundType, setAmbientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none'>('meditation-bell');
   
   // Determine time of day for Scene Library
   const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
@@ -240,72 +242,67 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-12">
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        {/* Compact Stats Row - Mobile Optimized */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-6 sm:mb-8">
           <StatCard
-            icon={<Calendar className="w-8 h-8 text-indigo-600" />}
-            label="Upcoming Meetings"
+            icon={<Calendar className="w-5 h-5 sm:w-8 sm:h-8 text-indigo-600" />}
+            label="Upcoming"
             value={meetings.length}
           />
           <StatCard
-            icon={<TrendingUp className="w-8 h-8 text-purple-600" />}
-            label="Total Meetings (30d)"
+            icon={<TrendingUp className="w-5 h-5 sm:w-8 sm:h-8 text-purple-600" />}
+            label="Total (30d)"
             value={stats?.totalMeetings || 0}
           />
           <StatCard
-            icon={<div className="text-3xl">✨</div>}
-            label="Focus Sessions (30d)"
+            icon={<div className="text-xl sm:text-3xl">✨</div>}
+            label="Sessions"
             value={stats?.totalFocusSessions || 0}
           />
         </div>
 
-        {/* Director's Insights - Cinematic productivity insights */}
-        <DirectorsInsights 
-          hasReflectionData={reflectionInsights?.hasData || false}
-          recentReflections={reflectionInsights?.recentReflections || []}
-          privateMode={reflectionInsights?.privateMode || false}
-          meetingStats={reflectionInsights?.stats || undefined}
-        />
+        {/* Director's Insights - Only show if has data, hidden on mobile when no data */}
+        {reflectionInsights?.hasData && (
+          <div className="mb-6 sm:mb-8">
+            <DirectorsInsights 
+              hasReflectionData={reflectionInsights?.hasData || false}
+              recentReflections={reflectionInsights?.recentReflections || []}
+              privateMode={reflectionInsights?.privateMode || false}
+              meetingStats={reflectionInsights?.stats || undefined}
+            />
+          </div>
+        )}
 
-        {/* Insight Cards - Always show */}
-        <InsightCards hasData={meetings.length > 0 || (stats?.totalMeetings || 0) > 0} />
-
-        {/* Scene Library - Show when no upcoming meetings */}
+        {/* Scene Library - Show when no upcoming meetings (more compact on mobile) */}
         {meetings.length === 0 && (
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <SceneLibrary timeOfDay={getTimeOfDay()} />
           </div>
         )}
 
-        {/* Presley Flow Card */}
+        {/* Presley Flow Card - Compact on Mobile */}
         {presleyFlow?.available && (
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-6 mb-8 border-2 border-purple-200">
-            <div className="flex items-start justify-between">
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-purple-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="text-2xl sm:text-4xl">🌙</div>
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="text-4xl">🌙</div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      Today's Mental Rehearsal
-                    </h3>
-                    <p className="text-sm text-purple-600 font-medium">Presley Flow Available</p>
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-4 leading-relaxed">
-                  Prepare for today's {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} with a cinematic mental rehearsal. 
-                  Visualize success before your day begins.
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
+                  Mental Rehearsal
+                </h3>
+                <p className="text-xs sm:text-sm text-purple-600 font-medium">
+                  {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} today
                 </p>
-                <a
-                  href={presleyFlow.presleyFlowUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
-                >
-                  🎬 Start Mental Rehearsal
-                </a>
               </div>
             </div>
+            <a
+              href={presleyFlow.presleyFlowUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+            >
+              🎬 Start Flow
+            </a>
           </div>
         )}
 
@@ -426,6 +423,12 @@ export default function Dashboard() {
           onSubmit={handleSubmitReflection}
         />
       )}
+
+      {/* Global Ambient Sound - Always available */}
+      <AmbientSound
+        soundType={ambientSoundType}
+        enabled={ambientSoundEnabled}
+      />
     </div>
   );
 }
@@ -488,12 +491,12 @@ function formatEveningTime(timeString: string): string {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
+      <div className="flex items-center sm:items-start justify-between mb-2 sm:mb-4">
         {icon}
       </div>
-      <div className="text-3xl font-bold mb-1">{value}</div>
-      <div className="text-gray-600">{label}</div>
+      <div className="text-xl sm:text-3xl font-bold mb-0.5 sm:mb-1">{value}</div>
+      <div className="text-xs sm:text-base text-gray-600 leading-tight">{label}</div>
     </div>
   );
 }
