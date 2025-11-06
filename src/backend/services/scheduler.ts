@@ -17,8 +17,8 @@ export function startScheduler() {
     await checkUpcomingMeetings();
   });
 
-  // Send daily wrap-ups at 8 PM every day
-  cron.schedule('0 20 * * *', async () => {
+  // Send daily wrap-ups every hour (check user's evening flow time)
+  cron.schedule('0 * * * *', async () => {
     await sendDailyWrapUps();
   });
 
@@ -434,6 +434,8 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
 
 async function sendDailyWrapUps() {
   try {
+    const now = new Date();
+    const currentHour = now.getHours();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -451,6 +453,13 @@ async function sendDailyWrapUps() {
 
     for (const user of users) {
       try {
+        // Only send at user's evening flow time
+        const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
+        const [eveningHour] = eveningFlowTime.split(':').map(Number);
+        
+        if (currentHour !== eveningHour) {
+          continue; // Skip if not the user's evening time
+        }
         // Get today's stats
         const meetings = await prisma.meeting.findMany({
           where: {
@@ -919,6 +928,19 @@ async function sendWellnessReminders() {
 
     for (const user of users) {
       try {
+        // Stop wellness reminders before evening flow time (save that time for wrap-up)
+        const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
+        const [eveningHour] = eveningFlowTime.split(':').map(Number);
+        
+        if (currentHour >= eveningHour) {
+          logger.info('⏭️ Skipping wellness reminder - after evening flow time', {
+            userId: user.id,
+            currentHour,
+            eveningHour,
+          });
+          continue; // Don't send wellness reminders after evening flow time
+        }
+        
         // Check if ANY delivery method is enabled
         const hasDeliveryMethod = 
           user.deliverySettings?.emailEnabled || 
