@@ -15,7 +15,7 @@ export interface ReflectionData {
 }
 
 export const PostMeetingReflection: React.FC<PostMeetingReflectionProps> = ({
-  meetingId,
+  meetingId: _meetingId,
   meetingTitle,
   onClose,
   onSubmit

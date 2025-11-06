@@ -24,7 +24,7 @@ interface DirectorsInsightsProps {
 
 export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
   hasReflectionData = false,
-  recentReflections = [],
+  recentReflections: _recentReflections = [],
   privateMode = false,
   meetingStats
 }) => {
