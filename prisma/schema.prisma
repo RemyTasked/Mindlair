@@ -168,6 +168,13 @@ model Meeting {
   postMeetingEmailSent Boolean @default(false)
   postMeetingEmailSentAt DateTime?
   meetingRating   Int?      // 1-5 star rating
+  
+  // Post-meeting reflection (new cinematic system)
+  reflectionRating    String?   // "great", "neutral", "draining"
+  reflectionOneWord   String?   // One word to describe the meeting
+  reflectionEmotionalTone String? // AI-analyzed emotional tone
+  reflectionCapturedAt DateTime? // When reflection was captured
+  reflectionNotes     String?   // Optional longer reflection
   meetingFeedback String?   // Optional user feedback
   ratedAt         DateTime?
   

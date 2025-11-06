@@ -23,6 +23,7 @@ import ratingRoutes from './routes/rating';
 import presleyFlowRoutes from './routes/presleyFlow';
 import pushNotificationRoutes from './routes/pushNotifications';
 import slackRoutes from './routes/slack';
+import reflectionRoutes from './routes/reflections';
 import testRoutes from './routes/test';
 
 dotenv.config();
@@ -78,6 +79,7 @@ app.use('/api/rating', ratingRoutes);
 app.use('/api/presley-flow', presleyFlowRoutes);
 app.use('/api/push', pushNotificationRoutes);
 app.use('/api/slack', slackRoutes);
+app.use('/api/reflections', reflectionRoutes);
 app.use('/api/test', testRoutes);
 
 // Serve static files from frontend build in production

@@ -4,6 +4,8 @@ import api from '../lib/axios';
 import { Calendar, Settings as SettingsIcon, TrendingUp } from 'lucide-react';
 import SceneLibrary from '../components/SceneLibrary';
 import InsightCards from '../components/InsightCards';
+import { DirectorsInsights } from '../components/DirectorsInsights';
+import { PostMeetingReflection, ReflectionData } from '../components/PostMeetingReflection';
 
 interface Meeting {
   id: string;
@@ -38,6 +40,9 @@ export default function Dashboard() {
   const [presleyFlow, setPresleyFlow] = useState<PresleyFlow | null>(null);
   const [loading, setLoading] = useState(true);
   const [eveningFlowTime, setEveningFlowTime] = useState<string>('18:00'); // Default 6 PM
+  const [reflectionInsights, setReflectionInsights] = useState<any>(null);
+  const [showReflectionModal, setShowReflectionModal] = useState(false);
+  const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
   
   // Determine time of day for Scene Library
   const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
@@ -73,7 +78,7 @@ export default function Dashboard() {
       const now = new Date();
       const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
 
-      const [userResponse, meetingsResponse, statsResponse] = await Promise.all([
+      const [userResponse, meetingsResponse, statsResponse, reflectionInsightsResponse] = await Promise.all([
         api.get('/api/user/profile'),
         api.get('/api/meetings', {
           params: {
@@ -86,6 +91,7 @@ export default function Dashboard() {
             startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
           },
         }),
+        api.get('/api/reflections/insights').catch(() => ({ data: { hasData: false, stats: null } })),
       ]);
 
       // Check for Presley Flow (non-critical - don't fail if it errors)
@@ -109,10 +115,14 @@ export default function Dashboard() {
       setMeetings(meetingsResponse.data.meetings);
       setStats(statsResponse.data.stats);
       setPresleyFlow(presleyData);
+      setReflectionInsights(reflectionInsightsResponse.data);
       
       // Extract evening flow time from user preferences
       const userEveningFlowTime = userResponse.data.user?.preferences?.eveningFlowTime || '18:00';
       setEveningFlowTime(userEveningFlowTime);
+      
+      // Check for recently ended meetings that need reflection
+      checkForRecentlyEndedMeetings(meetingsResponse.data.meetings);
       
       setLoading(false);
     } catch (error: any) {
@@ -140,6 +150,49 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem('meetcute_token');
     navigate('/');
+  };
+
+  // Check for recently ended meetings that need reflection
+  const checkForRecentlyEndedMeetings = (allMeetings: Meeting[]) => {
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    
+    // Find meetings that ended in the last 5 minutes
+    const recentlyEnded = allMeetings.find(meeting => {
+      const endTime = new Date(meeting.endTime);
+      return endTime > fiveMinutesAgo && endTime < now;
+    });
+
+    if (recentlyEnded) {
+      // Check if reflection already captured
+      const reflectionKey = `reflection_captured_${recentlyEnded.id}`;
+      const alreadyCaptured = localStorage.getItem(reflectionKey);
+      
+      if (!alreadyCaptured) {
+        setReflectionMeeting(recentlyEnded);
+        setShowReflectionModal(true);
+      }
+    }
+  };
+
+  const handleSubmitReflection = async (reflection: ReflectionData) => {
+    if (!reflectionMeeting) return;
+
+    try {
+      await api.post(`/api/reflections/${reflectionMeeting.id}`, reflection);
+      
+      // Mark as captured in localStorage
+      localStorage.setItem(`reflection_captured_${reflectionMeeting.id}`, 'true');
+      
+      // Reload insights
+      const insightsResponse = await api.get('/api/reflections/insights');
+      setReflectionInsights(insightsResponse.data);
+      
+      console.log('✅ Reflection submitted successfully');
+    } catch (error) {
+      console.error('❌ Failed to submit reflection:', error);
+      throw error;
+    }
   };
 
   if (loading) {
@@ -206,6 +259,13 @@ export default function Dashboard() {
             value={stats?.totalFocusSessions || 0}
           />
         </div>
+
+        {/* Director's Insights - Cinematic productivity insights */}
+        <DirectorsInsights 
+          hasReflectionData={reflectionInsights?.hasData || false}
+          recentReflections={reflectionInsights?.recentReflections || []}
+          meetingStats={reflectionInsights?.stats || undefined}
+        />
 
         {/* Insight Cards - Always show */}
         <InsightCards hasData={meetings.length > 0 || (stats?.totalMeetings || 0) > 0} />
@@ -355,6 +415,16 @@ export default function Dashboard() {
           </a>
         </div>
       </main>
+
+      {/* Post-Meeting Reflection Modal */}
+      {showReflectionModal && reflectionMeeting && (
+        <PostMeetingReflection
+          meetingId={reflectionMeeting.id}
+          meetingTitle={reflectionMeeting.title}
+          onClose={() => setShowReflectionModal(false)}
+          onSubmit={handleSubmitReflection}
+        />
+      )}
     </div>
   );
 }
