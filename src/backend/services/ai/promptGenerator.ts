@@ -133,7 +133,7 @@ Generate the message now:`;
         ],
         temperature: 0.8,
         maxTokens: 150,
-        model: 'gpt-4',
+        // Don't specify model - let each provider use its default
       });
 
       const generatedMessage = response.content.trim();
@@ -221,7 +221,7 @@ Generate the message now:`;
         ],
         temperature: 0.7,
         maxTokens: 200,
-        model: 'gpt-4',
+        // Don't specify model - let each provider use its default
       });
 
       const message = response.content.trim();
@@ -361,7 +361,7 @@ Return as JSON:
         ],
         temperature: 0.7,
         maxTokens: 800,
-        model: 'gpt-4',
+        // Don't specify model - let each provider use its default
       });
 
       const content = response.content.trim();
@@ -454,7 +454,7 @@ Generate the message now:`;
         ],
         temperature: 0.7,
         maxTokens: 100,
-        model: 'gpt-4',
+        // Don't specify model - let each provider use its default
       });
 
       const message = response.content.trim();

@@ -162,7 +162,7 @@ Generate the message now:`;
         ],
         temperature: 0.7,
         maxTokens: 150,
-        model: 'gpt-4',
+        // Don't specify model - let each provider use its default
       });
 
       const message = response.content.trim();
