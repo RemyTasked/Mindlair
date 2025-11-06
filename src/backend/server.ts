@@ -1,6 +1,6 @@
-// Meet Cute Backend Server - v1.6.1
-// Includes: Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis
-// TypeScript build fixes applied
+// Meet Cute Backend Server - v1.7.0
+// Includes: PWA Support, Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis
+// Latest: Progressive Web App implementation with offline support
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
