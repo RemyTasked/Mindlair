@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
@@ -20,6 +20,7 @@ interface MeetingData {
 
 export default function FocusScene() {
   const { userId, meetingId } = useParams();
+  const navigate = useNavigate();
   const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<'intro' | 'mindstate' | 'ai-message' | 'breathing' | 'reflection' | 'complete'>('intro');
