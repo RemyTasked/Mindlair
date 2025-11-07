@@ -224,9 +224,18 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     console.log('🎵 Attempting to start ambient sound...');
     initializeAudio();
     
+    // Cleanup
+    return () => {
+      stopAudio();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soundType, enabled]);
+
+  // Separate effect for handling user interaction
+  useEffect(() => {
     // Add global click listener to auto-start sound after ANY user interaction
     const handleGlobalClick = () => {
-      if (needsInteraction && !isPlaying) {
+      if (needsInteraction && !isPlaying && enabled && soundType !== 'none') {
         console.log('👆 User clicked page - attempting to start audio');
         initializeAudio();
       }
@@ -234,13 +243,11 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     
     document.addEventListener('click', handleGlobalClick);
 
-    // Cleanup
     return () => {
-      stopAudio();
       document.removeEventListener('click', handleGlobalClick);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [soundType, enabled, needsInteraction, isPlaying]);
+  }, [needsInteraction, isPlaying, enabled, soundType]);
 
   // Dim volume when voice is speaking
   useEffect(() => {
