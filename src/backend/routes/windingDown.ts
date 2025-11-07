@@ -46,17 +46,26 @@ router.get(
     const [morningFlowHour, morningFlowMinute] = morningFlowTime.split(':').map(Number);
     const morningFlowTimeInMinutes = morningFlowHour * 60 + morningFlowMinute;
     
-    // Winding down is available from windingDownTime until morningFlowTime (next day)
-    // This means it stays available overnight until the morning flow appears
+    // CRITICAL: Winding down is ONLY available from windingDownTime until morning flow time
+    // Once morning flow time hits, winding down MUST disappear
     let isAvailable = false;
     
-    if (windingDownTimeInMinutes < morningFlowTimeInMinutes) {
-      // Normal case: winding down at night (e.g., 21:00), morning flow in morning (e.g., 06:00)
-      // Available if current time is after winding down time OR before morning flow time
-      isAvailable = currentTimeInMinutes >= windingDownTimeInMinutes || currentTimeInMinutes < morningFlowTimeInMinutes;
+    // Check if we're in the overnight window (after winding down time but before midnight)
+    // OR in the early morning window (after midnight but before morning flow)
+    if (currentTimeInMinutes >= windingDownTimeInMinutes) {
+      // After winding down time - available until midnight
+      isAvailable = true;
+    } else if (currentTimeInMinutes < morningFlowTimeInMinutes) {
+      // Before morning flow time (early morning hours) - still available
+      isAvailable = true;
     } else {
-      // Edge case: winding down time is after midnight
-      isAvailable = currentTimeInMinutes >= windingDownTimeInMinutes && currentTimeInMinutes < morningFlowTimeInMinutes;
+      // Between morning flow time and winding down time - NOT available
+      isAvailable = false;
+    }
+    
+    // CRITICAL: If morning flow time has passed, winding down is NO LONGER AVAILABLE
+    if (currentTimeInMinutes >= morningFlowTimeInMinutes && currentTimeInMinutes < windingDownTimeInMinutes) {
+      isAvailable = false;
     }
     
     if (!isAvailable) {

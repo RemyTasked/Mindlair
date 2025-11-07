@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'meetcute-v3';
-const RUNTIME_CACHE = 'meetcute-runtime-v3';
+const CACHE_NAME = 'meetcute-v4';
+const RUNTIME_CACHE = 'meetcute-runtime-v4';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [

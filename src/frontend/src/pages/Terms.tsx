@@ -20,7 +20,7 @@ export default function Terms() {
             <img 
               src="/icons/meetcute-logo.png" 
               alt="Meet Cute Logo" 
-              className="w-12 h-12 object-contain"
+              className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
             />
             <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Meet Cute
