@@ -36,12 +36,20 @@ interface PresleyFlow {
   flowType?: 'morning' | 'evening';
 }
 
+interface WindingDown {
+  available: boolean;
+  windingDownUrl?: string;
+  reason?: string;
+  completed?: boolean;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [presleyFlow, setPresleyFlow] = useState<PresleyFlow | null>(null);
+  const [windingDown, setWindingDown] = useState<WindingDown | null>(null);
   const [loading, setLoading] = useState(true);
   const [eveningFlowTime, setEveningFlowTime] = useState<string>('18:00'); // Default 6 PM
   const [reflectionInsights, setReflectionInsights] = useState<any>(null);
@@ -135,10 +143,20 @@ export default function Dashboard() {
         // Don't fail the whole dashboard load if Presley Flow check fails
       }
 
+      // Check for Winding Down availability (non-critical)
+      let windingDownData = { available: false };
+      try {
+        const windingDownResponse = await api.get(`/api/winding-down/available/${userResponse.data.user.id}`);
+        windingDownData = windingDownResponse.data;
+      } catch (windingDownError: any) {
+        console.warn('⚠️ Winding Down check failed (non-critical):', windingDownError.message);
+      }
+
       console.log('✅ Critical data loaded', {
         userEmail: userResponse.data.user?.email,
         meetingsCount: meetingsResponse.data.meetings?.length,
         presleyFlowAvailable: presleyData.available,
+        windingDownAvailable: windingDownData.available,
       });
 
       // Detect and update user's timezone if it has changed
@@ -164,6 +182,7 @@ export default function Dashboard() {
       setUser(userResponse.data.user);
       setMeetings(meetingsResponse.data.meetings);
       setPresleyFlow(presleyData);
+      setWindingDown(windingDownData);
       
       // Extract evening flow time from user preferences
       const userEveningFlowTime = userResponse.data.user?.preferences?.eveningFlowTime || '18:00';
@@ -400,6 +419,31 @@ export default function Dashboard() {
               className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               🎬 Start Flow
+            </a>
+          </div>
+        )}
+
+        {/* Winding Down Card */}
+        {windingDown?.available && !windingDown?.completed && (
+          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-indigo-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="text-2xl sm:text-4xl">🌙</div>
+              <div className="flex-1">
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
+                  Winding Down
+                </h3>
+                <p className="text-xs sm:text-sm text-indigo-600 font-medium">
+                  Time to relax and prepare for rest
+                </p>
+              </div>
+            </div>
+            <a
+              href={windingDown.windingDownUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+            >
+              🌙 Start Winding Down
             </a>
           </div>
         )}
