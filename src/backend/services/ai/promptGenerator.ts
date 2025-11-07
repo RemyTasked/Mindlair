@@ -265,7 +265,7 @@ Generate the message now:`;
     attendees: string[];
     description?: string;
     meetingType?: string;
-  }>, tone: ToneType = 'balanced', historicalInsights?: HistoricalInsight[], userId?: string): Promise<{
+  }>, tone: ToneType = 'balanced', historicalInsights?: HistoricalInsight[], userId?: string, flowType: 'morning' | 'evening' = 'evening'): Promise<{
     openingScene: string;
     meetingPreviews: Array<{
       title: string;
@@ -307,9 +307,31 @@ IMPORTANT: Incorporate these insights naturally into your preparation script. If
         }
       }
 
-      const prompt = `You are creating an evening mental rehearsal script for tomorrow's meetings - a "Presley Flow Session."
+      // Different prompts for morning vs evening flows
+      const dayReference = flowType === 'morning' ? 'TODAY' : 'TOMORROW';
+      const timeContext = flowType === 'morning' 
+        ? 'morning preparation for today\'s meetings' 
+        : 'evening mental rehearsal for tomorrow\'s meetings';
+      
+      const openingGuidance = flowType === 'morning'
+        ? '"Today\'s script is ready. You\'ll move through it with clarity and confidence."'
+        : '"Tomorrow\'s script is ready. You\'ll move through it with grace."';
+      
+      const closingGuidance = flowType === 'morning'
+        ? '"Your day is mapped out. Step into it with intention—you\'re ready."'
+        : '"Tomorrow\'s script is ready. Rest easy—you\'re prepared."';
+      
+      const themeGuidance = flowType === 'morning'
+        ? 'Identify the emotional/strategic theme of today - "Today\'s tone is collaborative and decisive" or "A day of focused execution"'
+        : 'Identify the emotional/strategic theme of tomorrow - "Tomorrow\'s tone is collaborative and decisive" or "A day of focused execution"';
+      
+      const visualizationGuidance = flowType === 'morning'
+        ? 'Have them picture moving through today\'s scenes with confidence and presence'
+        : 'Have them picture moving through tomorrow\'s scenes smoothly, preparing mentally for each';
 
-TOMORROW'S SCHEDULE:
+      const prompt = `You are creating a ${timeContext} - a "Presley Flow Session."
+
+${dayReference}'S SCHEDULE:
 ${meetingsSummary}
 
 User's Tone Preference: ${tone}${historicalContext}${mindStateInsights}
@@ -318,26 +340,27 @@ Create a cinematic, calming mental preparation experience with these components:
 
 1. OPENING SCENE (2 sentences):
    - Set the tone: calm, cinematic, confident
-   - "Tomorrow's script is ready. You'll move through it with grace."
+   - ${openingGuidance}
 
 2. MEETING PREVIEWS:
-   For each meeting, provide a brief focus cue (1 sentence) that helps them mentally rehearse their role:
+   For each meeting, provide a brief focus cue (1 sentence) that helps them mentally ${flowType === 'morning' ? 'prepare for' : 'rehearse'} their role:
    ${meetings.map((m, i) => `   ${i + 1}. ${m.title} - Focus cue for this scene`).join('\n')}
 
 3. MINDSET THEME (2 sentences):
-   - Identify the emotional/strategic theme of tomorrow
-   - "Tomorrow's tone is collaborative and decisive" or "A day of focused execution"
+   - ${themeGuidance}
 
 4. VISUALIZATION SCRIPT (3-4 sentences):
    - A 30-second guided mental imagery
-   - Have them picture moving through each scene smoothly
+   - ${visualizationGuidance}
    - Cinematic language: "camera follows your composure"
 
 5. CLOSING MESSAGE (2 sentences):
    - Reassurance and confidence
-   - "Tomorrow's script is ready. Rest easy—you're prepared."
+   - ${closingGuidance}
 
-Match the ${tone} tone throughout. Make it feel like a director's cut of tomorrow.
+CRITICAL: This is a ${flowType.toUpperCase()} flow for ${dayReference}'s meetings. Use "${dayReference.toLowerCase()}" language throughout, NOT "tomorrow" if it's morning or "today" if it's evening.
+
+Match the ${tone} tone throughout. Make it feel like a director's cut of ${dayReference.toLowerCase()}.
 
 Return as JSON:
 {
@@ -348,11 +371,15 @@ Return as JSON:
   "closingMessage": "..."
 }`;
 
+      const systemMessage = flowType === 'morning'
+        ? 'You are a cinematic preparation coach creating morning preparation sessions. Return valid JSON only.'
+        : 'You are a cinematic preparation coach creating evening mental rehearsals. Return valid JSON only.';
+
       const response = await aiService.generateCompletion({
         messages: [
           {
             role: 'system',
-            content: 'You are a cinematic preparation coach creating evening mental rehearsals. Return valid JSON only.',
+            content: systemMessage,
           },
           {
             role: 'user',
@@ -391,9 +418,12 @@ Return as JSON:
       return parsed;
     } catch (error) {
       logger.error('Error generating Presley Flow', { error });
-      // Fallback
+      // Fallback with correct day reference
+      const dayRef = flowType === 'morning' ? 'Today' : 'Tomorrow';
+      const dayRefLower = dayRef.toLowerCase();
+      
       return {
-        openingScene: "Tomorrow's script is ready. You'll move through each scene with intention and ease.",
+        openingScene: `${dayRef}'s script is ready. You'll move through each scene with intention and ease.`,
         meetingPreviews: meetings.map(m => ({
           title: m.title,
           time: m.startTime.toLocaleTimeString('en-US', { 
@@ -403,9 +433,11 @@ Return as JSON:
           }),
           focusCue: `Bring your full presence and clarity to this moment.`,
         })),
-        mindsetTheme: "Tomorrow calls for focus and authentic connection. Trust your preparation.",
-        visualizationScript: "Picture yourself moving through tomorrow's scenes. The camera follows your composure. Each meeting unfolds smoothly. You transition with ease, centered and clear.",
-        closingMessage: "Tomorrow's script is ready. Rest well—you're prepared for every scene.",
+        mindsetTheme: `${dayRef} calls for focus and authentic connection. Trust your preparation.`,
+        visualizationScript: `Picture yourself moving through ${dayRefLower}'s scenes. The camera follows your composure. Each meeting unfolds smoothly. You transition with ease, centered and clear.`,
+        closingMessage: flowType === 'morning' 
+          ? `${dayRef}'s script is ready. Step into it with confidence—you're prepared.`
+          : `${dayRef}'s script is ready. Rest well—you're prepared for every scene.`,
       };
     }
   }
