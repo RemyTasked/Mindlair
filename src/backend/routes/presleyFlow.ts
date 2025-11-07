@@ -238,11 +238,35 @@ router.get(
       todayMeetingCount = todayMeetings.length;
     }
 
-    // Show flow if: morning with today's meetings OR evening with today/tomorrow meetings
-    const hasRelevantMeetings = relevantMeetings.length > 0 || (isEveningWindow && todayMeetingCount > 0);
+    // CRITICAL: Show flow only if there are relevant meetings
+    // Morning: Show if today has meetings
+    // Evening: Show if today had meetings (for wrap-up) OR tomorrow has meetings (for rehearsal)
+    // Weekend check: If tomorrow is weekend with no meetings, don't show evening flow
+    let hasRelevantMeetings = false;
+    
+    if (isMorningWindow) {
+      // Morning: Only show if TODAY has meetings
+      hasRelevantMeetings = relevantMeetings.length > 0;
+    } else if (isEveningWindow) {
+      // Evening: Show if today had meetings OR tomorrow has meetings
+      // This allows wrap-up (today) and/or rehearsal (tomorrow)
+      hasRelevantMeetings = todayMeetingCount > 0 || relevantMeetings.length > 0;
+    }
     
     if (!hasRelevantMeetings) {
-      return res.json({ available: false });
+      logger.info('No relevant meetings for flow', {
+        userId,
+        isMorningWindow,
+        isEveningWindow,
+        todayMeetingCount,
+        tomorrowMeetingCount: relevantMeetings.length,
+      });
+      return res.json({ 
+        available: false,
+        reason: isMorningWindow 
+          ? 'No meetings scheduled for today'
+          : 'No meetings today or tomorrow - enjoy your weekend!',
+      });
     }
 
     const dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD

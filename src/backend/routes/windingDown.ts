@@ -102,6 +102,35 @@ router.get(
       });
     }
 
+    // CRITICAL: Check if user has meetings tomorrow
+    // If no meetings tomorrow (weekend), DON'T show winding down
+    // Winding down is for preparing for work meetings, not for weekends
+    const tomorrow = moment().tz(userTimezone).add(1, 'day');
+    const tomorrowStart = tomorrow.startOf('day').toDate();
+    const tomorrowEnd = tomorrow.endOf('day').toDate();
+    
+    const tomorrowMeetings = await prisma.meeting.findMany({
+      where: {
+        userId,
+        startTime: {
+          gte: tomorrowStart,
+          lte: tomorrowEnd,
+        },
+      },
+    });
+
+    if (tomorrowMeetings.length === 0) {
+      logger.info('Winding down not available - no meetings tomorrow (weekend)', {
+        userId,
+        tomorrowDate: tomorrow.format('YYYY-MM-DD'),
+      });
+      return res.json({
+        available: false,
+        reason: 'No meetings tomorrow - enjoy your evening!',
+        isWeekend: true,
+      });
+    }
+
     return res.json({
       available: true,
       windingDownUrl: `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/winding-down/${userId}`,
