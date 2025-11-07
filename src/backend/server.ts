@@ -89,10 +89,37 @@ app.use('/api/test', testRoutes);
 if (process.env.NODE_ENV === 'production') {
   // In Docker, frontend is built to /app/src/frontend/dist
   const frontendDistPath = path.resolve('/app/src/frontend/dist');
-  app.use(express.static(frontendDistPath));
+  
+  // Serve static assets with proper cache-control headers
+  app.use(express.static(frontendDistPath, {
+    setHeaders: (res, filePath) => {
+      // Cache hashed assets (JS/CSS with content hashes) for 1 year
+      if (filePath.match(/\.(js|css)$/) && filePath.match(/-[a-zA-Z0-9]{8,}\.(js|css)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+      // Cache images/fonts for 1 week but allow revalidation
+      else if (filePath.match(/\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=604800, must-revalidate');
+      }
+      // Don't cache HTML, manifest, service worker
+      else if (filePath.match(/\.(html|json|js)$/) && 
+               (filePath.includes('index.html') || 
+                filePath.includes('manifest.json') || 
+                filePath.includes('service-worker'))) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+      // Default: cache for 1 hour with revalidation
+      else {
+        res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+      }
+    }
+  }));
   
   // Serve index.html for all non-API routes (SPA support)
   app.get('*', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.join(frontendDistPath, 'index.html'));
   });
 }

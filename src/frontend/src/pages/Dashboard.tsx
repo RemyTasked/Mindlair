@@ -309,7 +309,7 @@ export default function Dashboard() {
             {/* Logo Section */}
             <div className="flex items-center gap-3">
               <img 
-                src="/icons/meetcute-logo.png?v=2" 
+                src="/icons/meetcute-logo.png" 
                 alt="Meet Cute Logo" 
                 className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
               />
