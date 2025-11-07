@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import { LOGO_PATHS } from '../config/constants';
 import { ArrowLeft } from 'lucide-react';
+import { LOGO_PATHS } from '../config/constants';
 
 export default function Terms() {
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ export default function Terms() {
           </button>
           <div className="flex items-center gap-3">
             <img 
-              src="/icons/meetcute-logo.png" 
+              src={LOGO_PATHS.main} 
               alt="Meet Cute Logo" 
               className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
             />

@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import { LOGO_PATHS } from '../config/constants';
 import { Shield, Lock, Eye, Database, Key, UserCheck, ArrowLeft } from 'lucide-react';
+import { LOGO_PATHS } from '../config/constants';
 
 export default function Privacy() {
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ export default function Privacy() {
             </div>
             <div className="flex items-center gap-2">
               <img 
-                src="/icons/meetcute-logo.png" 
+                src={LOGO_PATHS.main} 
                 alt="Meet Cute Logo" 
                 className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
               />

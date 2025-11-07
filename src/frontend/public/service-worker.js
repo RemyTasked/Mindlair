@@ -5,19 +5,22 @@
 // - Server sends Cache-Control headers to prevent stale content
 // - Service worker cache version bumped on each deployment
 // - ETags enabled for efficient cache validation
-const CACHE_NAME = 'meetcute-v5';
-const RUNTIME_CACHE = 'meetcute-runtime-v5';
+// DEPLOYMENT: 2025-11-07 14:15 EST - Force clear all caches
+const CACHE_NAME = 'meetcute-v6';
+const RUNTIME_CACHE = 'meetcute-runtime-v6';
 
 // Assets to cache on install
+// Logo URLs include timestamp to force cache refresh
+const LOGO_TIMESTAMP = '20251107141500'; // YYYYMMDDHHMMSS
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.png',
-  '/og-image.png',
-  '/icons/meetcute-logo.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
+  `/favicon.png?v=${LOGO_TIMESTAMP}`,
+  `/og-image.png?v=${LOGO_TIMESTAMP}`,
+  `/icons/meetcute-logo.png?v=${LOGO_TIMESTAMP}`,
+  `/icons/icon-192x192.png?v=${LOGO_TIMESTAMP}`,
+  `/icons/icon-512x512.png?v=${LOGO_TIMESTAMP}`,
 ];
 
 // Install event - cache critical assets

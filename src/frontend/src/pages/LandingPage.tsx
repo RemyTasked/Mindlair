@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { LOGO_PATHS } from '../config/constants';
 import { motion } from 'framer-motion';
+import { LOGO_PATHS } from '../config/constants';
 import api from '../lib/axios';
 import { Calendar, Sparkles, Mail, Moon, Sun, Star, Music, Heart, Brain } from 'lucide-react';
 
@@ -71,7 +73,7 @@ export default function LandingPage() {
         >
           <div className="flex items-center gap-3">
             <motion.img
-              src="/icons/meetcute-logo.png"
+              src={LOGO_PATHS.main}
               alt="Meet Cute Logo"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
@@ -125,7 +127,7 @@ export default function LandingPage() {
             <div className="bg-gradient-to-br from-indigo-200/80 to-purple-200/80 rounded-2xl p-8 shadow-2xl backdrop-blur-sm border border-white/50">
               <div className="flex items-center justify-center gap-4 mb-4">
                 <img 
-                  src="/icons/meetcute-logo.png" 
+                  src={LOGO_PATHS.main} 
                   alt="Meet Cute Logo" 
                   className="w-24 h-24 sm:w-28 sm:h-28 object-contain"
                 />
