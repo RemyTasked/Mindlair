@@ -71,7 +71,7 @@ export default function LandingPage() {
         >
           <div className="flex items-center gap-3">
             <motion.img
-              src="/icons/meetcute-logo.png"
+              src="/icons/meetcute-logo.png?v=2"
               alt="Meet Cute Logo"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
@@ -125,7 +125,7 @@ export default function LandingPage() {
             <div className="bg-gradient-to-br from-indigo-200/80 to-purple-200/80 rounded-2xl p-8 shadow-2xl backdrop-blur-sm border border-white/50">
               <div className="flex items-center justify-center gap-4 mb-4">
                 <img 
-                  src="/icons/meetcute-logo.png" 
+                  src="/icons/meetcute-logo.png?v=2" 
                   alt="Meet Cute Logo" 
                   className="w-20 h-20 object-contain"
                 />

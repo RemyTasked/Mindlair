@@ -18,7 +18,7 @@ export default function Terms() {
           </button>
           <div className="flex items-center gap-3">
             <img 
-              src="/icons/meetcute-logo.png" 
+              src="/icons/meetcute-logo.png?v=2" 
               alt="Meet Cute Logo" 
               className="w-12 h-12 object-contain"
             />

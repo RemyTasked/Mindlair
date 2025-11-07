@@ -20,7 +20,7 @@ export default function Privacy() {
             </div>
             <div className="flex items-center gap-2">
               <img 
-                src="/icons/meetcute-logo.png" 
+                src="/icons/meetcute-logo.png?v=2" 
                 alt="Meet Cute Logo" 
                 className="w-10 h-10 object-contain"
               />
