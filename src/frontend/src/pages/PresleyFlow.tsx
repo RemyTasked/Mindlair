@@ -820,14 +820,15 @@ export default function PresleyFlow() {
               Tomorrow's rehearsal is complete. Rest well—your morning recap awaits.
             </p>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className="text-purple-300 text-sm"
+              onClick={() => navigate('/dashboard')}
+              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
             >
-              You can close this window now
-            </motion.div>
+              Return to Dashboard
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>

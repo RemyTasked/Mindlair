@@ -610,18 +610,20 @@ export default function FocusScene() {
               <motion.p
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="text-lg"
+                className="text-lg mb-6"
               >
                 You're ready to shine ⭐
               </motion.p>
-              <motion.p 
-                className="text-sm mt-4 opacity-60"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+              
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 2.5 }}
+                onClick={() => navigate('/dashboard')}
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl text-white"
               >
-                Returning to your meeting in a moment...
-              </motion.p>
+                Return to Dashboard
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
