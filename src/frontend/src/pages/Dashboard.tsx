@@ -308,7 +308,13 @@ export default function Dashboard() {
           <div className="flex justify-between items-center">
             {/* Logo Section */}
             <div className="flex items-center gap-3">
-              <div className="text-2xl" role="img" aria-label="Film camera emoji">🎬</div>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden shadow-md">
+                <img 
+                  src="/icons/meetcute-logo.png" 
+                  alt="Meet Cute Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Meet Cute
               </h1>

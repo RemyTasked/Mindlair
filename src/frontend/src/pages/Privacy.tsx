@@ -8,14 +8,28 @@ export default function Privacy() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-800">Privacy & Security</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-bold text-gray-800">Privacy & Security</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg overflow-hidden shadow-md">
+                <img 
+                  src="/icons/meetcute-logo.png" 
+                  alt="Meet Cute Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hidden sm:inline">
+                Meet Cute
+              </span>
+            </div>
           </div>
         </div>
       </header>

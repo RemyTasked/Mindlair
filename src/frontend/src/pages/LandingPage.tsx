@@ -71,13 +71,15 @@ export default function LandingPage() {
         >
           <div className="flex items-center gap-3">
             <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
+              animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              className="text-3xl"
-              role="img"
-              aria-label="Film camera emoji"
+              className="w-10 h-10 rounded-lg overflow-hidden shadow-lg"
             >
-              🎬
+              <img 
+                src="/icons/meetcute-logo.png" 
+                alt="Meet Cute Logo" 
+                className="w-full h-full object-cover"
+              />
             </motion.div>
             <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Meet Cute
@@ -126,7 +128,13 @@ export default function LandingPage() {
           >
             <div className="bg-gradient-to-br from-indigo-200/80 to-purple-200/80 rounded-2xl p-8 shadow-2xl backdrop-blur-sm border border-white/50">
               <div className="flex items-center justify-center gap-4 mb-4">
-                <div className="text-5xl">🎬</div>
+                <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg">
+                  <img 
+                    src="/icons/meetcute-logo.png" 
+                    alt="Meet Cute Logo" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <div className="text-left">
                   <div className="text-2xl font-bold text-indigo-900">Your Focus Scene</div>
                   <div className="text-indigo-700">5 minutes • Before every meeting</div>
