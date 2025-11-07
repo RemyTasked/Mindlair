@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { LOGO_PATHS } from '../config/constants';
 import { motion } from 'framer-motion';
 import { LOGO_PATHS } from '../config/constants';
 import api from '../lib/axios';

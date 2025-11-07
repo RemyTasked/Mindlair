@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { LOGO_PATHS } from '../config/constants';
 import { Shield, Lock, Eye, Database, Key, UserCheck, ArrowLeft } from 'lucide-react';
 import { LOGO_PATHS } from '../config/constants';
 
