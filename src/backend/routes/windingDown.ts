@@ -30,34 +30,70 @@ router.get(
       return res.json({ available: false, reason: 'Winding down is disabled' });
     }
 
-    // Get user's timezone and current hour
+    // Get user's timezone and current time
     const userTimezone = user.timezone || 'America/New_York';
     const currentHour = moment().tz(userTimezone).hour();
     const currentMinute = moment().tz(userTimezone).minute();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
     
     // Parse winding down time (format: "HH:mm")
     const windingDownTime = (user as any).preferences?.windingDownTime || '21:00';
     const [windingDownHour, windingDownMinute] = windingDownTime.split(':').map(Number);
-    
-    // Check if it's time for winding down (available from windingDownTime until 2 AM)
-    const currentTimeInMinutes = currentHour * 60 + currentMinute;
     const windingDownTimeInMinutes = windingDownHour * 60 + windingDownMinute;
     
-    // Available from winding down time until 2 AM (next day)
-    const isAvailable = currentTimeInMinutes >= windingDownTimeInMinutes || currentHour < 2;
+    // Parse morning flow time (format: "HH:mm")
+    const morningFlowTime = (user as any).preferences?.morningFlowTime || '06:00';
+    const [morningFlowHour, morningFlowMinute] = morningFlowTime.split(':').map(Number);
+    const morningFlowTimeInMinutes = morningFlowHour * 60 + morningFlowMinute;
+    
+    // Winding down is available from windingDownTime until morningFlowTime (next day)
+    // This means it stays available overnight until the morning flow appears
+    let isAvailable = false;
+    
+    if (windingDownTimeInMinutes < morningFlowTimeInMinutes) {
+      // Normal case: winding down at night (e.g., 21:00), morning flow in morning (e.g., 06:00)
+      // Available if current time is after winding down time OR before morning flow time
+      isAvailable = currentTimeInMinutes >= windingDownTimeInMinutes || currentTimeInMinutes < morningFlowTimeInMinutes;
+    } else {
+      // Edge case: winding down time is after midnight
+      isAvailable = currentTimeInMinutes >= windingDownTimeInMinutes && currentTimeInMinutes < morningFlowTimeInMinutes;
+    }
     
     if (!isAvailable) {
       logger.info('Winding down not available yet', {
         userId,
         currentHour,
         windingDownHour,
-        hoursUntilWindingDown: windingDownHour - currentHour,
+        morningFlowHour,
       });
       return res.json({ 
         available: false,
         reason: `Winding down is available starting at ${windingDownTime}`,
         locked: true,
         unlockTime: windingDownTime,
+      });
+    }
+
+    // Check if user has already completed winding down today
+    const todayStart = moment().tz(userTimezone).startOf('day').toDate();
+    const todayEnd = moment().tz(userTimezone).endOf('day').toDate();
+    
+    const completedSession = await prisma.windingDownSession.findFirst({
+      where: {
+        userId,
+        completedAt: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+    });
+
+    if (completedSession) {
+      logger.info('Winding down already completed today', { userId });
+      return res.json({
+        available: false,
+        reason: 'You have already completed your winding down session today',
+        completed: true,
       });
     }
 
@@ -93,6 +129,46 @@ router.get(
       tone: (user as any).preferences?.tone || 'balanced',
       enableFocusSound: (user as any).preferences?.enableFocusSound !== false,
       focusSoundType: (user as any).preferences?.focusSoundType || 'calm-ocean',
+    });
+  })
+);
+
+/**
+ * Mark winding down session as complete
+ */
+router.post(
+  '/complete/:userId',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const { duration } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Create completed session record
+    const session = await prisma.windingDownSession.create({
+      data: {
+        userId,
+        completedAt: new Date(),
+        duration: duration || null,
+      },
+    });
+
+    logger.info('Winding down session completed', {
+      userId,
+      sessionId: session.id,
+      duration,
+    });
+
+    return res.json({
+      success: true,
+      sessionId: session.id,
+      message: 'Winding down session completed successfully',
     });
   })
 );

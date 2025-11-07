@@ -30,6 +30,7 @@ model User {
   dailyReflections   DailyReflection[]
   wellnessCheckIns   WellnessCheckIn[]
   presleyFlowSessions PresleyFlowSession[]
+  windingDownSessions WindingDownSession[]
 
   // Delivery Settings
   deliverySettings DeliverySettings?
@@ -316,5 +317,19 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+model WindingDownSession {
+  id          String    @id @default(uuid())
+  userId      String
+  date        DateTime  @default(now()) // The date this session was started
+  completedAt DateTime?
+  duration    Int?      // Duration in seconds
+  createdAt   DateTime  @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, date])
+  @@map("winding_down_sessions")
 }
 

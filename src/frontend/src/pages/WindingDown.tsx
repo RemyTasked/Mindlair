@@ -12,6 +12,7 @@ export default function WindingDown() {
   const [currentPhase, setCurrentPhase] = useState<Phase>('opening');
   const [sessionData, setSessionData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [startTime] = useState(Date.now());
 
   useEffect(() => {
     fetchSessionData();
@@ -25,6 +26,16 @@ export default function WindingDown() {
     } catch (error) {
       console.error('Error fetching winding down session:', error);
       setLoading(false);
+    }
+  };
+
+  const completeSession = async () => {
+    try {
+      const duration = Math.floor((Date.now() - startTime) / 1000); // Duration in seconds
+      await api.post(`/api/winding-down/complete/${userId}`, { duration });
+      console.log('Winding down session marked as complete');
+    } catch (error) {
+      console.error('Error completing winding down session:', error);
     }
   };
 
@@ -287,7 +298,10 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                onClick={() => navigate('/dashboard')}
+                onClick={async () => {
+                  await completeSession();
+                  navigate('/dashboard');
+                }}
                 className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
               >
                 Return to Dashboard
