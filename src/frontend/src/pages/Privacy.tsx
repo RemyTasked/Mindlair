@@ -19,13 +19,11 @@ export default function Privacy() {
               <h1 className="text-xl font-bold text-gray-800">Privacy & Security</h1>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg overflow-hidden shadow-md">
-                <img 
-                  src="/icons/meetcute-logo.png" 
-                  alt="Meet Cute Logo" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <img 
+                src="/icons/meetcute-logo.png" 
+                alt="Meet Cute Logo" 
+                className="w-10 h-10 object-contain"
+              />
               <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hidden sm:inline">
                 Meet Cute
               </span>
