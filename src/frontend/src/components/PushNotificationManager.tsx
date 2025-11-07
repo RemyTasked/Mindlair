@@ -39,7 +39,12 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
       let message = 'Push notifications are not supported in your browser. Please use Chrome, Firefox, Edge, or Safari 16+ on macOS 13+.';
       
       if (isIOS) {
-        message = 'Push notifications are not yet supported on iOS/iPadOS. Please use Chrome, Firefox, or Edge on desktop for notifications.';
+        message = 'Browser push notifications are not yet supported on iOS/iPadOS.\n\n' +
+                  'You can still receive notifications via:\n' +
+                  '• Email (enabled above)\n' +
+                  '• SMS (enable below with your phone number)\n' +
+                  '• Slack (if configured)\n\n' +
+                  'For browser push notifications, please use Chrome, Firefox, or Edge on desktop.';
       } else if (isSafari) {
         message = 'Safari has limited support for push notifications. Please use Chrome, Firefox, or Edge for the best experience.';
       }
@@ -109,10 +114,18 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
   };
 
   if (!isSupported) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <p className="text-sm text-yellow-800">
-          ⚠️ Push notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Edge.
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm font-medium text-blue-900 mb-2">
+          ℹ️ {isIOS ? 'iOS Browser Notifications Not Available' : 'Browser Push Notifications Not Supported'}
+        </p>
+        <p className="text-xs text-blue-700">
+          {isIOS 
+            ? 'iOS doesn\'t support browser push notifications yet. You can still receive notifications via Email (above) or SMS (below with your phone number).'
+            : 'Please use a modern browser like Chrome, Firefox, or Edge for push notifications.'
+          }
         </p>
       </div>
     );

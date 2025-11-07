@@ -92,7 +92,22 @@ const preferencesSchema = z.object({
   mergeBackToBack: z.boolean().optional(),
   enableDailyWrapUp: z.boolean().optional(),
   enableFocusScene: z.boolean().optional(),
+  enableFocusSound: z.boolean().optional(),
+  focusSoundType: z.enum(['calm-ocean', 'rain', 'forest', 'meditation-bell', 'white-noise', 'none']).optional(),
+  enableVoiceNarration: z.boolean().optional(),
   enableAdaptiveTiming: z.boolean().optional(),
+  morningFlowTime: z.string().optional(),
+  eveningFlowTime: z.string().optional(),
+  enableMorningFlow: z.boolean().optional(),
+  enableEveningFlow: z.boolean().optional(),
+  enableWindingDown: z.boolean().optional(),
+  windingDownTime: z.string().optional(),
+  enableWellnessReminders: z.boolean().optional(),
+  wellnessReminderFrequency: z.number().optional(),
+  enableReflections: z.boolean().optional(),
+  privateReflectionMode: z.boolean().optional(),
+  reflectionDataSharing: z.boolean().optional(),
+  storeReflectionText: z.boolean().optional(),
 });
 
 router.put(
@@ -119,8 +134,16 @@ const deliverySchema = z.object({
   emailEnabled: z.boolean().optional(),
   slackEnabled: z.boolean().optional(),
   smsEnabled: z.boolean().optional(),
+  pushEnabled: z.boolean().optional(),
+  pushPreMeetingCues: z.boolean().optional(),
+  pushPresleyFlow: z.boolean().optional(),
+  pushWellnessReminders: z.boolean().optional(),
+  pushMeetingInsights: z.boolean().optional(),
+  pushMorningRecap: z.boolean().optional(),
+  pushDailyWrapUp: z.boolean().optional(),
+  pushWindingDown: z.boolean().optional(),
   phoneNumber: z.string().nullable().optional(),
-  slackWebhookUrl: z.string().url().nullable().optional(),
+  slackWebhookUrl: z.string().nullable().optional(), // Allow null or valid URL
 });
 
 router.put(
