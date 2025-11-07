@@ -1,13 +1,16 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'meetcute-v1';
-const RUNTIME_CACHE = 'meetcute-runtime';
+const CACHE_NAME = 'meetcute-v2';
+const RUNTIME_CACHE = 'meetcute-runtime-v2';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/favicon.png',
+  '/og-image.png',
+  '/icons/meetcute-logo.png',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
 ];
