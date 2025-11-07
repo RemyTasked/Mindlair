@@ -1,6 +1,7 @@
-// Meet Cute Backend Server - v1.8.0
+// Meet Cute Backend Server - v1.9.0
 // Includes: PWA Support, Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis, Winding Down Session
-// Latest: Separated winding down from evening flow + Fixed evening flow timing + Updated PWA icons with actual logo
+// Latest: Comprehensive automatic cache-busting + Flow timing fixes + Logo size improvements
+// Cache-Busting: Content hashes, Cache-Control headers, ETags, Service Worker versioning
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -48,6 +49,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Enable ETag for cache validation
+app.set('etag', 'strong');
 app.use(
   session({
     store: new PgSession({

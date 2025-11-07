@@ -1,7 +1,12 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'meetcute-v4';
-const RUNTIME_CACHE = 'meetcute-runtime-v4';
+// AUTOMATIC CACHE-BUSTING:
+// - Vite generates unique filenames with content hashes (e.g., main-a1b2c3d4.js)
+// - Server sends Cache-Control headers to prevent stale content
+// - Service worker cache version bumped on each deployment
+// - ETags enabled for efficient cache validation
+const CACHE_NAME = 'meetcute-v5';
+const RUNTIME_CACHE = 'meetcute-runtime-v5';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
