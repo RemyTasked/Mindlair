@@ -130,20 +130,47 @@ router.get(
       },
     });
     
-    // CRITICAL: Lock morning flow after first meeting starts
+    // CRITICAL: Lock morning flow 1 hour before first meeting starts
     if (isMorningWindow && relevantMeetings.length > 0) {
       const firstMeetingStart = new Date(relevantMeetings[0].startTime);
-      if (now >= firstMeetingStart) {
-        logger.info('Morning flow locked - first meeting has started', {
+      const oneHourBeforeFirstMeeting = new Date(firstMeetingStart.getTime() - 60 * 60 * 1000);
+      
+      if (now >= oneHourBeforeFirstMeeting) {
+        logger.info('Morning flow locked - within 1 hour of first meeting', {
           userId,
           firstMeetingStart: firstMeetingStart.toISOString(),
+          lockTime: oneHourBeforeFirstMeeting.toISOString(),
           currentTime: now.toISOString(),
         });
         return res.json({ 
           available: false,
-          reason: 'Morning flow is only available before your first meeting starts',
+          reason: 'Morning flow locks 1 hour before your first meeting',
           locked: true,
+          lockTime: oneHourBeforeFirstMeeting.toISOString(),
         });
+      }
+    }
+    
+    // CRITICAL: If no meetings today, lock morning flow when wellness reminders start
+    if (isMorningWindow && relevantMeetings.length === 0) {
+      const wellnessEnabled = (user as any).preferences?.enableWellnessReminders !== false;
+      
+      if (wellnessEnabled) {
+        // Wellness reminders start at 9 AM by default
+        const wellnessStartHour = 9;
+        
+        if (currentHour >= wellnessStartHour) {
+          logger.info('Morning flow locked - no meetings today and wellness reminders active', {
+            userId,
+            currentHour,
+            wellnessStartHour,
+          });
+          return res.json({ 
+            available: false,
+            reason: 'Morning flow is not available when you have no meetings scheduled',
+            locked: true,
+          });
+        }
       }
     }
     
