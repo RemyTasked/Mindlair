@@ -36,15 +36,21 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
     if (!isSupported) {
       const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator as any).standalone === true;
+      
       let message = 'Push notifications are not supported in your browser. Please use Chrome, Firefox, Edge, or Safari 16+ on macOS 13+.';
       
-      if (isIOS) {
-        message = 'Browser push notifications are not yet supported on iOS/iPadOS.\n\n' +
-                  'You can still receive notifications via:\n' +
-                  '• Email (enabled above)\n' +
-                  '• SMS (enable below with your phone number)\n' +
-                  '• Slack (if configured)\n\n' +
-                  'For browser push notifications, please use Chrome, Firefox, or Edge on desktop.';
+      if (isIOS && !isStandalone) {
+        message = '📱 To enable push notifications on iOS:\n\n' +
+                  '1. Open this site in Safari\n' +
+                  '2. Tap the Share button (square with arrow)\n' +
+                  '3. Select "Add to Home Screen"\n' +
+                  '4. Open the app from your home screen\n' +
+                  '5. Return here to enable notifications\n\n' +
+                  'Push notifications only work for installed PWAs on iOS 16.4+';
+      } else if (isIOS) {
+        message = 'Push notifications require iOS 16.4 or later. Please update your iOS version.';
       } else if (isSafari) {
         message = 'Safari has limited support for push notifications. Please use Chrome, Firefox, or Edge for the best experience.';
       }
@@ -115,15 +121,40 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
 
   if (!isSupported) {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        (window.navigator as any).standalone === true;
+    
+    if (isIOS && !isStandalone) {
+      return (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-4">
+          <p className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+            📱 Install App for Push Notifications
+          </p>
+          <div className="text-xs text-blue-800 space-y-2 mb-3">
+            <p className="font-medium">To enable push notifications on iOS:</p>
+            <ol className="list-decimal list-inside space-y-1 ml-2">
+              <li>Open this site in <strong>Safari</strong></li>
+              <li>Tap the <strong>Share</strong> button (⎋)</li>
+              <li>Select <strong>"Add to Home Screen"</strong></li>
+              <li>Open the app from your home screen</li>
+              <li>Return here to enable notifications</li>
+            </ol>
+          </div>
+          <p className="text-xs text-blue-600 italic">
+            ✨ Push notifications work on iOS 16.4+ when installed as a PWA
+          </p>
+        </div>
+      );
+    }
     
     return (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm font-medium text-blue-900 mb-2">
-          ℹ️ {isIOS ? 'iOS Browser Notifications Not Available' : 'Browser Push Notifications Not Supported'}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <p className="text-sm font-medium text-yellow-900 mb-2">
+          ⚠️ {isIOS ? 'Update Required' : 'Browser Not Supported'}
         </p>
-        <p className="text-xs text-blue-700">
+        <p className="text-xs text-yellow-700">
           {isIOS 
-            ? 'iOS doesn\'t support browser push notifications yet. You can still receive notifications via Email (above) or SMS (below with your phone number).'
+            ? 'Push notifications require iOS 16.4 or later. Please update your device.'
             : 'Please use a modern browser like Chrome, Firefox, or Edge for push notifications.'
           }
         </p>

@@ -9,7 +9,7 @@ class PushNotificationService {
 
   /**
    * Check if push notifications are supported
-   * Note: Safari on macOS/iOS has limited/no support for Web Push API
+   * Note: iOS 16.4+ supports Web Push for PWAs installed on home screen
    */
   isSupported(): boolean {
     // Check basic support
@@ -17,14 +17,34 @@ class PushNotificationService {
       return false;
     }
 
-    // Safari on iOS doesn't support Push API at all
+    // iOS 16.4+ supports Web Push for PWAs installed on home screen
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     if (isIOS) {
-      console.warn('Push notifications are not supported on iOS Safari');
-      return false;
+      // Check if running as standalone PWA (installed on home screen)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator as any).standalone === true;
+      
+      if (!isStandalone) {
+        console.warn('iOS Web Push requires PWA to be installed on home screen');
+        return false;
+      }
+      
+      // Check iOS version (need 16.4+)
+      const match = navigator.userAgent.match(/OS (\d+)_(\d+)/);
+      if (match) {
+        const majorVersion = parseInt(match[1]);
+        const minorVersion = parseInt(match[2]);
+        if (majorVersion < 16 || (majorVersion === 16 && minorVersion < 4)) {
+          console.warn('iOS Web Push requires iOS 16.4 or later');
+          return false;
+        }
+      }
+      
+      console.log('✅ iOS PWA detected - Web Push supported!');
+      return true;
     }
 
-    // Safari on macOS has limited support (requires macOS 13+ and Safari 16+)
+    // Safari on macOS has support (requires macOS 13+ and Safari 16+)
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (isSafari) {
       // Check Safari version
@@ -34,7 +54,7 @@ class PushNotificationService {
         console.warn('Push notifications require Safari 16+ on macOS 13+');
         return false;
       }
-      console.log('Safari 16+ detected - Push notifications supported with limitations');
+      console.log('Safari 16+ detected - Push notifications supported');
     }
 
     // Firefox has excellent push notification support
