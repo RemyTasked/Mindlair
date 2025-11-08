@@ -10,6 +10,7 @@ const FocusScene = lazy(() => import('./pages/FocusScene'));
 const FocusSceneDemo = lazy(() => import('./pages/FocusSceneDemo'));
 const PresleyFlow = lazy(() => import('./pages/PresleyFlow'));
 const WindingDown = lazy(() => import('./pages/WindingDown'));
+const WeekendFlow = lazy(() => import('./pages/WeekendFlow'));
 const MeetingRating = lazy(() => import('./pages/MeetingRating'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
@@ -34,6 +35,7 @@ function App() {
         <Route path="/rate/:userId/:meetingId" element={<MeetingRating />} />
         <Route path="/presley-flow/:userId/:date" element={<PresleyFlow />} />
         <Route path="/winding-down/:userId" element={<WindingDown />} />
+        <Route path="/weekend-flow/:userId" element={<WeekendFlow />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/auth/callback" element={<AuthCallback />} />

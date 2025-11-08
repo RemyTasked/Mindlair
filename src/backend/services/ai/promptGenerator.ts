@@ -314,12 +314,12 @@ IMPORTANT: Incorporate these insights naturally into your preparation script. If
         : 'evening mental rehearsal for tomorrow\'s meetings';
       
       const openingGuidance = flowType === 'morning'
-        ? '"Today\'s script is ready. You\'ll move through it with clarity and confidence."'
-        : '"Tomorrow\'s script is ready. You\'ll move through it with grace."';
+        ? '"Scene opens: sunlight filters in. Today unfolds at your direction."'
+        : '"Camera wraps — rest easy, the next act awaits."';
       
       const closingGuidance = flowType === 'morning'
-        ? '"Your day is mapped out. Step into it with intention—you\'re ready."'
-        : '"Tomorrow\'s script is ready. Rest easy—you\'re prepared."';
+        ? '"Today unfolds at your direction. Step into each scene with intention."'
+        : '"The stage rests — you\'ve earned the pause."';
       
       const themeGuidance = flowType === 'morning'
         ? 'Identify the emotional/strategic theme of today - "Today\'s tone is collaborative and decisive" or "A day of focused execution"'
@@ -423,7 +423,9 @@ Return as JSON:
       const dayRefLower = dayRef.toLowerCase();
       
       return {
-        openingScene: `${dayRef}'s script is ready. You'll move through each scene with intention and ease.`,
+        openingScene: flowType === 'morning'
+          ? `Scene opens: sunlight filters in. ${dayRef} unfolds at your direction.`
+          : `Camera wraps — rest easy, the next act awaits.`,
         meetingPreviews: meetings.map(m => ({
           title: m.title,
           time: m.startTime.toLocaleTimeString('en-US', { 
@@ -431,13 +433,13 @@ Return as JSON:
             minute: '2-digit',
             hour12: true
           }),
-          focusCue: `Bring your full presence and clarity to this moment.`,
+          focusCue: `Breathe and lead the moment.`,
         })),
-        mindsetTheme: `${dayRef} calls for focus and authentic connection. Trust your preparation.`,
+        mindsetTheme: `${dayRef}'s tone is focused and calm. Trust your preparation.`,
         visualizationScript: `Picture yourself moving through ${dayRefLower}'s scenes. The camera follows your composure. Each meeting unfolds smoothly. You transition with ease, centered and clear.`,
         closingMessage: flowType === 'morning' 
-          ? `${dayRef}'s script is ready. Step into it with confidence—you're prepared.`
-          : `${dayRef}'s script is ready. Rest well—you're prepared for every scene.`,
+          ? `${dayRef} unfolds at your direction. Step into each scene with intention.`
+          : `The stage rests — you've earned the pause.`,
       };
     }
   }
