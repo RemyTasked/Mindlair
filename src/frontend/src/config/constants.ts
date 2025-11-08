@@ -1,6 +1,6 @@
 // Cache-busting timestamp for logo assets
 // Update this timestamp whenever logo files change to force browser refresh
-export const LOGO_VERSION = '20251107141500'; // YYYYMMDDHHMMSS
+export const LOGO_VERSION = '20251108135200'; // YYYYMMDDHHMMSS - Presley Flow v1.10.0
 
 // Logo paths with cache-busting
 export const LOGO_PATHS = {

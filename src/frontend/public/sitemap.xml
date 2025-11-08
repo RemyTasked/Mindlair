@@ -1,10 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage -->
   <url>
     <loc>https://www.meetcuteai.com/</loc>
-    <lastmod>2025-11-01</lastmod>
+    <lastmod>2025-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.meetcuteai.com/og-image.png</image:loc>
+      <image:title>Meet Cute - The Presley Flow</image:title>
+      <image:caption>Cinematic meeting preparation and daily rituals</image:caption>
+    </image:image>
   </url>
+  
+  <!-- Dashboard (requires auth, but include for SEO) -->
+  <url>
+    <loc>https://www.meetcuteai.com/dashboard</loc>
+    <lastmod>2025-11-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Settings -->
+  <url>
+    <loc>https://www.meetcuteai.com/settings</loc>
+    <lastmod>2025-11-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Privacy Policy -->
+  <url>
+    <loc>https://www.meetcuteai.com/privacy</loc>
+    <lastmod>2025-11-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <!-- Terms of Service -->
+  <url>
+    <loc>https://www.meetcuteai.com/terms</loc>
+    <lastmod>2025-11-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
 </urlset>
-

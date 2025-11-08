@@ -5,13 +5,13 @@
 // - Server sends Cache-Control headers to prevent stale content
 // - Service worker cache version bumped on each deployment
 // - ETags enabled for efficient cache validation
-// DEPLOYMENT: 2025-11-07 14:15 EST - Force clear all caches
-const CACHE_NAME = 'meetcute-v6';
-const RUNTIME_CACHE = 'meetcute-runtime-v6';
+// DEPLOYMENT: 2025-11-08 13:52 EST - Presley Flow v1.10.0 + Aggressive cache clearing
+const CACHE_NAME = 'meetcute-v7-presleyflow';
+const RUNTIME_CACHE = 'meetcute-runtime-v7';
 
 // Assets to cache on install
 // Logo URLs include timestamp to force cache refresh
-const LOGO_TIMESTAMP = '20251107141500'; // YYYYMMDDHHMMSS
+const LOGO_TIMESTAMP = '20251108135200'; // YYYYMMDDHHMMSS - Updated for Presley Flow v1.10.0
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -21,6 +21,7 @@ const PRECACHE_ASSETS = [
   `/icons/meetcute-logo.png?v=${LOGO_TIMESTAMP}`,
   `/icons/icon-192x192.png?v=${LOGO_TIMESTAMP}`,
   `/icons/icon-512x512.png?v=${LOGO_TIMESTAMP}`,
+  `/icons/apple-touch-icon.png?v=${LOGO_TIMESTAMP}`,
 ];
 
 // Install event - cache critical assets
@@ -36,21 +37,35 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - AGGRESSIVELY clean up ALL old caches
 self.addEventListener('activate', (event) => {
-  console.log('🎬 Service Worker: Activating...');
+  console.log('🎬 Service Worker: Activating and clearing ALL old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
+      console.log('🎬 Found caches:', cacheNames);
       return Promise.all(
         cacheNames.map((cacheName) => {
+          // Delete ANY cache that doesn't match current version
           if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
-            console.log('🎬 Service Worker: Deleting old cache:', cacheName);
+            console.log('🗑️ Service Worker: DELETING old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
+      console.log('✅ Service Worker: All old caches cleared, claiming clients');
+      // Force all tabs to use new service worker immediately
       return self.clients.claim();
+    }).then(() => {
+      // Notify all clients to reload for fresh content
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: 'CACHE_UPDATED',
+            version: CACHE_NAME,
+          });
+        });
+      });
     })
   );
 });

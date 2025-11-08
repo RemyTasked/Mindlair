@@ -1,13 +1,22 @@
 # Meet Cute - Robots.txt
+# Allow all search engines to crawl the site
+
 User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemap location
 Sitemap: https://www.meetcuteai.com/sitemap.xml
 
-# Disallow private routes
-Disallow: /dashboard
+# Disallow admin/API routes from indexing
 Disallow: /api/
-Disallow: /settings
-Disallow: /scene
+Disallow: /admin/
 
+# Allow important pages
+Allow: /
+Allow: /dashboard
+Allow: /settings
+Allow: /privacy
+Allow: /terms
+
+# Crawl delay (optional, 1 second between requests)
+Crawl-delay: 1
