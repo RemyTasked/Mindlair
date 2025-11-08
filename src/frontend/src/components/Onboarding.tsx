@@ -20,7 +20,7 @@ interface OnboardingProps {
   onComplete: () => void;
 }
 
-export default function Onboarding({ userId, onComplete }: OnboardingProps) {
+export default function Onboarding({ onComplete }: OnboardingProps) {
   const [currentScene, setCurrentScene] = useState(0);
   const [data, setData] = useState<OnboardingData>({
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,

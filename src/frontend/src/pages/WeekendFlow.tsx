@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Moon, Sparkles, Heart } from 'lucide-react';
 
 type ResetTone = 'calm' | 'creative' | 'reflective';
 
 export default function WeekendFlow() {
-  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [selectedTone, setSelectedTone] = useState<ResetTone | null>(null);
   const [phase, setPhase] = useState<'select' | 'experience' | 'complete'>('select');
