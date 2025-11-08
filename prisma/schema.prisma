@@ -185,6 +185,7 @@ model Meeting {
   postMeetingEmailSent Boolean @default(false)
   postMeetingEmailSentAt DateTime?
   meetingRating   Int?      // 1-5 star rating
+  meetingMood     String?   // User's mood during meeting: confident, calm, energized, focused, overwhelmed, uncertain
   
   // Post-meeting reflection (new cinematic system)
   reflectionRating    String?   // "great", "neutral", "draining"

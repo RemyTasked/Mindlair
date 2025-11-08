@@ -11,8 +11,18 @@ interface MeetingData {
   endTime: string;
   meetingRating: number | null;
   meetingFeedback: string | null;
+  meetingMood: string | null;
   ratedAt: string | null;
 }
+
+const MOOD_OPTIONS = [
+  { value: 'confident', label: 'Confident', emoji: '💪', color: 'from-blue-500 to-cyan-500' },
+  { value: 'calm', label: 'Calm', emoji: '😌', color: 'from-green-500 to-teal-500' },
+  { value: 'energized', label: 'Energized', emoji: '⚡', color: 'from-yellow-500 to-orange-500' },
+  { value: 'focused', label: 'Focused', emoji: '🎯', color: 'from-purple-500 to-indigo-500' },
+  { value: 'overwhelmed', label: 'Overwhelmed', emoji: '😰', color: 'from-red-500 to-pink-500' },
+  { value: 'uncertain', label: 'Uncertain', emoji: '🤔', color: 'from-gray-500 to-slate-500' },
+];
 
 export default function MeetingRating() {
   const { userId, meetingId } = useParams();
@@ -21,6 +31,7 @@ export default function MeetingRating() {
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [mood, setMood] = useState('');
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -37,6 +48,7 @@ export default function MeetingRating() {
       // If already rated, populate the form
       if (response.data.meeting.meetingRating) {
         setRating(response.data.meeting.meetingRating);
+        setMood(response.data.meeting.meetingMood || '');
         setFeedback(response.data.meeting.meetingFeedback || '');
         setSubmitted(true);
       }
@@ -55,6 +67,7 @@ export default function MeetingRating() {
     try {
       await api.post(`/api/rating/${userId}/${meetingId}`, {
         rating,
+        mood: mood || undefined,
         feedback: feedback.trim() || undefined,
       });
       
@@ -137,6 +150,33 @@ export default function MeetingRating() {
                       minute: '2-digit',
                     })}
                   </p>
+                </div>
+
+                {/* Mood Selection */}
+                <div className="mb-8">
+                  <label className="block text-gray-700 font-semibold mb-4 text-center text-lg">
+                    How did you feel during the scene?
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {MOOD_OPTIONS.map((moodOption) => (
+                      <motion.button
+                        key={moodOption.value}
+                        onClick={() => setMood(moodOption.value)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`p-4 rounded-xl border-2 transition-all ${
+                          mood === moodOption.value
+                            ? `bg-gradient-to-r ${moodOption.color} text-white border-transparent shadow-lg`
+                            : 'bg-white border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="text-3xl mb-2">{moodOption.emoji}</div>
+                        <div className={`font-semibold ${mood === moodOption.value ? 'text-white' : 'text-gray-700'}`}>
+                          {moodOption.label}
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Rating Stars */}
@@ -235,6 +275,17 @@ export default function MeetingRating() {
               </p>
 
               <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-lg mb-8">
+                {mood && (
+                  <div className="mb-4">
+                    <p className="text-gray-600 text-sm mb-2">You felt:</p>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-3xl">{MOOD_OPTIONS.find(m => m.value === mood)?.emoji}</span>
+                      <span className="text-xl font-semibold text-gray-800">
+                        {MOOD_OPTIONS.find(m => m.value === mood)?.label}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-center gap-2 mb-2">
                   {[...Array(rating)].map((_, i) => (
                     <Star key={i} size={24} className="fill-amber-400 text-amber-400" />

@@ -23,6 +23,7 @@ router.get(
         startTime: true,
         endTime: true,
         meetingRating: true,
+        meetingMood: true,
         meetingFeedback: true,
         ratedAt: true,
       },
@@ -39,6 +40,7 @@ router.get(
 // Submit meeting rating
 const ratingSchema = z.object({
   rating: z.number().min(1).max(5),
+  mood: z.enum(['confident', 'calm', 'energized', 'focused', 'overwhelmed', 'uncertain']).optional(),
   feedback: z.string().optional(),
 });
 
@@ -64,6 +66,7 @@ router.post(
       where: { id: meeting.id },
       data: {
         meetingRating: data.rating,
+        meetingMood: data.mood || null,
         meetingFeedback: data.feedback || null,
         ratedAt: new Date(),
       },

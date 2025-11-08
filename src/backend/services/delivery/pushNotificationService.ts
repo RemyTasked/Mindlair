@@ -118,7 +118,7 @@ class PushNotificationService {
     focusSceneUrl?: string
   ): Promise<boolean> {
     return this.sendToUser(userId, {
-      title: `Meeting in 10 minutes: ${meetingTitle}`,
+      title: `🎬 You're on in 5: ${meetingTitle}`,
       body: cueMessage,
       icon: '/logo.png',
       url: focusSceneUrl || '/dashboard',
