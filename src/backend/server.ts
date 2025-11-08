@@ -1,6 +1,6 @@
-// Meet Cute Backend Server - v1.10.0
+// Meet Cute Backend Server - v1.10.1
 // Includes: PWA Support, Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis, Winding Down Session, Onboarding Flow, Weekend Flow
-// Latest: Complete Presley Flow system + Mood reflection + TypeScript fixes
+// Latest: Fixed onboarding migration with idempotent SQL + Database column checks
 // Cache-Busting: Content hashes, Cache-Control headers, ETags, Service Worker versioning
 import express from 'express';
 import cors from 'cors';
