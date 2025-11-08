@@ -1019,18 +1019,18 @@ export default function Settings() {
             </div>
           </Section>
 
-          {/* Debug Section - Clear All Data */}
-          <Section title="🔧 Debug & Troubleshooting" id="debug" isExpanded={expandedSections.has('debug')} onToggle={toggleSection}>
+          {/* App Update Section */}
+          <Section title="✨ App Update" id="update" isExpanded={expandedSections.has('update')} onToggle={toggleSection}>
             <div className="space-y-6">
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-                <h3 className="font-semibold text-yellow-900 mb-2">Clear All Cached Data</h3>
-                <p className="text-sm text-yellow-800 mb-4">
-                  If you're experiencing issues with old logos, onboarding loops, or cached data, click this button to completely reset the app.
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-l-4 border-indigo-400 p-6 rounded-lg">
+                <h3 className="font-semibold text-indigo-900 mb-2">Refresh to Latest Version</h3>
+                <p className="text-sm text-indigo-800 mb-4">
+                  Get the latest features and improvements! This will refresh your app to ensure you have the newest version of Meet Cute.
                 </p>
                 <button
                   onClick={async () => {
-                    if (confirm('This will clear ALL cached data and reload the app. Your account and settings will remain intact. Continue?')) {
-                      console.log('🔥 Manual cache clear initiated...');
+                    if (confirm('Refresh Meet Cute to the latest version? Your account and settings will remain intact.')) {
+                      console.log('✨ App refresh initiated...');
                       
                       // Clear localStorage (except token)
                       const token = localStorage.getItem('meetcute_token');
@@ -1049,13 +1049,13 @@ export default function Settings() {
                         await Promise.all(registrations.map(r => r.unregister()));
                       }
                       
-                      alert('Cache cleared! The app will now reload.');
+                      alert('Refreshing to latest version! ✨');
                       window.location.reload();
                     }
                   }}
-                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg font-medium"
                 >
-                  🗑️ Clear All Cached Data & Reload
+                  ✨ Refresh to Latest Version
                 </button>
               </div>
             </div>
