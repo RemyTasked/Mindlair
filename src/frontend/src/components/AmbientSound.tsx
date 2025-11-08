@@ -52,8 +52,20 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       audio.preload = 'auto';
       audio.crossOrigin = 'anonymous'; // Enable CORS
       
-      // CRITICAL: Set playsinline for iOS
+      // CRITICAL iOS SILENT MODE BYPASS:
+      // These attributes tell iOS to treat this as media playback (like YouTube/Spotify)
+      // This allows audio to play even when the silent switch is on
       audio.setAttribute('playsinline', 'true');
+      audio.setAttribute('webkit-playsinline', 'true');
+      
+      // Set media session metadata - this makes iOS treat it as "media" not "sound effect"
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: 'Ambient Sound',
+          artist: 'Meet Cute',
+          album: 'Focus Session',
+        });
+      }
       
       // Add event listeners for debugging
       audio.addEventListener('canplay', () => {
