@@ -81,10 +81,28 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       
       console.log('✅ Onboarding complete! Calling onComplete callback...');
       onComplete();
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to save onboarding data:', error);
-      alert('Failed to save onboarding data. Please try again or contact support.');
-      // Don't call onComplete if save fails - let user retry
+      const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+      const errorDetails = JSON.stringify(error.response?.data || error, null, 2);
+      console.error('Error details:', errorDetails);
+      
+      // Ask user if they want to skip onboarding
+      const skipOnboarding = confirm(
+        `Failed to save onboarding data:\n\n${errorMessage}\n\n` +
+        `This might be a temporary issue. Would you like to:\n\n` +
+        `• Click OK to skip onboarding for now (you can access settings later)\n` +
+        `• Click Cancel to try again`
+      );
+      
+      if (skipOnboarding) {
+        console.log('⚠️ User chose to skip onboarding');
+        // Clear caches and proceed anyway
+        localStorage.removeItem('meetcute_profile_cache');
+        localStorage.removeItem('meetcute_session_active');
+        onComplete();
+      }
+      // If they click Cancel, don't call onComplete - let them retry
     }
   };
 
