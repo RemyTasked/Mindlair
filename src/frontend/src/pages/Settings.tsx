@@ -1019,6 +1019,48 @@ export default function Settings() {
             </div>
           </Section>
 
+          {/* Debug Section - Clear All Data */}
+          <Section title="🔧 Debug & Troubleshooting" id="debug" isExpanded={expandedSections.has('debug')} onToggle={toggleSection}>
+            <div className="space-y-6">
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                <h3 className="font-semibold text-yellow-900 mb-2">Clear All Cached Data</h3>
+                <p className="text-sm text-yellow-800 mb-4">
+                  If you're experiencing issues with old logos, onboarding loops, or cached data, click this button to completely reset the app.
+                </p>
+                <button
+                  onClick={async () => {
+                    if (confirm('This will clear ALL cached data and reload the app. Your account and settings will remain intact. Continue?')) {
+                      console.log('🔥 Manual cache clear initiated...');
+                      
+                      // Clear localStorage (except token)
+                      const token = localStorage.getItem('meetcute_token');
+                      localStorage.clear();
+                      if (token) localStorage.setItem('meetcute_token', token);
+                      
+                      // Clear all caches
+                      if ('caches' in window) {
+                        const names = await caches.keys();
+                        await Promise.all(names.map(name => caches.delete(name)));
+                      }
+                      
+                      // Unregister service workers
+                      if ('serviceWorker' in navigator) {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        await Promise.all(registrations.map(r => r.unregister()));
+                      }
+                      
+                      alert('Cache cleared! The app will now reload.');
+                      window.location.reload();
+                    }
+                  }}
+                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+                >
+                  🗑️ Clear All Cached Data & Reload
+                </button>
+              </div>
+            </div>
+          </Section>
+
           {/* Bottom save button removed - using header button only */}
         </div>
       </main>

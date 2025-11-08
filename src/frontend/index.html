@@ -112,6 +112,51 @@
     </script>
   </head>
   <body>
+    <!-- NUCLEAR CACHE CLEAR - Runs before ANYTHING else -->
+    <script>
+      (function() {
+        const FORCE_VERSION = '20251108140000'; // Nuclear version bump
+        const lastVersion = localStorage.getItem('meetcute_force_version');
+        
+        if (lastVersion !== FORCE_VERSION) {
+          console.log('🔥 NUCLEAR CACHE CLEAR - Forcing complete reset...');
+          
+          // Clear ALL localStorage
+          const keysToKeep = ['meetcute_token']; // Keep auth token
+          const savedToken = localStorage.getItem('meetcute_token');
+          localStorage.clear();
+          if (savedToken) localStorage.setItem('meetcute_token', savedToken);
+          
+          // Clear ALL caches
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              for (let name of names) {
+                console.log('🗑️ Deleting cache:', name);
+                caches.delete(name);
+              }
+            });
+          }
+          
+          // Unregister ALL service workers
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              for(let registration of registrations) {
+                console.log('🗑️ Unregistering service worker');
+                registration.unregister();
+              }
+            });
+          }
+          
+          // Set new version
+          localStorage.setItem('meetcute_force_version', FORCE_VERSION);
+          
+          // Force hard reload (bypass cache)
+          console.log('🔥 Forcing hard reload...');
+          window.location.reload(true);
+        }
+      })();
+    </script>
+    
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

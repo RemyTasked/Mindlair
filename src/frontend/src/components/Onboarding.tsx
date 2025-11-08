@@ -52,14 +52,18 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const handleComplete = async () => {
     try {
+      console.log('🎬 Onboarding: Saving preferences...');
+      
       // Save onboarding data to user profile
-      await api.patch(`/api/user/preferences`, {
+      const prefsResponse = await api.patch(`/api/user/preferences`, {
         morningFlowTime: data.workStart,
         eveningFlowTime: data.presleyFlowTime,
         tone: data.meetingComfort <= 2 ? 'supportive' : data.meetingComfort >= 4 ? 'confident' : 'balanced',
       });
+      console.log('✅ Preferences saved:', prefsResponse.data);
 
-      await api.post(`/api/user/onboarding`, {
+      console.log('🎬 Onboarding: Marking as completed...');
+      const onboardingResponse = await api.post(`/api/user/onboarding`, {
         workStart: data.workStart,
         workEnd: data.workEnd,
         focusGoals: data.focusGoals,
@@ -69,12 +73,18 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         directorsNote: data.directorsNote,
         completedAt: new Date().toISOString(),
       });
+      console.log('✅ Onboarding marked complete:', onboardingResponse.data);
 
+      // Clear ALL caches to force fresh data
+      localStorage.removeItem('meetcute_profile_cache');
+      localStorage.removeItem('meetcute_session_active');
+      
+      console.log('✅ Onboarding complete! Calling onComplete callback...');
       onComplete();
     } catch (error) {
-      console.error('Failed to save onboarding data:', error);
-      // Still complete onboarding even if save fails
-      onComplete();
+      console.error('❌ Failed to save onboarding data:', error);
+      alert('Failed to save onboarding data. Please try again or contact support.');
+      // Don't call onComplete if save fails - let user retry
     }
   };
 
