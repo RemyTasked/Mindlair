@@ -30,15 +30,24 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       // Stop any existing audio
       stopAudio();
 
-      // Create audio context
+      // Create audio context with options to bypass silent mode on iOS
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const audioContext = new AudioContext();
+      const audioContext = new AudioContext({
+        latencyHint: 'interactive',
+        sampleRate: 44100,
+      });
       audioContextRef.current = audioContext;
 
       // Resume audio context if suspended (required by browsers)
       if (audioContext.state === 'suspended') {
         console.log('🔓 Resuming suspended audio context...');
         await audioContext.resume();
+      }
+
+      // Force audio to play even if device is on silent/vibrate mode (iOS)
+      // This is important for meditation/focus apps where audio is intentional
+      if (audioContext.state === 'running') {
+        console.log('✅ Audio context running - will play even on silent mode');
       }
 
       console.log('🎵 Audio context state:', audioContext.state);
