@@ -5,13 +5,13 @@
 // - Server sends Cache-Control headers to prevent stale content
 // - Service worker cache version bumped on each deployment
 // - ETags enabled for efficient cache validation
-// DEPLOYMENT: 2025-11-08 16:07 EST - FRESH BUILD - All old logos removed
-const CACHE_NAME = 'meetcute-v10-fresh';
-const RUNTIME_CACHE = 'meetcute-runtime-v10';
+// DEPLOYMENT: 2025-11-08 17:15 EST - Audio fix + Favicon/OG image added
+const CACHE_NAME = 'meetcute-v11-audio-fix';
+const RUNTIME_CACHE = 'meetcute-runtime-v11';
 
 // Assets to cache on install
 // Logo URLs include timestamp to force cache refresh
-const LOGO_TIMESTAMP = '20251108160700'; // YYYYMMDDHHMMSS - UNIFIED across all files
+const LOGO_TIMESTAMP = '20251108171500'; // YYYYMMDDHHMMSS - UNIFIED across all files
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

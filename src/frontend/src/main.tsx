@@ -6,7 +6,7 @@ import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 // AGGRESSIVE CACHE CLEARING - Force clear old logo caches
-const CURRENT_VERSION = '20251108160700'; // UNIFIED timestamp
+const CURRENT_VERSION = '20251108171500'; // UNIFIED timestamp
 const clearOldCaches = async () => {
   const lastVersion = localStorage.getItem('meetcute_logo_version');
   

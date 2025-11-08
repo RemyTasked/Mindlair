@@ -16,6 +16,8 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   const location = useLocation();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [needsInteraction, setNeedsInteraction] = useState(true);
 
   // Sound URLs - using royalty-free ambient sounds
   const soundUrls: Record<string, string> = {
@@ -53,9 +55,16 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
       // Play the audio
       await audio.play();
+      setIsPlaying(true);
+      setNeedsInteraction(false);
       console.log('✅ Audio playing - works even on iOS silent mode!');
     } catch (error: any) {
       console.error('❌ Error playing audio:', error);
+      // If autoplay fails, show play button
+      if (error.name === 'NotAllowedError') {
+        console.log('⚠️ Autoplay blocked - user interaction required');
+        setNeedsInteraction(true);
+      }
     }
   };
 
@@ -65,7 +74,12 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       audioRef.current = null;
+      setIsPlaying(false);
     }
+  };
+
+  const handlePlayClick = async () => {
+    await initializeAudio();
   };
 
   const toggleMute = () => {
@@ -109,17 +123,35 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     return null;
   }
 
-  return (
-    <button
-      onClick={toggleMute}
-      className="fixed bottom-6 right-6 z-50 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200"
-      title={isMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
-    >
-      {isMuted ? (
-        <VolumeX className="w-5 h-5 text-gray-600" />
-      ) : (
-        <Volume2 className="w-5 h-5 text-indigo-600" />
-      )}
-    </button>
-  );
+  // Show play button if audio needs user interaction
+  if (needsInteraction && !isPlaying) {
+    return (
+      <button
+        onClick={handlePlayClick}
+        className="fixed bottom-6 right-6 z-50 p-4 bg-indigo-600 hover:bg-indigo-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white animate-pulse"
+        title="Play ambient sound"
+      >
+        <Volume2 className="w-6 h-6 text-white" />
+      </button>
+    );
+  }
+
+  // Show mute/unmute button when playing
+  if (isPlaying) {
+    return (
+      <button
+        onClick={toggleMute}
+        className="fixed bottom-6 right-6 z-50 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200"
+        title={isMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
+      >
+        {isMuted ? (
+          <VolumeX className="w-5 h-5 text-gray-600" />
+        ) : (
+          <Volume2 className="w-5 h-5 text-indigo-600" />
+        )}
+      </button>
+    );
+  }
+
+  return null;
 }
