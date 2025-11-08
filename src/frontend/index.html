@@ -35,17 +35,20 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#6366f1" />
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/meetcute-logo.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
-    <link rel="shortcut icon" href="/favicon.png" />
+    <!-- Preload critical logo to prevent flash of old logo -->
+    <link rel="preload" href="/icons/meetcute-logo.png?v=20251107141500" as="image" type="image/png" />
     
-    <!-- iOS-specific meta tags -->
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <!-- Favicon with cache-busting -->
+    <link rel="icon" type="image/png" href="/favicon.png?v=20251107141500" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/meetcute-logo.png?v=20251107141500" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png?v=20251107141500" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png?v=20251107141500" />
+    <link rel="shortcut icon" href="/favicon.png?v=20251107141500" />
+    
+    <!-- iOS-specific meta tags with cache-busting -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=20251107141500" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png?v=20251107141500" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20251107141500" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Meet Cute" />
