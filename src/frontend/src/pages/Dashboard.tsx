@@ -125,8 +125,8 @@ export default function Dashboard() {
       // Fetch meetings for next 2 days
       const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
 
-      // OPTIMIZED: Load ALL data in parallel for faster loading
-      const [userResponse, meetingsResponse, presleyResponse, windingDownResponse] = await Promise.all([
+      // OPTIMIZED: Load user + meetings first, then flows in parallel
+      const [userResponse, meetingsResponse] = await Promise.all([
         api.get('/api/user/profile'),
         api.get('/api/meetings', {
           params: {
@@ -134,11 +134,15 @@ export default function Dashboard() {
             endDate: twoDaysFromNow.toISOString(),
           },
         }),
-        api.get(`/api/presley-flow/check/${userId}`).catch(err => {
+      ]);
+
+      // Now load flows in parallel using the userId from userResponse
+      const [presleyResponse, windingDownResponse] = await Promise.all([
+        api.get(`/api/presley-flow/check/${userResponse.data.user.id}`).catch(err => {
           console.warn('⚠️ Presley Flow check failed (non-critical):', err.message);
           return { data: { available: false } };
         }),
-        api.get(`/api/winding-down/available/${userId}`).catch(err => {
+        api.get(`/api/winding-down/available/${userResponse.data.user.id}`).catch(err => {
           console.warn('⚠️ Winding Down check failed (non-critical):', err.message);
           return { data: { available: false } };
         }),
