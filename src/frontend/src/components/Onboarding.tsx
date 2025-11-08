@@ -54,7 +54,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     try {
       console.log('🎬 Onboarding: Saving preferences...');
       
-      // Save onboarding data to user profile (using PUT not PATCH)
+      // Save onboarding data to user profile
       const prefsResponse = await api.put(`/api/user/preferences`, {
         morningFlowTime: data.workStart,
         eveningFlowTime: data.presleyFlowTime,

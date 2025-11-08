@@ -185,7 +185,9 @@ export default function Dashboard() {
       
       // Show onboarding for users who haven't completed the new Presley Flow onboarding
       // This ensures everyone (including existing users) goes through the configuration
-      if (!userResponse.data.user.onboardingCompleted) {
+      const hasCompletedOnboarding = userResponse.data.user.onboardingCompleted || 
+                                      localStorage.getItem('meetcute_onboarding_completed') === 'true';
+      if (!hasCompletedOnboarding) {
         setShowOnboarding(true);
       }
       
