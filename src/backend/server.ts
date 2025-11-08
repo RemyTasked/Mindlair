@@ -1,7 +1,7 @@
-// Meet Cute Backend Server - v1.11.2
+// Meet Cute Backend Server - v1.11.3
 // Includes: PWA Support, Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis, Winding Down Session, Onboarding Flow, Weekend Flow
-// Latest: Audio with user interaction + Favicon/OG image for SEO + Auto-run migrations
-// Cache-Busting: Content hashes, Cache-Control headers, ETags, Service Worker v11
+// Latest: NEW LOGO FILENAME to bypass iOS aggressive caching + Audio + Migrations
+// Cache-Busting: New filename strategy, Service Worker v12, Content hashes
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

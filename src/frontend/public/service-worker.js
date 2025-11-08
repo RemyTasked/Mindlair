@@ -5,23 +5,21 @@
 // - Server sends Cache-Control headers to prevent stale content
 // - Service worker cache version bumped on each deployment
 // - ETags enabled for efficient cache validation
-// DEPLOYMENT: 2025-11-08 17:15 EST - Audio fix + Favicon/OG image added
-const CACHE_NAME = 'meetcute-v11-audio-fix';
-const RUNTIME_CACHE = 'meetcute-runtime-v11';
+// DEPLOYMENT: 2025-11-08 17:25 EST - New logo filename to bypass iOS cache
+const CACHE_NAME = 'meetcute-v12-new-logo-file';
+const RUNTIME_CACHE = 'meetcute-runtime-v12';
 
 // Assets to cache on install
-// Logo URLs include timestamp to force cache refresh
-const LOGO_TIMESTAMP = '20251108171500'; // YYYYMMDDHHMMSS - UNIFIED across all files
+// Using NEW filename that iOS has never cached before
+const LOGO_FILE = 'meetcute-clapperboard-v2.png'; // Completely new filename
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  `/favicon.png?v=${LOGO_TIMESTAMP}`,
-  `/og-image.png?v=${LOGO_TIMESTAMP}`,
-  `/icons/meetcute-logo.png?v=${LOGO_TIMESTAMP}`,
-  `/icons/icon-192x192.png?v=${LOGO_TIMESTAMP}`,
-  `/icons/icon-512x512.png?v=${LOGO_TIMESTAMP}`,
-  `/icons/apple-touch-icon.png?v=${LOGO_TIMESTAMP}`,
+  `/icons/${LOGO_FILE}`, // New logo file
+  `/icons/icon-192x192.png`,
+  `/icons/icon-512x512.png`,
+  `/icons/apple-touch-icon.png`,
 ];
 
 // Install event - cache critical assets
