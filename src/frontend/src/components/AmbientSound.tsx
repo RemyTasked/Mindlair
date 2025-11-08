@@ -13,7 +13,6 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   const location = useLocation();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   // Sound URLs - using royalty-free ambient sounds
   const soundUrls: Record<string, string> = {
@@ -51,11 +50,9 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
       // Play the audio
       await audio.play();
-      setIsPlaying(true);
       console.log('✅ Audio playing - works even on iOS silent mode!');
     } catch (error: any) {
       console.error('❌ Error playing audio:', error);
-      setIsPlaying(false);
     }
   };
 
@@ -65,7 +62,6 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       audioRef.current = null;
-      setIsPlaying(false);
     }
   };
 
