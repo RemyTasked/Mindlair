@@ -19,13 +19,13 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   const [isPlaying, setIsPlaying] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(true);
 
-  // Sound URLs - using royalty-free ambient sounds
+  // Sound URLs - using reliable royalty-free sources
   const soundUrls: Record<string, string> = {
-    'calm-ocean': 'https://cdn.pixabay.com/audio/2022/05/13/audio_2f888e9d83.mp3', // Ocean waves
-    'rain': 'https://cdn.pixabay.com/audio/2022/03/10/audio_c610232c26.mp3', // Rain sounds
-    'forest': 'https://cdn.pixabay.com/audio/2022/03/10/audio_24345a11d0.mp3', // Forest ambience
-    'white-noise': 'https://cdn.pixabay.com/audio/2023/10/30/audio_24b0e13f4c.mp3', // White noise
-    'meditation-bell': 'https://cdn.pixabay.com/audio/2022/03/24/audio_c610232c26.mp3', // Meditation bell
+    'calm-ocean': 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
+    'rain': 'https://assets.mixkit.co/active_storage/sfx/2413/2413-preview.mp3',
+    'forest': 'https://assets.mixkit.co/active_storage/sfx/2459/2459-preview.mp3',
+    'white-noise': 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
+    'meditation-bell': 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
   };
 
   const initializeAudio = async () => {
@@ -43,28 +43,60 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
       // Create new audio element
       const audio = new Audio();
-      audio.src = soundUrls[soundType] || soundUrls['white-noise'];
+      const audioUrl = soundUrls[soundType] || soundUrls['white-noise'];
+      console.log('🎵 Loading audio from:', audioUrl);
+      
+      audio.src = audioUrl;
       audio.loop = true;
       audio.volume = dimVolume ? 0.15 : 0.3;
       audio.preload = 'auto';
+      audio.crossOrigin = 'anonymous'; // Enable CORS
       
       // CRITICAL: Set playsinline for iOS
       audio.setAttribute('playsinline', 'true');
       
+      // Add event listeners for debugging
+      audio.addEventListener('canplay', () => {
+        console.log('✅ Audio can play');
+      });
+      
+      audio.addEventListener('error', (e) => {
+        console.error('❌ Audio error:', e);
+        console.error('Audio error details:', {
+          error: audio.error,
+          src: audio.src,
+          networkState: audio.networkState,
+          readyState: audio.readyState
+        });
+      });
+      
       audioRef.current = audio;
 
+      // Wait for audio to be ready
+      await new Promise((resolve, reject) => {
+        audio.addEventListener('canplaythrough', resolve, { once: true });
+        audio.addEventListener('error', reject, { once: true });
+        
+        // Timeout after 5 seconds
+        setTimeout(() => reject(new Error('Audio load timeout')), 5000);
+      });
+
       // Play the audio
+      console.log('🎵 Attempting to play audio...');
       await audio.play();
       setIsPlaying(true);
       setNeedsInteraction(false);
       console.log('✅ Audio playing - works even on iOS silent mode!');
     } catch (error: any) {
       console.error('❌ Error playing audio:', error);
-      // If autoplay fails, show play button
-      if (error.name === 'NotAllowedError') {
-        console.log('⚠️ Autoplay blocked - user interaction required');
-        setNeedsInteraction(true);
-      }
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      // Always show play button if there's any error
+      setNeedsInteraction(true);
     }
   };
 
