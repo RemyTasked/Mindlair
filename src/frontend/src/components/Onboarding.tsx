@@ -55,35 +55,25 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       console.log('🎬 Onboarding: Saving preferences...');
       
       // Save onboarding data to user profile (using PUT not PATCH)
-      try {
-        const prefsResponse = await api.put(`/api/user/preferences`, {
-          morningFlowTime: data.workStart,
-          eveningFlowTime: data.presleyFlowTime,
-          tone: data.meetingComfort <= 2 ? 'supportive' : data.meetingComfort >= 4 ? 'confident' : 'balanced',
-        });
-        console.log('✅ Preferences saved:', prefsResponse.data);
-      } catch (prefError: any) {
-        console.warn('⚠️ Failed to save preferences, continuing anyway:', prefError.message);
-      }
+      const prefsResponse = await api.put(`/api/user/preferences`, {
+        morningFlowTime: data.workStart,
+        eveningFlowTime: data.presleyFlowTime,
+        tone: data.meetingComfort <= 2 ? 'supportive' : data.meetingComfort >= 4 ? 'confident' : 'balanced',
+      });
+      console.log('✅ Preferences saved:', prefsResponse.data);
 
       console.log('🎬 Onboarding: Marking as completed...');
-      try {
-        const onboardingResponse = await api.post(`/api/user/onboarding`, {
-          workStart: data.workStart,
-          workEnd: data.workEnd,
-          focusGoals: data.focusGoals,
-          customGoal: data.customGoal,
-          meetingComfort: data.meetingComfort,
-          meetingsPerDay: data.meetingsPerDay,
-          directorsNote: data.directorsNote,
-          completedAt: new Date().toISOString(),
-        });
-        console.log('✅ Onboarding marked complete:', onboardingResponse.data);
-      } catch (onboardingError: any) {
-        console.warn('⚠️ Failed to save onboarding data (migration may not be run yet), continuing anyway:', onboardingError.message);
-        // Set a flag so we don't show onboarding again this session
-        localStorage.setItem('meetcute_onboarding_skipped', 'true');
-      }
+      const onboardingResponse = await api.post(`/api/user/onboarding`, {
+        workStart: data.workStart,
+        workEnd: data.workEnd,
+        focusGoals: data.focusGoals,
+        customGoal: data.customGoal,
+        meetingComfort: data.meetingComfort,
+        meetingsPerDay: data.meetingsPerDay,
+        directorsNote: data.directorsNote,
+        completedAt: new Date().toISOString(),
+      });
+      console.log('✅ Onboarding marked complete:', onboardingResponse.data);
 
       // Clear ALL caches to force fresh data
       localStorage.removeItem('meetcute_profile_cache');

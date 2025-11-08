@@ -5,13 +5,13 @@
 // - Server sends Cache-Control headers to prevent stale content
 // - Service worker cache version bumped on each deployment
 // - ETags enabled for efficient cache validation
-// DEPLOYMENT: 2025-11-08 15:07 EST - Presley Flow v1.10.0 + Mobile logo fix
-const CACHE_NAME = 'meetcute-v8-mobile-fix';
-const RUNTIME_CACHE = 'meetcute-runtime-v8';
+// DEPLOYMENT: 2025-11-08 15:38 EST - Presley Flow v1.10.1 + Unified timestamps
+const CACHE_NAME = 'meetcute-v9-unified';
+const RUNTIME_CACHE = 'meetcute-runtime-v9';
 
 // Assets to cache on install
 // Logo URLs include timestamp to force cache refresh
-const LOGO_TIMESTAMP = '20251108135200'; // YYYYMMDDHHMMSS - Updated for Presley Flow v1.10.0
+const LOGO_TIMESTAMP = '20251108153800'; // YYYYMMDDHHMMSS - UNIFIED across all files
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

@@ -189,9 +189,7 @@ export default function Dashboard() {
       
       // Show onboarding for users who haven't completed the new Presley Flow onboarding
       // This ensures everyone (including existing users) goes through the configuration
-      // Skip if user already skipped it this session
-      const hasSkipped = localStorage.getItem('meetcute_onboarding_skipped');
-      if (!userResponse.data.user.onboardingCompleted && !hasSkipped) {
+      if (!userResponse.data.user.onboardingCompleted) {
         setShowOnboarding(true);
       }
       
