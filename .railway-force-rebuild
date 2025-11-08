@@ -1,3 +1,4 @@
-Force rebuild: 20251108160622
+Force rebuild: 20251108161800
+Complete cache clear - HTML5 Audio implementation
 This file forces Railway to do a fresh build and clear all caches.
-
+Previous builds may have cached the old Web Audio API code.

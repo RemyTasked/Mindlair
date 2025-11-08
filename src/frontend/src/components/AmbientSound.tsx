@@ -1,3 +1,6 @@
+// HTML5 Audio implementation for iOS silent mode compatibility
+// Uses <audio> element instead of Web Audio API to bypass silent switch
+// Last updated: 2025-11-08 16:18 EST
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Volume2, VolumeX } from 'lucide-react';
