@@ -6,6 +6,44 @@ import { prisma } from '../utils/prisma';
 
 const router = express.Router();
 
+// Save onboarding data
+router.post(
+  '/onboarding',
+  authenticate,
+  asyncHandler(async (req: Request, res) => {
+    const {
+      workStart,
+      workEnd,
+      focusGoals,
+      customGoal,
+      meetingComfort,
+      meetingsPerDay,
+      directorsNote,
+      completedAt,
+    } = req.body;
+
+    // Update user with onboarding completion
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        onboardingCompleted: true,
+        onboardingData: {
+          workStart,
+          workEnd,
+          focusGoals,
+          customGoal,
+          meetingComfort,
+          meetingsPerDay,
+          directorsNote,
+          completedAt,
+        } as any,
+      },
+    });
+
+    res.json({ success: true, user });
+  })
+);
+
 // Get user profile
 router.get(
   '/profile',

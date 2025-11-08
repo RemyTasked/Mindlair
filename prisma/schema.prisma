@@ -18,6 +18,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Onboarding
+  onboardingCompleted Boolean @default(false)
+  onboardingData      Json?   // Stores: workStart, workEnd, focusGoals, customGoal, meetingComfort, meetingsPerDay, directorsNote
+
   // Calendar Integrations
   calendarAccounts CalendarAccount[]
 

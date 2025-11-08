@@ -10,6 +10,7 @@ import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import { LOGO_PATHS } from '../config/constants';
 import { getUserTimezone } from '../utils/timezone';
+import Onboarding from '../components/Onboarding';
 
 interface Meeting {
   id: string;
@@ -57,6 +58,7 @@ export default function Dashboard() {
   const [showReflectionModal, setShowReflectionModal] = useState(false);
   const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
   const [ambientSoundType, setAmbientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none'>('calm-ocean');
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
   // Determine time of day for Scene Library
   const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
@@ -184,6 +186,11 @@ export default function Dashboard() {
       setMeetings(meetingsResponse.data.meetings);
       setPresleyFlow(presleyData);
       setWindingDown(windingDownData);
+      
+      // Check if user needs onboarding
+      if (!userResponse.data.user.onboardingCompleted) {
+        setShowOnboarding(true);
+      }
       
       // Extract evening flow time from user preferences
       const userEveningFlowTime = userResponse.data.user?.preferences?.eveningFlowTime || '18:00';
@@ -318,6 +325,20 @@ export default function Dashboard() {
 
   if (loading) {
     return <DashboardSkeleton />;
+  }
+
+  // Show onboarding if user hasn't completed it
+  if (showOnboarding && user) {
+    return (
+      <Onboarding
+        userId={user.id}
+        onComplete={() => {
+          setShowOnboarding(false);
+          // Reload user data to reflect onboarding completion
+          loadUserData();
+        }}
+      />
+    );
   }
 
   return (
