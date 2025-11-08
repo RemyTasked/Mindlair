@@ -30,6 +30,21 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       // Stop any existing audio
       stopAudio();
 
+      // CRITICAL iOS FIX: Create a silent audio element to unlock audio playback
+      // This allows Web Audio API to work even when device is on silent/vibrate mode
+      const silentAudio = new Audio();
+      silentAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhAC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4T/////////////////////////////////////////////////////////////////';
+      silentAudio.loop = true;
+      silentAudio.volume = 0.01; // Nearly silent
+      
+      // Play the silent audio to unlock iOS audio
+      try {
+        await silentAudio.play();
+        console.log('🔓 Silent audio playing - iOS audio unlocked');
+      } catch (err) {
+        console.warn('⚠️ Could not play silent audio:', err);
+      }
+
       // Create audio context with options to bypass silent mode on iOS
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContext({
@@ -42,12 +57,6 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       if (audioContext.state === 'suspended') {
         console.log('🔓 Resuming suspended audio context...');
         await audioContext.resume();
-      }
-
-      // Force audio to play even if device is on silent/vibrate mode (iOS)
-      // This is important for meditation/focus apps where audio is intentional
-      if (audioContext.state === 'running') {
-        console.log('✅ Audio context running - will play even on silent mode');
       }
 
       console.log('🎵 Audio context state:', audioContext.state);
@@ -63,7 +72,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
       setIsPlaying(true);
       setNeedsInteraction(false);
-      console.log('✅ Ambient sound started successfully!', { 
+      console.log('✅ Ambient sound started - will play even on silent mode!', { 
         state: audioContext.state,
         soundType 
       });

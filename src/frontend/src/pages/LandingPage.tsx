@@ -70,13 +70,13 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
           className="flex justify-center items-center"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <motion.img
               src={LOGO_PATHS.main}
               alt="Meet Cute Logo"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+              className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
             />
             <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Meet Cute

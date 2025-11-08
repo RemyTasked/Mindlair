@@ -21,7 +21,7 @@ export default function Terms() {
             <img 
               src={LOGO_PATHS.main} 
               alt="Meet Cute Logo" 
-              className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+              className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
             />
             <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Meet Cute

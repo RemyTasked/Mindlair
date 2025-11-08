@@ -125,8 +125,8 @@ export default function Dashboard() {
       // Fetch meetings for next 2 days
       const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
 
-      // CRITICAL: Load user + meetings first (fast render)
-      const [userResponse, meetingsResponse] = await Promise.all([
+      // OPTIMIZED: Load ALL data in parallel for faster loading
+      const [userResponse, meetingsResponse, presleyResponse, windingDownResponse] = await Promise.all([
         api.get('/api/user/profile'),
         api.get('/api/meetings', {
           params: {
@@ -134,26 +134,18 @@ export default function Dashboard() {
             endDate: twoDaysFromNow.toISOString(),
           },
         }),
+        api.get(`/api/presley-flow/check/${userId}`).catch(err => {
+          console.warn('⚠️ Presley Flow check failed (non-critical):', err.message);
+          return { data: { available: false } };
+        }),
+        api.get(`/api/winding-down/available/${userId}`).catch(err => {
+          console.warn('⚠️ Winding Down check failed (non-critical):', err.message);
+          return { data: { available: false } };
+        }),
       ]);
 
-      // Check for Presley Flow (non-critical - don't fail if it errors)
-      let presleyData = { available: false };
-      try {
-        const presleyResponse = await api.get(`/api/presley-flow/check/${userResponse.data.user.id}`);
-        presleyData = presleyResponse.data;
-      } catch (presleyError: any) {
-        console.warn('⚠️ Presley Flow check failed (non-critical):', presleyError.message);
-        // Don't fail the whole dashboard load if Presley Flow check fails
-      }
-
-      // Check for Winding Down availability (non-critical)
-      let windingDownData = { available: false };
-      try {
-        const windingDownResponse = await api.get(`/api/winding-down/available/${userResponse.data.user.id}`);
-        windingDownData = windingDownResponse.data;
-      } catch (windingDownError: any) {
-        console.warn('⚠️ Winding Down check failed (non-critical):', windingDownError.message);
-      }
+      const presleyData = presleyResponse.data;
+      const windingDownData = windingDownResponse.data;
 
       console.log('✅ Critical data loaded', {
         userEmail: userResponse.data.user?.email,
@@ -355,7 +347,7 @@ export default function Dashboard() {
               <img 
                 src={LOGO_PATHS.main}
                 alt="Meet Cute Logo" 
-                className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+                className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
               />
               <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Meet Cute
