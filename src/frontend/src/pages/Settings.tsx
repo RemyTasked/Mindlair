@@ -465,8 +465,8 @@ export default function Settings() {
           <Section title="Presley Flow" id="presley" isExpanded={expandedSections.has('presley')} onToggle={toggleSection}>
             <div className="space-y-6">
               <Toggle
-                label="Enable Morning Flow"
-                description="Morning prep for today's meetings (default: 6:00 AM)"
+                label="Enable Morning Flow — 'Opening Scene'"
+                description="Scene opens: Today unfolds at your direction (default: 6:00 AM)"
                 checked={preferences.enableMorningFlow}
                 onChange={(checked) =>
                   setPreferences({ ...preferences, enableMorningFlow: checked })
@@ -493,8 +493,8 @@ export default function Settings() {
               )}
 
               <Toggle
-                label="Enable Evening Flow"
-                description="Daily wrap-up + tomorrow's mental rehearsal (default: 6:00 PM)"
+                label="Enable Evening Flow — 'Presley Flow Session'"
+                description="Camera wraps — rest easy, the next act awaits (default: 6:00 PM)"
                 checked={preferences.enableEveningFlow}
                 onChange={(checked) =>
                   setPreferences({ ...preferences, enableEveningFlow: checked })
@@ -521,8 +521,8 @@ export default function Settings() {
               )}
 
               <Toggle
-                label="Enable Winding Down Session"
-                description="Standalone deep breathing & relaxation before bed (default: 9:00 PM)"
+                label="Enable Winding Down Session — 'Evening Wind-Down'"
+                description="No calls, no scripts—just space to breathe and reset (default: 9:00 PM)"
                 checked={preferences.enableWindingDown}
                 onChange={(checked) =>
                   setPreferences({ ...preferences, enableWindingDown: checked })
@@ -555,23 +555,37 @@ export default function Settings() {
                     <div className="text-4xl">🎬</div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-2">
-                        Daily Rituals Explained
+                        The Presley Flow — Daily Cinematic Rhythm
                       </h3>
                       <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                        Three distinct rituals to frame your day with intention, reflection, and rest.
+                        A complete daily rhythm mirroring cinematic storytelling — from opening scene to final wrap.
                       </p>
-                      <ul className="text-sm text-gray-600 space-y-2">
+                      <ul className="text-sm text-gray-600 space-y-3">
                         <li>
-                          <strong>🌅 Morning Flow:</strong> Prep for today's meetings with AI-powered insights and intention-setting
+                          <strong>☀️ Morning Prep — 'Opening Scene':</strong><br/>
+                          <span className="text-gray-500 italic">"Scene opens: sunlight filters in. Today unfolds at your direction."</span><br/>
+                          Sets emotional theme, breathing ritual, and scene forecast for the day.
                         </li>
                         <li>
-                          <strong>🌙 Evening Flow:</strong> Reflect on today's outcomes, then mentally rehearse tomorrow's meetings
+                          <strong>⏰ Daytime — 'Scene-by-Scene':</strong><br/>
+                          <span className="text-gray-500 italic">"You're on in 5: Breathe and lead the moment."</span><br/>
+                          Pre-meeting cues 5 minutes before each meeting with focus mode.
                         </li>
                         <li>
-                          <strong>✨ Winding Down:</strong> Standalone deep breathing & visualization to prepare for restful sleep (separate from evening flow)
+                          <strong>🌙 Evening — 'Presley Flow Session':</strong><br/>
+                          <span className="text-gray-500 italic">"Camera wraps — rest easy, the next act awaits."</span><br/>
+                          Daily wrap-up + gentle preview of tomorrow's schedule.
                         </li>
-                        <li>• Guided visualization & breathing</li>
-                        <li>• Takes 3-7 minutes per session</li>
+                        <li>
+                          <strong>🌜 Winding Down — 'Evening Wind-Down':</strong><br/>
+                          <span className="text-gray-500 italic">"No calls, no scripts—just space."</span><br/>
+                          Standalone breathing and relaxation before sleep.
+                        </li>
+                        <li>
+                          <strong>🌙 Weekend — 'The Intermission':</strong><br/>
+                          <span className="text-gray-500 italic">"The stage rests. You've earned the pause."</span><br/>
+                          Choose your reset tone: Calm, Creative, or Reflective.
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -858,8 +872,8 @@ export default function Settings() {
                     />
                     
                     <Toggle
-                      label="Presley Flow (Morning & Evening)"
-                      description="Morning prep and evening mental rehearsal notifications"
+                      label="Presley Flow — 'Opening Scene' & 'Final Wrap'"
+                      description="Morning prep and evening cinematic reflection notifications"
                       checked={delivery.pushPresleyFlow}
                       onChange={(checked) =>
                         setDelivery({ ...delivery, pushPresleyFlow: checked })

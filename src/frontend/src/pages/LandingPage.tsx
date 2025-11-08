@@ -235,9 +235,98 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* The Presley Flow Section */}
+      <section className="container mx-auto px-6 py-20 relative z-10">
+        <h2 className="text-4xl font-bold text-center mb-4">The Presley Flow</h2>
+        <p className="text-center text-gray-600 mb-16 text-lg">
+          A complete daily rhythm mirroring cinematic storytelling
+        </p>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl border-2 border-yellow-200 shadow-lg"
+          >
+            <div className="text-4xl mb-3">☀️</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Morning Prep</h3>
+            <p className="text-sm text-gray-600 italic mb-2">"Opening Scene"</p>
+            <p className="text-sm text-gray-700">
+              Scene opens: sunlight filters in. Today unfolds at your direction.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border-2 border-blue-200 shadow-lg"
+          >
+            <div className="text-4xl mb-3">⏰</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Daytime Flow</h3>
+            <p className="text-sm text-gray-600 italic mb-2">"Scene-by-Scene"</p>
+            <p className="text-sm text-gray-700">
+              You're on in 5: Breathe and lead the moment. Pre-meeting cues with focus mode.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-2xl border-2 border-purple-200 shadow-lg"
+          >
+            <div className="text-4xl mb-3">🌙</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Evening Flow</h3>
+            <p className="text-sm text-gray-600 italic mb-2">"Presley Flow Session"</p>
+            <p className="text-sm text-gray-700">
+              Camera wraps — rest easy, the next act awaits. Daily wrap-up + tomorrow preview.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl border-2 border-indigo-200 shadow-lg"
+          >
+            <div className="text-4xl mb-3">🌜</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Winding Down</h3>
+            <p className="text-sm text-gray-600 italic mb-2">"Evening Wind-Down"</p>
+            <p className="text-sm text-gray-700">
+              No calls, no scripts—just space. Breathing and relaxation before sleep.
+            </p>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="max-w-4xl mx-auto p-8 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-300 shadow-xl"
+        >
+          <div className="text-center">
+            <div className="text-4xl mb-3">🎬</div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">Weekend — 'The Intermission'</h3>
+            <p className="text-gray-700 text-lg italic mb-2">
+              "The stage rests. You've earned the pause."
+            </p>
+            <p className="text-gray-600">
+              Choose your reset tone: Calm, Creative, or Reflective. Intentional rest for no-meeting days.
+            </p>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Features Section */}
       <section className="container mx-auto px-6 py-20 relative z-10">
-        <h2 className="text-4xl font-bold text-center mb-4">Beyond the 5-Minute Prep</h2>
+        <h2 className="text-4xl font-bold text-center mb-4">Beyond the Basics</h2>
         <p className="text-center text-gray-600 mb-16 text-lg">
           AI that learns and adapts to support you all day
         </p>
@@ -267,18 +356,8 @@ export default function LandingPage() {
             description="Reminders to breathe, walk, or pause"
           />
           <FeatureCard
-            icon={<Moon className="w-8 h-8 text-purple-600" />}
-            title="Evening Prep"
-            description="Preview tomorrow with stress insights"
-          />
-          <FeatureCard
-            icon={<Sun className="w-8 h-8 text-yellow-600" />}
-            title="Morning Boost"
-            description="Wake up with personalized confidence"
-          />
-          <FeatureCard
             icon={<Mail className="w-8 h-8 text-indigo-600" />}
-            title="Email + SMS"
+            title="Email + Push"
             description="Get cues however you prefer"
           />
           <FeatureCard
@@ -290,6 +369,16 @@ export default function LandingPage() {
             icon={<Star className="w-8 h-8 text-indigo-600" />}
             title="Meeting Ratings"
             description="Rate meetings, AI improves"
+          />
+          <FeatureCard
+            icon={<Sun className="w-8 h-8 text-yellow-600" />}
+            title="Scene Library"
+            description="Access focus sessions anytime"
+          />
+          <FeatureCard
+            icon={<Moon className="w-8 h-8 text-purple-600" />}
+            title="PWA Ready"
+            description="Install on your phone like an app"
           />
         </div>
       </section>
