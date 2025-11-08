@@ -5,9 +5,9 @@
 // - Server sends Cache-Control headers to prevent stale content
 // - Service worker cache version bumped on each deployment
 // - ETags enabled for efficient cache validation
-// DEPLOYMENT: 2025-11-08 13:52 EST - Presley Flow v1.10.0 + Aggressive cache clearing
-const CACHE_NAME = 'meetcute-v7-presleyflow';
-const RUNTIME_CACHE = 'meetcute-runtime-v7';
+// DEPLOYMENT: 2025-11-08 15:07 EST - Presley Flow v1.10.0 + Mobile logo fix
+const CACHE_NAME = 'meetcute-v8-mobile-fix';
+const RUNTIME_CACHE = 'meetcute-runtime-v8';
 
 // Assets to cache on install
 // Logo URLs include timestamp to force cache refresh

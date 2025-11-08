@@ -54,8 +54,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     try {
       console.log('🎬 Onboarding: Saving preferences...');
       
-      // Save onboarding data to user profile
-      const prefsResponse = await api.patch(`/api/user/preferences`, {
+      // Save onboarding data to user profile (using PUT not PATCH)
+      const prefsResponse = await api.put(`/api/user/preferences`, {
         morningFlowTime: data.workStart,
         eveningFlowTime: data.presleyFlowTime,
         tone: data.meetingComfort <= 2 ? 'supportive' : data.meetingComfort >= 4 ? 'confident' : 'balanced',
