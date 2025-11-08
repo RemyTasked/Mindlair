@@ -187,7 +187,8 @@ export default function Dashboard() {
       setPresleyFlow(presleyData);
       setWindingDown(windingDownData);
       
-      // Check if user needs onboarding
+      // Show onboarding for users who haven't completed the new Presley Flow onboarding
+      // This ensures everyone (including existing users) goes through the configuration
       if (!userResponse.data.user.onboardingCompleted) {
         setShowOnboarding(true);
       }
