@@ -335,6 +335,8 @@ export default function Dashboard() {
         userId={user.id}
         onComplete={() => {
           setShowOnboarding(false);
+          // Clear cached profile to force fresh data fetch
+          localStorage.removeItem('meetcute_profile_cache');
           // Reload user data to reflect onboarding completion
           loadUserData();
         }}

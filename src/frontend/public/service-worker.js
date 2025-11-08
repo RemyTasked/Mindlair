@@ -193,3 +193,11 @@ self.addEventListener('notificationclick', (event) => {
     );
   }
 });
+
+// Handle skip waiting message from client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('🎬 Service Worker: Received SKIP_WAITING message, activating immediately');
+    self.skipWaiting();
+  }
+});
