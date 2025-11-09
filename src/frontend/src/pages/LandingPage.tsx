@@ -145,17 +145,17 @@ export default function LandingPage() {
               </div>
               <div className="space-y-3 text-left bg-white rounded-xl p-6">
                 <div className="flex items-start gap-3">
+                  <div className="text-2xl">🎯</div>
+                  <div>
+                    <div className="font-semibold text-gray-800">5-Minute Pre-Meeting Prep</div>
+                    <div className="text-gray-600 text-sm">Guided preparation ritual 5 minutes before every meeting - breathe, center, prepare</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
                   <div className="text-2xl">💡</div>
                   <div>
                     <div className="font-semibold text-gray-800">Smart Meeting Cues</div>
                     <div className="text-gray-600 text-sm">AI analyzes your calendar and sends personalized cues before, during, and after meetings</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">🧘</div>
-                  <div>
-                    <div className="font-semibold text-gray-800">Adaptive Breathing</div>
-                    <div className="text-gray-600 text-sm">2-minute guided breathing matched to your current mind state</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
