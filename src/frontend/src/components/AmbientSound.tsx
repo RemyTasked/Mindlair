@@ -1,15 +1,34 @@
 // HTML5 Audio implementation for iOS silent mode compatibility
 // Uses <audio> element instead of Web Audio API to bypass silent switch
 // Last updated: 2025-11-08 16:18 EST
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Volume2, VolumeX } from 'lucide-react';
+
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
 
 type SoundType = 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
 
 const SAMPLE_RATE = 44100;
 const DURATION_SECONDS = 4;
-const audioCache = new Map<SoundType, string>();
+const dataUrlCache = new Map<SoundType, string>();
+const bufferCache = new Map<SoundType, AudioBuffer>();
+
+function getAudioBuffer(context: AudioContext, type: SoundType): AudioBuffer {
+  if (bufferCache.has(type)) {
+    return bufferCache.get(type)!;
+  }
+
+  const samples = generateSamples(type);
+  const buffer = context.createBuffer(1, samples.length, SAMPLE_RATE);
+  buffer.getChannelData(0).set(samples);
+  bufferCache.set(type, buffer);
+  return buffer;
+}
 
 function generateSamples(type: SoundType): Float32Array {
   const length = SAMPLE_RATE * DURATION_SECONDS;
@@ -85,8 +104,8 @@ function createDataUrl(type: SoundType): string {
     return '';
   }
 
-  if (audioCache.has(type)) {
-    return audioCache.get(type)!;
+  if (dataUrlCache.has(type)) {
+    return dataUrlCache.get(type)!;
   }
 
   const samples = generateSamples(type);
@@ -119,7 +138,7 @@ function createDataUrl(type: SoundType): string {
 
   const base64 = typeof btoa === 'function' ? btoa(binary) : Buffer.from(binary, 'binary').toString('base64');
   const dataUrl = `data:audio/wav;base64,${base64}`;
-  audioCache.set(type, dataUrl);
+  dataUrlCache.set(type, dataUrl);
   return dataUrl;
 }
 
@@ -132,37 +151,157 @@ interface AmbientSoundProps {
 
 export default function AmbientSound({ soundType, enabled, dimVolume = false, stopOnNavigation = true }: AmbientSoundProps) {
   const location = useLocation();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(true);
 
-  const startAudio = (source: string) => {
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const gainRef = useRef<GainNode | null>(null);
+  const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const supportsWebAudio =
+    typeof window !== 'undefined' &&
+    (!!window.AudioContext || !!window.webkitAudioContext);
+
+  const getVolume = useCallback(
+    (muted: boolean) => (muted ? 0 : dimVolume ? 0.15 : 0.3),
+    [dimVolume]
+  );
+
+  const cleanupSource = useCallback(() => {
+    if (sourceRef.current) {
+      try {
+        sourceRef.current.stop(0);
+      } catch (error) {
+        console.warn('⚠️ Error stopping WebAudio source', error);
+      }
+      sourceRef.current.disconnect();
+      sourceRef.current = null;
+    }
+    if (gainRef.current) {
+      gainRef.current.disconnect();
+      gainRef.current = null;
+    }
+  }, []);
+
+  const cleanupFallback = useCallback(() => {
+    if (fallbackAudioRef.current) {
+      fallbackAudioRef.current.pause();
+      fallbackAudioRef.current.currentTime = 0;
+      fallbackAudioRef.current = null;
+    }
+  }, []);
+
+  const stopAudio = useCallback(() => {
+    cleanupSource();
+    cleanupFallback();
+    setIsPlaying(false);
+  }, [cleanupFallback, cleanupSource]);
+
+  const ensureAudioContext = useCallback((): AudioContext | null => {
+    if (!supportsWebAudio) {
+      return null;
+    }
+
+    let context = audioContextRef.current;
+    if (!context) {
+      const AudioContextCtor =
+        (typeof window !== 'undefined' &&
+          (window.AudioContext || window.webkitAudioContext)) || null;
+
+      if (!AudioContextCtor) {
+        return null;
+      }
+
+      context = new AudioContextCtor({
+        sampleRate: SAMPLE_RATE,
+        latencyHint: 'interactive',
+      }) as AudioContext;
+
+      audioContextRef.current = context;
+    }
+
+    return context;
+  }, [supportsWebAudio]);
+
+  const startFallbackAudio = useCallback(async () => {
     if (!enabled || soundType === 'none') {
-      console.log('🔇 Audio disabled or sound type is none');
       stopAudio();
       return;
     }
 
+    const audioUrl = createDataUrl(soundType);
+    if (!audioUrl) {
+      throw new Error('No audio URL available for fallback playback');
+    }
+
+    cleanupSource();
+    cleanupFallback();
+
+    const audio = new Audio(audioUrl);
+    audio.loop = true;
+    audio.volume = getVolume(isMuted);
+    audio.preload = 'auto';
+    audio.setAttribute('playsinline', 'true');
+    audio.setAttribute('webkit-playsinline', 'true');
+
+    if (
+      typeof window !== 'undefined' &&
+      'MediaMetadata' in window &&
+      typeof navigator !== 'undefined' &&
+      'mediaSession' in navigator
+    ) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'Ambient Sound',
+        artist: 'Meet Cute',
+        album: 'Focus Session',
+      });
+    }
+
+    fallbackAudioRef.current = audio;
+
     try {
-      console.log(`🎵 Starting ambient sound [${source}]...`, { soundType });
-      stopAudio();
+      await audio.play();
+      setIsPlaying(true);
+      setNeedsInteraction(false);
+      localStorage.removeItem('meetcute_autoplay_sound');
+    } catch (error) {
+      console.warn('⚠️ Fallback audio play blocked', error);
+      setNeedsInteraction(true);
+      throw error;
+    }
+  }, [cleanupFallback, cleanupSource, enabled, getVolume, isMuted, soundType, stopAudio]);
 
-      const audio = new Audio();
-      const audioUrl = createDataUrl(soundType);
-      if (!audioUrl) {
-        console.warn('⚠️ No audio URL generated for soundType:', soundType);
-        return;
+  const startWebAudio = useCallback(
+    async (sourceLabel: string) => {
+      const context = ensureAudioContext();
+      if (!context) {
+        throw new Error('Web Audio API not available');
       }
-      audio.src = audioUrl;
-      audio.loop = true;
-      audio.volume = dimVolume ? 0.15 : 0.3;
-      audio.preload = 'auto';
-      audio.crossOrigin = 'anonymous';
-      audio.setAttribute('playsinline', 'true');
-      audio.setAttribute('webkit-playsinline', 'true');
 
-      if ('mediaSession' in navigator) {
+      cleanupFallback();
+      cleanupSource();
+
+      if (context.state === 'suspended' || context.state === 'interrupted') {
+        await context.resume();
+      }
+
+      const buffer = getAudioBuffer(context, soundType);
+      const gainNode = gainRef.current || context.createGain();
+      gainNode.gain.value = getVolume(isMuted);
+      const sourceNode = context.createBufferSource();
+      sourceNode.buffer = buffer;
+      sourceNode.loop = true;
+      sourceNode.connect(gainNode);
+      gainNode.connect(context.destination);
+
+      if (
+        typeof window !== 'undefined' &&
+        'MediaMetadata' in window &&
+        typeof navigator !== 'undefined' &&
+        'mediaSession' in navigator
+      ) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: 'Ambient Sound',
           artist: 'Meet Cute',
@@ -170,66 +309,75 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         });
       }
 
-      audio.addEventListener('error', (e) => {
-        console.error('❌ Audio error:', e);
-        setNeedsInteraction(true);
+      sourceNode.onended = () => {
+        if (sourceRef.current === sourceNode) {
+          sourceRef.current = null;
+          setIsPlaying(false);
+        }
+      };
+
+      sourceNode.start(0);
+      sourceRef.current = sourceNode;
+      gainRef.current = gainNode;
+
+      console.log(`🎵 WebAudio ambient sound started [${sourceLabel}]`, {
+        soundType,
       });
 
-      audioRef.current = audio;
+      setIsPlaying(true);
+      setNeedsInteraction(false);
+      localStorage.removeItem('meetcute_autoplay_sound');
+    },
+    [cleanupFallback, cleanupSource, ensureAudioContext, getVolume, isMuted, soundType]
+  );
 
-      const playPromise = audio.play();
-      if (playPromise && typeof playPromise.then === 'function') {
-        playPromise
-          .then(() => {
-            console.log('✅ Ambient sound playing');
-            setIsPlaying(true);
-            setNeedsInteraction(false);
-            localStorage.removeItem('meetcute_autoplay_sound');
-          })
-          .catch((err) => {
-            console.warn('⚠️ Audio play blocked:', err);
-            setNeedsInteraction(true);
-          });
-      } else {
-        setIsPlaying(true);
-        setNeedsInteraction(false);
-        localStorage.removeItem('meetcute_autoplay_sound');
+  const startAudio = useCallback(
+    async (sourceLabel: string) => {
+      if (!enabled || soundType === 'none') {
+        stopAudio();
+        return;
       }
-    } catch (error) {
-      console.error('❌ Error starting ambient sound:', error);
-      setNeedsInteraction(true);
-    }
-  };
 
-  const stopAudio = () => {
-    if (audioRef.current) {
-      console.log('🛑 Stopping audio...');
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current = null;
-      setIsPlaying(false);
-    }
-  };
+      try {
+        await startWebAudio(sourceLabel);
+      } catch (webAudioError) {
+        console.warn('⚠️ WebAudio failed, falling back to HTMLAudio', webAudioError);
+        try {
+          await startFallbackAudio();
+        } catch (fallbackError) {
+          console.error('❌ Unable to start ambient sound', fallbackError);
+          setNeedsInteraction(true);
+        }
+      }
+    },
+    [enabled, soundType, startWebAudio, startFallbackAudio, stopAudio]
+  );
 
-  const toggleMute = () => {
-    if (!audioRef.current) {
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      const volume = getVolume(next);
+
+      if (gainRef.current) {
+        gainRef.current.gain.value = volume;
+      }
+      if (fallbackAudioRef.current) {
+        fallbackAudioRef.current.volume = volume;
+      }
+
+      return next;
+    });
+  }, [getVolume]);
+
+  const handlePlayClick = useCallback(() => {
+    startAudio('manual-click');
+  }, [startAudio]);
+
+  useEffect(() => {
+    if (!enabled) {
       return;
     }
 
-    if (isMuted) {
-      audioRef.current.volume = dimVolume ? 0.15 : 0.3;
-      setIsMuted(false);
-    } else {
-      audioRef.current.volume = 0;
-      setIsMuted(true);
-    }
-  };
-
-  const handlePlayClick = () => {
-    startAudio('manual-click');
-  };
-
-  useEffect(() => {
     const playHandler = () => {
       console.log('🎵 ambient-sound-play event received');
       startAudio('event-dispatch');
@@ -249,15 +397,18 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       window.removeEventListener('ambient-sound-play', playHandler);
       window.removeEventListener('ambient-sound-stop', stopHandler);
     };
-  }, [soundType, enabled]);
+  }, [enabled, startAudio, stopAudio]);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const shouldAutoplay = localStorage.getItem('meetcute_autoplay_sound');
     if (shouldAutoplay === 'true') {
-      console.log('🎵 Autoplay flag detected - attempting to start ambient sound');
       startAudio('autoplay-flag');
     }
-  }, [enabled, soundType]);
+  }, [enabled, soundType, startAudio]);
 
   useEffect(() => {
     if (!enabled || !needsInteraction) {
@@ -269,38 +420,62 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       startAudio('user-gesture');
     };
 
-    window.addEventListener('pointerdown', gestureHandler, { once: true });
-    window.addEventListener('touchstart', gestureHandler, { once: true });
-    window.addEventListener('keydown', gestureHandler, { once: true });
+    const options: AddEventListenerOptions = { once: true };
+    window.addEventListener('pointerdown', gestureHandler, options);
+    window.addEventListener('touchstart', gestureHandler, options);
+    window.addEventListener('keydown', gestureHandler, options);
 
     return () => {
       window.removeEventListener('pointerdown', gestureHandler);
       window.removeEventListener('touchstart', gestureHandler);
       window.removeEventListener('keydown', gestureHandler);
     };
-  }, [enabled, needsInteraction, soundType]);
+  }, [enabled, needsInteraction, startAudio]);
 
-  // Update volume when dimVolume changes
   useEffect(() => {
-    if (audioRef.current && !isMuted) {
-      audioRef.current.volume = dimVolume ? 0.15 : 0.3;
+    if (!enabled) {
+      stopAudio();
+      setNeedsInteraction(true);
     }
-  }, [dimVolume, isMuted]);
+  }, [enabled, stopAudio]);
 
-  // Stop audio when navigating away (if enabled)
   useEffect(() => {
-    if (stopOnNavigation) {
-      return () => {
-        stopAudio();
-      };
+    if (!enabled || soundType === 'none') {
+      stopAudio();
+      return;
     }
-  }, [location.pathname, stopOnNavigation]);
+
+    if (isPlaying && !needsInteraction) {
+      startAudio('sound-change');
+    }
+  }, [enabled, soundType, isPlaying, needsInteraction, startAudio, stopAudio]);
+
+  useEffect(() => {
+    const volume = getVolume(isMuted);
+
+    if (gainRef.current) {
+      gainRef.current.gain.value = volume;
+    }
+    if (fallbackAudioRef.current) {
+      fallbackAudioRef.current.volume = volume;
+    }
+  }, [dimVolume, getVolume, isMuted]);
+
+  useEffect(() => {
+    if (!stopOnNavigation) {
+      return;
+    }
+
+    return () => {
+      stopAudio();
+      setNeedsInteraction(true);
+    };
+  }, [location.key, stopOnNavigation, stopAudio]);
 
   if (!enabled || soundType === 'none') {
     return null;
   }
 
-  // Show play button if audio needs user interaction
   if (needsInteraction && !isPlaying) {
     return (
       <button
@@ -313,7 +488,6 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     );
   }
 
-  // Show mute/unmute button when playing
   if (isPlaying) {
     return (
       <button
@@ -332,3 +506,4 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
   return null;
 }
+
