@@ -7,52 +7,59 @@ import { prisma } from '../utils/prisma';
 const router = express.Router();
 
 // Save onboarding data
+const onboardingSchema = z.object({
+  workStart: z.string(),
+  workEnd: z.string(),
+  focusGoals: z.array(z.string()).optional(),
+  customGoal: z.string().optional(),
+  meetingComfort: z.number().min(1).max(5),
+  meetingsPerDay: z.string(),
+  directorsNote: z.string().optional(),
+  completedAt: z.string().optional(),
+});
+
 router.post(
   '/onboarding',
   authenticate,
   asyncHandler(async (req: Request, res) => {
-    const {
-      workStart,
-      workEnd,
-      focusGoals,
-      customGoal,
-      meetingComfort,
-      meetingsPerDay,
-      directorsNote,
-      completedAt,
-    } = req.body;
+    console.log('📝 Onboarding save request:', {
+      userId: req.userId,
+      body: req.body,
+    });
+
+    // Validate input
+    const validated = onboardingSchema.parse(req.body);
 
     const saveOnboarding = async () => {
       return prisma.user.update({
         where: { id: req.userId },
         data: {
           onboardingCompleted: true,
-          onboardingData: {
-            workStart,
-            workEnd,
-            focusGoals,
-            customGoal,
-            meetingComfort,
-            meetingsPerDay,
-            directorsNote,
-            completedAt,
-          } as any,
+          onboardingData: validated as any,
         },
       });
     };
 
     try {
       const user = await saveOnboarding();
+      console.log('✅ Onboarding saved successfully:', { userId: req.userId });
       res.json({ success: true, user });
     } catch (error: any) {
       console.error('❌ Failed to save onboarding data:', {
         userId: req.userId,
-        error: error.message,
+        errorName: error.name,
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorMeta: error.meta,
         stack: error.stack,
       });
 
       const message = error.message || '';
-      const needsColumns = message.includes('onboardingCompleted') || message.includes('onboardingData');
+      const needsColumns = 
+        message.includes('onboardingCompleted') || 
+        message.includes('onboardingData') ||
+        message.includes('column') ||
+        error.code === 'P2010';
 
       if (needsColumns) {
         console.log('⚠️ Attempting to add missing onboarding columns on-the-fly...');
@@ -65,6 +72,7 @@ router.post(
           );
           console.log('✅ Onboarding columns ensured. Retrying save...');
           const user = await saveOnboarding();
+          console.log('✅ Onboarding saved after column creation:', { userId: req.userId });
           res.json({ success: true, user });
           return;
         } catch (migrationError: any) {
@@ -73,11 +81,20 @@ router.post(
             error: migrationError.message,
             stack: migrationError.stack,
           });
-          throw new AppError('Failed to save onboarding data. Please try again.', 500);
+          throw new AppError('Database migration failed. Please contact support.', 500);
         }
       }
 
-      throw new AppError('Failed to save onboarding data. Please try again.', 500);
+      // If it's a validation error from Zod, return specific message
+      if (error.name === 'ZodError') {
+        throw new AppError(`Invalid onboarding data: ${error.message}`, 400);
+      }
+
+      // Generic error
+      throw new AppError(
+        `Failed to save onboarding data: ${error.message || 'Unknown error'}`,
+        500
+      );
     }
   })
 );
@@ -339,4 +356,5 @@ router.patch(
 );
 
 export default router;
+
 

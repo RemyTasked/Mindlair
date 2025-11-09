@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
-import { asyncHandler } from '../middleware/errorHandler';
+import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { prisma } from '../utils/prisma';
 import { z } from 'zod';
 import { logger } from '../utils/logger';
@@ -93,19 +93,46 @@ router.put(
   authenticate,
   asyncHandler(async (req, res) => {
     const userId = req.userId!;
-    const data = cueSettingsSchema.parse(req.body);
-
-    const settings = await prisma.cueSettings.upsert({
-      where: { userId },
-      create: {
-        userId,
-        ...data,
-      },
-      update: data,
+    
+    console.log('📝 Cue settings save request:', {
+      userId,
+      body: req.body,
     });
 
-    logger.info('Cue settings updated', { userId, settings });
-    res.json(settings);
+    try {
+      const data = cueSettingsSchema.parse(req.body);
+
+      const settings = await prisma.cueSettings.upsert({
+        where: { userId },
+        create: {
+          userId,
+          ...data,
+        },
+        update: data,
+      });
+
+      logger.info('✅ Cue settings updated', { userId, settings });
+      res.json(settings);
+    } catch (error: any) {
+      console.error('❌ Failed to save cue settings:', {
+        userId,
+        errorName: error.name,
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorMeta: error.meta,
+        stack: error.stack,
+      });
+
+      if (error.name === 'ZodError') {
+        logger.error('Cue settings validation error', { userId, error: error.message });
+        throw new AppError(`Invalid cue settings: ${error.message}`, 400);
+      }
+
+      throw new AppError(
+        `Failed to save cue settings: ${error.message || 'Unknown error'}`,
+        500
+      );
+    }
   })
 );
 
