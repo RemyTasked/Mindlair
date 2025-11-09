@@ -81,6 +81,10 @@ function writeString(view: DataView, offset: number, str: string) {
 }
 
 function createDataUrl(type: SoundType): string {
+  if (type === 'none') {
+    return '';
+  }
+
   if (audioCache.has(type)) {
     return audioCache.get(type)!;
   }
@@ -155,6 +159,10 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
       const audio = new Audio();
       const audioUrl = createDataUrl(soundType);
+      if (!audioUrl) {
+        console.warn('⚠️ No audio URL generated for soundType:', soundType);
+        return;
+      }
       audio.src = audioUrl;
       audio.loop = true;
       audio.volume = dimVolume ? 0.15 : 0.3;
