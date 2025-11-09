@@ -1,7 +1,7 @@
 {
-  "name": "Meet Cute - Cinematic Meeting Preparation",
+  "name": "Meet Cute - 5-Minute Meeting Prep",
   "short_name": "Meet Cute",
-  "description": "Transform your meeting prep into a cinematic ritual. Calm, focused, intentional.",
+  "description": "AI-powered 5-minute pre-meeting preparation. Get cues, breathing exercises, and calming sounds before every meeting.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1e1b4b",
@@ -11,49 +11,49 @@
   "categories": ["productivity", "business", "lifestyle"],
   "icons": [
     {
-      "src": "/icons/icon-72x72.png?v=20251108192533",
+      "src": "/icons/icon-72x72.png?v=20251109175545",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-96x96.png?v=20251108192533",
+      "src": "/icons/icon-96x96.png?v=20251109175545",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-128x128.png?v=20251108192533",
+      "src": "/icons/icon-128x128.png?v=20251109175545",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-144x144.png?v=20251108192533",
+      "src": "/icons/icon-144x144.png?v=20251109175545",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-152x152.png?v=20251108192533",
+      "src": "/icons/icon-152x152.png?v=20251109175545",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-192x192.png?v=20251108192533",
+      "src": "/icons/icon-192x192.png?v=20251109175545",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-384x384.png?v=20251108192533",
+      "src": "/icons/icon-384x384.png?v=20251109175545",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png?v=20251108192533",
+      "src": "/icons/icon-512x512.png?v=20251109175545",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -73,14 +73,14 @@
       "short_name": "Home",
       "description": "View your dashboard",
       "url": "/dashboard",
-      "icons": [{ "src": "/icons/icon-96x96.png?v=20251108192533", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-96x96.png?v=20251109175545", "sizes": "96x96" }]
     },
     {
       "name": "Settings",
       "short_name": "Settings",
       "description": "Manage your preferences",
       "url": "/settings",
-      "icons": [{ "src": "/icons/icon-96x96.png?v=20251108192533", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-96x96.png?v=20251109175545", "sizes": "96x96" }]
     }
   ]
 }

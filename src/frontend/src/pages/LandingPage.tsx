@@ -102,18 +102,26 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+            className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
           >
-            Enter Every Meeting Centered
+            5 Minutes to Meeting Mastery
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-xl text-gray-700 mb-8 leading-relaxed max-w-3xl mx-auto"
+            className="text-xl sm:text-2xl text-gray-700 mb-4 leading-relaxed max-w-3xl mx-auto"
           >
-            5 minutes before your meeting, get an AI cue + guided breathing + ambient sounds.
-            <strong className="text-gray-900"> Walk in prepared, not panicked.</strong>
+            AI-powered pre-meeting preparation that transforms how you show up.
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto"
+          >
+            Get personalized cues, guided breathing, and calming sounds before every meeting. 
+            <strong className="text-gray-900"> Walk in prepared, composed, and confident.</strong>
           </motion.p>
           
           {/* Visual Preview */}
