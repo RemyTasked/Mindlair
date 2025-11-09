@@ -225,7 +225,36 @@ export default function Settings() {
       // Load Cue Companion settings
       const cueResponse = await api.get('/api/cues/settings');
       if (cueResponse.data) {
-        setCueSettings(cueResponse.data);
+        const data = cueResponse.data;
+
+        let parsedQuietHours: Array<{ start: string; end: string }> = [];
+        if (Array.isArray(data.quietHours)) {
+          parsedQuietHours = data.quietHours;
+        } else if (typeof data.quietHours === 'string' && data.quietHours.trim().length > 0) {
+          try {
+            const parsed = JSON.parse(data.quietHours);
+            if (Array.isArray(parsed)) {
+              parsedQuietHours = parsed;
+            }
+          } catch (parseError) {
+            console.warn('Unable to parse cue quietHours JSON', parseError);
+          }
+        }
+
+        const normalizedCueSettings: CueSettings = {
+          enabled: data.enabled ?? true,
+          tone: (data.tone === 'direct' ? 'direct' : 'calm'),
+          toastEnabled: data.toastEnabled ?? true,
+          slackEnabled: data.slackEnabled ?? false,
+          quietHours: parsedQuietHours,
+          cueFrequency: (data.cueFrequency === 'minimal' || data.cueFrequency === 'frequent')
+            ? data.cueFrequency
+            : 'balanced',
+          lowEnergyStart: data.lowEnergyStart || '14:00',
+          lowEnergyEnd: data.lowEnergyEnd || '16:00',
+        };
+
+        setCueSettings(normalizedCueSettings);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
