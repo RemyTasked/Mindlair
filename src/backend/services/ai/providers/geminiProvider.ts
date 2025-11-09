@@ -43,49 +43,70 @@ export class GeminiProvider implements AIProvider {
       throw new Error('Gemini API key not configured');
     }
 
-    try {
-      // Use gemini-1.5-flash for faster, cost-effective responses
-      // or gemini-1.5-pro for higher quality
-      const modelName = request.model || 'gemini-1.5-flash';
-      const model = this.client.getGenerativeModel({ model: modelName });
-
-      logger.info('Gemini request', {
-        model: modelName,
-        messageCount: request.messages.length,
-        temperature: request.temperature,
-      });
-
-      // Convert messages to Gemini format
-      const prompt = this.convertMessagesToPrompt(request.messages);
-
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: request.temperature ?? 0.7,
-          maxOutputTokens: request.maxTokens ?? 500,
-        },
-      });
-
-      const response = await result.response;
-      const content = response.text();
-
-      logger.info('Gemini response received', {
-        model: modelName,
-        contentLength: content.length,
-      });
-
-      return {
-        content,
-        provider: this.name,
-        model: modelName,
-        finishReason: response.candidates?.[0]?.finishReason || 'STOP',
-      };
-    } catch (error: any) {
-      logger.error('Gemini request failed', {
-        error: error.message,
-      });
-      throw new Error(`Gemini API error: ${error.message}`);
+    const preferredModels: string[] = [];
+    if (request.model) {
+      preferredModels.push(request.model);
+    } else {
+      preferredModels.push('gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-pro');
     }
+
+    let lastError: any = null;
+
+    for (const modelName of preferredModels) {
+      try {
+        const model = this.client.getGenerativeModel({ model: modelName });
+
+        logger.info('Gemini request', {
+          model: modelName,
+          messageCount: request.messages.length,
+          temperature: request.temperature,
+        });
+
+        const prompt = this.convertMessagesToPrompt(request.messages);
+
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: request.temperature ?? 0.7,
+            maxOutputTokens: request.maxTokens ?? 500,
+          },
+        });
+
+        const response = await result.response;
+        const content = response.text();
+
+        logger.info('Gemini response received', {
+          model: modelName,
+          contentLength: content.length,
+        });
+
+        return {
+          content,
+          provider: this.name,
+          model: modelName,
+          finishReason: response.candidates?.[0]?.finishReason || 'STOP',
+        };
+      } catch (error: any) {
+        lastError = error;
+        const message = error?.message || '';
+        logger.warn('Gemini model failed, trying fallback', {
+          attemptedModel: modelName,
+          error: message,
+        });
+
+        const isNotFound = message.includes('404') || message.includes('not found');
+        const isInvalidModel = message.includes('not supported') || message.includes('ListModels');
+
+        if (!isNotFound && !isInvalidModel && modelName === preferredModels[preferredModels.length - 1]) {
+          logger.error('Gemini request failed', {
+            error: message,
+          });
+          throw new Error(`Gemini API error: ${message}`);
+        }
+      }
+    }
+
+    throw new Error(`Gemini API error: ${lastError?.message || 'Unknown error'}`);
   }
 
   /**
