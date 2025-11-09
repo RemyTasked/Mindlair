@@ -277,18 +277,37 @@ export default function Settings() {
     setSaving(true);
     setMessage('');
 
+    if (cueSettings.slackEnabled && !slackStatus?.connected) {
+      setSaving(false);
+      setMessage('Connect Slack before enabling Slack cue notifications.');
+      setTimeout(() => setMessage(''), 4000);
+      return;
+    }
+
     try {
+      const cuePayload = {
+        enabled: cueSettings.enabled,
+        tone: cueSettings.tone,
+        toastEnabled: cueSettings.toastEnabled,
+        slackEnabled: cueSettings.slackEnabled,
+        quietHours: Array.isArray(cueSettings.quietHours) ? cueSettings.quietHours : [],
+        cueFrequency: cueSettings.cueFrequency,
+        lowEnergyStart: cueSettings.lowEnergyStart,
+        lowEnergyEnd: cueSettings.lowEnergyEnd,
+      };
+
       await Promise.all([
         api.put('/api/user/preferences', preferences),
         api.put('/api/user/delivery', delivery),
-        api.put('/api/cues/settings', cueSettings),
+        api.put('/api/cues/settings', cuePayload),
       ]);
 
       setMessage('Settings saved successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error saving settings:', error);
-      setMessage('Error saving settings');
+      const errorMessage = (error as any)?.response?.data?.error || 'Error saving settings';
+      setMessage(errorMessage);
     } finally {
       setSaving(false);
     }
