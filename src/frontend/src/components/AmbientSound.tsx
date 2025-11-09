@@ -45,34 +45,51 @@ function generateSamples(type: SoundType): Float32Array {
       break;
     }
     case 'rain': {
+      // Rain: High-frequency noise with occasional droplets
       for (let i = 0; i < length; i++) {
-        const noise = Math.random() * 2 - 1;
-        data[i] = noise * 0.3;
+        const t = i / SAMPLE_RATE;
+        const baseNoise = (Math.random() * 2 - 1) * 0.4;
+        // Add occasional "droplet" pings
+        const droplet = Math.sin(2 * Math.PI * (2000 + Math.random() * 1000) * t) * 
+                       Math.exp(-50 * (t % 0.1)) * 0.2;
+        data[i] = baseNoise + droplet;
       }
       break;
     }
     case 'forest': {
+      // Forest: Birds chirping, leaves rustling, gentle wind
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
-        const rustle = Math.sin(2 * Math.PI * 0.2 * t) * 0.2;
-        const chirp = Math.sin(2 * Math.PI * (4 + Math.sin(t * 0.5) * 2) * t) * 0.1;
-        const wind = (Math.random() * 2 - 1) * 0.2;
-        data[i] = rustle + chirp + wind;
+        const rustle = Math.sin(2 * Math.PI * 0.3 * t) * (Math.random() * 0.3);
+        const bird1 = Math.sin(2 * Math.PI * (1200 + Math.sin(t * 2) * 200) * t) * 
+                     Math.exp(-3 * (t % 1)) * 0.15;
+        const bird2 = Math.sin(2 * Math.PI * (800 + Math.sin(t * 1.5) * 150) * t) * 
+                     Math.exp(-4 * (t % 1.3)) * 0.1;
+        const wind = (Math.random() * 2 - 1) * 0.15;
+        data[i] = rustle + bird1 + bird2 + wind;
       }
       break;
     }
     case 'meditation-bell': {
+      // Meditation bell: Soft, resonant bell with harmonics
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
-        const envelope = Math.exp(-2 * t);
-        const bell = Math.sin(2 * Math.PI * 660 * t) * envelope;
-        data[i] = bell * 0.6;
+        const envelope = Math.exp(-1.5 * t);
+        const fundamental = Math.sin(2 * Math.PI * 440 * t);
+        const harmonic2 = Math.sin(2 * Math.PI * 880 * t) * 0.5;
+        const harmonic3 = Math.sin(2 * Math.PI * 1320 * t) * 0.25;
+        data[i] = (fundamental + harmonic2 + harmonic3) * envelope * 0.5;
       }
       break;
     }
     case 'white-noise': {
+      // White noise: Smooth, consistent static for focus
+      let prev = 0;
       for (let i = 0; i < length; i++) {
-        data[i] = (Math.random() * 2 - 1) * 0.25;
+        const noise = Math.random() * 2 - 1;
+        // Low-pass filter for smoother white noise
+        prev += 0.05 * (noise - prev);
+        data[i] = prev * 0.35;
       }
       break;
     }
