@@ -154,6 +154,29 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }
   }, []);
 
+  useEffect(() => {
+    if (!enabled || !needsInteraction) {
+      return;
+    }
+
+    const gestureHandler = () => {
+      console.log('🎵 User gesture detected - attempting to start ambient sound');
+      handlePlayClick().catch(() => {
+        // If still blocked, button remains visible
+      });
+    };
+
+    window.addEventListener('pointerdown', gestureHandler, { once: true });
+    window.addEventListener('touchstart', gestureHandler, { once: true });
+    window.addEventListener('keydown', gestureHandler, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', gestureHandler);
+      window.removeEventListener('touchstart', gestureHandler);
+      window.removeEventListener('keydown', gestureHandler);
+    };
+  }, [enabled, needsInteraction, soundType]);
+
   // Update volume when dimVolume changes
   useEffect(() => {
     if (audioRef.current && !isMuted) {
