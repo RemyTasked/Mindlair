@@ -22,25 +22,63 @@ router.post(
       completedAt,
     } = req.body;
 
-    // Update user with onboarding completion
-    const user = await prisma.user.update({
-      where: { id: req.userId },
-      data: {
-        onboardingCompleted: true,
-        onboardingData: {
-          workStart,
-          workEnd,
-          focusGoals,
-          customGoal,
-          meetingComfort,
-          meetingsPerDay,
-          directorsNote,
-          completedAt,
-        } as any,
-      },
-    });
+    const saveOnboarding = async () => {
+      return prisma.user.update({
+        where: { id: req.userId },
+        data: {
+          onboardingCompleted: true,
+          onboardingData: {
+            workStart,
+            workEnd,
+            focusGoals,
+            customGoal,
+            meetingComfort,
+            meetingsPerDay,
+            directorsNote,
+            completedAt,
+          } as any,
+        },
+      });
+    };
 
-    res.json({ success: true, user });
+    try {
+      const user = await saveOnboarding();
+      res.json({ success: true, user });
+    } catch (error: any) {
+      console.error('❌ Failed to save onboarding data:', {
+        userId: req.userId,
+        error: error.message,
+        stack: error.stack,
+      });
+
+      const message = error.message || '';
+      const needsColumns = message.includes('onboardingCompleted') || message.includes('onboardingData');
+
+      if (needsColumns) {
+        console.log('⚠️ Attempting to add missing onboarding columns on-the-fly...');
+        try {
+          await prisma.$executeRawUnsafe(
+            'ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false'
+          );
+          await prisma.$executeRawUnsafe(
+            'ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "onboardingData" JSONB'
+          );
+          console.log('✅ Onboarding columns ensured. Retrying save...');
+          const user = await saveOnboarding();
+          res.json({ success: true, user });
+          return;
+        } catch (migrationError: any) {
+          console.error('❌ Failed to add onboarding columns automatically:', {
+            userId: req.userId,
+            error: migrationError.message,
+            stack: migrationError.stack,
+          });
+          throw new AppError('Failed to save onboarding data. Please try again.', 500);
+        }
+      }
+
+      throw new AppError('Failed to save onboarding data. Please try again.', 500);
+    }
   })
 );
 

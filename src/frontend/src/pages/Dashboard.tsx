@@ -11,6 +11,7 @@ import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import { LOGO_PATHS } from '../config/constants';
 import { getUserTimezone } from '../utils/timezone';
 import Onboarding from '../components/Onboarding';
+import OnboardingWelcome from '../components/OnboardingWelcome';
 
 interface Meeting {
   id: string;
@@ -59,6 +60,7 @@ export default function Dashboard() {
   const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
   const [ambientSoundType, setAmbientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none'>('calm-ocean');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
   
   // Determine time of day for Scene Library
   const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
@@ -183,10 +185,10 @@ export default function Dashboard() {
       setPresleyFlow(presleyData);
       setWindingDown(windingDownData);
       
-      // Show onboarding for users who haven't completed the new Presley Flow onboarding
-      // This ensures everyone (including existing users) goes through the configuration
-      if (!userResponse.data.user.onboardingCompleted) {
+      const hasLocalCompletion = localStorage.getItem('meetcute_onboarding_completed') === 'true';
+      if (!userResponse.data.user.onboardingCompleted && !hasLocalCompletion) {
         setShowOnboarding(true);
+        setShowOnboardingWelcome(true);
       }
       
       // Extract evening flow time from user preferences
@@ -324,16 +326,19 @@ export default function Dashboard() {
     return <DashboardSkeleton />;
   }
 
-  // Show onboarding if user hasn't completed it
+  if (showOnboarding && showOnboardingWelcome) {
+    return <OnboardingWelcome onContinue={() => setShowOnboardingWelcome(false)} />;
+  }
+
   if (showOnboarding && user) {
     return (
       <Onboarding
         userId={user.id}
         onComplete={() => {
+          localStorage.setItem('meetcute_onboarding_completed', 'true');
           setShowOnboarding(false);
-          // Clear cached profile to force fresh data fetch
+          setShowOnboardingWelcome(false);
           localStorage.removeItem('meetcute_profile_cache');
-          // Reload user data to reflect onboarding completion
           loadUserData();
         }}
       />

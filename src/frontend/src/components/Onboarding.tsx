@@ -75,7 +75,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       });
       console.log('✅ Onboarding marked complete:', onboardingResponse.data);
 
-      // Clear ALL caches to force fresh data
+      localStorage.setItem('meetcute_onboarding_completed', 'true');
+
       localStorage.removeItem('meetcute_profile_cache');
       localStorage.removeItem('meetcute_session_active');
       
@@ -97,6 +98,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       
       if (skipOnboarding) {
         console.log('⚠️ User chose to skip onboarding');
+        localStorage.setItem('meetcute_onboarding_completed', 'true');
         // Clear caches and proceed anyway
         localStorage.removeItem('meetcute_profile_cache');
         localStorage.removeItem('meetcute_session_active');
