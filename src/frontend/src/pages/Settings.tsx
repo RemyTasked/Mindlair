@@ -195,12 +195,17 @@ export default function Settings() {
       // Check for cached profile first (instant load)
       const cachedProfile = localStorage.getItem('meetcute_profile_cache');
       if (cachedProfile) {
-        const cached = JSON.parse(cachedProfile);
-        if (cached.email) setUserEmail(cached.email);
-        if (cached.preferences) setPreferences(cached.preferences);
-        if (cached.deliverySettings) setDelivery(cached.deliverySettings);
-        if (cached.calendarAccounts) setCalendarAccounts(cached.calendarAccounts);
-        console.log('✅ Using cached profile in Settings');
+        try {
+          const cached = JSON.parse(cachedProfile);
+          if (cached.email) setUserEmail(cached.email);
+          if (cached.preferences) setPreferences(cached.preferences);
+          if (cached.deliverySettings) setDelivery(cached.deliverySettings);
+          if (cached.calendarAccounts) setCalendarAccounts(cached.calendarAccounts);
+          console.log('✅ Using cached profile in Settings');
+        } catch (parseError) {
+          console.warn('⚠️ Invalid cached profile, clearing cache', parseError);
+          localStorage.removeItem('meetcute_profile_cache');
+        }
       }
 
       // Fetch fresh data in background
@@ -301,6 +306,8 @@ export default function Settings() {
         api.put('/api/user/delivery', delivery),
         api.put('/api/cues/settings', cuePayload),
       ]);
+
+      await Promise.all([loadSettings(), loadSlackStatus()]);
 
       setMessage('Settings saved successfully!');
       setTimeout(() => setMessage(''), 3000);
