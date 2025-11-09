@@ -61,6 +61,11 @@ export function startScheduler() {
     await sendWindingDownNotifications();
   });
 
+  // Evaluate and dispatch cues every minute
+  cron.schedule('* * * * *', async () => {
+    await evaluateAndDispatchCues();
+  });
+
   logger.info('Scheduler initialized');
 }
 
@@ -1234,5 +1239,204 @@ async function sendWindingDownNotifications() {
       error: error.message,
     });
   }
+}
+
+async function evaluateAndDispatchCues() {
+  try {
+    const now = new Date();
+    
+    // Get all users with cue settings enabled
+    const users = await prisma.user.findMany({
+      include: {
+        cueSettings: true,
+        preferences: true,
+        calendarAccounts: true,
+        deliverySettings: true,
+      },
+    });
+
+    for (const user of users) {
+      try {
+        // Skip if cues disabled or no calendar
+        if (!user.cueSettings?.enabled || user.calendarAccounts.length === 0) {
+          continue;
+        }
+
+        // Get today's and tomorrow's meetings
+        const startOfToday = new Date(now);
+        startOfToday.setHours(0, 0, 0, 0);
+        
+        const endOfTomorrow = new Date(now);
+        endOfTomorrow.setDate(endOfTomorrow.getDate() + 1);
+        endOfTomorrow.setHours(23, 59, 59, 999);
+
+        const meetings = await prisma.meeting.findMany({
+          where: {
+            userId: user.id,
+            startTime: {
+              gte: startOfToday,
+              lte: endOfTomorrow,
+            },
+          },
+          orderBy: {
+            startTime: 'asc',
+          },
+        });
+
+        // Determine time-of-day bucket
+        const userTimezone = user.timezone || 'America/New_York';
+        const userHour = getUserCurrentHour(userTimezone);
+        let timeOfDayBucket: 'peak' | 'low-energy' | 'wind-down' | 'other' = 'other';
+        
+        if (userHour >= 9 && userHour < 11) {
+          timeOfDayBucket = 'peak';
+        } else if (userHour >= 14 && userHour < 16) {
+          timeOfDayBucket = 'low-energy';
+        } else if (userHour >= 17 && userHour < 19) {
+          timeOfDayBucket = 'wind-down';
+        }
+
+        // Check each meeting for cue opportunities
+        for (let i = 0; i < meetings.length; i++) {
+          const meeting = meetings[i];
+          const meetingStart = new Date(meeting.startTime);
+          const meetingEnd = new Date(meeting.endTime);
+          
+          // Skip if meeting already passed
+          if (meetingEnd < now) continue;
+
+          // Determine if back-to-back
+          const previousMeeting = i > 0 ? meetings[i - 1] : null;
+          const nextMeeting = i < meetings.length - 1 ? meetings[i + 1] : null;
+          const isBackToBack = previousMeeting && 
+            new Date(previousMeeting.endTime).getTime() + 5 * 60 * 1000 >= meetingStart.getTime();
+
+          // Get user mood if set
+          const mood = await prisma.meetingMood.findUnique({
+            where: {
+              meetingId_userId: {
+                meetingId: meeting.id,
+                userId: user.id,
+              },
+            },
+          });
+
+          // Evaluate cues for this meeting
+          const evaluateResponse = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3000'}/api/cues/evaluate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${generateInternalToken(user.id)}`,
+            },
+            body: JSON.stringify({
+              meetingId: meeting.id,
+              userId: user.id,
+              startTime: meeting.startTime.toISOString(),
+              endTime: meeting.endTime.toISOString(),
+              title: meeting.title,
+              attendeeCount: meeting.attendeeCount,
+              isBackToBack,
+              previousMeetingEnd: previousMeeting?.endTime.toISOString(),
+              nextMeetingStart: nextMeeting?.startTime.toISOString(),
+              timeOfDayBucket,
+              userMood: mood?.value,
+            }),
+          });
+
+          if (!evaluateResponse.ok) {
+            logger.error('Failed to evaluate cues', {
+              userId: user.id,
+              meetingId: meeting.id,
+              status: evaluateResponse.status,
+            });
+            continue;
+          }
+
+          const evaluateData = await evaluateResponse.json() as { cues: any[] };
+
+          // Dispatch cues that are due now
+          for (const cue of evaluateData.cues) {
+            const triggerTime = new Date(cue.triggerAt);
+            const timeDiff = triggerTime.getTime() - now.getTime();
+            
+            // Dispatch if trigger time is within next 2 minutes or past due
+            if (timeDiff <= 2 * 60 * 1000) {
+              // Check if already dispatched (store in telemetry or separate table)
+              const alreadyDispatched = await prisma.cueTelemetry.findFirst({
+                where: {
+                  cueId: cue.cueId,
+                  userId: user.id,
+                  action: 'dispatched',
+                },
+              });
+
+              if (alreadyDispatched) continue;
+
+              // Dispatch the cue
+              logger.info('📣 Dispatching cue', {
+                userId: user.id,
+                meetingId: meeting.id,
+                cueId: cue.cueId,
+                channel: cue.channel,
+                text: cue.text,
+              });
+
+              // Record dispatch in telemetry
+              await prisma.cueTelemetry.create({
+                data: {
+                  cueId: cue.cueId,
+                  meetingId: meeting.id,
+                  userId: user.id,
+                  action: 'dispatched',
+                  timestamp: now,
+                },
+              });
+
+              // Deliver via appropriate channel
+              if (cue.channel === 'toast') {
+                // Toast delivery happens via push notification for now
+                // TODO: Implement WebSocket for real-time toast delivery
+                if (user.deliverySettings?.pushEnabled) {
+                  await pushNotificationService.sendPresleyFlowNotification(
+                    user.id,
+                    'Cue Companion',
+                    cue.text,
+                    `/dashboard`
+                  );
+                }
+              } else if (cue.channel === 'slack') {
+                // Slack DM to self - skip for now, will implement in Phase 2
+                logger.info('Slack cue delivery not yet implemented', {
+                  userId: user.id,
+                  cueId: cue.cueId,
+                });
+              }
+            }
+          }
+        }
+      } catch (error: any) {
+        logger.error('Error evaluating cues for user', {
+          userId: user.id,
+          error: error.message,
+          stack: error.stack,
+        });
+      }
+    }
+  } catch (error: any) {
+    logger.error('Error in cue evaluation scheduler', {
+      error: error.message,
+      stack: error.stack,
+    });
+  }
+}
+
+// Helper to generate internal JWT for API calls
+function generateInternalToken(userId: string): string {
+  const jwt = require('jsonwebtoken');
+  return jwt.sign(
+    { userId, email: 'internal@meetcute.ai' },
+    process.env.JWT_SECRET || 'secret',
+    { expiresIn: '5m' }
+  );
 }
 
