@@ -51,14 +51,12 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       audio.volume = dimVolume ? 0.15 : 0.3;
       audio.preload = 'auto';
       audio.crossOrigin = 'anonymous'; // Enable CORS
+      audio.load();
       
       // CRITICAL iOS SILENT MODE BYPASS:
-      // These attributes tell iOS to treat this as media playback (like YouTube/Spotify)
-      // This allows audio to play even when the silent switch is on
       audio.setAttribute('playsinline', 'true');
       audio.setAttribute('webkit-playsinline', 'true');
       
-      // Set media session metadata - this makes iOS treat it as "media" not "sound effect"
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: 'Ambient Sound',
@@ -66,11 +64,6 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
           album: 'Focus Session',
         });
       }
-      
-      // Add event listeners for debugging
-      audio.addEventListener('canplay', () => {
-        console.log('✅ Audio can play');
-      });
       
       audio.addEventListener('error', (e) => {
         console.error('❌ Audio error:', e);
@@ -84,31 +77,16 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       
       audioRef.current = audio;
 
-      // Wait for audio to be ready
-      await new Promise((resolve, reject) => {
-        audio.addEventListener('canplaythrough', resolve, { once: true });
-        audio.addEventListener('error', reject, { once: true });
-        
-        // Timeout after 5 seconds
-        setTimeout(() => reject(new Error('Audio load timeout')), 5000);
-      });
-
-      // Play the audio
       console.log('🎵 Attempting to play audio...');
       await audio.play();
       setIsPlaying(true);
       setNeedsInteraction(false);
+      localStorage.removeItem('meetcute_autoplay_sound');
       console.log('✅ Audio playing - works even on iOS silent mode!');
     } catch (error: any) {
       console.error('❌ Error playing audio:', error);
-      console.error('Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
-      
-      // Always show play button if there's any error
       setNeedsInteraction(true);
+      throw error;
     }
   };
 
@@ -137,7 +115,11 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   };
 
   const handlePlayClick = async () => {
-    await initializeAudio();
+    try {
+      await initializeAudio();
+    } catch (err) {
+      console.warn('⚠️ Audio playback requires interaction:', err);
+    }
   };
 
   useEffect(() => {
@@ -165,9 +147,10 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   useEffect(() => {
     const shouldAutoplay = localStorage.getItem('meetcute_autoplay_sound');
     if (shouldAutoplay === 'true') {
-      console.log('🎵 Autoplay flag detected - starting ambient sound');
-      localStorage.removeItem('meetcute_autoplay_sound');
-      handlePlayClick();
+      console.log('🎵 Autoplay flag detected - attempting to start ambient sound');
+      handlePlayClick().catch(() => {
+        // Will fall back to manual play button
+      });
     }
   }, []);
 
