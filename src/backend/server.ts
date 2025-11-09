@@ -28,6 +28,7 @@ import pushNotificationRoutes from './routes/pushNotifications';
 import slackRoutes from './routes/slack';
 import reflectionRoutes from './routes/reflections';
 import windingDownRoutes from './routes/windingDown';
+import cuesRoutes from './routes/cues';
 import testRoutes from './routes/test';
 
 dotenv.config();
@@ -89,6 +90,7 @@ app.use('/api/push', pushNotificationRoutes);
 app.use('/api/slack', slackRoutes);
 app.use('/api/reflections', reflectionRoutes);
 app.use('/api/winding-down', windingDownRoutes);
+app.use('/api/cues', cuesRoutes);
 app.use('/api/test', testRoutes);
 
 // Serve static files from frontend build in production
