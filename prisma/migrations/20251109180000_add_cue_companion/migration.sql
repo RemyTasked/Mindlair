@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS "cue_settings" (
   "quietHours" JSONB NOT NULL DEFAULT '[]'::jsonb,
   "cueFrequency" TEXT NOT NULL DEFAULT 'balanced' CHECK ("cueFrequency" IN ('minimal', 'balanced', 'frequent')),
   "perMeetingOverrides" JSONB NOT NULL DEFAULT '{}'::jsonb,
-  "lowEnergyStart" TIME NOT NULL DEFAULT '14:00',
-  "lowEnergyEnd" TIME NOT NULL DEFAULT '16:00',
+  "lowEnergyStart" TEXT NOT NULL DEFAULT '14:00',
+  "lowEnergyEnd" TEXT NOT NULL DEFAULT '16:00',
   "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
   "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE("userId")

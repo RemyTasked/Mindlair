@@ -100,18 +100,29 @@ router.put(
     });
 
     try {
-      const data = cueSettingsSchema.parse(req.body);
+      const validated = cueSettingsSchema.parse(req.body);
+
+      // Prepare data for Prisma - ensure JSON fields are properly formatted
+      const prismaData: any = { ...validated };
+      
+      // Ensure quietHours and perMeetingOverrides are proper JSON
+      if (validated.quietHours !== undefined) {
+        prismaData.quietHours = validated.quietHours;
+      }
+      if (validated.perMeetingOverrides !== undefined) {
+        prismaData.perMeetingOverrides = validated.perMeetingOverrides;
+      }
 
       const settings = await prisma.cueSettings.upsert({
         where: { userId },
         create: {
           userId,
-          ...data,
+          ...prismaData,
         },
-        update: data,
+        update: prismaData,
       });
 
-      logger.info('✅ Cue settings updated', { userId, settings });
+      logger.info('✅ Cue settings updated', { userId });
       res.json(settings);
     } catch (error: any) {
       console.error('❌ Failed to save cue settings:', {
@@ -120,7 +131,7 @@ router.put(
         errorCode: error.code,
         errorMessage: error.message,
         errorMeta: error.meta,
-        stack: error.stack,
+        errorDetails: JSON.stringify(error, null, 2),
       });
 
       if (error.name === 'ZodError') {
