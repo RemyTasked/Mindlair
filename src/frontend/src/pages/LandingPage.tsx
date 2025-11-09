@@ -120,7 +120,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto"
           >
-            Get personalized cues, guided breathing, and calming sounds before every meeting. 
+            Get <strong className="text-indigo-700">smart meeting cues</strong>, guided breathing, and calming sounds before every meeting. 
             <strong className="text-gray-900"> Walk in prepared, composed, and confident.</strong>
           </motion.p>
           
@@ -145,24 +145,24 @@ export default function LandingPage() {
               </div>
               <div className="space-y-3 text-left bg-white rounded-xl p-6">
                 <div className="flex items-start gap-3">
-                  <div className="text-2xl">1️⃣</div>
+                  <div className="text-2xl">💡</div>
                   <div>
-                    <div className="font-semibold text-gray-800">AI Cue</div>
-                    <div className="text-gray-600 text-sm">Personalized prep message based on your patterns</div>
+                    <div className="font-semibold text-gray-800">Smart Meeting Cues</div>
+                    <div className="text-gray-600 text-sm">AI analyzes your calendar and sends personalized cues before, during, and after meetings</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="text-2xl">2️⃣</div>
-                  <div>
-                    <div className="font-semibold text-gray-800">Mind State Check</div>
-                    <div className="text-gray-600 text-sm">Select: Calm, Stressed, Focused, or Unclear</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">3️⃣</div>
+                  <div className="text-2xl">🧘</div>
                   <div>
                     <div className="font-semibold text-gray-800">Adaptive Breathing</div>
-                    <div className="text-gray-600 text-sm">Custom flow matched to your state + ambient sounds</div>
+                    <div className="text-gray-600 text-sm">2-minute guided breathing matched to your current mind state</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">🎵</div>
+                  <div>
+                    <div className="font-semibold text-gray-800">Calming Ambient Sounds</div>
+                    <div className="text-gray-600 text-sm">Ocean waves, rain, white noise - pick what centers you</div>
                   </div>
                 </div>
               </div>
