@@ -12,7 +12,6 @@ declare global {
 }
 
 type SoundType = 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
-
 const SAMPLE_RATE = 44100;
 const DURATION_SECONDS = 4;
 const dataUrlCache = new Map<SoundType, string>();
@@ -149,6 +148,36 @@ interface AmbientSoundProps {
   stopOnNavigation?: boolean;
 }
 
+async function unlockAudioContext(context: AudioContext) {
+  const initialState = context.state as string;
+  if (initialState === 'running') {
+    return;
+  }
+
+  try {
+    await context.resume();
+  } catch (error) {
+    console.warn('⚠️ AudioContext resume error', error);
+  }
+
+  const resumedState = context.state as string;
+  if (resumedState === 'running') {
+    return;
+  }
+
+  try {
+    const buffer = context.createBuffer(1, 1, 22050);
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    source.connect(context.destination);
+    source.start(0);
+    source.stop(context.currentTime + 0.001);
+    source.disconnect();
+  } catch (error) {
+    console.warn('⚠️ AudioContext unlock buffer failed', error);
+  }
+}
+
 export default function AmbientSound({ soundType, enabled, dimVolume = false, stopOnNavigation = true }: AmbientSoundProps) {
   const location = useLocation();
   const [isMuted, setIsMuted] = useState(false);
@@ -283,8 +312,9 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       cleanupFallback();
       cleanupSource();
 
-      if (context.state === 'suspended' || context.state === 'interrupted') {
-        await context.resume();
+      const contextState = context.state as string;
+      if (contextState !== 'running') {
+        await unlockAudioContext(context);
       }
 
       const buffer = getAudioBuffer(context, soundType);
@@ -415,8 +445,12 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       return;
     }
 
-    const gestureHandler = () => {
+    const gestureHandler = async () => {
       console.log('🎵 User gesture detected - attempting to start ambient sound');
+      const context = ensureAudioContext();
+      if (context) {
+        await unlockAudioContext(context);
+      }
       startAudio('user-gesture');
     };
 
@@ -430,7 +464,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       window.removeEventListener('touchstart', gestureHandler);
       window.removeEventListener('keydown', gestureHandler);
     };
-  }, [enabled, needsInteraction, startAudio]);
+  }, [enabled, needsInteraction, startAudio, ensureAudioContext]);
 
   useEffect(() => {
     if (!enabled) {
