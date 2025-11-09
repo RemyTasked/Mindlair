@@ -34,6 +34,20 @@ export default function PresleyFlow() {
   const [improvementNotes, setImprovementNotes] = useState('');
 
   useEffect(() => {
+    localStorage.setItem('meetcute_autoplay_sound', 'true');
+    window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+      detail: { source: 'presley-flow-page' }
+    }));
+
+    return () => {
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'presley-flow-page' }
+      }));
+    };
+  }, []);
+
+  useEffect(() => {
     loadFlowData();
   }, [userId, date]);
 

@@ -15,6 +15,20 @@ export default function WindingDown() {
   const [startTime] = useState(Date.now());
 
   useEffect(() => {
+    localStorage.setItem('meetcute_autoplay_sound', 'true');
+    window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+      detail: { source: 'winding-down-page' }
+    }));
+
+    return () => {
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'winding-down-page' }
+      }));
+    };
+  }, []);
+
+  useEffect(() => {
     fetchSessionData();
   }, [userId]);
 

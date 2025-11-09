@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Moon, Sparkles, Heart } from 'lucide-react';
@@ -9,6 +9,20 @@ export default function WeekendFlow() {
   const navigate = useNavigate();
   const [selectedTone, setSelectedTone] = useState<ResetTone | null>(null);
   const [phase, setPhase] = useState<'select' | 'experience' | 'complete'>('select');
+
+  useEffect(() => {
+    localStorage.setItem('meetcute_autoplay_sound', 'true');
+    window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+      detail: { source: 'weekend-flow-page' }
+    }));
+
+    return () => {
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'weekend-flow-page' }
+      }));
+    };
+  }, []);
 
   const tones = {
     calm: {

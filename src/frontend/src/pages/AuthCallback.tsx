@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { LOGO_PATHS } from '../config/constants';
 
 export default function AuthCallback() {
   const [searchParams] = useSearchParams();
@@ -57,7 +58,11 @@ export default function AuthCallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
       <div className="text-center">
-        <div className="text-6xl mb-4 animate-bounce">🎬</div>
+        <img
+          src={LOGO_PATHS.main}
+          alt="Meet Cute Logo"
+          className="w-20 h-20 mx-auto mb-4 animate-pulse"
+        />
         <h2 className="text-2xl font-semibold text-gray-800">Completing setup...</h2>
       </div>
     </div>

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import BreathingCircle from '../components/BreathingCircle';
+import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
+import AmbientSound from '../components/AmbientSound';
+import { LOGO_PATHS } from '../config/constants';
 
 export default function FocusSceneDemo() {
   const [currentPhase, setCurrentPhase] = useState<'intro' | 'breathing' | 'reflection' | 'complete'>('intro');
@@ -28,6 +30,20 @@ export default function FocusSceneDemo() {
   const startBreathing = () => {
     setCurrentPhase('breathing');
   };
+
+  useEffect(() => {
+    localStorage.setItem('meetcute_autoplay_sound', 'true');
+    window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+      detail: { source: 'focus-scene-demo' }
+    }));
+
+    return () => {
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'focus-scene-demo' }
+      }));
+    };
+  }, []);
 
   if (currentPhase === 'complete') {
     return (
@@ -58,6 +74,7 @@ export default function FocusSceneDemo() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 text-white overflow-hidden">
+      <AmbientSound soundType="calm-ocean" enabled stopOnNavigation={false} />
       <AnimatePresence mode="wait">
         {/* Intro Phase */}
         {currentPhase === 'intro' && (
@@ -74,7 +91,11 @@ export default function FocusSceneDemo() {
               transition={{ delay: 0.2 }}
               className="text-center max-w-2xl"
             >
-              <div className="text-6xl mb-8">🎬</div>
+              <img
+                src={LOGO_PATHS.main}
+                alt="Meet Cute Logo"
+                className="w-20 h-20 mx-auto mb-8"
+              />
               <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-200 to-pink-200">
                 {meeting.title}
               </h1>
@@ -121,7 +142,7 @@ export default function FocusSceneDemo() {
               Breathe & Center
             </motion.h2>
             
-            <BreathingCircle duration={4000} onComplete={handleBreathingComplete} />
+            <AdaptiveBreathingFlow duration={4000} onComplete={handleBreathingComplete} />
             
             <motion.p
               initial={{ y: 50, opacity: 0 }}

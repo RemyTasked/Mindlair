@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
+import { LOGO_PATHS } from '../config/constants';
 
 type MindState = 'calm' | 'stressed' | 'focused' | 'unclear';
 
@@ -33,6 +34,30 @@ export default function FocusScene() {
   useEffect(() => {
     loadMeetingData();
   }, [userId, meetingId]);
+
+  useEffect(() => {
+    if (!meeting) return;
+
+    if (meeting.soundPreferences?.enabled === false) {
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'focus-scene', meetingId: meetingId }
+      }));
+      return;
+    }
+
+    localStorage.setItem('meetcute_autoplay_sound', 'true');
+    window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+      detail: { source: 'focus-scene', meetingId: meetingId, soundType: meeting.soundPreferences?.soundType }
+    }));
+
+    return () => {
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'focus-scene', meetingId: meetingId }
+      }));
+    };
+  }, [meeting, meetingId]);
 
   const loadMeetingData = async () => {
     try {
@@ -213,7 +238,7 @@ export default function FocusScene() {
               className="text-center max-w-3xl relative z-10"
             >
               <motion.div 
-                className="text-6xl mb-8"
+                className="mb-8"
                 animate={{ 
                   rotate: [0, 5, -5, 0],
                   scale: [1, 1.1, 1]
@@ -224,7 +249,11 @@ export default function FocusScene() {
                   repeatDelay: 3
                 }}
               >
-                🎬
+                <img
+                  src={LOGO_PATHS.main}
+                  alt="Meet Cute Logo"
+                  className="w-20 h-20 mx-auto"
+                />
               </motion.div>
               <motion.h1 
                 className="text-5xl font-bold mb-6 text-balance"

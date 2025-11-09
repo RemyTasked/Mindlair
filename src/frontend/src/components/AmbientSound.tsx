@@ -126,26 +126,36 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     await initializeAudio();
   };
 
-  const toggleMute = () => {
-    if (audioRef.current) {
-      if (isMuted) {
-        audioRef.current.volume = dimVolume ? 0.15 : 0.3;
-        setIsMuted(false);
-      } else {
-        audioRef.current.volume = 0;
-        setIsMuted(true);
-      }
-    }
-  };
-
-  // Initialize audio when component mounts or settings change
   useEffect(() => {
-    initializeAudio();
+    const playHandler = () => {
+      console.log('🎵 ambient-sound-play event received');
+      handlePlayClick();
+    };
+
+    const stopHandler = () => {
+      console.log('🛑 ambient-sound-stop event received');
+      localStorage.removeItem('meetcute_autoplay_sound');
+      stopAudio();
+      setNeedsInteraction(true);
+    };
+
+    window.addEventListener('ambient-sound-play', playHandler);
+    window.addEventListener('ambient-sound-stop', stopHandler);
 
     return () => {
-      stopAudio();
+      window.removeEventListener('ambient-sound-play', playHandler);
+      window.removeEventListener('ambient-sound-stop', stopHandler);
     };
   }, [soundType, enabled]);
+
+  useEffect(() => {
+    const shouldAutoplay = localStorage.getItem('meetcute_autoplay_sound');
+    if (shouldAutoplay === 'true') {
+      console.log('🎵 Autoplay flag detected - starting ambient sound');
+      localStorage.removeItem('meetcute_autoplay_sound');
+      handlePlayClick();
+    }
+  }, []);
 
   // Update volume when dimVolume changes
   useEffect(() => {

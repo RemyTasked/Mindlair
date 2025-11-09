@@ -437,6 +437,12 @@ export default function Dashboard() {
               href={presleyFlow.presleyFlowUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                localStorage.setItem('meetcute_autoplay_sound', 'true');
+                window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+                  detail: { source: 'dashboard', flow: 'presley-flow' }
+                }));
+              }}
               className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               🎬 Start Flow
@@ -462,6 +468,12 @@ export default function Dashboard() {
               href={windingDown.windingDownUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                localStorage.setItem('meetcute_autoplay_sound', 'true');
+                window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+                  detail: { source: 'dashboard', flow: 'winding-down' }
+                }));
+              }}
               className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               🌙 Start Winding Down
@@ -726,6 +738,12 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                 href={meeting.focusSceneUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  localStorage.setItem('meetcute_autoplay_sound', 'true');
+                  window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+                    detail: { source: 'dashboard', flow: 'focus-session', meetingId: meeting.id }
+                  }));
+                }}
                 className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg text-center whitespace-nowrap"
               >
                 🎬 Start Focus Session

@@ -11,14 +11,28 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
 
   // Change sound type based on active scene
   useEffect(() => {
+    let soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none' = 'none';
+
     if (activeScene === 'listen') {
-      onSoundTypeChange('calm-ocean'); // Relaxing ocean waves
+      soundType = 'calm-ocean';
     } else if (activeScene === 'focus') {
-      onSoundTypeChange('white-noise'); // Focus-enhancing white noise
+      soundType = 'white-noise';
     } else if (activeScene === 'reflect') {
-      onSoundTypeChange('rain'); // Gentle rain for contemplation
+      soundType = 'rain';
+    }
+
+    onSoundTypeChange(soundType);
+
+    if (activeScene) {
+      localStorage.setItem('meetcute_autoplay_sound', 'true');
+      window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+        detail: { source: 'scene-library', sceneId: activeScene, soundType }
+      }));
     } else {
-      onSoundTypeChange('calm-ocean'); // Default calming sound
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'scene-library' }
+      }));
     }
   }, [activeScene, onSoundTypeChange]);
 

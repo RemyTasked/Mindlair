@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AuthCallback from './pages/AuthCallback';
+import { LOGO_PATHS } from './config/constants';
 
 // Lazy load heavy routes
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -19,7 +20,11 @@ const Privacy = lazy(() => import('./pages/Privacy'));
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
     <div className="text-center">
-      <div className="text-6xl mb-4 animate-bounce">🎬</div>
+      <img
+        src={LOGO_PATHS.main}
+        alt="Meet Cute Logo"
+        className="w-20 h-20 mx-auto mb-4 animate-pulse"
+      />
       <h2 className="text-2xl font-semibold text-gray-800">Loading...</h2>
     </div>
   </div>
