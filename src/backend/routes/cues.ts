@@ -257,62 +257,7 @@ function generateCues(
   const tone = settings.tone as 'calm' | 'direct';
   const channel = settings.toastEnabled ? 'toast' : settings.slackEnabled ? 'slack' : 'toast';
 
-  // Pre-meeting cues (5 min before)
-  const preMeetingTime = new Date(startTime.getTime() - 5 * 60 * 1000);
-  
-  if (data.isBackToBack) {
-    cues.push({
-      cueId: `pre-${data.meetingId}-back-to-back`,
-      triggerAt: preMeetingTime.toISOString(),
-      text: tone === 'calm' 
-        ? "Take one breath before you unmute." 
-        : "Back-to-back. Breathe first.",
-      channel,
-      actions: [
-        { label: 'Breathe 20s', action: 'breathe' },
-        { label: 'Hide', action: 'hide' },
-      ],
-    });
-  } else if (data.attendeeCount > 8) {
-    cues.push({
-      cueId: `pre-${data.meetingId}-large`,
-      triggerAt: preMeetingTime.toISOString(),
-      text: tone === 'calm'
-        ? "Big room. Lead with clarity."
-        : "Large meeting. Be clear.",
-      channel,
-      actions: [
-        { label: 'Focus Note', action: 'focus-note' },
-        { label: 'Hide', action: 'hide' },
-      ],
-    });
-  } else if (data.timeOfDayBucket === 'low-energy') {
-    cues.push({
-      cueId: `pre-${data.meetingId}-low-energy`,
-      triggerAt: preMeetingTime.toISOString(),
-      text: tone === 'calm'
-        ? "Energy dip zone. Hydrate + posture check."
-        : "Low energy window. Reset posture.",
-      channel,
-      actions: [
-        { label: 'Breathe 20s', action: 'breathe' },
-        { label: 'Hide', action: 'hide' },
-      ],
-    });
-  } else if (data.userMood === -1) {
-    cues.push({
-      cueId: `pre-${data.meetingId}-stressed`,
-      triggerAt: preMeetingTime.toISOString(),
-      text: tone === 'calm'
-        ? "Ground yourself. You've got this."
-        : "Stressed? One breath.",
-      channel,
-      actions: [
-        { label: 'Breathe 20s', action: 'breathe' },
-        { label: 'Hide', action: 'hide' },
-      ],
-    });
-  }
+  // Pre-meeting nudges handled via core "You're on in 5" flow (scheduler).
 
   // In-meeting cues
   if (frequency === 'balanced' || frequency === 'frequent') {

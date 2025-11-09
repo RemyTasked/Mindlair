@@ -10,6 +10,7 @@ import { smsService } from './delivery/smsService';
 import { pushNotificationService } from './delivery/pushNotificationService';
 import { logger } from '../utils/logger';
 import { analyzeMindStatePatterns } from './ai/mindStateAnalyzer';
+import { updateMeetingPresence } from './meetingPresence';
 
 /**
  * Get the current hour in the user's timezone
@@ -186,7 +187,16 @@ async function checkUpcomingMeetings() {
           }
 
           if (events) {
-            allEvents.push(...events);
+            const annotatedEvents = events.map((event: any) => ({
+              ...event,
+              calendarAccountId: account.id,
+              calendarLabel: account.label || `${account.provider} • ${account.email}`,
+              calendarColor: account.color,
+              calendarProvider: account.provider,
+              calendarEmail: account.email,
+            }));
+
+            allEvents.push(...annotatedEvents);
           }
         } catch (error: any) {
           logger.error('Error fetching calendar events', {
@@ -334,6 +344,10 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
       create: {
         userId: user.id,
         calendarEventId: event.id,
+        calendarAccountId: event.calendarAccountId,
+        calendarLabel: event.calendarLabel,
+        calendarColor: event.calendarColor,
+        calendarProvider: event.calendarProvider,
         title: event.summary,
         description: event.description,
         startTime: event.start,
@@ -356,6 +370,10 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         description: event.description,
         startTime: event.start,
         endTime: event.end,
+        calendarAccountId: event.calendarAccountId ?? undefined,
+        calendarLabel: event.calendarLabel ?? undefined,
+        calendarColor: event.calendarColor ?? undefined,
+        calendarProvider: event.calendarProvider ?? undefined,
         attendees: event.attendees,
         attendeeCount,
         location: event.location,
@@ -431,6 +449,29 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         );
         logger.info('✅ Push notification sent successfully', {
           userId: user.id,
+        });
+      }
+
+      // Record telemetry for pre-meeting cue dispatch to align with Cue Companion
+      const preCueId = `pre-${meeting.id}-youre-on-in-5`;
+      const existingPreCueTelemetry = await prisma.cueTelemetry.findFirst({
+        where: {
+          cueId: preCueId,
+          userId: user.id,
+          action: 'dispatched',
+        },
+      });
+
+      if (!existingPreCueTelemetry) {
+        await prisma.cueTelemetry.create({
+          data: {
+            cueId: preCueId,
+            meetingId: meeting.id,
+            userId: user.id,
+            action: 'dispatched',
+            actionType: 'pre-meeting',
+            timestamp: new Date(),
+          },
         });
       }
 
@@ -1283,6 +1324,10 @@ async function evaluateAndDispatchCues() {
           },
         });
 
+        const accountMap = new Map(
+          user.calendarAccounts.map((account: any) => [account.id, account])
+        );
+
         // Determine time-of-day bucket
         const userTimezone = user.timezone || 'America/New_York';
         const userHour = getUserCurrentHour(userTimezone);
@@ -1298,12 +1343,38 @@ async function evaluateAndDispatchCues() {
 
         // Check each meeting for cue opportunities
         for (let i = 0; i < meetings.length; i++) {
-          const meeting = meetings[i];
+          let meeting = meetings[i];
           const meetingStart = new Date(meeting.startTime);
           const meetingEnd = new Date(meeting.endTime);
           
           // Skip if meeting already passed
-          if (meetingEnd < now) continue;
+          if (meetingEnd < now && meeting.actualEndTime) {
+            continue;
+          }
+
+          const presence = await updateMeetingPresence(meeting, accountMap, now);
+          meeting = presence.meeting;
+          meetings[i] = meeting;
+
+          const actualStart = meeting.actualStartTime
+            ? new Date(meeting.actualStartTime)
+            : meetingStart;
+          const actualEnd = meeting.actualEndTime
+            ? new Date(meeting.actualEndTime)
+            : meetingEnd;
+
+          const hasStarted =
+            Boolean(meeting.actualStartTime) ||
+            presence.isActive ||
+            now.getTime() >= meetingStart.getTime() - 60 * 1000;
+          const hasEnded =
+            Boolean(meeting.actualEndTime) ||
+            presence.hasEnded ||
+            now.getTime() > actualEnd.getTime();
+
+          if (hasEnded && now.getTime() > actualEnd.getTime() + 10 * 60 * 1000) {
+            continue;
+          }
 
           // Determine if back-to-back
           const previousMeeting = i > 0 ? meetings[i - 1] : null;
@@ -1331,8 +1402,8 @@ async function evaluateAndDispatchCues() {
             body: JSON.stringify({
               meetingId: meeting.id,
               userId: user.id,
-              startTime: meeting.startTime.toISOString(),
-              endTime: meeting.endTime.toISOString(),
+              startTime: actualStart.toISOString(),
+              endTime: actualEnd.toISOString(),
               title: meeting.title,
               attendeeCount: meeting.attendeeCount,
               isBackToBack,
@@ -1358,6 +1429,26 @@ async function evaluateAndDispatchCues() {
           for (const cue of evaluateData.cues) {
             const triggerTime = new Date(cue.triggerAt);
             const timeDiff = triggerTime.getTime() - now.getTime();
+            const isPreCue = cue.cueId.startsWith('pre-');
+            const isMidCue = cue.cueId.startsWith('mid-');
+            const isEndCue = cue.cueId.startsWith('end-');
+            const isPostCue = cue.cueId.startsWith('post-');
+
+            if (isPreCue) {
+              continue; // handled by You're on in 5 flow
+            }
+
+            if (isMidCue && !hasStarted) {
+              continue;
+            }
+
+            if (isEndCue && (!hasStarted || hasEnded)) {
+              continue;
+            }
+
+            if (isPostCue && !hasEnded) {
+              continue;
+            }
             
             // Dispatch if trigger time is within next 2 minutes or past due
             if (timeDiff <= 2 * 60 * 1000) {
@@ -1379,6 +1470,8 @@ async function evaluateAndDispatchCues() {
                 cueId: cue.cueId,
                 channel: cue.channel,
                 text: cue.text,
+                hasStarted,
+                hasEnded,
               });
 
               // Record dispatch in telemetry

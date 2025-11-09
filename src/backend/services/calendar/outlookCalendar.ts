@@ -19,6 +19,9 @@ export class OutlookCalendarService {
     const scopes = [
       'User.Read',
       'Calendars.Read',
+      'Presence.Read',
+      'CallRecords.Read.All',
+      'OnlineMeetings.Read',
       'offline_access',
     ].join(' ');
 

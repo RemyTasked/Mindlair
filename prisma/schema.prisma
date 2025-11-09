@@ -168,6 +168,7 @@ model Meeting {
   calendarAccountId String?
   calendarLabel     String?
   calendarColor     String?
+  calendarProvider  String?
   
   calendarAccount CalendarAccount? @relation(fields: [calendarAccountId], references: [id], onDelete: SetNull)
   
@@ -184,6 +185,11 @@ model Meeting {
   isOrganizer     Boolean   @default(false) // Is user the meeting organizer/host?
   attendeeCount   Int       @default(0)     // Number of attendees in the meeting
   isBackToBack    Boolean   @default(false)
+  status          String    @default("scheduled") // scheduled, active, ended
+  statusSource    String?   // google_meet, microsoft_graph, heuristic
+  actualStartTime DateTime?
+  actualEndTime   DateTime?
+  lastPresenceCheck DateTime?
   
   // Cue delivery
   cueScheduledFor DateTime?
