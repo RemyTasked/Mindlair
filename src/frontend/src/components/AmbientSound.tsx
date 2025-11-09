@@ -137,15 +137,6 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   const [isPlaying, setIsPlaying] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(true);
 
-  // Sound URLs - using reliable royalty-free sources
-  const soundUrls: Record<string, string> = {
-    'calm-ocean': 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
-    'rain': 'https://assets.mixkit.co/active_storage/sfx/2413/2413-preview.mp3',
-    'forest': 'https://assets.mixkit.co/active_storage/sfx/2459/2459-preview.mp3',
-    'white-noise': 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
-    'meditation-bell': 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
-  };
-
   const startAudio = (source: string) => {
     if (!enabled || soundType === 'none') {
       console.log('🔇 Audio disabled or sound type is none');
