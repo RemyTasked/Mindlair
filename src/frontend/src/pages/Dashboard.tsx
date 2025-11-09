@@ -21,9 +21,27 @@ interface Meeting {
   cueDelivered: boolean;
   focusSceneOpened: boolean;
   focusSceneUrl?: string;
+  calendarLabel?: string;
+  calendarColor?: string | null;
+  calendarAccountId?: string | null;
   focusSession?: {
     completedAt: string | null;
   };
+}
+
+const DEFAULT_CALENDAR_COLOR = '#6366f1';
+
+function getContrastColor(hex?: string | null) {
+  if (!hex) return '#ffffff';
+  const sanitized = hex.replace('#', '');
+  if (sanitized.length !== 6) return '#ffffff';
+
+  const r = parseInt(sanitized.substring(0, 2), 16);
+  const g = parseInt(sanitized.substring(2, 4), 16);
+  const b = parseInt(sanitized.substring(4, 6), 16);
+
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? '#1f2937' : '#ffffff';
 }
 
 interface Stats {
@@ -714,9 +732,24 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
     timeUntilText = `In ${days}d ${remainingHours}h`;
   }
 
+  const badgeColor = meeting.calendarColor || DEFAULT_CALENDAR_COLOR;
+  const badgeStyle = meeting.calendarColor
+    ? { backgroundColor: badgeColor, color: getContrastColor(badgeColor) }
+    : undefined;
+  const badgeClass = meeting.calendarColor
+    ? 'px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm'
+    : 'px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700';
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors gap-3 sm:gap-4">
       <div className="flex-1 min-w-0">
+        {meeting.calendarLabel && (
+          <div className="mb-1">
+            <span className={badgeClass} style={badgeStyle}>
+              {meeting.calendarLabel}
+            </span>
+          </div>
+        )}
         <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{meeting.title}</h3>
         <div className="text-gray-600 text-sm sm:text-base space-y-0.5 sm:space-y-1">
           <div className="flex items-center gap-2">

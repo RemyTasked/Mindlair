@@ -12,6 +12,10 @@ export interface CalendarEvent {
   location?: string;
   hangoutLink?: string;
   isOrganizer?: boolean; // Is the user the organizer/host?
+  calendarLabel?: string;
+  calendarColor?: string | null;
+  calendarAccountId?: string;
+  calendarProvider?: string;
 }
 
 export class GoogleCalendarService {

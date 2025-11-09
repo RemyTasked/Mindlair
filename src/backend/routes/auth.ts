@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { outlookCalendarService } from '../services/calendar/outlookCalendar';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { authenticate } from '../middleware/auth';
 import { logger } from '../utils/logger';
 import { prisma } from '../utils/prisma';
 
@@ -134,27 +135,50 @@ router.get(
       expiresAt = new Date(validExpiry);
     }
     
-    await prisma.calendarAccount.upsert({
+    // Determine default label if not already set
+    const defaultLabel = `Google • ${userInfo.email}`;
+
+    // Check existing account for this email/provider
+    const existingAccount = await prisma.calendarAccount.findFirst({
       where: {
-        userId_provider: {
-          userId: user.id,
-          provider: 'google',
-        },
-      },
-      create: {
         userId: user.id,
         provider: 'google',
         email: userInfo.email,
-        accessToken: tokens.access_token!,
-        refreshToken: tokens.refresh_token || null,
-        expiresAt: expiresAt,
-      },
-      update: {
-        accessToken: tokens.access_token!,
-        refreshToken: tokens.refresh_token || undefined,
-        expiresAt: expiresAt || undefined,
       },
     });
+
+    if (!existingAccount) {
+      // If first Google calendar, set as primary
+      const existingGoogleAccounts = await prisma.calendarAccount.findMany({
+        where: { userId: user.id, provider: 'google' },
+      });
+
+      const isPrimary = existingGoogleAccounts.length === 0;
+
+      await prisma.calendarAccount.create({
+        data: {
+          userId: user.id,
+          provider: 'google',
+          email: userInfo.email,
+          label: defaultLabel,
+          color: null,
+          isPrimary,
+          accessToken: tokens.access_token!,
+          refreshToken: tokens.refresh_token || null,
+          expiresAt,
+        },
+      });
+    } else {
+      await prisma.calendarAccount.update({
+        where: { id: existingAccount.id },
+        data: {
+          accessToken: tokens.access_token!,
+          refreshToken: tokens.refresh_token || undefined,
+          expiresAt: expiresAt || undefined,
+          label: existingAccount.label?.trim() ? undefined : defaultLabel,
+        },
+      });
+    }
 
     logger.info('📝 Stored Google calendar account', { 
       userId: user.id, 
@@ -269,27 +293,48 @@ router.get(
       86400
     );
     
-    await prisma.calendarAccount.upsert({
+    const defaultLabel = `Microsoft • ${userInfo.email}`;
+
+    const existingAccount = await prisma.calendarAccount.findFirst({
       where: {
-        userId_provider: {
-          userId: user.id,
-          provider: 'microsoft',
-        },
-      },
-      create: {
         userId: user.id,
         provider: 'microsoft',
         email: userInfo.email,
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token || null,
-        expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
-      },
-      update: {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token || undefined,
-        expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
       },
     });
+
+    const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
+
+    if (!existingAccount) {
+      const existingMicrosoftAccounts = await prisma.calendarAccount.findMany({
+        where: { userId: user.id, provider: 'microsoft' },
+      });
+      const isPrimary = existingMicrosoftAccounts.length === 0;
+
+      await prisma.calendarAccount.create({
+        data: {
+          userId: user.id,
+          provider: 'microsoft',
+          email: userInfo.email,
+          label: defaultLabel,
+          color: null,
+          isPrimary,
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token || null,
+          expiresAt,
+        },
+      });
+    } else {
+      await prisma.calendarAccount.update({
+        where: { id: existingAccount.id },
+        data: {
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token || undefined,
+          expiresAt,
+          label: existingAccount.label?.trim() ? undefined : defaultLabel,
+        },
+      });
+    }
 
     // Generate JWT
     const jwtToken = jwt.sign(
@@ -337,52 +382,44 @@ router.get('/verify', asyncHandler(async (req, res) => {
 
 // Disconnect calendar
 router.delete(
-  '/calendar/:provider',
+  '/calendar/:accountId',
+  authenticate,
   asyncHandler(async (req, res) => {
-    const { userId } = req.body;
-    const { provider } = req.params;
+    const userId = req.userId;
+    const { accountId } = req.params;
 
     if (!userId) {
       throw new AppError('User ID is required', 400);
     }
 
-    if (provider !== 'google' && provider !== 'microsoft') {
-      throw new AppError('Invalid provider. Must be "google" or "microsoft"', 400);
-    }
-
-    logger.info('🔌 Disconnecting calendar', {
+    logger.info('🔌 Disconnecting specific calendar', {
       userId,
-      provider,
+      accountId,
     });
 
-    // Delete calendar account
-    const deleted = await prisma.calendarAccount.deleteMany({
-      where: {
-        userId,
-        provider,
-      },
+    const account = await prisma.calendarAccount.findFirst({
+      where: { id: accountId, userId },
     });
 
-    if (deleted.count === 0) {
+    if (!account) {
       throw new AppError('Calendar account not found', 404);
     }
 
-    // Delete associated meetings (cascade should handle this, but being explicit)
-    await prisma.meeting.deleteMany({
-      where: {
-        userId,
-      },
+    await prisma.calendarAccount.delete({
+      where: { id: accountId },
     });
 
     logger.info('✅ Calendar disconnected successfully', {
       userId,
-      provider,
-      deletedAccounts: deleted.count,
+      accountId,
+      provider: account.provider,
+      email: account.email,
     });
 
     res.json({
-      message: `${provider} calendar disconnected successfully`,
-      provider,
+      message: `${account.provider} calendar disconnected successfully`,
+      provider: account.provider,
+      email: account.email,
     });
   })
 );

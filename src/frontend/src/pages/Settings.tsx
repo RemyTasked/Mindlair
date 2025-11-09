@@ -1,3 +1,22 @@
+  const connectGoogleCalendar = async () => {
+    try {
+      const response = await api.get('/api/auth/google/url');
+      window.location.href = response.data.authUrl;
+    } catch (error) {
+      console.error('Error initiating Google auth:', error);
+      alert('Failed to start Google authorization');
+    }
+  };
+
+  const connectMicrosoftCalendar = async () => {
+    try {
+      const response = await api.get('/api/auth/microsoft/url');
+      window.location.href = response.data.authUrl;
+    } catch (error) {
+      console.error('Error initiating Microsoft auth:', error);
+      alert('Failed to start Microsoft authorization');
+    }
+  };
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
@@ -90,6 +109,9 @@ export default function Settings() {
     provider: string;
     email: string;
     createdAt: string;
+    label: string;
+    color: string | null;
+    isPrimary: boolean;
   }>>([]);
 
   useEffect(() => {
@@ -215,9 +237,9 @@ export default function Settings() {
     }
   };
 
-  const handleDisconnectCalendar = async (provider: 'google' | 'microsoft') => {
+  const handleDisconnectCalendar = async (accountId: string, providerLabel: string) => {
     const confirmed = window.confirm(
-      `Are you sure you want to disconnect your ${provider === 'google' ? 'Google' : 'Microsoft'} calendar?\n\n` +
+      `Are you sure you want to disconnect "${providerLabel}"?\n\n` +
       'This will:\n' +
       '• Remove all synced meetings\n' +
       '• Stop future syncing\n' +
@@ -234,21 +256,56 @@ export default function Settings() {
         return;
       }
 
-      const decoded: any = JSON.parse(atob(token.split('.')[1]));
-      const userId = decoded.userId;
+      await api.delete(`/api/auth/calendar/${accountId}`);
 
-      await api.delete(`/api/auth/calendar/${provider}`, {
-        data: { userId },
-      });
-
-      alert(`${provider === 'google' ? 'Google' : 'Microsoft'} calendar disconnected successfully.\n\nYou will be logged out.`);
-      
-      // Log out and redirect
-      localStorage.removeItem('meetcute_token');
-      navigate('/');
+      alert('Calendar disconnected successfully.');
+      await loadSettings();
     } catch (error: any) {
       alert('Error disconnecting calendar: ' + (error.response?.data?.message || error.message));
       console.error('Error disconnecting calendar:', error);
+    }
+  };
+
+  const handleCalendarFieldChange = (accountId: string, field: 'label' | 'color', value: string) => {
+    setCalendarAccounts(prev =>
+      prev.map(account =>
+        account.id === accountId
+          ? {
+              ...account,
+              [field]: field === 'label' ? value : value || null,
+            }
+          : account
+      )
+    );
+  };
+
+  const handleSaveCalendarAccount = async (accountId: string) => {
+    const account = calendarAccounts.find(acc => acc.id === accountId);
+    if (!account) return;
+
+    try {
+      await api.put(`/api/calendar/accounts/${accountId}`, {
+        label: account.label,
+        color: account.color,
+      });
+      await loadSettings();
+      setMessage('Calendar updated');
+      setTimeout(() => setMessage(''), 2000);
+    } catch (error) {
+      console.error('Error updating calendar account:', error);
+      alert('Failed to update calendar account');
+    }
+  };
+
+  const handleSetPrimaryCalendar = async (accountId: string) => {
+    try {
+      await api.post(`/api/calendar/accounts/${accountId}/primary`);
+      await loadSettings();
+      setMessage('Primary calendar updated');
+      setTimeout(() => setMessage(''), 2000);
+    } catch (error) {
+      console.error('Error setting primary calendar:', error);
+      alert('Failed to set primary calendar');
     }
   };
 
@@ -952,32 +1009,94 @@ export default function Settings() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Connected Calendars</h3>
                 {calendarAccounts.length > 0 ? (
                   <div className="space-y-3">
-                    {calendarAccounts.map((account) => (
-                      <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold ${
-                            account.provider === 'google' 
-                              ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
-                              : 'bg-gradient-to-br from-blue-400 to-blue-600'
-                          }`}>
-                            {account.provider === 'google' ? 'G' : 'M'}
+                    {calendarAccounts.map((account) => {
+                      const fallbackLabel = `${account.provider === 'google' ? 'Google' : 'Microsoft'} • ${account.email}`;
+                      const displayLabel = account.label && account.label.trim().length > 0 ? account.label : fallbackLabel;
+                      const displayColor = account.color || '#6366f1';
+
+                      return (
+                        <div key={account.id} className="p-4 bg-gray-50 rounded-lg space-y-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold ${
+                                account.provider === 'google'
+                                  ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                                  : 'bg-gradient-to-br from-blue-400 to-blue-600'
+                              }`}>
+                                {account.provider === 'google' ? 'G' : 'M'}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {account.provider === 'google' ? 'Google Calendar' : 'Microsoft Outlook'}
+                                </p>
+                                <p className="text-sm text-gray-600 font-medium">{account.email}</p>
+                                {account.isPrimary && (
+                                  <p className="text-xs font-semibold text-indigo-600 mt-1">
+                                    Primary calendar
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleDisconnectCalendar(account.id, displayLabel)}
+                              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                            >
+                              Disconnect
+                            </button>
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {account.provider === 'google' ? 'Google Calendar' : 'Microsoft Outlook'}
-                            </p>
-                            <p className="text-sm text-gray-600 font-medium">{account.email}</p>
-                            <p className="text-xs text-gray-500">Syncing meetings automatically</p>
+
+                          <div className="grid gap-4 md:grid-cols-3">
+                            <div className="space-y-2">
+                              <label className="text-xs font-semibold text-gray-600 uppercase">
+                                Calendar label
+                              </label>
+                              <input
+                                type="text"
+                                value={displayLabel}
+                                onChange={(e) => handleCalendarFieldChange(account.id, 'label', e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Work, Personal, Client, etc."
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-semibold text-gray-600 uppercase">
+                                Color
+                              </label>
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="color"
+                                  value={displayColor}
+                                  onChange={(e) => handleCalendarFieldChange(account.id, 'color', e.target.value)}
+                                  className="w-12 h-12 rounded cursor-pointer border border-gray-300"
+                                />
+                                <input
+                                  type="text"
+                                  value={account.color || ''}
+                                  onChange={(e) => handleCalendarFieldChange(account.id, 'color', e.target.value)}
+                                  placeholder="#6366f1"
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2 flex flex-col justify-end">
+                              <button
+                                onClick={() => handleSaveCalendarAccount(account.id)}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                onClick={() => handleSetPrimaryCalendar(account.id)}
+                                className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors font-medium disabled:opacity-50"
+                                disabled={account.isPrimary}
+                              >
+                                {account.isPrimary ? 'Primary Calendar' : 'Set as Primary'}
+                              </button>
+                            </div>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleDisconnectCalendar(account.provider as 'google' | 'microsoft')}
-                          className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
-                        >
-                          Disconnect
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="p-4 bg-gray-50 rounded-lg text-center">
@@ -985,6 +1104,20 @@ export default function Settings() {
                     <p className="text-sm text-gray-500 mt-1">Connect a calendar to start syncing meetings</p>
                   </div>
                 )}
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    onClick={connectGoogleCalendar}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium shadow-sm"
+                  >
+                    Add Google Calendar
+                  </button>
+                  <button
+                    onClick={connectMicrosoftCalendar}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all font-medium shadow-sm"
+                  >
+                    Add Outlook Calendar
+                  </button>
+                </div>
                 <p className="mt-3 text-sm text-gray-500">
                   Disconnecting will remove all synced meetings and stop future syncing.
                 </p>

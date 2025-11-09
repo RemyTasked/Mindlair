@@ -19,6 +19,7 @@ import { startScheduler } from './services/scheduler';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import meetingRoutes from './routes/meeting';
+import calendarRoutes from './routes/calendar';
 import focusSceneRoutes from './routes/focusScene';
 import webhookRoutes from './routes/webhook';
 import ratingRoutes from './routes/rating';
@@ -79,6 +80,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/meetings', meetingRoutes);
+app.use('/api/calendar', calendarRoutes);
 app.use('/api/focus-scene', focusSceneRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/rating', ratingRoutes);

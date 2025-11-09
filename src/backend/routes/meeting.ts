@@ -21,6 +21,9 @@ router.get(
       select: {
         id: true,
         provider: true,
+        label: true,
+        color: true,
+        isPrimary: true,
         email: true,
         expiresAt: true,
         createdAt: true,
@@ -185,7 +188,14 @@ router.post(
           }
 
           if (events) {
-            allEvents.push(...events);
+        const decoratedEvents = events.map(evt => ({
+          ...evt,
+          calendarAccountId: account.id,
+          calendarLabel: account.label || `${account.provider} • ${account.email}`,
+          calendarColor: account.color || null,
+          calendarProvider: account.provider,
+        }));
+        allEvents.push(...decoratedEvents);
           }
         } catch (error: any) {
           logger.error('❌ Error fetching calendar events during manual sync', {
@@ -224,6 +234,10 @@ router.post(
           event.attendees
         );
 
+        const calendarAccountId = event.calendarAccountId as string | undefined;
+        const calendarLabel = event.calendarLabel as string | undefined;
+        const calendarColor = event.calendarColor as string | null | undefined;
+
         // Check if this is back-to-back
         const previousMeetings = await prisma.meeting.findMany({
           where: {
@@ -250,6 +264,9 @@ router.post(
           create: {
             userId,
             calendarEventId: event.id,
+            calendarAccountId,
+            calendarLabel,
+            calendarColor,
             title: event.summary,
             description: event.description || null,
             startTime: event.start,
@@ -275,6 +292,9 @@ router.post(
             meetingType: meetingType || null,
             isOrganizer: event.isOrganizer || false,
             isBackToBack,
+            calendarAccountId,
+            calendarLabel,
+            calendarColor,
           },
         });
 
