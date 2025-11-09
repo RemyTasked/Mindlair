@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AuthCallback from './pages/AuthCallback';
 import { LOGO_PATHS } from './config/constants';
+import { CueToastManager } from './components/CueToast';
 
 // Lazy load heavy routes
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -32,22 +33,27 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/focus/demo" element={<FocusSceneDemo />} />
-        <Route path="/focus/:userId/:meetingId" element={<FocusScene />} />
-        <Route path="/rate/:userId/:meetingId" element={<MeetingRating />} />
-        <Route path="/presley-flow/:userId/:date" element={<PresleyFlow />} />
-        <Route path="/winding-down/:userId" element={<WindingDown />} />
-        <Route path="/weekend-flow/:userId" element={<WeekendFlow />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
-      </Routes>
-    </Suspense>
+    <>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/focus/demo" element={<FocusSceneDemo />} />
+          <Route path="/focus/:userId/:meetingId" element={<FocusScene />} />
+          <Route path="/rate/:userId/:meetingId" element={<MeetingRating />} />
+          <Route path="/presley-flow/:userId/:date" element={<PresleyFlow />} />
+          <Route path="/winding-down/:userId" element={<WindingDown />} />
+          <Route path="/weekend-flow/:userId" element={<WeekendFlow />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+        </Routes>
+      </Suspense>
+      
+      {/* Global Cue Toast Manager */}
+      <CueToastManager />
+    </>
   );
 }
 

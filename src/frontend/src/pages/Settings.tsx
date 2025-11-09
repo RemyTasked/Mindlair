@@ -60,6 +60,17 @@ interface DeliverySettings {
   slackWebhookUrl?: string;
 }
 
+interface CueSettings {
+  enabled: boolean;
+  tone: 'calm' | 'direct';
+  toastEnabled: boolean;
+  slackEnabled: boolean;
+  quietHours: Array<{ start: string; end: string }>;
+  cueFrequency: 'minimal' | 'balanced' | 'frequent';
+  lowEnergyStart: string;
+  lowEnergyEnd: string;
+}
+
 export default function Settings() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>('');
@@ -113,6 +124,16 @@ export default function Settings() {
     color: string | null;
     isPrimary: boolean;
   }>>([]);
+  const [cueSettings, setCueSettings] = useState<CueSettings>({
+    enabled: true,
+    tone: 'calm',
+    toastEnabled: true,
+    slackEnabled: false,
+    quietHours: [],
+    cueFrequency: 'balanced',
+    lowEnergyStart: '14:00',
+    lowEnergyEnd: '16:00',
+  });
 
   useEffect(() => {
     loadSettings();
@@ -200,6 +221,12 @@ export default function Settings() {
       if (response.data.user.calendarAccounts) {
         setCalendarAccounts(response.data.user.calendarAccounts);
       }
+      
+      // Load Cue Companion settings
+      const cueResponse = await api.get('/api/cues/settings');
+      if (cueResponse.data) {
+        setCueSettings(cueResponse.data);
+      }
     } catch (error) {
       console.error('Error loading settings:', error);
     }
@@ -225,6 +252,7 @@ export default function Settings() {
       await Promise.all([
         api.put('/api/user/preferences', preferences),
         api.put('/api/user/delivery', delivery),
+        api.put('/api/cues/settings', cueSettings),
       ]);
 
       setMessage('Settings saved successfully!');
@@ -1149,6 +1177,121 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
+            </div>
+          </Section>
+
+          {/* Cue Companion Section */}
+          <Section title="🔔 Cue Companion" id="cues" isExpanded={expandedSections.has('cues')} onToggle={toggleSection}>
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-6 rounded-lg">
+                <h3 className="font-semibold text-blue-900 mb-2">Contextual Meeting Nudges</h3>
+                <p className="text-sm text-blue-800 mb-4">
+                  Get timed, context-aware cues during meetings to help you stay grounded, focused, and intentional—no audio access required.
+                </p>
+              </div>
+
+              <Toggle
+                label="Enable Cue Companion"
+                description="Receive contextual nudges before, during, and after meetings"
+                checked={cueSettings.enabled}
+                onChange={(checked) => setCueSettings({ ...cueSettings, enabled: checked })}
+              />
+
+              {cueSettings.enabled && (
+                <div className="space-y-6 pl-4 border-l-2 border-gray-200">
+                  {/* Tone */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cue Tone
+                    </label>
+                    <select
+                      value={cueSettings.tone}
+                      onChange={(e) => setCueSettings({ ...cueSettings, tone: e.target.value as 'calm' | 'direct' })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="calm">Calm & Supportive</option>
+                      <option value="direct">Direct & Brief</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {cueSettings.tone === 'calm' ? 'Gentle, encouraging language' : 'Short, actionable prompts'}
+                    </p>
+                  </div>
+
+                  {/* Frequency */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cue Frequency
+                    </label>
+                    <select
+                      value={cueSettings.cueFrequency}
+                      onChange={(e) => setCueSettings({ ...cueSettings, cueFrequency: e.target.value as 'minimal' | 'balanced' | 'frequent' })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="minimal">Minimal (Pre-meeting + 5-min-left only)</option>
+                      <option value="balanced">Balanced (Recommended)</option>
+                      <option value="frequent">Frequent (All cues enabled)</option>
+                    </select>
+                  </div>
+
+                  {/* Delivery Channels */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Delivery Channels</h4>
+                    <div className="space-y-3">
+                      <Toggle
+                        label="Toast Notifications"
+                        description="Show cues as small toasts in the bottom-right corner"
+                        checked={cueSettings.toastEnabled}
+                        onChange={(checked) => setCueSettings({ ...cueSettings, toastEnabled: checked })}
+                      />
+                      <Toggle
+                        label="Slack DM to Self"
+                        description="Send cues as Slack direct messages (requires Slack connection)"
+                        checked={cueSettings.slackEnabled}
+                        onChange={(checked) => setCueSettings({ ...cueSettings, slackEnabled: checked })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Low-Energy Window */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Low-Energy Window</h4>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Time window when you typically experience an energy dip (e.g., 2-4 PM). Cues will be adjusted accordingly.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Start</label>
+                        <input
+                          type="time"
+                          value={cueSettings.lowEnergyStart}
+                          onChange={(e) => setCueSettings({ ...cueSettings, lowEnergyStart: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">End</label>
+                        <input
+                          type="time"
+                          value={cueSettings.lowEnergyEnd}
+                          onChange={(e) => setCueSettings({ ...cueSettings, lowEnergyEnd: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Example Cues */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2">Example Cues</h4>
+                    <ul className="text-xs text-gray-600 space-y-1">
+                      <li>• <span className="font-medium">Pre-meeting:</span> "Take one breath before you unmute."</li>
+                      <li>• <span className="font-medium">Mid-meeting:</span> "Breath check. Slow your next sentence."</li>
+                      <li>• <span className="font-medium">5 min left:</span> "Land one clear outcome → who does what, by when?"</li>
+                      <li>• <span className="font-medium">Post-meeting:</span> "Next call in 3 min. Breathe first."</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
           </Section>
 
