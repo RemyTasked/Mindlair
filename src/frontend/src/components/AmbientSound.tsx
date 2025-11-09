@@ -122,6 +122,20 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }
   };
 
+  const toggleMute = () => {
+    if (!audioRef.current) {
+      return;
+    }
+
+    if (isMuted) {
+      audioRef.current.volume = dimVolume ? 0.15 : 0.3;
+      setIsMuted(false);
+    } else {
+      audioRef.current.volume = 0;
+      setIsMuted(true);
+    }
+  };
+
   const handlePlayClick = async () => {
     await initializeAudio();
   };

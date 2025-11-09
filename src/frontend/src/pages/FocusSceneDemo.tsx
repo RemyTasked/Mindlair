@@ -142,7 +142,7 @@ export default function FocusSceneDemo() {
               Breathe & Center
             </motion.h2>
             
-            <AdaptiveBreathingFlow duration={4000} onComplete={handleBreathingComplete} />
+            <AdaptiveBreathingFlow mindState="calm" onComplete={handleBreathingComplete} />
             
             <motion.p
               initial={{ y: 50, opacity: 0 }}
