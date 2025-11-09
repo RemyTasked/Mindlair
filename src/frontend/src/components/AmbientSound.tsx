@@ -28,7 +28,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     'meditation-bell': 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
   };
 
-  const initializeAudio = async () => {
+  const startAudio = (source: string) => {
     if (!enabled || soundType === 'none') {
       console.log('🔇 Audio disabled or sound type is none');
       stopAudio();
@@ -36,27 +36,19 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }
 
     try {
-      console.log('🎵 Initializing HTML5 Audio...', { soundType });
-
-      // Stop any existing audio
+      console.log(`🎵 Starting ambient sound [${source}]...`, { soundType });
       stopAudio();
 
-      // Create new audio element
       const audio = new Audio();
       const audioUrl = soundUrls[soundType] || soundUrls['white-noise'];
-      console.log('🎵 Loading audio from:', audioUrl);
-      
       audio.src = audioUrl;
       audio.loop = true;
       audio.volume = dimVolume ? 0.15 : 0.3;
       audio.preload = 'auto';
-      audio.crossOrigin = 'anonymous'; // Enable CORS
-      audio.load();
-      
-      // CRITICAL iOS SILENT MODE BYPASS:
+      audio.crossOrigin = 'anonymous';
       audio.setAttribute('playsinline', 'true');
       audio.setAttribute('webkit-playsinline', 'true');
-      
+
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: 'Ambient Sound',
@@ -64,29 +56,35 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
           album: 'Focus Session',
         });
       }
-      
+
       audio.addEventListener('error', (e) => {
         console.error('❌ Audio error:', e);
-        console.error('Audio error details:', {
-          error: audio.error,
-          src: audio.src,
-          networkState: audio.networkState,
-          readyState: audio.readyState
-        });
+        setNeedsInteraction(true);
       });
-      
+
       audioRef.current = audio;
 
-      console.log('🎵 Attempting to play audio...');
-      await audio.play();
-      setIsPlaying(true);
-      setNeedsInteraction(false);
-      localStorage.removeItem('meetcute_autoplay_sound');
-      console.log('✅ Audio playing - works even on iOS silent mode!');
-    } catch (error: any) {
-      console.error('❌ Error playing audio:', error);
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        playPromise
+          .then(() => {
+            console.log('✅ Ambient sound playing');
+            setIsPlaying(true);
+            setNeedsInteraction(false);
+            localStorage.removeItem('meetcute_autoplay_sound');
+          })
+          .catch((err) => {
+            console.warn('⚠️ Audio play blocked:', err);
+            setNeedsInteraction(true);
+          });
+      } else {
+        setIsPlaying(true);
+        setNeedsInteraction(false);
+        localStorage.removeItem('meetcute_autoplay_sound');
+      }
+    } catch (error) {
+      console.error('❌ Error starting ambient sound:', error);
       setNeedsInteraction(true);
-      throw error;
     }
   };
 
@@ -114,18 +112,14 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }
   };
 
-  const handlePlayClick = async () => {
-    try {
-      await initializeAudio();
-    } catch (err) {
-      console.warn('⚠️ Audio playback requires interaction:', err);
-    }
+  const handlePlayClick = () => {
+    startAudio('manual-click');
   };
 
   useEffect(() => {
     const playHandler = () => {
       console.log('🎵 ambient-sound-play event received');
-      handlePlayClick();
+      startAudio('event-dispatch');
     };
 
     const stopHandler = () => {
@@ -148,11 +142,9 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     const shouldAutoplay = localStorage.getItem('meetcute_autoplay_sound');
     if (shouldAutoplay === 'true') {
       console.log('🎵 Autoplay flag detected - attempting to start ambient sound');
-      handlePlayClick().catch(() => {
-        // Will fall back to manual play button
-      });
+      startAudio('autoplay-flag');
     }
-  }, []);
+  }, [enabled, soundType]);
 
   useEffect(() => {
     if (!enabled || !needsInteraction) {
@@ -161,9 +153,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
     const gestureHandler = () => {
       console.log('🎵 User gesture detected - attempting to start ambient sound');
-      handlePlayClick().catch(() => {
-        // If still blocked, button remains visible
-      });
+      startAudio('user-gesture');
     };
 
     window.addEventListener('pointerdown', gestureHandler, { once: true });
