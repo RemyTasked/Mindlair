@@ -69,6 +69,7 @@ interface CueSettings {
   cueFrequency: 'minimal' | 'balanced' | 'frequent';
   lowEnergyStart: string;
   lowEnergyEnd: string;
+  perMeetingOverrides: Record<string, boolean>;
 }
 
 export default function Settings() {
@@ -133,6 +134,7 @@ export default function Settings() {
     cueFrequency: 'balanced',
     lowEnergyStart: '14:00',
     lowEnergyEnd: '16:00',
+    perMeetingOverrides: {},
   });
 
   useEffect(() => {
@@ -246,6 +248,20 @@ export default function Settings() {
           }
         }
 
+        let parsedOverrides: Record<string, boolean> = {};
+        if (data.perMeetingOverrides && typeof data.perMeetingOverrides === 'object' && !Array.isArray(data.perMeetingOverrides)) {
+          parsedOverrides = data.perMeetingOverrides as Record<string, boolean>;
+        } else if (typeof data.perMeetingOverrides === 'string' && data.perMeetingOverrides.trim().length > 0) {
+          try {
+            const parsed = JSON.parse(data.perMeetingOverrides);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+              parsedOverrides = parsed;
+            }
+          } catch (parseError) {
+            console.warn('Unable to parse cue perMeetingOverrides JSON', parseError);
+          }
+        }
+
         const normalizedCueSettings: CueSettings = {
           enabled: data.enabled ?? true,
           tone: (data.tone === 'direct' ? 'direct' : 'calm'),
@@ -257,6 +273,7 @@ export default function Settings() {
             : 'balanced',
           lowEnergyStart: data.lowEnergyStart || '14:00',
           lowEnergyEnd: data.lowEnergyEnd || '16:00',
+          perMeetingOverrides: parsedOverrides,
         };
 
         setCueSettings(normalizedCueSettings);
@@ -299,6 +316,7 @@ export default function Settings() {
         cueFrequency: cueSettings.cueFrequency,
         lowEnergyStart: cueSettings.lowEnergyStart,
         lowEnergyEnd: cueSettings.lowEnergyEnd,
+        perMeetingOverrides: cueSettings.perMeetingOverrides || {},
       };
 
       await Promise.all([
@@ -313,8 +331,14 @@ export default function Settings() {
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error saving settings:', error);
-      const errorMessage = (error as any)?.response?.data?.error || 'Error saving settings';
-      setMessage(errorMessage);
+      const errorPayload = (error as any)?.response?.data?.error;
+      const normalizedError =
+        typeof errorPayload === 'string'
+          ? errorPayload
+          : errorPayload?.message
+          ? String(errorPayload.message)
+          : 'Error saving settings';
+      setMessage(normalizedError);
     } finally {
       setSaving(false);
     }
@@ -464,10 +488,10 @@ export default function Settings() {
                 <Save className="w-5 h-5" />
                 {saving ? 'Saving...' : 'Save Settings'}
               </button>
-              {message && (
+              {typeof message === 'string' && message && (
                 <span
                   className={`text-sm font-medium ${
-                    message.includes('success') ? 'text-green-600' : 'text-red-600'
+                    message.toLowerCase().includes('success') ? 'text-green-600' : 'text-red-600'
                   }`}
                 >
                   {message}
