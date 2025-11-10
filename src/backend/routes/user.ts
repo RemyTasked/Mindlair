@@ -232,6 +232,8 @@ const deliverySchema = z.object({
   smsEnabled: z.boolean().optional(),
   pushEnabled: z.boolean().optional(),
   pushPreMeetingCues: z.boolean().optional(),
+  pushInMeetingCues: z.boolean().optional(),
+  pushPostMeetingCues: z.boolean().optional(),
   pushPresleyFlow: z.boolean().optional(),
   pushWellnessReminders: z.boolean().optional(),
   pushMeetingInsights: z.boolean().optional(),

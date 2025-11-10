@@ -134,6 +134,8 @@ model DeliverySettings {
   
   // Granular push notification preferences (only applies if pushEnabled is true)
   pushPreMeetingCues      Boolean @default(true)  // Pre-meeting focus session alerts
+  pushInMeetingCues       Boolean @default(true)  // In-meeting cues (contextual nudges)
+  pushPostMeetingCues     Boolean @default(true)  // Post-meeting cues (reflections, insights)
   pushPresleyFlow         Boolean @default(true)  // Morning/evening Presley Flow alerts
   pushWellnessReminders   Boolean @default(true)  // Wellness check-in reminders
   pushMeetingInsights     Boolean @default(true)  // Post-meeting insights
