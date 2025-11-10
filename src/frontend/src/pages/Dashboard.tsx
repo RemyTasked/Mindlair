@@ -79,6 +79,8 @@ export default function Dashboard() {
   const [ambientSoundType, setAmbientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none'>('calm-ocean');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
+  const [activeMeetings, setActiveMeetings] = useState<Meeting[]>([]);
+  const [activeCues, setActiveCues] = useState<any[]>([]);
   
   // Determine time of day for Scene Library
   const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
@@ -97,8 +99,19 @@ export default function Dashboard() {
       refreshMeetings();
     }, 5 * 60 * 1000); // 5 minutes
 
-    // Cleanup interval on unmount
-    return () => clearInterval(refreshInterval);
+    // Poll for active cues every 30 seconds
+    const cueInterval = setInterval(() => {
+      pollActiveCues();
+    }, 30 * 1000); // 30 seconds
+
+    // Initial cue poll
+    pollActiveCues();
+
+    // Cleanup intervals on unmount
+    return () => {
+      clearInterval(refreshInterval);
+      clearInterval(cueInterval);
+    };
   }, []);
 
   const loadUserData = async () => {
@@ -253,6 +266,45 @@ export default function Dashboard() {
         console.log('⚠️ Non-auth error - staying on dashboard, user can retry');
         setLoading(false);
       }
+    }
+  };
+
+  const pollActiveCues = async () => {
+    try {
+      const token = localStorage.getItem('meetcute_token');
+      if (!token) return;
+
+      const response = await api.get('/api/cues/active', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const { activeMeetings: newActiveMeetings, activeCues: newActiveCues } = response.data;
+      
+      setActiveMeetings(newActiveMeetings);
+      
+      // Display new cues as toasts
+      if (newActiveCues && newActiveCues.length > 0) {
+        newActiveCues.forEach((cue: any) => {
+          // Check if this cue was already shown
+          const alreadyShown = activeCues.some(existing => existing.cueId === cue.cueId);
+          if (!alreadyShown) {
+            console.log('🔔 Displaying new cue:', cue);
+            // Trigger cue toast event
+            window.dispatchEvent(new CustomEvent('cue-toast', {
+              detail: {
+                cueId: cue.cueId,
+                text: cue.text,
+                actions: cue.actions,
+                meetingId: cue.meetingId,
+              }
+            }));
+          }
+        });
+      }
+      
+      setActiveCues(newActiveCues);
+    } catch (error) {
+      console.error('Failed to poll active cues:', error);
     }
   };
 
@@ -501,6 +553,58 @@ export default function Dashboard() {
             >
               🌙 Start Winding Down
             </a>
+          </div>
+        )}
+
+        {/* Ongoing Meetings */}
+        {activeMeetings.length > 0 && (
+          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border-2 border-red-200 mb-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                <h2 className="text-xl sm:text-2xl font-bold text-red-900">
+                  Live Now
+                </h2>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {activeMeetings.map((meeting: any) => {
+                const activeCue = activeCues.find((c: any) => c.meetingId === meeting.id);
+                return (
+                  <div key={meeting.id} className="bg-white rounded-xl p-4 border-2 border-red-300">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{meeting.title}</h3>
+                        <p className="text-sm text-gray-600">
+                          {new Date(meeting.startTime).toLocaleTimeString('en-US', { 
+                            hour: 'numeric',
+                            minute: '2-digit'
+                          })} - {new Date(meeting.endTime).toLocaleTimeString('en-US', { 
+                            hour: 'numeric',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                        LIVE
+                      </span>
+                    </div>
+                    
+                    {activeCue && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+                        <p className="text-sm font-medium text-indigo-900">
+                          💡 {activeCue.text}
+                        </p>
+                        <p className="text-xs text-indigo-600 mt-1">
+                          {activeCue.minutesIntoMeeting} min into {activeCue.totalDuration} min meeting
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
