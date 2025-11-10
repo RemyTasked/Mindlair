@@ -51,11 +51,14 @@ interface DeliverySettings {
   smsEnabled: boolean;
   pushEnabled: boolean;
   pushPreMeetingCues: boolean;
+  pushInMeetingCues: boolean;
+  pushPostMeetingCues: boolean;
   pushPresleyFlow: boolean;
   pushWellnessReminders: boolean;
   pushMeetingInsights: boolean;
   pushMorningRecap: boolean;
   pushDailyWrapUp: boolean;
+  pushWindingDown: boolean;
   phoneNumber?: string;
   slackWebhookUrl?: string;
 }
@@ -103,11 +106,14 @@ export default function Settings() {
     smsEnabled: false,
     pushEnabled: true,
     pushPreMeetingCues: true,
+    pushInMeetingCues: true,
+    pushPostMeetingCues: true,
     pushPresleyFlow: true,
     pushWellnessReminders: true,
     pushMeetingInsights: true,
     pushMorningRecap: true,
     pushDailyWrapUp: true,
+    pushWindingDown: true,
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -899,7 +905,11 @@ export default function Settings() {
           </Section>
 
           {/* Delivery Methods */}
-          <Section title="Delivery Methods" id="delivery" isExpanded={expandedSections.has('delivery')} onToggle={toggleSection}>
+          <Section title="Notification Preferences" id="delivery" isExpanded={expandedSections.has('delivery')} onToggle={toggleSection}>
+            <p className="text-sm text-gray-600 mb-6">
+              Choose which channels to receive each type of alert. You have full control over when and how Meet Cute reaches you.
+            </p>
+            
             <div className="space-y-6">
               <div>
                 <Toggle
@@ -1103,6 +1113,402 @@ export default function Settings() {
                     className="mt-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 )}
+              </div>
+
+              {/* Granular Notification Matrix */}
+              <div className="border-t pt-6 mt-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Fine-Tune Your Alerts</h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Control exactly which alerts you receive through each channel. Toggle master switches above to enable/disable entire channels.
+                </p>
+
+                {/* Desktop/Tablet View - Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700 border-b-2">Alert Type</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-700 border-b-2">
+                          📧 Email
+                        </th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-700 border-b-2">
+                          💬 Slack
+                        </th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-700 border-b-2">
+                          📱 Push
+                        </th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-700 border-b-2">
+                          💬 SMS
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Pre-Meeting Focus */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="font-medium text-gray-900">Pre-Meeting Focus (5 min)</div>
+                          <div className="text-xs text-gray-500">Guided preparation before meetings</div>
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.emailEnabled}
+                            disabled={!delivery.emailEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.slackEnabled}
+                            disabled={!delivery.slackEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.pushEnabled && delivery.pushPreMeetingCues}
+                            disabled={!delivery.pushEnabled}
+                            onChange={(e) => setDelivery({ ...delivery, pushPreMeetingCues: e.target.checked })}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 cursor-pointer"
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.smsEnabled}
+                            disabled={!delivery.smsEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                      </tr>
+
+                      {/* In-Meeting Cues */}
+                      <tr className="hover:bg-gray-50 bg-amber-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="font-medium text-gray-900">In-Meeting Cues</div>
+                          <div className="text-xs text-gray-500">Real-time nudges during meetings</div>
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.emailEnabled}
+                            disabled={!delivery.emailEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.slackEnabled}
+                            disabled={!delivery.slackEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.pushEnabled && delivery.pushInMeetingCues}
+                            disabled={!delivery.pushEnabled}
+                            onChange={(e) => setDelivery({ ...delivery, pushInMeetingCues: e.target.checked })}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 cursor-pointer"
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.smsEnabled}
+                            disabled={!delivery.smsEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                      </tr>
+
+                      {/* Post-Meeting Reflection */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="font-medium text-gray-900">Post-Meeting Reflection</div>
+                          <div className="text-xs text-gray-500">Insights and cues after meetings</div>
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.emailEnabled}
+                            disabled={!delivery.emailEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.slackEnabled}
+                            disabled={!delivery.slackEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.pushEnabled && delivery.pushPostMeetingCues}
+                            disabled={!delivery.pushEnabled}
+                            onChange={(e) => setDelivery({ ...delivery, pushPostMeetingCues: e.target.checked })}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 cursor-pointer"
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.smsEnabled}
+                            disabled={!delivery.smsEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                      </tr>
+
+                      {/* Presley Flow */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="font-medium text-gray-900">Presley Flow (Morning/Evening)</div>
+                          <div className="text-xs text-gray-500">Opening scene & final wrap rituals</div>
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.emailEnabled}
+                            disabled={!delivery.emailEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.slackEnabled}
+                            disabled={!delivery.slackEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.pushEnabled && delivery.pushPresleyFlow}
+                            disabled={!delivery.pushEnabled}
+                            onChange={(e) => setDelivery({ ...delivery, pushPresleyFlow: e.target.checked })}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 cursor-pointer"
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.smsEnabled}
+                            disabled={!delivery.smsEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                      </tr>
+
+                      {/* Wellness Reminders */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="font-medium text-gray-900">Wellness Reminders</div>
+                          <div className="text-xs text-gray-500">Periodic check-ins throughout the day</div>
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.emailEnabled}
+                            disabled={!delivery.emailEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.slackEnabled}
+                            disabled={!delivery.slackEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.pushEnabled && delivery.pushWellnessReminders}
+                            disabled={!delivery.pushEnabled}
+                            onChange={(e) => setDelivery({ ...delivery, pushWellnessReminders: e.target.checked })}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 cursor-pointer"
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.smsEnabled}
+                            disabled={!delivery.smsEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                      </tr>
+
+                      {/* Winding Down */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="font-medium text-gray-900">Winding Down</div>
+                          <div className="text-xs text-gray-500">Evening ritual notifications</div>
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.emailEnabled}
+                            disabled={!delivery.emailEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.slackEnabled}
+                            disabled={!delivery.slackEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.pushEnabled && delivery.pushWindingDown}
+                            disabled={!delivery.pushEnabled}
+                            onChange={(e) => setDelivery({ ...delivery, pushWindingDown: e.target.checked })}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 cursor-pointer"
+                          />
+                        </td>
+                        <td className="py-3 px-4 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={delivery.smsEnabled}
+                            disabled={!delivery.smsEnabled}
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30"
+                            readOnly
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile View - Stacked Cards */}
+                <div className="md:hidden space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="font-medium text-gray-900 mb-3">Pre-Meeting Focus (5 min)</div>
+                    <div className="space-y-2">
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">📧 Email</span>
+                        <input type="checkbox" checked={delivery.emailEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">💬 Slack</span>
+                        <input type="checkbox" checked={delivery.slackEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">📱 Push</span>
+                        <input
+                          type="checkbox"
+                          checked={delivery.pushEnabled && delivery.pushPreMeetingCues}
+                          disabled={!delivery.pushEnabled}
+                          onChange={(e) => setDelivery({ ...delivery, pushPreMeetingCues: e.target.checked })}
+                          className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">💬 SMS</span>
+                        <input type="checkbox" checked={delivery.smsEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-amber-50 rounded-lg">
+                    <div className="font-medium text-gray-900 mb-3">In-Meeting Cues</div>
+                    <div className="space-y-2">
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">📧 Email</span>
+                        <input type="checkbox" checked={delivery.emailEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">💬 Slack</span>
+                        <input type="checkbox" checked={delivery.slackEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">📱 Push</span>
+                        <input
+                          type="checkbox"
+                          checked={delivery.pushEnabled && delivery.pushInMeetingCues}
+                          disabled={!delivery.pushEnabled}
+                          onChange={(e) => setDelivery({ ...delivery, pushInMeetingCues: e.target.checked })}
+                          className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">💬 SMS</span>
+                        <input type="checkbox" checked={delivery.smsEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="font-medium text-gray-900 mb-3">Post-Meeting Reflection</div>
+                    <div className="space-y-2">
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">📧 Email</span>
+                        <input type="checkbox" checked={delivery.emailEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">💬 Slack</span>
+                        <input type="checkbox" checked={delivery.slackEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">📱 Push</span>
+                        <input
+                          type="checkbox"
+                          checked={delivery.pushEnabled && delivery.pushPostMeetingCues}
+                          disabled={!delivery.pushEnabled}
+                          onChange={(e) => setDelivery({ ...delivery, pushPostMeetingCues: e.target.checked })}
+                          className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">💬 SMS</span>
+                        <input type="checkbox" checked={delivery.smsEnabled} disabled className="w-5 h-5 text-indigo-600 rounded disabled:opacity-30" readOnly />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg">ℹ️</span>
+                    <div className="text-sm text-blue-900">
+                      <p className="font-medium mb-1">How this works</p>
+                      <p className="text-blue-700">
+                        Master toggles above (Email, Slack, Push, SMS) control whether each channel is enabled at all. 
+                        Then use this table to choose which specific alerts you want through each channel.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </Section>

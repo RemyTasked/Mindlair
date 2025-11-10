@@ -45,14 +45,23 @@ function generateSamples(type: SoundType): Float32Array {
       break;
     }
     case 'rain': {
-      // Rain: High-frequency noise with occasional droplets
+      // Rain: Gentle, soothing rain - perfect for reflection
+      let prevNoise = 0;
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
-        const baseNoise = (Math.random() * 2 - 1) * 0.4;
-        // Add occasional "droplet" pings
-        const droplet = Math.sin(2 * Math.PI * (2000 + Math.random() * 1000) * t) * 
-                       Math.exp(-50 * (t % 0.1)) * 0.2;
-        data[i] = baseNoise + droplet;
+        // Soft pink noise (filtered random)
+        const noise = Math.random() * 2 - 1;
+        prevNoise += 0.03 * (noise - prevNoise);
+        const softRain = prevNoise * 0.25;
+        
+        // Very gentle, occasional droplets at lower frequency
+        const droplet = Math.sin(2 * Math.PI * (400 + Math.random() * 200) * t) * 
+                       Math.exp(-20 * (t % 0.2)) * 0.08;
+        
+        // Add a subtle low rumble for depth
+        const rumble = Math.sin(2 * Math.PI * 80 * t) * 0.05;
+        
+        data[i] = softRain + droplet + rumble;
       }
       break;
     }

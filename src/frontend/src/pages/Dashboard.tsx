@@ -272,39 +272,56 @@ export default function Dashboard() {
   const pollActiveCues = async () => {
     try {
       const token = localStorage.getItem('meetcute_token');
-      if (!token) return;
+      if (!token) {
+        console.log('⚠️ No token for cue polling');
+        return;
+      }
 
+      console.log('🔄 Polling for active cues...');
       const response = await api.get('/api/cues/active', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       const { activeMeetings: newActiveMeetings, activeCues: newActiveCues } = response.data;
       
-      setActiveMeetings(newActiveMeetings);
+      console.log('📊 Active cues response:', {
+        activeMeetings: newActiveMeetings?.length || 0,
+        activeCues: newActiveCues?.length || 0,
+        cues: newActiveCues
+      });
+
+      setActiveMeetings(newActiveMeetings || []);
       
       // Display new cues as toasts
       if (newActiveCues && newActiveCues.length > 0) {
+        console.log('🔔 Processing cues for toast display...');
         newActiveCues.forEach((cue: any) => {
           // Check if this cue was already shown
           const alreadyShown = activeCues.some(existing => existing.cueId === cue.cueId);
+          console.log(`Cue ${cue.cueId}: alreadyShown=${alreadyShown}`);
+          
           if (!alreadyShown) {
-            console.log('🔔 Displaying new cue:', cue);
+            console.log('🔔 Dispatching NEW cue toast event:', cue);
             // Trigger cue toast event
-            window.dispatchEvent(new CustomEvent('cue-toast', {
+            const event = new CustomEvent('cue-toast', {
               detail: {
                 cueId: cue.cueId,
                 text: cue.text,
-                actions: cue.actions,
+                actions: cue.actions || [],
                 meetingId: cue.meetingId,
               }
-            }));
+            });
+            window.dispatchEvent(event);
+            console.log('✅ Toast event dispatched');
           }
         });
+      } else {
+        console.log('ℹ️ No active cues at this time');
       }
       
-      setActiveCues(newActiveCues);
+      setActiveCues(newActiveCues || []);
     } catch (error) {
-      console.error('Failed to poll active cues:', error);
+      console.error('❌ Failed to poll active cues:', error);
     }
   };
 
