@@ -58,7 +58,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       const prefsResponse = await api.put(`/api/user/preferences`, {
         morningFlowTime: data.workStart,
         eveningFlowTime: data.presleyFlowTime,
-        tone: data.meetingComfort <= 2 ? 'supportive' : data.meetingComfort >= 4 ? 'confident' : 'balanced',
+        tone: data.meetingComfort <= 2 ? 'calm' : data.meetingComfort >= 4 ? 'executive' : 'balanced',
       });
       console.log('✅ Preferences saved:', prefsResponse.data);
 
