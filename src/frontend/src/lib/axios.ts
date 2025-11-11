@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken, removeToken } from '../utils/persistentStorage';
 
 // Create axios instance with proper configuration
 const api = axios.create({
@@ -8,10 +9,18 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - add auth token
+// Request interceptor - add auth token (check both localStorage and IndexedDB)
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('meetcute_token');
+  async (config) => {
+    // Try localStorage first (fast)
+    let token = localStorage.getItem('meetcute_token');
+    
+    // If not in localStorage, check IndexedDB (PWA persistence)
+    if (!token) {
+      console.log('🔍 Token not in localStorage, checking IndexedDB...');
+      token = await getToken();
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -19,6 +28,7 @@ api.interceptors.request.use(
       method: config.method?.toUpperCase(),
       url: config.url,
       hasToken: !!token,
+      tokenSource: localStorage.getItem('meetcute_token') ? 'localStorage' : 'IndexedDB',
     });
     return config;
   },
@@ -45,10 +55,10 @@ api.interceptors.response.use(
       data: error.response?.data,
     });
 
-    // If 401, clear token and redirect to login
+    // If 401, clear token from all storage and redirect to login
     if (error.response?.status === 401) {
-      console.log('🔐 Unauthorized - clearing token');
-      localStorage.removeItem('meetcute_token');
+      console.log('🔐 Unauthorized - clearing token from all storage');
+      removeToken(); // Clear from both localStorage and IndexedDB
       // Don't redirect here - let the component handle it
     }
 
