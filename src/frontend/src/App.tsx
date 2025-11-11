@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import AuthCallback from './pages/AuthCallback';
 import { LOGO_PATHS } from './config/constants';
 import { CueToastManager } from './components/CueToast';
+import { UpdateNotificationManager } from './components/UpdateNotification';
 
 // Lazy load heavy routes
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -53,6 +54,9 @@ function App() {
       
       {/* Global Cue Toast Manager */}
       <CueToastManager />
+      
+      {/* Global Update Notification Manager */}
+      <UpdateNotificationManager />
     </>
   );
 }

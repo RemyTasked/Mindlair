@@ -48,6 +48,22 @@
     padding-left: env(safe-area-inset-left);
   }
 
+  /* Update notification animation */
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
   .safe-right {
     padding-right: env(safe-area-inset-right);
   }

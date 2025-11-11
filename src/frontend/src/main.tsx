@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+import { showUpdateNotification } from './components/UpdateNotification';
 
 // AGGRESSIVE CACHE CLEARING - Force clear old logo caches
 const CURRENT_VERSION = '20251108192533'; // UNIFIED timestamp
@@ -61,13 +62,22 @@ serviceWorkerRegistration.register({
     console.log('🎬 PWA: App is ready for offline use!');
   },
   onUpdate: (registration) => {
-    console.log('🎬 PWA: New version available! Forcing update...');
-    // Skip waiting and activate new service worker immediately
-    if (registration.waiting) {
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    }
-    // Force hard reload
-    window.location.reload();
+    console.log('🎬 PWA: New version available! Showing gentle update notification...');
+    
+    // Show gentle update notification instead of forcing reload
+    showUpdateNotification(() => {
+      console.log('✨ User accepted update, activating new version...');
+      
+      // Skip waiting and activate new service worker immediately
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+      
+      // Wait a moment for service worker to activate, then reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    });
   },
 });
 
