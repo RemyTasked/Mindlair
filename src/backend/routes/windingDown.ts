@@ -47,6 +47,10 @@ router.get(
     const [morningFlowHour, morningFlowMinute] = morningFlowTime.split(':').map(Number);
     const morningFlowTimeInMinutes = morningFlowHour * 60 + morningFlowMinute;
     
+    // Special handling for midnight (00:00 = 0 minutes)
+    // Midnight means "start of next day", so treat it as 24:00 (1440 minutes) for comparison
+    const adjustedWindingDownTime = windingDownTimeInMinutes === 0 ? 1440 : windingDownTimeInMinutes;
+    
     logger.info('Winding down availability check', {
       userId,
       userTimezone,
@@ -55,25 +59,26 @@ router.get(
       currentTimeInMinutes,
       windingDownTime,
       windingDownTimeInMinutes,
+      adjustedWindingDownTime,
       morningFlowTime,
       morningFlowTimeInMinutes,
     });
     
     // CRITICAL: Winding down is ONLY available from windingDownTime until morning flow time (next day)
-    // Example: windingDown at 21:00 (9 PM), morningFlow at 06:00 (6 AM)
-    // Available: 9 PM → Midnight → 6 AM
-    // NOT Available: 6 AM → 9 PM
+    // Example: windingDown at 22:00 (10 PM), morningFlow at 06:00 (6 AM)
+    // Available: 10 PM → Midnight → 6 AM
+    // NOT Available: 6 AM → 10 PM
     
     let isAvailable = false;
     
     // Check if current time is in the "daytime" window (between morning flow and winding down)
     // If YES → NOT available
     // If NO → Available (either late night or early morning)
-    if (currentTimeInMinutes >= morningFlowTimeInMinutes && currentTimeInMinutes < windingDownTimeInMinutes) {
-      // Daytime: Between 6 AM and 9 PM → NOT AVAILABLE
+    if (currentTimeInMinutes >= morningFlowTimeInMinutes && currentTimeInMinutes < adjustedWindingDownTime) {
+      // Daytime: Between morning flow and winding down → NOT AVAILABLE
       isAvailable = false;
     } else {
-      // Nighttime: After 9 PM OR before 6 AM → AVAILABLE
+      // Nighttime: After winding down time OR before morning flow → AVAILABLE
       isAvailable = true;
     }
     
