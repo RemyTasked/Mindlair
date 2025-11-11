@@ -164,7 +164,8 @@ export class EmailService {
     email: string,
     presleyFlowUrl: string,
     meetingCount: number,
-    tomorrowDate: string
+    dateString: string,
+    flowType: 'morning' | 'evening' = 'evening'
   ): Promise<boolean> {
     if (!this.isConfigured) {
       logger.warn('Email service not configured, skipping email send');
@@ -175,8 +176,15 @@ export class EmailService {
       const html = this.generatePresleyFlowHtml(
         presleyFlowUrl,
         meetingCount,
-        tomorrowDate
+        dateString,
+        flowType
       );
+
+      const isMorning = flowType === 'morning';
+      const dayRef = isMorning ? 'today' : 'tomorrow';
+      const emoji = isMorning ? '☀️' : '🌙';
+      const action = isMorning ? 'prepare for' : 'preview';
+      const verb = isMorning ? 'step into' : 'mentally rehearse';
 
       await sgMail.send({
         to: email,
@@ -184,12 +192,12 @@ export class EmailService {
           email: this.fromEmail,
           name: this.fromName,
         },
-        subject: '🎬 Presley Flow is ready — preview tomorrow\'s scenes',
-        text: `Your Presley Flow Session is ready. Preview tomorrow's ${meetingCount} meeting${meetingCount > 1 ? 's' : ''} and mentally rehearse your day: ${presleyFlowUrl}`,
+        subject: `${emoji} Presley Flow is ready — ${action} ${dayRef}'s scenes`,
+        text: `Your Presley Flow Session is ready. ${action.charAt(0).toUpperCase() + action.slice(1)} ${dayRef}'s ${meetingCount} meeting${meetingCount > 1 ? 's' : ''} and ${verb} your day: ${presleyFlowUrl}`,
         html,
       });
 
-      logger.info('Presley Flow notification sent', { email, meetingCount });
+      logger.info('Presley Flow notification sent', { email, meetingCount, flowType });
       return true;
     } catch (error: any) {
       logger.error('Error sending Presley Flow notification', {
@@ -645,8 +653,16 @@ export class EmailService {
   private generatePresleyFlowHtml(
     presleyFlowUrl: string,
     meetingCount: number,
-    tomorrowDate: string
+    dateString: string,
+    flowType: 'morning' | 'evening' = 'evening'
   ): string {
+    const isMorning = flowType === 'morning';
+    const dayRef = isMorning ? 'today' : 'tomorrow';
+    const dayRefCap = isMorning ? 'Today' : 'Tomorrow';
+    const emoji = isMorning ? '☀️' : '🌙';
+    const timeLabel = isMorning ? 'Morning' : 'Evening';
+    const action = isMorning ? 'prepare for' : 'preview';
+    const verb = isMorning ? 'step into' : 'step into tomorrow with';
     return `
 <!DOCTYPE html>
 <html>
@@ -774,18 +790,18 @@ export class EmailService {
   <div class="container">
     <div class="header">
       <h1>🎬 Presley Flow Session</h1>
-      <p>Your evening mental rehearsal is ready</p>
+      <p>Your ${timeLabel.toLowerCase()} ${isMorning ? 'preparation' : 'mental rehearsal'} is ready</p>
     </div>
     <div class="content">
-      <div class="moon-icon">🌙</div>
+      <div class="moon-icon">${emoji}</div>
       
       <div class="intro">
-        Tomorrow's script is ready. Take a few moments to preview your scenes and step into tomorrow with calm confidence.
+        ${dayRefCap}'s script is ready. Take a few moments to ${action} your scenes and ${verb} calm confidence.
       </div>
 
       <div class="meeting-count">
         <div class="number">${meetingCount}</div>
-        <div class="label">Meeting${meetingCount > 1 ? 's' : ''} Tomorrow · ${tomorrowDate}</div>
+        <div class="label">Meeting${meetingCount > 1 ? 's' : ''} ${dayRefCap} · ${dateString}</div>
       </div>
 
       <a href="${presleyFlowUrl}" class="cta-button">
@@ -796,7 +812,7 @@ export class EmailService {
         <h3>🌟 What you'll experience:</h3>
         <div class="benefit">
           <div class="benefit-icon">🎭</div>
-          <div>Preview each meeting as a "scene"</div>
+          <div>${isMorning ? 'Prepare for' : 'Preview'} each meeting as a "scene"</div>
         </div>
         <div class="benefit">
           <div class="benefit-icon">🧘</div>
@@ -804,7 +820,7 @@ export class EmailService {
         </div>
         <div class="benefit">
           <div class="benefit-icon">💫</div>
-          <div>Set your intention for tomorrow</div>
+          <div>Set your intention for ${dayRef}</div>
         </div>
         <div class="benefit">
           <div class="benefit-icon">😴</div>

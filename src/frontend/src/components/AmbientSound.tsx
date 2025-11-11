@@ -45,23 +45,30 @@ function generateSamples(type: SoundType): Float32Array {
       break;
     }
     case 'rain': {
-      // Rain: Gentle, soothing rain - perfect for reflection
+      // Rain: Ultra-gentle, meditative rain - perfect for deep reflection
       let prevNoise = 0;
+      let prevLowPass = 0;
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
-        // Soft pink noise (filtered random)
+        
+        // Very soft brown noise (heavily filtered for warmth)
         const noise = Math.random() * 2 - 1;
-        prevNoise += 0.03 * (noise - prevNoise);
-        const softRain = prevNoise * 0.25;
+        prevNoise += 0.01 * (noise - prevNoise); // Much slower filter
+        prevLowPass += 0.05 * (prevNoise - prevLowPass); // Second stage filter
+        const gentleRain = prevLowPass * 0.15; // Very quiet
         
-        // Very gentle, occasional droplets at lower frequency
-        const droplet = Math.sin(2 * Math.PI * (400 + Math.random() * 200) * t) * 
-                       Math.exp(-20 * (t % 0.2)) * 0.08;
+        // Extremely rare, soft droplets (only every ~1 second)
+        const dropletChance = Math.random();
+        const droplet = dropletChance < 0.001 
+          ? Math.sin(2 * Math.PI * (200 + Math.random() * 100) * t) * 
+            Math.exp(-10 * (t % 0.5)) * 0.04
+          : 0;
         
-        // Add a subtle low rumble for depth
-        const rumble = Math.sin(2 * Math.PI * 80 * t) * 0.05;
+        // Deep, barely-there rumble for grounding
+        const rumble = Math.sin(2 * Math.PI * 60 * t) * 0.03 + 
+                      Math.sin(2 * Math.PI * 40 * t) * 0.02;
         
-        data[i] = softRain + droplet + rumble;
+        data[i] = gentleRain + droplet + rumble;
       }
       break;
     }

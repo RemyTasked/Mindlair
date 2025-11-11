@@ -37,7 +37,8 @@ router.get(
     const currentTimeInMinutes = currentHour * 60 + currentMinute;
     
     // Parse winding down time (format: "HH:mm")
-    const windingDownTime = (user as any).preferences?.windingDownTime || '21:00';
+    // DEFAULT: 22:00 (10 PM) - late enough that most people are done with their day
+    const windingDownTime = (user as any).preferences?.windingDownTime || '22:00';
     const [windingDownHour, windingDownMinute] = windingDownTime.split(':').map(Number);
     const windingDownTimeInMinutes = windingDownHour * 60 + windingDownMinute;
     
@@ -45,6 +46,18 @@ router.get(
     const morningFlowTime = (user as any).preferences?.morningFlowTime || '06:00';
     const [morningFlowHour, morningFlowMinute] = morningFlowTime.split(':').map(Number);
     const morningFlowTimeInMinutes = morningFlowHour * 60 + morningFlowMinute;
+    
+    logger.info('Winding down availability check', {
+      userId,
+      userTimezone,
+      currentHour,
+      currentMinute,
+      currentTimeInMinutes,
+      windingDownTime,
+      windingDownTimeInMinutes,
+      morningFlowTime,
+      morningFlowTimeInMinutes,
+    });
     
     // CRITICAL: Winding down is ONLY available from windingDownTime until morning flow time (next day)
     // Example: windingDown at 21:00 (9 PM), morningFlow at 06:00 (6 AM)

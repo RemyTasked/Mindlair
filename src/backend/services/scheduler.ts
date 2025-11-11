@@ -764,6 +764,23 @@ async function sendPresleyFlowSessions() {
         const isMorningTime = currentHour === morningHour && user.preferences?.enableMorningFlow;
         const isEveningTime = currentHour === eveningHour && user.preferences?.enableEveningFlow;
         
+        logger.info('Presley Flow scheduler check', {
+          userId: user.id,
+          userEmail: user.email,
+          userTimezone,
+          serverTime: new Date().toISOString(),
+          userLocalTime: now.toISOString(),
+          currentHour,
+          morningFlowTime,
+          morningHour,
+          eveningFlowTime,
+          eveningHour,
+          isMorningTime,
+          isEveningTime,
+          enableMorningFlow: user.preferences?.enableMorningFlow,
+          enableEveningFlow: user.preferences?.enableEveningFlow,
+        });
+        
         if (!isMorningTime && !isEveningTime) continue;
 
         // Only send if email is enabled
@@ -810,7 +827,8 @@ async function sendPresleyFlowSessions() {
         const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
         const presleyFlowUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/presley-flow/${user.id}/${targetDateStr}`;
 
-        // Send via email
+        // Send via email with correct flowType
+        const flowType = isMorningTime ? 'morning' : 'evening';
         const emailSent = await emailService.sendPresleyFlowNotification(
           user.email,
           presleyFlowUrl,
@@ -819,7 +837,8 @@ async function sendPresleyFlowSessions() {
             weekday: 'long',
             month: 'short',
             day: 'numeric',
-          })
+          }),
+          flowType
         );
 
         // Send via SMS if enabled

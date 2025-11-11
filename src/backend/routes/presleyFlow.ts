@@ -404,8 +404,9 @@ router.get(
         focusSceneUsed: m.focusSceneOpened,
       }));
 
-    // Generate Presley Flow content with AI - pass flowType to ensure correct language
+    // Generate Presley Flow content with AI - pass flowType and timezone to ensure correct language and times
     const flowType = isMorning ? 'morning' : 'evening';
+    const userTimezone = user.timezone || 'America/New_York';
     const flowContent = await promptGenerator.generatePresleyFlowSession(
       meetings.map((m: Meeting) => ({
         title: m.title,
@@ -418,7 +419,8 @@ router.get(
       (user as any).preferences?.tone as any,
       historicalInsights.length > 0 ? historicalInsights : undefined,
       userId,
-      flowType
+      flowType,
+      userTimezone
     );
 
     return res.json({

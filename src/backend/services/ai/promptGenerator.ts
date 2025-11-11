@@ -265,7 +265,7 @@ Generate the message now:`;
     attendees: string[];
     description?: string;
     meetingType?: string;
-  }>, tone: ToneType = 'balanced', historicalInsights?: HistoricalInsight[], userId?: string, flowType: 'morning' | 'evening' = 'evening'): Promise<{
+  }>, tone: ToneType = 'balanced', historicalInsights?: HistoricalInsight[], userId?: string, flowType: 'morning' | 'evening' = 'evening', userTimezone?: string): Promise<{
     openingScene: string;
     meetingPreviews: Array<{
       title: string;
@@ -403,14 +403,17 @@ Return as JSON:
 
       const parsed = JSON.parse(content);
       
-      // Ensure meeting previews match the input
+      // Ensure meeting previews match the input with correct timezone
+      const moment = require('moment-timezone');
       parsed.meetingPreviews = meetings.map((m, i) => ({
         title: m.title,
-        time: m.startTime.toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true
-        }),
+        time: userTimezone 
+          ? moment(m.startTime).tz(userTimezone).format('h:mm A')
+          : m.startTime.toLocaleTimeString('en-US', { 
+              hour: 'numeric', 
+              minute: '2-digit',
+              hour12: true
+            }),
         focusCue: parsed.meetingPreviews?.[i]?.focusCue || `Bring clarity and presence to this ${m.meetingType || 'meeting'}.`,
       }));
 
@@ -422,17 +425,20 @@ Return as JSON:
       const dayRef = flowType === 'morning' ? 'Today' : 'Tomorrow';
       const dayRefLower = dayRef.toLowerCase();
       
+      const moment = require('moment-timezone');
       return {
         openingScene: flowType === 'morning'
           ? `Scene opens: sunlight filters in. ${dayRef} unfolds at your direction.`
           : `Camera wraps — rest easy, the next act awaits.`,
         meetingPreviews: meetings.map(m => ({
           title: m.title,
-          time: m.startTime.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit',
-            hour12: true
-          }),
+          time: userTimezone 
+            ? moment(m.startTime).tz(userTimezone).format('h:mm A')
+            : m.startTime.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true
+              }),
           focusCue: `Breathe and lead the moment.`,
         })),
         mindsetTheme: `${dayRef}'s tone is focused and calm. Trust your preparation.`,
