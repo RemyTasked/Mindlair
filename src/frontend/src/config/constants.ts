@@ -1,6 +1,6 @@
 // Cache-busting timestamp for logo assets
 // Update this timestamp whenever logo files change to force browser refresh
-export const LOGO_VERSION = '20251109180610'; // YYYYMMDDHHMMSS - Meet Cute M logo
+export const LOGO_VERSION = '20251110212911'; // YYYYMMDDHHMMSS - Meet Cute M logo
 
 // Logo paths - using M logo with circle
 export const LOGO_PATHS = {
