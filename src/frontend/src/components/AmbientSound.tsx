@@ -45,30 +45,29 @@ function generateSamples(type: SoundType): Float32Array {
       break;
     }
     case 'rain': {
-      // Rain: Ultra-gentle, meditative rain - perfect for deep reflection
+      // Rain: Pure, continuous meditative soundscape - NO ticks or droplets
+      // Just smooth, warm filtered noise for deep reflection
       let prevNoise = 0;
       let prevLowPass = 0;
+      let prevVeryLowPass = 0;
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
         
-        // Very soft brown noise (heavily filtered for warmth)
+        // Triple-filtered brown noise for ultra-smooth warmth
         const noise = Math.random() * 2 - 1;
-        prevNoise += 0.01 * (noise - prevNoise); // Much slower filter
-        prevLowPass += 0.05 * (prevNoise - prevLowPass); // Second stage filter
-        const gentleRain = prevLowPass * 0.15; // Very quiet
+        prevNoise += 0.008 * (noise - prevNoise); // Very slow filter
+        prevLowPass += 0.04 * (prevNoise - prevLowPass); // Second stage
+        prevVeryLowPass += 0.06 * (prevLowPass - prevVeryLowPass); // Third stage
+        const gentleRain = prevVeryLowPass * 0.18; // Slightly louder but still gentle
         
-        // Extremely rare, soft droplets (only every ~1 second)
-        const dropletChance = Math.random();
-        const droplet = dropletChance < 0.001 
-          ? Math.sin(2 * Math.PI * (200 + Math.random() * 100) * t) * 
-            Math.exp(-10 * (t % 0.5)) * 0.04
-          : 0;
+        // Deep, barely-there rumble for grounding (no sharp attacks)
+        const rumble = Math.sin(2 * Math.PI * 55 * t) * 0.025 + 
+                      Math.sin(2 * Math.PI * 38 * t) * 0.018;
         
-        // Deep, barely-there rumble for grounding
-        const rumble = Math.sin(2 * Math.PI * 60 * t) * 0.03 + 
-                      Math.sin(2 * Math.PI * 40 * t) * 0.02;
+        // Subtle slow modulation for organic feel (no ticks)
+        const modulation = Math.sin(2 * Math.PI * 0.1 * t) * 0.02;
         
-        data[i] = gentleRain + droplet + rumble;
+        data[i] = gentleRain + rumble + (gentleRain * modulation);
       }
       break;
     }

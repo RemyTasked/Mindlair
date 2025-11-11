@@ -1790,7 +1790,12 @@ export default function Settings() {
                 </p>
                 <button
                   onClick={async () => {
-                    if (confirm('Refresh Meet Cute to the latest version? Your account and settings will remain intact.')) {
+                    try {
+                      if (!confirm('Refresh Meet Cute to the latest version? Your account and settings will remain intact.')) {
+                        console.log('❌ User canceled app refresh');
+                        return;
+                      }
+                      
                       console.log('✨ App refresh initiated...');
                       
                       // Show updating state
@@ -1804,21 +1809,30 @@ export default function Settings() {
                       const token = localStorage.getItem('meetcute_token');
                       localStorage.clear();
                       if (token) localStorage.setItem('meetcute_token', token);
+                      console.log('✅ Cleared localStorage (kept token)');
                       
                       // Clear all caches
                       if ('caches' in window) {
                         const names = await caches.keys();
+                        console.log(`🗑️ Clearing ${names.length} caches...`);
                         await Promise.all(names.map(name => caches.delete(name)));
+                        console.log('✅ Cleared all caches');
                       }
                       
                       // Unregister service workers
                       if ('serviceWorker' in navigator) {
                         const registrations = await navigator.serviceWorker.getRegistrations();
+                        console.log(`🗑️ Unregistering ${registrations.length} service workers...`);
                         await Promise.all(registrations.map(r => r.unregister()));
+                        console.log('✅ Unregistered all service workers');
                       }
                       
-                      // Reload immediately without alert
+                      console.log('🔄 Reloading app...');
+                      // Reload immediately
                       window.location.reload();
+                    } catch (error) {
+                      console.error('❌ Error during app refresh:', error);
+                      alert('Failed to refresh app. Please try closing and reopening the app.');
                     }
                   }}
                   className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg font-medium"
