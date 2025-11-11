@@ -1,0 +1,44 @@
+Pre-Meeting Focus:
+  Email: emailPreMeetingCues
+  Slack: slackPreMeetingCues  
+  SMS: smsPreMeetingCues
+
+In-Meeting Cues:
+  Email: emailInMeetingCues
+  Slack: slackInMeetingCues
+  SMS: smsInMeetingCues
+
+Post-Meeting:
+  Email: emailPostMeetingCues
+  Slack: slackPostMeetingCues
+  SMS: smsPostMeetingCues
+
+Presley Flow:
+  Email: emailPresleyFlow
+  Slack: slackPresleyFlow
+  SMS: smsPresleyFlow
+
+Wellness:
+  Email: emailWellnessReminders
+  Slack: slackWellnessReminders
+  SMS: smsWellnessReminders
+
+Meeting Insights:
+  Email: emailMeetingInsights
+  Slack: slackMeetingInsights
+  SMS: smsMeetingInsights
+
+Morning Recap:
+  Email: emailMorningRecap
+  Slack: slackMorningRecap
+  SMS: smsMorningRecap
+
+Daily Wrap-Up:
+  Email: emailDailyWrapUp
+  Slack: slackDailyWrapUp
+  SMS: smsDailyWrapUp
+
+Winding Down:
+  Email: emailWindingDown
+  Slack: slackWindingDown
+  SMS: smsWindingDown

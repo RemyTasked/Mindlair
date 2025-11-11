@@ -126,13 +126,46 @@ model DeliverySettings {
   id        String   @id @default(uuid())
   userId    String   @unique
   
-  // Delivery channels
+  // Delivery channels - Master toggles
   emailEnabled   Boolean @default(true)
   slackEnabled   Boolean @default(false)
   smsEnabled     Boolean @default(false)
   pushEnabled    Boolean @default(true)  // Master toggle for web push notifications
   
-  // Granular push notification preferences (only applies if pushEnabled is true)
+  // Granular EMAIL preferences (only applies if emailEnabled is true)
+  emailPreMeetingCues      Boolean @default(true)  // Pre-meeting focus session alerts
+  emailInMeetingCues       Boolean @default(false) // In-meeting cues (usually not needed via email)
+  emailPostMeetingCues     Boolean @default(true)  // Post-meeting cues (reflections, insights)
+  emailPresleyFlow         Boolean @default(true)  // Morning/evening Presley Flow alerts
+  emailWellnessReminders   Boolean @default(true)  // Wellness check-in reminders
+  emailMeetingInsights     Boolean @default(true)  // Post-meeting insights
+  emailMorningRecap        Boolean @default(true)  // Morning recap notifications
+  emailDailyWrapUp         Boolean @default(true)  // Evening wrap-up notifications
+  emailWindingDown         Boolean @default(true)  // Winding down session notifications
+  
+  // Granular SLACK preferences (only applies if slackEnabled is true)
+  slackPreMeetingCues      Boolean @default(true)  // Pre-meeting focus session alerts
+  slackInMeetingCues       Boolean @default(true)  // In-meeting cues (contextual nudges)
+  slackPostMeetingCues     Boolean @default(true)  // Post-meeting cues (reflections, insights)
+  slackPresleyFlow         Boolean @default(true)  // Morning/evening Presley Flow alerts
+  slackWellnessReminders   Boolean @default(true)  // Wellness check-in reminders
+  slackMeetingInsights     Boolean @default(true)  // Post-meeting insights
+  slackMorningRecap        Boolean @default(true)  // Morning recap notifications
+  slackDailyWrapUp         Boolean @default(true)  // Evening wrap-up notifications
+  slackWindingDown         Boolean @default(true)  // Winding down session notifications
+  
+  // Granular SMS preferences (only applies if smsEnabled is true)
+  smsPreMeetingCues        Boolean @default(true)  // Pre-meeting focus session alerts
+  smsInMeetingCues         Boolean @default(false) // In-meeting cues (usually too intrusive via SMS)
+  smsPostMeetingCues       Boolean @default(false) // Post-meeting cues
+  smsPresleyFlow           Boolean @default(true)  // Morning/evening Presley Flow alerts
+  smsWellnessReminders     Boolean @default(true)  // Wellness check-in reminders
+  smsMeetingInsights       Boolean @default(false) // Post-meeting insights
+  smsMorningRecap          Boolean @default(true)  // Morning recap notifications
+  smsDailyWrapUp           Boolean @default(true)  // Evening wrap-up notifications
+  smsWindingDown           Boolean @default(true)  // Winding down session notifications
+  
+  // Granular PUSH notification preferences (only applies if pushEnabled is true)
   pushPreMeetingCues      Boolean @default(true)  // Pre-meeting focus session alerts
   pushInMeetingCues       Boolean @default(true)  // In-meeting cues (contextual nudges)
   pushPostMeetingCues     Boolean @default(true)  // Post-meeting cues (reflections, insights)

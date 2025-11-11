@@ -46,10 +46,46 @@ interface Preferences {
 }
 
 interface DeliverySettings {
+  // Master toggles
   emailEnabled: boolean;
   slackEnabled: boolean;
   smsEnabled: boolean;
   pushEnabled: boolean;
+  
+  // Email granular
+  emailPreMeetingCues: boolean;
+  emailInMeetingCues: boolean;
+  emailPostMeetingCues: boolean;
+  emailPresleyFlow: boolean;
+  emailWellnessReminders: boolean;
+  emailMeetingInsights: boolean;
+  emailMorningRecap: boolean;
+  emailDailyWrapUp: boolean;
+  emailWindingDown: boolean;
+  
+  // Slack granular
+  slackPreMeetingCues: boolean;
+  slackInMeetingCues: boolean;
+  slackPostMeetingCues: boolean;
+  slackPresleyFlow: boolean;
+  slackWellnessReminders: boolean;
+  slackMeetingInsights: boolean;
+  slackMorningRecap: boolean;
+  slackDailyWrapUp: boolean;
+  slackWindingDown: boolean;
+  
+  // SMS granular
+  smsPreMeetingCues: boolean;
+  smsInMeetingCues: boolean;
+  smsPostMeetingCues: boolean;
+  smsPresleyFlow: boolean;
+  smsWellnessReminders: boolean;
+  smsMeetingInsights: boolean;
+  smsMorningRecap: boolean;
+  smsDailyWrapUp: boolean;
+  smsWindingDown: boolean;
+  
+  // Push granular
   pushPreMeetingCues: boolean;
   pushInMeetingCues: boolean;
   pushPostMeetingCues: boolean;
@@ -59,6 +95,7 @@ interface DeliverySettings {
   pushMorningRecap: boolean;
   pushDailyWrapUp: boolean;
   pushWindingDown: boolean;
+  
   phoneNumber?: string;
   slackWebhookUrl?: string;
 }
@@ -105,6 +142,41 @@ export default function Settings() {
     slackEnabled: false,
     smsEnabled: false,
     pushEnabled: true,
+    
+    // Email defaults
+    emailPreMeetingCues: true,
+    emailInMeetingCues: false,
+    emailPostMeetingCues: true,
+    emailPresleyFlow: true,
+    emailWellnessReminders: true,
+    emailMeetingInsights: true,
+    emailMorningRecap: true,
+    emailDailyWrapUp: true,
+    emailWindingDown: true,
+    
+    // Slack defaults
+    slackPreMeetingCues: true,
+    slackInMeetingCues: true,
+    slackPostMeetingCues: true,
+    slackPresleyFlow: true,
+    slackWellnessReminders: true,
+    slackMeetingInsights: true,
+    slackMorningRecap: true,
+    slackDailyWrapUp: true,
+    slackWindingDown: true,
+    
+    // SMS defaults
+    smsPreMeetingCues: true,
+    smsInMeetingCues: false,
+    smsPostMeetingCues: false,
+    smsPresleyFlow: true,
+    smsWellnessReminders: true,
+    smsMeetingInsights: false,
+    smsMorningRecap: true,
+    smsDailyWrapUp: true,
+    smsWindingDown: true,
+    
+    // Push defaults
     pushPreMeetingCues: true,
     pushInMeetingCues: true,
     pushPostMeetingCues: true,
