@@ -1793,6 +1793,13 @@ export default function Settings() {
                     if (confirm('Refresh Meet Cute to the latest version? Your account and settings will remain intact.')) {
                       console.log('✨ App refresh initiated...');
                       
+                      // Show updating state
+                      const btn = document.activeElement as HTMLButtonElement;
+                      if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '🔄 Updating...';
+                      }
+                      
                       // Clear localStorage (except token)
                       const token = localStorage.getItem('meetcute_token');
                       localStorage.clear();
@@ -1810,7 +1817,7 @@ export default function Settings() {
                         await Promise.all(registrations.map(r => r.unregister()));
                       }
                       
-                      alert('Refreshing to latest version! ✨');
+                      // Reload immediately without alert
                       window.location.reload();
                     }
                   }}

@@ -8,6 +8,7 @@ interface UpdateNotificationProps {
 
 export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate, onDismiss }) => {
   const [isVisible, setIsVisible] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   if (!isVisible) return null;
 
@@ -16,47 +17,63 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-2xl p-4 border border-indigo-400">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-1">
-            <RefreshCw className="w-6 h-6 text-white" />
+            <RefreshCw className={`w-6 h-6 text-white ${isUpdating ? 'animate-spin' : ''}`} />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-lg mb-1">Update Available! ✨</h3>
-            <p className="text-sm text-indigo-100 mb-3">
-              A new version of Meet Cute is ready. Update now to get the latest features and improvements.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setIsVisible(false);
-                  onUpdate();
-                }}
-                className="flex-1 px-4 py-2 bg-white text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors font-medium text-sm shadow-md"
-              >
-                Update Now
-              </button>
-              <button
-                onClick={() => {
-                  setIsVisible(false);
-                  onDismiss();
-                }}
-                className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 rounded-lg transition-colors font-medium text-sm"
-              >
-                Later
-              </button>
-            </div>
-            <p className="text-xs text-indigo-200 mt-2">
-              💡 Tip: Update during a break to avoid interrupting your workflow
-            </p>
+            {isUpdating ? (
+              <>
+                <h3 className="font-semibold text-lg mb-1">Updating... ✨</h3>
+                <p className="text-sm text-indigo-100">
+                  Refreshing to the latest version. This will only take a moment!
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="font-semibold text-lg mb-1">Update Available! ✨</h3>
+                <p className="text-sm text-indigo-100 mb-3">
+                  A new version of Meet Cute is ready. Update now to get the latest features and improvements.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setIsUpdating(true);
+                      // Small delay to show the updating state
+                      setTimeout(() => {
+                        onUpdate();
+                      }, 500);
+                    }}
+                    className="flex-1 px-4 py-2 bg-white text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors font-medium text-sm shadow-md"
+                  >
+                    Update Now
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsVisible(false);
+                      onDismiss();
+                    }}
+                    className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 rounded-lg transition-colors font-medium text-sm"
+                  >
+                    Later
+                  </button>
+                </div>
+                <p className="text-xs text-indigo-200 mt-2">
+                  💡 Tip: Update during a break to avoid interrupting your workflow
+                </p>
+              </>
+            )}
           </div>
-          <button
-            onClick={() => {
-              setIsVisible(false);
-              onDismiss();
-            }}
-            className="flex-shrink-0 text-white hover:text-indigo-200 transition-colors"
-            aria-label="Dismiss"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!isUpdating && (
+            <button
+              onClick={() => {
+                setIsVisible(false);
+                onDismiss();
+              }}
+              className="flex-shrink-0 text-white hover:text-indigo-200 transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>

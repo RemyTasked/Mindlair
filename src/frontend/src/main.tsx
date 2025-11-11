@@ -71,12 +71,18 @@ serviceWorkerRegistration.register({
       // Skip waiting and activate new service worker immediately
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
-      
-      // Wait a moment for service worker to activate, then reload
-      setTimeout(() => {
+        
+        // Listen for the service worker to become active
+        registration.waiting.addEventListener('statechange', (e: any) => {
+          if (e.target.state === 'activated') {
+            // Reload as soon as the new service worker is active
+            window.location.reload();
+          }
+        });
+      } else {
+        // If no waiting worker, just reload
         window.location.reload();
-      }, 100);
+      }
     });
   },
 });
