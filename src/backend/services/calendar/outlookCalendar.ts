@@ -15,7 +15,7 @@ export class OutlookCalendarService {
     this.redirectUri = process.env.MICROSOFT_REDIRECT_URI || '';
   }
 
-  getAuthUrl(): string {
+  getAuthUrl(userId?: string): string {
     const scopes = [
       'User.Read',
       'Calendars.Read',
@@ -25,15 +25,21 @@ export class OutlookCalendarService {
       'offline_access',
     ].join(' ');
 
-    const params = new URLSearchParams({
+    const params: any = {
       client_id: this.clientId,
       response_type: 'code',
       redirect_uri: this.redirectUri,
       scope: scopes,
       response_mode: 'query',
-    });
+    };
 
-    return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params.toString()}`;
+    // If userId is provided, include it in state to track which user is adding a calendar
+    if (userId) {
+      params.state = Buffer.from(JSON.stringify({ userId })).toString('base64');
+    }
+
+    const urlParams = new URLSearchParams(params);
+    return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${urlParams.toString()}`;
   }
 
   async getTokensFromCode(code: string) {

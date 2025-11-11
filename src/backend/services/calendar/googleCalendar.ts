@@ -30,8 +30,8 @@ export class GoogleCalendarService {
     );
   }
 
-  getAuthUrl(): string {
-    return this.oauth2Client.generateAuthUrl({
+  getAuthUrl(userId?: string): string {
+    const authUrlParams: any = {
       access_type: 'offline',
       scope: [
         'https://www.googleapis.com/auth/calendar.readonly',
@@ -41,7 +41,14 @@ export class GoogleCalendarService {
         'https://www.googleapis.com/auth/calendar.events.readonly',
       ],
       prompt: 'consent',
-    });
+    };
+
+    // If userId is provided, include it in state to track which user is adding a calendar
+    if (userId) {
+      authUrlParams.state = Buffer.from(JSON.stringify({ userId })).toString('base64');
+    }
+
+    return this.oauth2Client.generateAuthUrl(authUrlParams);
   }
 
   async getTokensFromCode(code: string) {

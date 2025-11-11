@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { outlookCalendarService } from '../services/calendar/outlookCalendar';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { authenticate } from '../middleware/auth';
+import { authenticate, optionalAuthenticate } from '../middleware/auth';
 import { logger } from '../utils/logger';
 import { prisma } from '../utils/prisma';
 
@@ -12,8 +12,11 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 // Get Google OAuth URL
-router.get('/google/url', (_req, res) => {
-  const authUrl = googleCalendarService.getAuthUrl();
+router.get('/google/url', optionalAuthenticate, (req, res) => {
+  // If user is already authenticated, pass their userId to track multi-calendar addition
+  const userId = req.userId; // Set by optionalAuthenticate middleware if token present
+  const authUrl = googleCalendarService.getAuthUrl(userId);
+  logger.info('📝 Generated Google OAuth URL', { hasUserId: !!userId });
   return res.json({ authUrl });
 });
 
@@ -21,15 +24,28 @@ router.get('/google/url', (_req, res) => {
 router.get(
   '/google/callback',
   asyncHandler(async (req, res) => {
-    const { code, error } = req.query;
+    const { code, error, state } = req.query;
 
     logger.info('🔐 Google OAuth callback received', {
       hasCode: !!code,
       error: error,
+      hasState: !!state,
       query: req.query,
       frontendUrl: process.env.FRONTEND_URL,
       redirectUri: process.env.GOOGLE_REDIRECT_URI,
     });
+
+    // Decode state to get userId if present (for multi-calendar addition)
+    let existingUserId: string | null = null;
+    if (state && typeof state === 'string') {
+      try {
+        const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+        existingUserId = decoded.userId;
+        logger.info('📝 Decoded state parameter', { existingUserId });
+      } catch (e) {
+        logger.warn('⚠️ Failed to decode state parameter', { state });
+      }
+    }
 
     if (error) {
       logger.error('❌ Google OAuth error', { error });
@@ -75,13 +91,30 @@ router.get(
     }
 
     // Create or update user
-    let user = await prisma.user.findUnique({
-      where: { email: userInfo.email },
-      include: {
-        preferences: true,
-        deliverySettings: true,
-      },
-    });
+    // If existingUserId is present, this is a multi-calendar addition - use that user
+    let user;
+    if (existingUserId) {
+      user = await prisma.user.findUnique({
+        where: { id: existingUserId },
+        include: {
+          preferences: true,
+          deliverySettings: true,
+        },
+      });
+      logger.info('✅ Using existing user for multi-calendar addition', { 
+        existingUserId, 
+        newEmail: userInfo.email 
+      });
+    } else {
+      // Otherwise, find or create user by email (initial signup)
+      user = await prisma.user.findUnique({
+        where: { email: userInfo.email },
+        include: {
+          preferences: true,
+          deliverySettings: true,
+        },
+      });
+    }
 
     if (!user) {
       user = await prisma.user.create({
@@ -212,8 +245,11 @@ router.get(
 );
 
 // Get Microsoft OAuth URL
-router.get('/microsoft/url', (_req, res) => {
-  const authUrl = outlookCalendarService.getAuthUrl();
+router.get('/microsoft/url', optionalAuthenticate, (req, res) => {
+  // If user is already authenticated, pass their userId to track multi-calendar addition
+  const userId = req.userId; // Set by optionalAuthenticate middleware if token present
+  const authUrl = outlookCalendarService.getAuthUrl(userId);
+  logger.info('📝 Generated Microsoft OAuth URL', { hasUserId: !!userId });
   return res.json({ authUrl });
 });
 
@@ -221,10 +257,22 @@ router.get('/microsoft/url', (_req, res) => {
 router.get(
   '/microsoft/callback',
   asyncHandler(async (req, res) => {
-    const { code } = req.query;
+    const { code, state } = req.query;
 
     if (!code || typeof code !== 'string') {
       throw new AppError('Authorization code is required', 400);
+    }
+
+    // Decode state to get userId if present (for multi-calendar addition)
+    let existingUserId: string | null = null;
+    if (state && typeof state === 'string') {
+      try {
+        const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+        existingUserId = decoded.userId;
+        logger.info('📝 Decoded state parameter (Microsoft)', { existingUserId });
+      } catch (e) {
+        logger.warn('⚠️ Failed to decode state parameter (Microsoft)', { state });
+      }
     }
 
     // Exchange code for tokens
@@ -236,13 +284,30 @@ router.get(
     );
 
     // Create or update user
-    let user = await prisma.user.findUnique({
-      where: { email: userInfo.email },
-      include: {
-        preferences: true,
-        deliverySettings: true,
-      },
-    });
+    // If existingUserId is present, this is a multi-calendar addition - use that user
+    let user;
+    if (existingUserId) {
+      user = await prisma.user.findUnique({
+        where: { id: existingUserId },
+        include: {
+          preferences: true,
+          deliverySettings: true,
+        },
+      });
+      logger.info('✅ Using existing user for multi-calendar addition (Microsoft)', { 
+        existingUserId, 
+        newEmail: userInfo.email 
+      });
+    } else {
+      // Otherwise, find or create user by email (initial signup)
+      user = await prisma.user.findUnique({
+        where: { email: userInfo.email },
+        include: {
+          preferences: true,
+          deliverySettings: true,
+        },
+      });
+    }
 
     if (!user) {
       user = await prisma.user.create({
