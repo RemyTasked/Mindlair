@@ -1,7 +1,7 @@
--- Drop old unique constraint on (userId, provider)
--- Add new unique constraint on (userId, provider, email)
+-- Fix calendar account unique constraint (v2 - idempotent)
+-- This migration safely handles the constraint change even if partially applied
 
--- First, check if the old constraint exists and drop it
+-- Drop old unique constraint on (userId, provider) if it exists
 DO $$ 
 BEGIN
     IF EXISTS (
@@ -11,11 +11,11 @@ BEGIN
         ALTER TABLE "calendar_accounts" DROP CONSTRAINT "calendar_accounts_userId_provider_key";
         RAISE NOTICE 'Dropped old constraint: calendar_accounts_userId_provider_key';
     ELSE
-        RAISE NOTICE 'Old constraint does not exist, skipping drop';
+        RAISE NOTICE 'Old constraint does not exist, skipping';
     END IF;
 END $$;
 
--- Add the new constraint (only if it doesn't already exist)
+-- Add new unique constraint on (userId, provider, email) if it doesn't exist
 DO $$ 
 BEGIN
     IF NOT EXISTS (
@@ -25,6 +25,6 @@ BEGIN
         ALTER TABLE "calendar_accounts" ADD CONSTRAINT "calendar_accounts_userId_provider_email_key" UNIQUE ("userId", "provider", "email");
         RAISE NOTICE 'Added new constraint: calendar_accounts_userId_provider_email_key';
     ELSE
-        RAISE NOTICE 'New constraint already exists, skipping add';
+        RAISE NOTICE 'New constraint already exists, skipping';
     END IF;
 END $$;
