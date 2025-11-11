@@ -43,7 +43,28 @@ const pgPool = new pg.Pool({
 });
 
 // Middleware
-app.use(helmet());
+// Configure helmet with PWA-friendly CSP
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'", // Allow inline scripts for PWA/service worker registration
+        "'unsafe-eval'", // Allow eval for development/debugging
+      ],
+      styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles
+      imgSrc: ["'self'", "data:", "blob:", "https:"], // Allow images from various sources
+      connectSrc: ["'self'", "https://www.googleapis.com", "https://graph.microsoft.com"], // Allow API calls
+      fontSrc: ["'self'", "data:"], // Allow fonts
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'", "blob:", "data:"], // Allow audio/video
+      frameSrc: ["'self'"],
+      workerSrc: ["'self'", "blob:"], // Allow service workers
+      manifestSrc: ["'self'"], // Allow PWA manifest
+    },
+  },
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
