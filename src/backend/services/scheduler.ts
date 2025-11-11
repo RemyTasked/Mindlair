@@ -1304,6 +1304,7 @@ async function sendWindingDownNotifications() {
 async function evaluateAndDispatchCues() {
   try {
     const now = new Date();
+    logger.info('🔄 Evaluating cues for all users', { timestamp: now.toISOString() });
     
     // Get all users with cue settings enabled
     const users = await prisma.user.findMany({
@@ -1315,12 +1316,22 @@ async function evaluateAndDispatchCues() {
       },
     });
 
+    logger.info(`Found ${users.length} total users`);
+
     for (const user of users) {
       try {
         // Skip if cues disabled or no calendar
-        if (!user.cueSettings?.enabled || user.calendarAccounts.length === 0) {
+        if (!user.cueSettings?.enabled) {
+          logger.info(`⏭️ Skipping user ${user.email} - cues disabled`);
           continue;
         }
+        
+        if (user.calendarAccounts.length === 0) {
+          logger.info(`⏭️ Skipping user ${user.email} - no calendar accounts`);
+          continue;
+        }
+        
+        logger.info(`✅ Processing cues for user ${user.email}`);
 
         // Get today's and tomorrow's meetings
         const startOfToday = new Date(now);
@@ -1341,6 +1352,14 @@ async function evaluateAndDispatchCues() {
           orderBy: {
             startTime: 'asc',
           },
+        });
+
+        logger.info(`Found ${meetings.length} meetings for user ${user.email}`, {
+          meetings: meetings.map(m => ({
+            title: m.title,
+            start: m.startTime,
+            end: m.endTime,
+          })),
         });
 
         const accountMap = new Map(
@@ -1506,15 +1525,24 @@ async function evaluateAndDispatchCues() {
 
               // Deliver via appropriate channel
               if (cue.channel === 'toast') {
-                // Toast delivery happens via push notification for now
-                // TODO: Implement WebSocket for real-time toast delivery
-                if (user.deliverySettings?.pushEnabled) {
-                  await pushNotificationService.sendPresleyFlowNotification(
+                // Send push notification if enabled
+                if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushInMeetingCues) {
+                  await pushNotificationService.sendCueNotification(
                     user.id,
-                    'Cue Companion',
                     cue.text,
-                    `/dashboard`
+                    meeting.title,
+                    cue.cueId
                   );
+                  logger.info('✅ Push notification sent for cue', {
+                    userId: user.id,
+                    cueId: cue.cueId,
+                  });
+                } else {
+                  logger.info('⚠️ Push notifications disabled for user', {
+                    userId: user.id,
+                    pushEnabled: user.deliverySettings?.pushEnabled,
+                    pushInMeetingCues: user.deliverySettings?.pushInMeetingCues,
+                  });
                 }
               } else if (cue.channel === 'slack') {
                 // Slack DM to self - skip for now, will implement in Phase 2

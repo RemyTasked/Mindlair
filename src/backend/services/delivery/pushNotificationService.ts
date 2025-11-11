@@ -23,6 +23,7 @@ interface PushPayload {
   badge?: string;
   url?: string;
   tag?: string;
+  requireInteraction?: boolean;
   data?: any;
 }
 
@@ -159,6 +160,31 @@ class PushNotificationService {
         presleyFlowUrl,
         meetingCount,
         dateStr,
+      },
+    });
+  }
+
+  /**
+   * Send in-meeting cue notification
+   */
+  async sendCueNotification(
+    userId: string,
+    cueText: string,
+    meetingTitle: string,
+    cueId: string
+  ): Promise<boolean> {
+    return this.sendToUser(userId, {
+      title: '💡 Meeting Cue',
+      body: cueText,
+      icon: '/logo.png',
+      url: '/dashboard',
+      tag: `cue-${cueId}`,
+      requireInteraction: true, // Keep notification visible
+      data: {
+        type: 'meeting-cue',
+        cueId,
+        meetingTitle,
+        cueText,
       },
     });
   }
