@@ -90,21 +90,32 @@ export function CueToast({ cue, onDismiss }: CueToastProps) {
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className="fixed bottom-6 right-6 z-[9999] max-w-sm"
       >
-        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 space-y-3">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3">
+        <div className="bg-gradient-to-br from-white to-indigo-50 rounded-xl shadow-2xl border-2 border-indigo-200 p-4 space-y-3">
+          {/* Meet Cute Branding + Close Button */}
+          <div className="flex items-center justify-between gap-3 pb-2 border-b border-indigo-100">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center">
+                <span className="text-white text-xs font-bold">M</span>
+              </div>
+              <span className="text-xs font-semibold text-indigo-900">Meet Cute</span>
+            </div>
+            <button
+              onClick={handleDismiss}
+              className="flex-shrink-0 p-1.5 hover:bg-red-100 rounded-full transition-colors group"
+              aria-label="Dismiss"
+              title="Dismiss cue"
+            >
+              <X className="w-5 h-5 text-gray-600 group-hover:text-red-600" />
+            </button>
+          </div>
+          
+          {/* Cue Message */}
+          <div className="flex items-start gap-3">
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900 leading-relaxed">
                 {cue.text}
               </p>
             </div>
-            <button
-              onClick={handleDismiss}
-              className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
-              aria-label="Dismiss"
-            >
-              <X className="w-4 h-4 text-gray-500" />
-            </button>
           </div>
 
           {/* Actions */}
