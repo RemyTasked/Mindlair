@@ -5,6 +5,7 @@ import App from './App';
 import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { showUpdateNotification } from './components/UpdateNotification';
+import { getToken } from './utils/persistentStorage';
 
 // AGGRESSIVE CACHE CLEARING - Force clear old logo caches
 const CURRENT_VERSION = '20251108192533'; // UNIFIED timestamp
@@ -35,7 +36,19 @@ const clearOldCaches = async () => {
 };
 
 // Clear caches before rendering
-clearOldCaches().then(() => {
+const bootstrap = async () => {
+  try {
+    await getToken();
+  } catch (error) {
+    console.error('⚠️ Failed to restore auth token from persistent storage:', error);
+  }
+
+  try {
+    await clearOldCaches();
+  } catch (error) {
+    console.error('⚠️ Failed to clear old caches:', error);
+  }
+
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <BrowserRouter>
@@ -43,6 +56,10 @@ clearOldCaches().then(() => {
       </BrowserRouter>
     </React.StrictMode>
   );
+};
+
+bootstrap().catch((error) => {
+  console.error('❌ Failed to bootstrap Meet Cute app:', error);
 });
 
 // Listen for service worker cache updates

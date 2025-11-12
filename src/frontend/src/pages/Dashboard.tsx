@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
+import { getToken } from '../utils/persistentStorage';
 import { Calendar, Settings as SettingsIcon, TrendingUp } from 'lucide-react';
 import SceneLibrary from '../components/SceneLibrary';
 import { DirectorsInsights } from '../components/DirectorsInsights';
@@ -82,6 +83,25 @@ export default function Dashboard() {
   const [activeMeetings, setActiveMeetings] = useState<Meeting[]>([]);
   const [activeCues, setActiveCues] = useState<any[]>([]);
   
+  const ensureAuthToken = async (): Promise<string | null> => {
+    let token = localStorage.getItem('meetcute_token');
+    if (token) {
+      return token;
+    }
+
+    try {
+      const restored = await getToken();
+      if (restored) {
+        console.log('✅ Restored auth token from persistent storage');
+        return restored;
+      }
+    } catch (error) {
+      console.error('⚠️ Failed to restore auth token from persistent storage:', error);
+    }
+
+    return null;
+  };
+
   // Determine time of day for Scene Library
   const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
     const hour = new Date().getHours();
@@ -116,19 +136,30 @@ export default function Dashboard() {
 
   const loadUserData = async () => {
     try {
-      const token = localStorage.getItem('meetcute_token');
-
-      console.log('🔍 Dashboard - Loading user data', {
-        hasToken: !!token,
-        tokenLength: token?.length || 0,
-        tokenPreview: token?.substring(0, 20) + '...',
-      });
+      let token = localStorage.getItem('meetcute_token');
+      const hadLocalToken = !!token;
 
       if (!token) {
-        console.error('❌ No token found in localStorage');
+        console.warn('❌ No token found in localStorage - attempting restore from persistent storage');
+        token = await ensureAuthToken();
+      }
+
+      if (!token) {
+        console.error('❌ Unable to locate auth token in any storage, redirecting to landing');
         navigate('/');
         return;
       }
+
+      if (!hadLocalToken) {
+        localStorage.setItem('meetcute_session_active', 'true');
+      }
+
+      console.log('🔍 Dashboard - Loading user data', {
+        hasToken: true,
+        tokenSource: hadLocalToken ? 'localStorage' : 'persistent',
+        tokenLength: token.length,
+        tokenPreview: token.substring(0, 20) + '...',
+      });
 
       // Check for cached user profile (session-based cache)
       // Cache persists from sign-in until user logs out or closes browser
@@ -271,9 +302,9 @@ export default function Dashboard() {
 
   const pollActiveCues = async () => {
     try {
-      const token = localStorage.getItem('meetcute_token');
+      const token = await ensureAuthToken();
       if (!token) {
-        console.log('⚠️ No token for cue polling');
+        console.log('⚠️ No token available for cue polling');
         return;
       }
 
@@ -637,8 +668,11 @@ export default function Dashboard() {
                   setLoading(true);
                   
                   // Trigger calendar sync on backend
-                  const token = localStorage.getItem('meetcute_token');
-                  if (!token) return;
+                  const token = await ensureAuthToken();
+                  if (!token) {
+                    alert('Please sign in again to refresh your meetings.');
+                    return;
+                  }
                   
                   const syncResponse = await api.post('/api/meetings/sync', {}, {
                     headers: { Authorization: `Bearer ${token}` }
