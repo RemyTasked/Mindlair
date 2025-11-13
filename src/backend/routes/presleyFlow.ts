@@ -74,14 +74,34 @@ router.get(
 
     const now = new Date();
     const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
     
-    // Get user's configured flow times
-    const morningFlowHour = parseInt((user as any).preferences?.morningFlowTime?.split(':')[0] || '6');
-    const eveningFlowHour = parseInt((user as any).preferences?.eveningFlowTime?.split(':')[0] || '18');
+    // Get user's configured flow times (format: "HH:mm")
+    const morningFlowTime = (user as any).preferences?.morningFlowTime || '06:00';
+    const eveningFlowTime = (user as any).preferences?.eveningFlowTime || '18:00';
     
-    // Check if we're in the morning or evening window
-    const isMorningWindow = currentHour >= morningFlowHour && currentHour < eveningFlowHour;
-    const isEveningWindow = currentHour >= eveningFlowHour;
+    const [morningFlowHour, morningFlowMinute] = morningFlowTime.split(':').map(Number);
+    const [eveningFlowHour, eveningFlowMinute] = eveningFlowTime.split(':').map(Number);
+    
+    const morningFlowTimeInMinutes = morningFlowHour * 60 + morningFlowMinute;
+    const eveningFlowTimeInMinutes = eveningFlowHour * 60 + eveningFlowMinute;
+    
+    // Check if we're in the morning or evening window (now using minutes for precision)
+    const isMorningWindow = currentTimeInMinutes >= morningFlowTimeInMinutes && currentTimeInMinutes < eveningFlowTimeInMinutes;
+    const isEveningWindow = currentTimeInMinutes >= eveningFlowTimeInMinutes;
+    
+    logger.info('Presley Flow time check', {
+      userId,
+      currentTime: `${currentHour}:${currentMinute.toString().padStart(2, '0')}`,
+      currentTimeInMinutes,
+      morningFlowTime,
+      morningFlowTimeInMinutes,
+      eveningFlowTime,
+      eveningFlowTimeInMinutes,
+      isMorningWindow,
+      isEveningWindow,
+    });
     
     // Check if flows are enabled
     const morningFlowEnabled = (user as any).preferences?.enableMorningFlow !== false;
@@ -303,15 +323,23 @@ router.get(
     const targetDate = new Date(date + 'T00:00:00Z'); // Parse as UTC to avoid timezone issues
     const now = new Date();
     const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
     
-    // Get user's configured flow times
-    const morningFlowHour = parseInt((user as any).preferences?.morningFlowTime?.split(':')[0] || '6');
-    const eveningFlowHour = parseInt((user as any).preferences?.eveningFlowTime?.split(':')[0] || '18');
+    // Get user's configured flow times (format: "HH:mm")
+    const morningFlowTime = (user as any).preferences?.morningFlowTime || '06:00';
+    const eveningFlowTime = (user as any).preferences?.eveningFlowTime || '18:00';
     
-    // Determine flow type based on current time
-    // Morning: from morningFlowTime until eveningFlowTime (default 6am-6pm)
-    // Evening: from eveningFlowTime onwards (default 6pm+)
-    const isMorning = currentHour >= morningFlowHour && currentHour < eveningFlowHour;
+    const [morningFlowHour, morningFlowMinute] = morningFlowTime.split(':').map(Number);
+    const [eveningFlowHour, eveningFlowMinute] = eveningFlowTime.split(':').map(Number);
+    
+    const morningFlowTimeInMinutes = morningFlowHour * 60 + morningFlowMinute;
+    const eveningFlowTimeInMinutes = eveningFlowHour * 60 + eveningFlowMinute;
+    
+    // Determine flow type based on current time (using minutes for precision)
+    // Morning: from morningFlowTime until eveningFlowTime (default 6am-6:30pm)
+    // Evening: from eveningFlowTime onwards (default 6:30pm+)
+    const isMorning = currentTimeInMinutes >= morningFlowTimeInMinutes && currentTimeInMinutes < eveningFlowTimeInMinutes;
     
     let startOfDay, endOfDay;
     if (isMorning) {
