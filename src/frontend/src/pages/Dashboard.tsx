@@ -549,7 +549,7 @@ export default function Dashboard() {
               <div className="text-2xl sm:text-4xl">🌙</div>
               <div className="flex-1">
                 <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
-                  Mental Rehearsal
+                  Rehearsal Flow
                 </h3>
                 <p className="text-xs sm:text-sm text-purple-600 font-medium">
                   {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} {presleyFlow.flowType === 'evening' ? 'tomorrow' : 'today'}
@@ -726,7 +726,7 @@ export default function Dashboard() {
                         Tomorrow's meetings are hidden until evening flow
                       </p>
                       <p className="text-sm text-gray-600">
-                        Focus on today! Tomorrow's schedule unlocks at {formatEveningTime(eveningFlowTime)} for your mental rehearsal.
+                        Focus on today! Tomorrow's schedule unlocks at {formatEveningTime(eveningFlowTime)} for your rehearsal flow.
                       </p>
                     </div>
                   ) : (
@@ -806,22 +806,41 @@ function groupMeetingsByDay(meetings: Meeting[], eveningFlowTime: string): { dat
   
   // Check if we're in the evening flow window (after evening flow time)
   const isEveningFlowTime = currentTimeInMinutes >= eveningTimeInMinutes;
+  
+  console.log('🕐 Meeting grouping debug:', {
+    currentTime: `${currentHour}:${currentMinute.toString().padStart(2, '0')}`,
+    eveningFlowTime,
+    currentTimeInMinutes,
+    eveningTimeInMinutes,
+    isEveningFlowTime,
+    todayTimestamp: today.getTime(),
+    tomorrowTimestamp: tomorrow.getTime()
+  });
 
   meetings.forEach((meeting) => {
     const meetingDate = new Date(meeting.startTime);
+    const originalMeetingDate = meetingDate.toISOString();
     meetingDate.setHours(0, 0, 0, 0);
     
     let dateLabel: string;
     let isLocked = false;
     
-    if (meetingDate.getTime() === today.getTime()) {
+    const meetingTimestamp = meetingDate.getTime();
+    
+    if (meetingTimestamp === today.getTime()) {
       dateLabel = 'Today';
-      isLocked = false; // Today's meetings are ALWAYS visible, even after evening flow
-    } else if (meetingDate.getTime() === tomorrow.getTime()) {
+      isLocked = false; // Today's meetings are ALWAYS visible
+    } else if (meetingTimestamp === tomorrow.getTime()) {
       dateLabel = 'Tomorrow';
       isLocked = !isEveningFlowTime; // Lock tomorrow's meetings until evening flow time
-    } else {
+      console.log(`📅 Tomorrow meeting "${meeting.title}": isLocked=${isLocked}, originalDate=${originalMeetingDate}`);
+    } else if (meetingTimestamp > tomorrow.getTime()) {
       // Skip meetings beyond tomorrow
+      console.log(`⏭️ Skipping future meeting "${meeting.title}": ${originalMeetingDate}`);
+      return;
+    } else {
+      // Skip past meetings
+      console.log(`⏮️ Skipping past meeting "${meeting.title}": ${originalMeetingDate}`);
       return;
     }
 
