@@ -11,6 +11,9 @@ psql $DATABASE_URL -c "SELECT 1;" || { echo "Database connection failed!"; exit 
 echo "Checking for failed migrations..."
 psql $DATABASE_URL -c "SELECT migration_name, finished_at, logs FROM _prisma_migrations WHERE finished_at IS NULL ORDER BY started_at DESC LIMIT 1;" || echo "No failed migrations table yet"
 
+echo "Fixing calendar_accounts unique constraint..."
+psql $DATABASE_URL -f fix-calendar-constraint.sql || echo "Calendar constraint fix failed (may already be correct)"
+
 echo "Cleaning up any failed migrations..."
 psql $DATABASE_URL -c "DELETE FROM _prisma_migrations WHERE migration_name LIKE '%add_attendee_count%' AND finished_at IS NULL;" || echo "No failed migrations to clean"
 psql $DATABASE_URL -c "UPDATE _prisma_migrations SET finished_at = NOW(), rolled_back_at = NOW() WHERE migration_name = '20250103210000_backfill_existing_preferences' AND finished_at IS NULL;" || echo "No backfill migration to fix"
