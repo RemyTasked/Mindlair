@@ -91,7 +91,7 @@ router.get(
     const isMorningWindow = currentTimeInMinutes >= morningFlowTimeInMinutes && currentTimeInMinutes < eveningFlowTimeInMinutes;
     const isEveningWindow = currentTimeInMinutes >= eveningFlowTimeInMinutes;
     
-    logger.info('Presley Flow time check', {
+    logger.info('🕐 Presley Flow time check (MINUTES PRECISION v2.0)', {
       userId,
       currentTime: `${currentHour}:${currentMinute.toString().padStart(2, '0')}`,
       currentTimeInMinutes,
