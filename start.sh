@@ -14,6 +14,7 @@ psql $DATABASE_URL -c "SELECT migration_name, finished_at, logs FROM _prisma_mig
 echo "Cleaning up any failed migrations..."
 psql $DATABASE_URL -c "DELETE FROM _prisma_migrations WHERE migration_name LIKE '%add_attendee_count%' AND finished_at IS NULL;" || echo "No failed migrations to clean"
 psql $DATABASE_URL -c "UPDATE _prisma_migrations SET finished_at = NOW(), rolled_back_at = NOW() WHERE migration_name = '20250103210000_backfill_existing_preferences' AND finished_at IS NULL;" || echo "No backfill migration to fix"
+psql $DATABASE_URL -c "UPDATE _prisma_migrations SET finished_at = NOW(), rolled_back_at = NOW() WHERE migration_name = '20251112192100_drop_old_calendar_unique' AND finished_at IS NULL;" || echo "No calendar unique migration to fix"
 
 echo "Running Prisma migrations..."
 npx prisma migrate deploy --schema=./prisma/schema.prisma
