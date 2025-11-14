@@ -32,7 +32,6 @@ export default function FocusScene() {
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [breathingCompleted, setBreathingCompleted] = useState(false);
   const [level2Enabled, setLevel2Enabled] = useState(false); // Level 2 is opt-in per meeting
-  const [meetingStartTime] = useState<number>(Date.now()); // Track when meeting prep started
 
   useEffect(() => {
     loadMeetingData();

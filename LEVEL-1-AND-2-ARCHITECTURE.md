@@ -11,8 +11,10 @@ Meet Cute has two complementary cue systems that work together to support users 
 
 ### How It Works
 1. **Pre-Meeting**: AI generates personalized cues based on meeting context, user preferences, and historical data
-2. **During Meeting**: Cues are delivered via push notifications at strategic moments
-3. **Display**: `CueToast.tsx` component shows cues with Meet Cute branding
+2. **During Meeting**: Cues are delivered via **push notifications AND in-browser toasts** at strategic moments
+3. **Display**: 
+   - `CueToast.tsx` component shows cues in browser with Meet Cute branding
+   - Push notifications appear on device even when browser is in background
 4. **Polling**: Dashboard polls for active cues every 30 seconds
 5. **Meeting Detection**: `meetingDetection.ts` utility tracks which meeting is currently active
 
@@ -24,7 +26,8 @@ Meet Cute has two complementary cue systems that work together to support users 
 
 ### User Experience
 - **Always On**: Works automatically once user enables Cue Companion in Settings
-- **No Permissions Needed**: Uses push notifications, no microphone access required
+- **Dual Display**: Cues appear as both push notifications AND in-browser toasts
+- **No Microphone Needed**: Works without any special permissions
 - **Delivery Methods**: Email, Slack, SMS, Push (configurable per alert type)
 - **Tone Options**: Calm, Direct, Balanced, Executive, Cinematic
 
@@ -40,7 +43,7 @@ Meet Cute has two complementary cue systems that work together to support users 
    - Pause rhythm (breathless vs. hesitant)
    - Energy curve (escalating vs. calm)
    - Monologuing (floor-taking vs. inviting replies)
-5. **Cue Delivery**: 2-3 word cinematic cues appear briefly and auto-dismiss
+5. **Cue Delivery**: 2-3 word cinematic cues appear as **in-browser toasts AND push notifications**
 6. **Adaptive Learning**: System learns user's tendencies and adjusts thresholds
 
 ### Key Files
@@ -59,7 +62,9 @@ Meet Cute has two complementary cue systems that work together to support users 
   - Purple = active
   - Pulsing green = speaking detected
   - Orange = calibrating
-- **Cue Display**: Minimal, 2-3 word cues that auto-dismiss after 3 seconds
+- **Dual Cue Display**: 
+  - In-browser toasts (minimal, 2-3 word cues that auto-dismiss after 3 seconds)
+  - Push notifications (for when browser is in background)
 - **End-of-Meeting Summary**: Pace trend, volume trend, cue stats, and suggestion
 
 ### Privacy Guarantees
@@ -75,11 +80,11 @@ Meet Cute has two complementary cue systems that work together to support users 
 1. **5 Minutes Before Meeting**: Level 1 sends pre-meeting cue via push notification
 2. **User Opens Focus Scene**: Completes breathing flow and prep ritual
 3. **Meeting Starts**: 
-   - Level 1 continues to send strategic cues via push notifications
+   - Level 1 continues to send strategic cues via push notifications + in-browser toasts
    - User can optionally enable Level 2 for real-time audio coaching
 4. **During Meeting**:
-   - Level 1: Periodic push notifications with strategic cues
-   - Level 2 (if enabled): Real-time audio analysis with brief on-screen cues
+   - Level 1: Periodic cues (push notifications + in-browser toasts)
+   - Level 2 (if enabled): Real-time audio cues (push notifications + in-browser toasts)
 5. **Meeting Ends**:
    - Level 1: Post-meeting insights and reflection prompts
    - Level 2 (if enabled): End-of-meeting summary with trends and suggestions

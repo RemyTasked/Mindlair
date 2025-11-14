@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Activity, Loader } from 'lucide-react';
 import { getAudioAnalyzer, type CueTrigger, type MeetingSummary } from '../services/audioAnalyzer';
+import { sendPushNotification } from '../services/pushNotificationService';
 
 interface Level2CueCompanionProps {
   enabled: boolean;
@@ -45,6 +46,16 @@ export default function Level2CueCompanion({
           // Listen for cues
           analyzer.current.onCue((cue) => {
             setCurrentCue(cue);
+            
+            // Send push notification for Level 2 cue
+            sendPushNotification({
+              title: '💡 Level 2 Cue',
+              body: cue.message,
+              tag: `level2-cue-${Date.now()}`,
+              requireInteraction: false, // Auto-dismiss
+            }).catch(err => {
+              console.warn('⚠️ Failed to send Level 2 push notification:', err);
+            });
             
             // Auto-dismiss after 3 seconds
             if (cueTimeoutRef.current) {
