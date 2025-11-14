@@ -1048,6 +1048,40 @@ export default function Settings() {
                   )}
                 </div>
               )}
+              
+              {/* Delete Level 2 Meeting Data */}
+              <div className="pt-6 border-t border-gray-200">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🗑️</span>
+                    <div className="flex-1">
+                      <h5 className="font-semibold text-red-900 mb-1">Level 2 Meeting Data</h5>
+                      <p className="text-sm text-red-800 mb-3">
+                        Delete your stored voice patterns and baseline data. This only affects locally stored analysis data—no audio is ever saved.
+                      </p>
+                      <button
+                        onClick={() => {
+                          if (confirm('Delete all Level 2 Companion meeting data? Your baseline patterns will be recalibrated in your next meeting.')) {
+                            // Import AudioAnalyzer class and call static delete method
+                            try {
+                              // We'll need to import this at the top
+                              // For now, just clear localStorage directly
+                              localStorage.removeItem('meetcute_level2_baseline');
+                              alert('✅ Level 2 meeting data deleted. Your patterns will recalibrate in your next meeting.');
+                            } catch (error) {
+                              console.error('Failed to delete data:', error);
+                              alert('Failed to delete data. Please try again.');
+                            }
+                          }
+                        }}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Delete Meeting Data
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </Section>
 
