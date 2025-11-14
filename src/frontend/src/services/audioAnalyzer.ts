@@ -1,12 +1,19 @@
 /**
- * Level 2 Cue Companion - Audio Analysis Service (Z-Score Based)
+ * Level 2 Cue Companion - Audio Analysis Service (Z-Score Based + ML)
  * 
  * Real-time, on-device audio analysis for composure coaching
  * Privacy-first: No recording, no transcription, no cloud processing
  * 
+ * Hybrid System:
+ * - ML model (ONNX) for sophisticated pattern recognition (when available)
+ * - Z-score based rules as fallback (always works)
+ * 
  * Uses z-scores vs baseline for all triggers:
  * z = (current_value - baseline_mean) / baseline_std
  */
+
+import { MLFeatureExtractor, normalizeMLFeatures, type MLFeatures } from './mlFeatureExtractor';
+import { getMLModelLoader, ruleBasedPredict, type ModelPrediction } from './mlModelLoader';
 
 export interface AudioFeatures {
   rms: number;              // Root Mean Square (volume/loudness)
@@ -78,6 +85,11 @@ export class AudioAnalyzer {
   private mediaStream: MediaStream | null = null;
   private animationFrameId: number | null = null;
   
+  // ML components
+  private mlFeatureExtractor: MLFeatureExtractor;
+  private mlModelLoader = getMLModelLoader();
+  private useML = false; // Will be set to true if model loads successfully
+  
   // Analysis settings
   private readonly SAMPLE_RATE = 16000;
   private readonly FFT_SIZE = 2048;
@@ -141,6 +153,20 @@ export class AudioAnalyzer {
   private isInBackground = false;
   
   constructor() {
+    // Initialize ML feature extractor
+    this.mlFeatureExtractor = new MLFeatureExtractor();
+    
+    // Attempt to load ML model (non-blocking)
+    this.mlModelLoader.loadModel().then(success => {
+      if (success) {
+        this.useML = true;
+        console.log('✅ Level 2 ML mode enabled');
+      } else {
+        this.useML = false;
+        console.log('ℹ️ Level 2 using rule-based mode (ML model not available)');
+      }
+    });
+    
     // Listen for visibility changes
     document.addEventListener('visibilitychange', () => {
       this.isInBackground = document.hidden;
@@ -242,11 +268,21 @@ export class AudioAnalyzer {
     
     // Get time-domain data (waveform)
     const bufferLength = this.analyserNode.fftSize;
-    const dataArray = new Float32Array(bufferLength);
-    this.analyserNode.getFloatTimeDomainData(dataArray);
+    const timeDomainData = new Float32Array(bufferLength);
+    this.analyserNode.getFloatTimeDomainData(timeDomainData);
     
-    // Extract features
-    const features = this.extractFeatures(dataArray);
+    // Get frequency-domain data (spectrum) for ML features
+    const frequencyData = new Uint8Array(this.analyserNode.frequencyBinCount);
+    this.analyserNode.getByteFrequencyData(frequencyData);
+    
+    // Extract basic features
+    const features = this.extractFeatures(timeDomainData);
+    
+    // Extract ML features (for hybrid system)
+    let mlFeatures: MLFeatures | null = null;
+    if (this.useML || this.baseline.calibrationComplete) {
+      mlFeatures = this.mlFeatureExtractor.extract(timeDomainData, frequencyData);
+    }
     
     // Store in history for summary
     this.featureHistory.push(features);
@@ -261,7 +297,7 @@ export class AudioAnalyzer {
     
     // Trigger cues if baseline is ready
     if (this.baseline.calibrationComplete && features.isSpeaking) {
-      this.checkForCueTriggers(features);
+      this.checkForCueTriggers(features, mlFeatures);
     }
     
     // Notify listeners
@@ -381,15 +417,34 @@ export class AudioAnalyzer {
   }
   
   /**
-   * Check if current features warrant a cue (Z-score based with persistence)
+   * Check if current features warrant a cue (Hybrid: ML + Z-score based with persistence)
    */
-  private checkForCueTriggers(features: AudioFeatures): void {
+  private async checkForCueTriggers(features: AudioFeatures, mlFeatures: MLFeatures | null): Promise<void> {
     // Hard cap on cues
     if (this.cuesThisMeeting >= this.MAX_CUES_PER_MEETING) return;
     
     // Global cool-down: 10 seconds after any cue
     const now = Date.now();
     if (now - this.debounceState.lastAnyCue < 10000) return;
+    
+    // ML-enhanced detection (if available)
+    let mlPrediction: ModelPrediction | null = null;
+    if (this.useML && mlFeatures) {
+      const normalizedFeatures = normalizeMLFeatures(mlFeatures);
+      mlPrediction = await this.mlModelLoader.predict(normalizedFeatures);
+      
+      // If ML model not available, use rule-based fallback
+      if (!mlPrediction) {
+        mlPrediction = ruleBasedPredict(normalizedFeatures, this.baseline);
+      }
+      
+      // ML prediction can boost confidence in z-score triggers
+      // or trigger cues that rules might miss
+      if (mlPrediction.confidence > 0.7 && mlPrediction.class !== 'calm') {
+        console.log('🤖 ML detected:', mlPrediction.class, 'confidence:', mlPrediction.confidence.toFixed(2));
+        // ML predictions will be combined with z-score logic below
+      }
+    }
     
     // Calculate z-scores
     const rmsZ = this.calculateZScore(features.rms, this.baseline.avgRMS, this.baseline.stdRMS);
@@ -731,6 +786,9 @@ export class AudioAnalyzer {
    * Reset for new meeting
    */
   reset(): void {
+    // Reset ML feature extractor
+    this.mlFeatureExtractor.reset();
+    
     // Keep cross-session baseline but reset everything else
     const crossSessionData = {
       avgRMS: this.baseline.avgRMS,

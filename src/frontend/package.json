@@ -18,7 +18,8 @@
     "lucide-react": "^0.309.0",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-switch": "^1.0.3",
-    "@radix-ui/react-tabs": "^1.0.4"
+    "@radix-ui/react-tabs": "^1.0.4",
+    "onnxruntime-web": "^1.17.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.48",
