@@ -72,9 +72,14 @@ router.get(
       throw new AppError('User not found', 404);
     }
 
+    // CRITICAL: Use user's timezone, not server time!
+    const userTimezone = user.timezone || 'America/New_York';
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    
+    // Convert server time to user's timezone
+    const userLocalTime = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
+    const currentHour = userLocalTime.getHours();
+    const currentMinute = userLocalTime.getMinutes();
     const currentTimeInMinutes = currentHour * 60 + currentMinute;
     
     // Get user's configured flow times (format: "HH:mm")
@@ -91,8 +96,11 @@ router.get(
     const isMorningWindow = currentTimeInMinutes >= morningFlowTimeInMinutes && currentTimeInMinutes < eveningFlowTimeInMinutes;
     const isEveningWindow = currentTimeInMinutes >= eveningFlowTimeInMinutes;
     
-    logger.info('🕐 Presley Flow time check (MINUTES PRECISION v2.0)', {
+    logger.info('🕐 Presley Flow time check (TIMEZONE-AWARE v3.0)', {
       userId,
+      userTimezone,
+      serverTime: now.toISOString(),
+      userLocalTime: userLocalTime.toISOString(),
       currentTime: `${currentHour}:${currentMinute.toString().padStart(2, '0')}`,
       currentTimeInMinutes,
       morningFlowTime,
