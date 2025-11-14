@@ -154,8 +154,10 @@ export default function LandingPage() {
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">💡</div>
                   <div>
-                    <div className="font-semibold text-gray-800">Smart Meeting Cues</div>
-                    <div className="text-gray-600 text-sm">AI analyzes your calendar and sends personalized cues before, during, and after meetings</div>
+                    <div className="font-semibold text-gray-800">Smart In-Meeting Cues</div>
+                    <div className="text-gray-600 text-sm">
+                      <strong className="text-indigo-700">Real-time composure cues</strong> delivered during your meeting to help you stay calm, focused, and present
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -407,9 +409,14 @@ export default function LandingPage() {
             description="Click the link. Select your mind state. Get a custom breathing flow (2-3 min) with ambient sounds."
           />
           <Step
+            number="💡"
+            title="Stay Composed During"
+            description="Receive smart in-meeting cues on your phone or desktop to help you stay calm, focused, and present throughout the conversation."
+          />
+          <Step
             number="✨"
-            title="Walk In Ready"
-            description="Enter the meeting centered, not scattered. The AI learns from your ratings and gets smarter over time."
+            title="Walk Out Confident"
+            description="Finish strong with post-meeting insights. The AI learns from your ratings and gets smarter over time."
           />
         </div>
 
