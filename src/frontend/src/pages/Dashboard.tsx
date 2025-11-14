@@ -13,6 +13,7 @@ import { LOGO_PATHS } from '../config/constants';
 import { getUserTimezone } from '../utils/timezone';
 import Onboarding from '../components/Onboarding';
 import OnboardingWelcome from '../components/OnboardingWelcome';
+import { getActiveMeeting, setActiveMeetingId } from '../utils/meetingDetection';
 
 interface Meeting {
   id: string;
@@ -246,6 +247,21 @@ export default function Dashboard() {
       setMeetings(meetingsResponse.data.meetings);
       setPresleyFlow(presleyData);
       setWindingDown(windingDownData);
+      
+      // Detect active meeting for Level 1 cues
+      const activeMeeting = getActiveMeeting(meetingsResponse.data.meetings);
+      if (activeMeeting) {
+        console.log('🎯 Active meeting detected:', {
+          meetingId: activeMeeting.meetingId,
+          title: activeMeeting.title,
+          isActive: activeMeeting.isActive,
+          minutesUntilEnd: activeMeeting.minutesUntilEnd,
+        });
+        setActiveMeetingId(activeMeeting.meetingId);
+      } else {
+        console.log('📭 No active meeting at this time');
+        setActiveMeetingId(null);
+      }
       
       const hasLocalCompletion = localStorage.getItem('meetcute_onboarding_completed') === 'true';
       if (!userResponse.data.user.onboardingCompleted && !hasLocalCompletion) {

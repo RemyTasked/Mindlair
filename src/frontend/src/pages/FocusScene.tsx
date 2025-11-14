@@ -31,8 +31,8 @@ export default function FocusScene() {
   const [loadingAiMessage, setLoadingAiMessage] = useState(false);
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [breathingCompleted, setBreathingCompleted] = useState(false);
-  const [cueLevel] = useState<1 | 2>(1); // Default to Level 1 (existing CueToast system)
-  const [level2Enabled, setLevel2Enabled] = useState(false); // Level 2 is opt-in
+  const [level2Enabled, setLevel2Enabled] = useState(false); // Level 2 is opt-in per meeting
+  const [meetingStartTime] = useState<number>(Date.now()); // Track when meeting prep started
 
   useEffect(() => {
     loadMeetingData();
@@ -191,8 +191,8 @@ export default function FocusScene() {
         />
       )}
 
-      {/* Level 2 Cue Companion - Real-time composure coach (opt-in) */}
-      {cueLevel === 2 && (currentPhase === 'reflection' || currentPhase === 'complete') && (
+      {/* Level 2 Cue Companion - Real-time composure coach (opt-in during meeting) */}
+      {(currentPhase === 'reflection' || currentPhase === 'complete') && (
         <Level2CueCompanion
           enabled={level2Enabled}
           onToggle={setLevel2Enabled}

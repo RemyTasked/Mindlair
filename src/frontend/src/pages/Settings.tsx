@@ -1652,6 +1652,25 @@ export default function Settings() {
 
               {cueSettings.enabled && (
                 <div className="space-y-6 pl-4 border-l-2 border-gray-200">
+                  {/* Info about Level 2 */}
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <h4 className="text-sm font-semibold text-purple-900 mb-1">Level 2: Real-Time Coach Available</h4>
+                        <p className="text-xs text-purple-800 mb-2">
+                          During meetings, you can optionally enable <strong>Level 2</strong> for real-time audio analysis. 
+                          It listens to how you sound (not what you say) to provide composure cues.
+                        </p>
+                        <p className="text-xs text-purple-700">
+                          💡 Look for the "Level 2" toggle button during your next meeting to try it out!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Tone */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
