@@ -6,6 +6,7 @@ import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
 import Level2CueCompanion from '../components/Level2CueCompanion';
+import CueLevelSelector from '../components/CueLevelSelector';
 import { LOGO_PATHS } from '../config/constants';
 
 type MindState = 'calm' | 'stressed' | 'focused' | 'unclear';
@@ -31,7 +32,8 @@ export default function FocusScene() {
   const [loadingAiMessage, setLoadingAiMessage] = useState(false);
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [breathingCompleted, setBreathingCompleted] = useState(false);
-  const [level2Enabled, setLevel2Enabled] = useState(false);
+  const [cueLevel, setCueLevel] = useState<1 | 2>(1); // Default to Level 1 (existing CueToast system)
+  const [level2Enabled, setLevel2Enabled] = useState(false); // Level 2 is opt-in
 
   useEffect(() => {
     loadMeetingData();
@@ -190,10 +192,10 @@ export default function FocusScene() {
         />
       )}
 
-      {/* Level 2 Cue Companion - Real-time composure coach */}
-      {(currentPhase === 'reflection' || currentPhase === 'complete') && (
+      {/* Level 2 Cue Companion - Real-time composure coach (opt-in) */}
+      {cueLevel === 2 && (currentPhase === 'reflection' || currentPhase === 'complete') && (
         <Level2CueCompanion
-          meetingId={meetingId}
+          meetingId={meetingId || ''}
           enabled={level2Enabled}
           onToggle={setLevel2Enabled}
         />

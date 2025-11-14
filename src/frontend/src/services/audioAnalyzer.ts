@@ -14,6 +14,7 @@
 
 import { MLFeatureExtractor, normalizeMLFeatures, type MLFeatures } from './mlFeatureExtractor';
 import { getMLModelLoader, ruleBasedPredict, type ModelPrediction } from './mlModelLoader';
+import { getAdaptiveLearningSystem, type MeetingContext } from './adaptiveLearning';
 
 export interface AudioFeatures {
   rms: number;              // Root Mean Square (volume/loudness)
@@ -89,6 +90,9 @@ export class AudioAnalyzer {
   private mlFeatureExtractor: MLFeatureExtractor;
   private mlModelLoader = getMLModelLoader();
   private useML = false; // Will be set to true if model loads successfully
+  
+  // Adaptive learning
+  private adaptiveSystem = getAdaptiveLearningSystem();
   
   // Analysis settings
   private readonly SAMPLE_RATE = 16000;
@@ -181,11 +185,27 @@ export class AudioAnalyzer {
   /**
    * Initialize audio capture and analysis
    */
-  async start(): Promise<void> {
+  async start(meetingContext?: MeetingContext): Promise<void> {
     try {
       console.log('🎤 Level 2 Cue Companion: Requesting microphone access...');
       
       this.meetingStartTime = Date.now();
+      
+      // Start adaptive learning session
+      if (meetingContext) {
+        this.adaptiveSystem.startMeeting(meetingContext);
+      } else {
+        // Infer context from time of day
+        const hour = new Date().getHours();
+        const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+        const dayOfWeek = [0, 6].includes(new Date().getDay()) ? 'weekend' : 'weekday';
+        
+        this.adaptiveSystem.startMeeting({
+          timeOfDay,
+          dayOfWeek,
+          duration: 30, // Default 30 minutes
+        });
+      }
       
       // Try to load previous baseline from localStorage
       this.loadCrossSessionBaseline();
@@ -451,8 +471,13 @@ export class AudioAnalyzer {
     const paceZ = this.calculateZScore(features.speechRate, this.baseline.avgSpeechRate, this.baseline.stdSpeechRate);
     const pauseRatioZ = this.calculateZScore(features.pauseRatio, this.baseline.avgPauseRatio, this.baseline.stdPauseRatio);
     
-    // A. Fast Pace: pace_z >= +1.0 for >= 4 seconds
-    if (paceZ >= 1.0) {
+    // Apply adaptive threshold multipliers
+    const paceThreshold = 1.0 * this.adaptiveSystem.getThresholdMultiplier('pace');
+    const volumeThreshold = 1.0 * this.adaptiveSystem.getThresholdMultiplier('volume');
+    const pauseThreshold = 0.8 * this.adaptiveSystem.getThresholdMultiplier('pause');
+    
+    // A. Fast Pace: pace_z >= +1.0 for >= 4 seconds (adjusted by adaptive threshold)
+    if (paceZ >= paceThreshold) {
       if (!this.persistenceState.conditionStartTime || this.persistenceState.conditionType !== 'pace') {
         this.persistenceState.conditionStartTime = now;
         this.persistenceState.conditionType = 'pace';
@@ -476,8 +501,8 @@ export class AudioAnalyzer {
       this.persistenceState.conditionType = null;
     }
     
-    // B. Loudness Spike: rms_z >= +1.0 for >= 3 seconds
-    if (rmsZ >= 1.0) {
+    // B. Loudness Spike: rms_z >= +1.0 for >= 3 seconds (adjusted by adaptive threshold)
+    if (rmsZ >= volumeThreshold) {
       if (!this.persistenceState.conditionStartTime || this.persistenceState.conditionType !== 'volume') {
         this.persistenceState.conditionStartTime = now;
         this.persistenceState.conditionType = 'volume';
@@ -501,8 +526,8 @@ export class AudioAnalyzer {
       this.persistenceState.conditionType = null;
     }
     
-    // C. Too Few Pauses (Breathless): pause_ratio <= (base - 0.8σ) for >= 8 seconds
-    if (pauseRatioZ <= -0.8) {
+    // C. Too Few Pauses (Breathless): pause_ratio <= (base - 0.8σ) for >= 8 seconds (adjusted by adaptive threshold)
+    if (pauseRatioZ <= -pauseThreshold) {
       if (!this.persistenceState.conditionStartTime || this.persistenceState.conditionType !== 'breathless') {
         this.persistenceState.conditionStartTime = now;
         this.persistenceState.conditionType = 'breathless';
@@ -583,11 +608,15 @@ export class AudioAnalyzer {
     this.cuesThisMeeting++;
     this.cueHistory.push(cue);
     
+    // Record with adaptive learning system
+    this.adaptiveSystem.recordCue(cue);
+    
     console.log(`💡 Level 2 Cue (${this.cuesThisMeeting}/${this.MAX_CUES_PER_MEETING}):`, {
       message: cue.message,
       type: cue.type,
       severity: cue.severity.toFixed(2),
       persistedFor: `${(cue.persistedFor / 1000).toFixed(1)}s`,
+      effectiveness: this.adaptiveSystem.getCueEffectiveness(cue.type).toFixed(2),
     });
     
     if (this.onCueCallback) {
@@ -613,6 +642,9 @@ export class AudioAnalyzer {
     
     // Generate suggestion
     const suggestion = this.generateSuggestion(paceTrend, volumeTrend, cueTypes);
+    
+    // End adaptive learning session
+    this.adaptiveSystem.endMeeting({ paceTrend, volumeTrend });
     
     return {
       duration,
