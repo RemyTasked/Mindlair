@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
+import Level2CueCompanion from '../components/Level2CueCompanion';
 import { LOGO_PATHS } from '../config/constants';
 
 type MindState = 'calm' | 'stressed' | 'focused' | 'unclear';
@@ -30,6 +31,7 @@ export default function FocusScene() {
   const [loadingAiMessage, setLoadingAiMessage] = useState(false);
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [breathingCompleted, setBreathingCompleted] = useState(false);
+  const [level2Enabled, setLevel2Enabled] = useState(false);
 
   useEffect(() => {
     loadMeetingData();
@@ -185,6 +187,15 @@ export default function FocusScene() {
           soundType={meeting?.soundPreferences?.soundType || 'calm-ocean'}
           enabled={meeting?.soundPreferences?.enabled ?? true}
           stopOnNavigation={false}
+        />
+      )}
+
+      {/* Level 2 Cue Companion - Real-time composure coach */}
+      {(currentPhase === 'reflection' || currentPhase === 'complete') && (
+        <Level2CueCompanion
+          meetingId={meetingId}
+          enabled={level2Enabled}
+          onToggle={setLevel2Enabled}
         />
       )}
       
