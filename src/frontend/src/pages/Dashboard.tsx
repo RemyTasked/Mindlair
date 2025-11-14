@@ -587,20 +587,22 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <a
-              href={windingDown.windingDownUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
               onClick={() => {
                 localStorage.setItem('meetcute_autoplay_sound', 'true');
                 window.dispatchEvent(new CustomEvent('ambient-sound-play', {
                   detail: { source: 'dashboard', flow: 'winding-down' }
                 }));
+                // Navigate in same tab to avoid glitches
+                if (windingDown.windingDownUrl) {
+                  const path = windingDown.windingDownUrl.replace(window.location.origin, '');
+                  navigate(path);
+                }
               }}
               className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               🌙 Start Winding Down
-            </a>
+            </button>
           </div>
         )}
 

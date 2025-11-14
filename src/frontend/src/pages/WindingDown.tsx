@@ -13,6 +13,7 @@ export default function WindingDown() {
   const [sessionData, setSessionData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [startTime] = useState(Date.now());
+  const [transitioning, setTransitioning] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('meetcute_autoplay_sound', 'true');
@@ -43,13 +44,31 @@ export default function WindingDown() {
     }
   };
 
+  const handlePhaseTransition = (nextPhase: Phase) => {
+    if (transitioning) return; // Prevent double-clicks
+    
+    setTransitioning(true);
+    setTimeout(() => {
+      setCurrentPhase(nextPhase);
+      setTransitioning(false);
+    }, 300); // Small delay for smooth transition
+  };
+
   const completeSession = async () => {
+    if (transitioning) return;
+    
+    setTransitioning(true);
     try {
       const duration = Math.floor((Date.now() - startTime) / 1000); // Duration in seconds
       await api.post(`/api/winding-down/complete/${userId}`, { duration });
       console.log('Winding down session marked as complete');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error completing winding down session:', error);
+      // Navigate anyway
+      navigate('/dashboard');
+    } finally {
+      setTransitioning(false);
     }
   };
 
@@ -113,8 +132,9 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                onClick={() => setCurrentPhase('breathing')}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+                onClick={() => handlePhaseTransition('breathing')}
+                disabled={transitioning}
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Begin Winding Down →
               </motion.button>
@@ -212,8 +232,9 @@ export default function WindingDown() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 30 }}
-                onClick={() => setCurrentPhase('visualization')}
-                className="px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all border border-white/20"
+                onClick={() => handlePhaseTransition('visualization')}
+                disabled={transitioning}
+                className="px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue to Visualization →
               </motion.button>
@@ -264,8 +285,9 @@ export default function WindingDown() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 20 }}
-                onClick={() => setCurrentPhase('closing')}
-                className="mt-12 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all border border-white/20"
+                onClick={() => handlePhaseTransition('closing')}
+                disabled={transitioning}
+                className="mt-12 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Complete Session →
               </motion.button>
@@ -312,13 +334,11 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                onClick={async () => {
-                  await completeSession();
-                  navigate('/dashboard');
-                }}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+                onClick={completeSession}
+                disabled={transitioning}
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Return to Dashboard
+                {transitioning ? 'Completing...' : 'Return to Dashboard'}
               </motion.button>
             </motion.div>
           )}
