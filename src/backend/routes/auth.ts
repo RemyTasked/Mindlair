@@ -152,24 +152,27 @@ router.get(
       }
     }
 
+    // Ensure user exists (should never be null at this point)
+    if (!user) {
+      throw new AppError('User not found after upsert', 500);
+    }
+
     // Ensure preferences and delivery settings exist (for old users)
-    if (user) {
-      // HOTFIX: For existing users, ensure they have preferences and delivery settings
-      if (!user.preferences) {
-        await prisma.userPreferences.create({
-          data: { userId: user.id },
-        });
-        logger.info('Created missing preferences for existing user (Google)', { userId: user.id });
-      }
-      if (!user.deliverySettings) {
-        await prisma.deliverySettings.create({
-          data: { 
-            userId: user.id,
-            emailEnabled: true,
-          },
-        });
-        logger.info('Created missing delivery settings for existing user (Google)', { userId: user.id });
-      }
+    // HOTFIX: For existing users, ensure they have preferences and delivery settings
+    if (!user.preferences) {
+      await prisma.userPreferences.create({
+        data: { userId: user.id },
+      });
+      logger.info('Created missing preferences for existing user (Google)', { userId: user.id });
+    }
+    if (!user.deliverySettings) {
+      await prisma.deliverySettings.create({
+        data: { 
+          userId: user.id,
+          emailEnabled: true,
+        },
+      });
+      logger.info('Created missing delivery settings for existing user (Google)', { userId: user.id });
     }
 
     // Store calendar account
@@ -359,24 +362,27 @@ router.get(
       }
     }
 
+    // Ensure user exists (should never be null at this point)
+    if (!user) {
+      throw new AppError('User not found after upsert', 500);
+    }
+
     // Ensure preferences and delivery settings exist (for old users)
-    if (user) {
-      // HOTFIX: For existing users, ensure they have preferences and delivery settings
-      if (!user.preferences) {
-        await prisma.userPreferences.create({
-          data: { userId: user.id },
-        });
-        logger.info('Created missing preferences for existing user (Microsoft)', { userId: user.id });
-      }
-      if (!user.deliverySettings) {
-        await prisma.deliverySettings.create({
-          data: { 
-            userId: user.id,
-            emailEnabled: true,
-          },
-        });
-        logger.info('Created missing delivery settings for existing user (Microsoft)', { userId: user.id });
-      }
+    // HOTFIX: For existing users, ensure they have preferences and delivery settings
+    if (!user.preferences) {
+      await prisma.userPreferences.create({
+        data: { userId: user.id },
+      });
+      logger.info('Created missing preferences for existing user (Microsoft)', { userId: user.id });
+    }
+    if (!user.deliverySettings) {
+      await prisma.deliverySettings.create({
+        data: { 
+          userId: user.id,
+          emailEnabled: true,
+        },
+      });
+      logger.info('Created missing delivery settings for existing user (Microsoft)', { userId: user.id });
     }
 
     // Store calendar account
