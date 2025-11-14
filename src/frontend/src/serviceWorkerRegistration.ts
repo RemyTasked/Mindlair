@@ -15,7 +15,8 @@ export function register(config?: Config) {
   if ('serviceWorker' in navigator) {
     // Wait for page load to register service worker
     window.addEventListener('load', () => {
-      const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
+      // Vite uses import.meta.env.BASE_URL, not process.env.PUBLIC_URL
+      const swUrl = `${import.meta.env.BASE_URL || '/'}service-worker.js`;
 
       if (isLocalhost) {
         // Check if service worker exists in localhost
