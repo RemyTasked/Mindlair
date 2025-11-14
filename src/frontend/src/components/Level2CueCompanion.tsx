@@ -11,14 +11,12 @@ import { Mic, MicOff, Activity, Loader } from 'lucide-react';
 import { getAudioAnalyzer, type CueTrigger, type MeetingSummary } from '../services/audioAnalyzer';
 
 interface Level2CueCompanionProps {
-  meetingId: string;
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
   showSummary?: boolean;  // Show end-of-meeting summary
 }
 
 export default function Level2CueCompanion({
-  meetingId,
   enabled,
   onToggle,
   showSummary = false,

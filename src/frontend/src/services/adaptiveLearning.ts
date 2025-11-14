@@ -35,9 +35,9 @@ export interface UserPattern {
   breathlessTimes: number[];
   
   // Context patterns
-  morningTendency: 'calm' | 'rushed' | 'variable';
-  afternoonTendency: 'calm' | 'tired' | 'variable';
-  eveningTendency: 'calm' | 'energetic' | 'variable';
+  morningTendency: 'calm' | 'rushed' | 'tired' | 'energetic' | 'variable';
+  afternoonTendency: 'calm' | 'rushed' | 'tired' | 'energetic' | 'variable';
+  eveningTendency: 'calm' | 'rushed' | 'tired' | 'energetic' | 'variable';
   
   // Meeting type patterns
   presentationStress: number; // 0-1 score

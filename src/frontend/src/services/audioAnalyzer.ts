@@ -699,7 +699,7 @@ export class AudioAnalyzer {
   /**
    * Generate a single actionable suggestion
    */
-  private generateSuggestion(paceTrend: string, volumeTrend: string, cueTypes: Record<string, number>): string {
+  private generateSuggestion(paceTrend: string, _volumeTrend: string, cueTypes: Record<string, number>): string {
     // Prioritize based on cue counts
     const mostCommonCue = Object.entries(cueTypes).sort((a, b) => b[1] - a[1])[0]?.[0];
     
@@ -872,7 +872,7 @@ export class AudioAnalyzer {
     return !!(
       navigator.mediaDevices &&
       navigator.mediaDevices.getUserMedia &&
-      window.AudioContext
+      (window.AudioContext || (window as any).webkitAudioContext)
     );
   }
 }

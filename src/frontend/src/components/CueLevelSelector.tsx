@@ -21,13 +21,11 @@ import { Clock, Mic, Lock, Zap, TrendingUp, Shield } from 'lucide-react';
 interface CueLevelSelectorProps {
   currentLevel: 1 | 2;
   onLevelChange: (level: 1 | 2) => void;
-  meetingId: string;
 }
 
 export default function CueLevelSelector({
   currentLevel,
   onLevelChange,
-  meetingId,
 }: CueLevelSelectorProps) {
   const [showDetails, setShowDetails] = useState(false);
 
