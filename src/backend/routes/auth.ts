@@ -107,39 +107,53 @@ router.get(
       });
     } else {
       // Otherwise, find or create user by email (initial signup)
-      user = await prisma.user.findUnique({
-        where: { email: userInfo.email },
-        include: {
-          preferences: true,
-          deliverySettings: true,
-        },
-      });
+      // Use upsert to avoid race conditions
+      try {
+        user = await prisma.user.upsert({
+          where: { email: userInfo.email },
+          update: {
+            // Update name if it changed
+            name: userInfo.name || undefined,
+          },
+          create: {
+            email: userInfo.email,
+            name: userInfo.name || undefined,
+            preferences: {
+              create: {
+                tone: 'balanced',
+                alertMinutesBefore: 10,
+              },
+            },
+            deliverySettings: {
+              create: {
+                emailEnabled: true,
+              },
+            },
+          },
+          include: {
+            preferences: true,
+            deliverySettings: true,
+          },
+        });
+        logger.info('User upserted (Google)', { userId: user.id, email: user.email });
+      } catch (error: any) {
+        // If upsert fails, try to find the user one more time
+        logger.warn('⚠️ Upsert failed, attempting to find user', { email: userInfo.email, error: error.message });
+        user = await prisma.user.findUnique({
+          where: { email: userInfo.email },
+          include: {
+            preferences: true,
+            deliverySettings: true,
+          },
+        });
+        if (!user) {
+          throw new AppError('Failed to create or find user', 500);
+        }
+      }
     }
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: userInfo.email,
-          name: userInfo.name || undefined,
-          preferences: {
-            create: {
-              tone: 'balanced',
-              alertMinutesBefore: 10,
-            },
-          },
-          deliverySettings: {
-            create: {
-              emailEnabled: true,
-            },
-          },
-        },
-        include: {
-          preferences: true,
-          deliverySettings: true,
-        },
-      });
-      logger.info('New user created (Google)', { userId: user.id, email: user.email });
-    } else {
+    // Ensure preferences and delivery settings exist (for old users)
+    if (user) {
       // HOTFIX: For existing users, ensure they have preferences and delivery settings
       if (!user.preferences) {
         await prisma.userPreferences.create({
@@ -300,39 +314,53 @@ router.get(
       });
     } else {
       // Otherwise, find or create user by email (initial signup)
-      user = await prisma.user.findUnique({
-        where: { email: userInfo.email },
-        include: {
-          preferences: true,
-          deliverySettings: true,
-        },
-      });
+      // Use upsert to avoid race conditions
+      try {
+        user = await prisma.user.upsert({
+          where: { email: userInfo.email },
+          update: {
+            // Update name if it changed
+            name: userInfo.name || undefined,
+          },
+          create: {
+            email: userInfo.email,
+            name: userInfo.name || undefined,
+            preferences: {
+              create: {
+                tone: 'balanced',
+                alertMinutesBefore: 10,
+              },
+            },
+            deliverySettings: {
+              create: {
+                emailEnabled: true,
+              },
+            },
+          },
+          include: {
+            preferences: true,
+            deliverySettings: true,
+          },
+        });
+        logger.info('User upserted (Microsoft)', { userId: user.id, email: user.email });
+      } catch (error: any) {
+        // If upsert fails, try to find the user one more time
+        logger.warn('⚠️ Upsert failed, attempting to find user (Microsoft)', { email: userInfo.email, error: error.message });
+        user = await prisma.user.findUnique({
+          where: { email: userInfo.email },
+          include: {
+            preferences: true,
+            deliverySettings: true,
+          },
+        });
+        if (!user) {
+          throw new AppError('Failed to create or find user', 500);
+        }
+      }
     }
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: userInfo.email,
-          name: userInfo.name || undefined,
-          preferences: {
-            create: {
-              tone: 'balanced',
-              alertMinutesBefore: 10,
-            },
-          },
-          deliverySettings: {
-            create: {
-              emailEnabled: true,
-            },
-          },
-        },
-        include: {
-          preferences: true,
-          deliverySettings: true,
-        },
-      });
-      logger.info('New user created (Microsoft)', { userId: user.id, email: user.email });
-    } else {
+    // Ensure preferences and delivery settings exist (for old users)
+    if (user) {
       // HOTFIX: For existing users, ensure they have preferences and delivery settings
       if (!user.preferences) {
         await prisma.userPreferences.create({
