@@ -46,6 +46,16 @@ export default function Level2CueCompanion({
           analyzer.current.onCue((cue) => {
             setCurrentCue(cue);
             
+            // Dispatch cue-toast event for CueToastManager (Level 1 system)
+            // This shows the cue in the standard toast UI
+            window.dispatchEvent(new CustomEvent('cue-toast', {
+              detail: {
+                cueId: `level2-${Date.now()}`,
+                text: cue.message,
+                actions: [], // Level 2 cues are brief, no actions needed
+              }
+            }));
+            
             // Send browser notification for Level 2 cue (works even when tab is backgrounded)
             if ('Notification' in window && Notification.permission === 'granted') {
               try {
