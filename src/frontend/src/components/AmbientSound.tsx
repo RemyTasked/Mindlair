@@ -223,7 +223,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
   const supportsWebAudio =
     typeof window !== 'undefined' &&
-    (!!window.AudioContext || !!window.webkitAudioContext);
+    ('AudioContext' in window || 'webkitAudioContext' in window);
 
   const getVolume = useCallback(
     (muted: boolean) => (muted ? 0 : dimVolume ? 0.15 : 0.3),
@@ -268,8 +268,9 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     let context = audioContextRef.current;
     if (!context) {
       const AudioContextCtor =
-        (typeof window !== 'undefined' &&
-          (window.AudioContext || window.webkitAudioContext)) || null;
+        typeof window !== 'undefined'
+          ? (window.AudioContext || (window as any).webkitAudioContext)
+          : null;
 
       if (!AudioContextCtor) {
         return null;
