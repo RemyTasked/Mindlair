@@ -869,11 +869,9 @@ export class AudioAnalyzer {
    * Check if browser supports audio analysis
    */
   static isSupported(): boolean {
-    return !!(
-      navigator.mediaDevices &&
-      navigator.mediaDevices.getUserMedia &&
-      typeof (window.AudioContext || (window as any).webkitAudioContext) !== 'undefined'
-    );
+    const hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    const hasAudioContext = 'AudioContext' in window || 'webkitAudioContext' in window;
+    return hasMediaDevices && hasAudioContext;
   }
 }
 
