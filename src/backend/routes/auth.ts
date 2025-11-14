@@ -101,6 +101,9 @@ router.get(
           deliverySettings: true,
         },
       });
+      if (!user) {
+        throw new AppError('Existing user not found for multi-calendar addition', 404);
+      }
       logger.info('✅ Using existing user for multi-calendar addition', { 
         existingUserId, 
         newEmail: userInfo.email 
@@ -311,6 +314,9 @@ router.get(
           deliverySettings: true,
         },
       });
+      if (!user) {
+        throw new AppError('Existing user not found for multi-calendar addition', 404);
+      }
       logger.info('✅ Using existing user for multi-calendar addition (Microsoft)', { 
         existingUserId, 
         newEmail: userInfo.email 
