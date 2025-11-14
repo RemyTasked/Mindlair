@@ -1,11 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LOGO_PATHS } from '../config/constants';
 import api from '../lib/axios';
+import { getToken } from '../utils/persistentStorage';
 import { Calendar, Sparkles, Mail, Moon, Sun, Star, Music, Heart, Brain } from 'lucide-react';
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Check if user is already logged in (PWA persistence)
+  useEffect(() => {
+    const checkExistingAuth = async () => {
+      try {
+        // Check localStorage first
+        let token = localStorage.getItem('meetcute_token');
+        
+        // If not in localStorage, check IndexedDB (PWA persistence)
+        if (!token) {
+          console.log('🔍 Checking IndexedDB for auth token...');
+          token = await getToken();
+        }
+        
+        if (token) {
+          console.log('✅ Found existing auth token - redirecting to dashboard');
+          localStorage.setItem('meetcute_token', token);
+          localStorage.setItem('meetcute_session_active', 'true');
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+        
+        console.log('ℹ️ No existing auth token found - showing landing page');
+      } catch (error) {
+        console.error('⚠️ Error checking auth:', error);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+    
+    checkExistingAuth();
+  }, [navigate]);
+
+  // Show loading state while checking auth
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
+        <div className="text-center">
+          <img
+            src={LOGO_PATHS.main}
+            alt="Meet Cute Logo"
+            className="w-20 h-20 mx-auto mb-4 animate-pulse"
+          />
+          <h2 className="text-2xl font-semibold text-gray-800">Loading...</h2>
+        </div>
+      </div>
+    );
+  }
 
   const handleGoogleAuth = async () => {
     setLoading(true);
