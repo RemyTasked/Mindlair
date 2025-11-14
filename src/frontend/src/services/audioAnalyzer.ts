@@ -872,7 +872,7 @@ export class AudioAnalyzer {
     return !!(
       navigator.mediaDevices &&
       navigator.mediaDevices.getUserMedia &&
-      (window.AudioContext || (window as any).webkitAudioContext)
+      typeof (window.AudioContext || (window as any).webkitAudioContext) !== 'undefined'
     );
   }
 }
