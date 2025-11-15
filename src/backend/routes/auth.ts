@@ -669,13 +669,7 @@ router.get(
           name: userInfo.displayName,
           profilePicture: userInfo.avatar || null,
           preferences: {
-            create: {
-              workdayStart: '09:00',
-              workdayEnd: '18:00',
-              enablePresleyFlow: true,
-              enableFocusSound: true,
-              focusSoundType: 'calm-ocean',
-            },
+            create: {},
           },
         },
         include: {

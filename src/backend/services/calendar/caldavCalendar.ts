@@ -4,6 +4,7 @@
  * No OAuth required - uses email + app password
  */
 
+// @ts-ignore - dav package has no type definitions
 import dav from 'dav';
 import { logger } from '../../utils/logger';
 
