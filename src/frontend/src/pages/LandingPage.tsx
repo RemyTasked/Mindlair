@@ -81,6 +81,17 @@ export default function LandingPage() {
     }
   };
 
+  const handleWebexAuth = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/api/auth/webex/url');
+      window.location.href = response.data.authUrl;
+    } catch (error) {
+      console.error('Error initiating Webex auth:', error);
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -257,6 +268,20 @@ export default function LandingPage() {
                 <path fill="#ffba08" d="M12 12h10v10H12z"/>
               </svg>
               Continue with Outlook
+            </button>
+
+            <button
+              onClick={handleWebexAuth}
+              disabled={loading}
+              aria-label="Sign in with Cisco Webex"
+              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-semibold disabled:opacity-50"
+            >
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#00BCF2"/>
+                <path d="M2 17L12 22L22 17L12 12L2 17Z" fill="#00BCF2"/>
+                <path d="M2 12L12 17L22 12" stroke="#00BCF2" strokeWidth="2"/>
+              </svg>
+              Continue with Webex
             </button>
           </motion.div>
 

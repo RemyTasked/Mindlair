@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { outlookCalendarService } from '../services/calendar/outlookCalendar';
+import { webexCalendarService } from '../services/calendar/webexCalendar';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { authenticate, optionalAuthenticate } from '../middleware/auth';
 import { logger } from '../utils/logger';
@@ -569,6 +570,188 @@ router.delete(
     res.json({
       message: 'Account deleted successfully',
     });
+  })
+);
+
+// ============================================
+// WEBEX OAUTH ROUTES
+// ============================================
+
+// Get Webex OAuth URL
+router.get('/webex/url', optionalAuthenticate, (req, res) => {
+  const userId = req.userId;
+  const authUrl = webexCalendarService.getAuthUrl(userId);
+  logger.info('📝 Generated Webex OAuth URL', { hasUserId: !!userId });
+  return res.json({ authUrl });
+});
+
+// Webex OAuth callback
+router.get(
+  '/webex/callback',
+  asyncHandler(async (req, res) => {
+    const { code, state, error } = req.query;
+
+    logger.info('🔐 Webex OAuth callback received', {
+      hasCode: !!code,
+      error: error,
+      hasState: !!state,
+    });
+
+    // Decode state to get userId if present
+    let existingUserId: string | null = null;
+    if (state && typeof state === 'string') {
+      try {
+        const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+        existingUserId = decoded.userId;
+        logger.info('📝 Decoded state parameter', { existingUserId });
+      } catch (e) {
+        logger.warn('⚠️ Failed to decode state parameter', { state });
+      }
+    }
+
+    if (error) {
+      logger.error('❌ Webex OAuth error', { error });
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?error=${error}`;
+      return res.redirect(redirectUrl);
+    }
+
+    if (!code || typeof code !== 'string') {
+      logger.error('❌ No authorization code provided');
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?error=no_code`;
+      return res.redirect(redirectUrl);
+    }
+
+    // Exchange code for tokens
+    const tokens = await webexCalendarService.getTokensFromCode(code);
+
+    // Get user info
+    const userInfo = await webexCalendarService.getUserInfo(tokens.access_token);
+
+    // Use first email from Webex
+    const email = userInfo.emails[0];
+    if (!email) {
+      logger.error('❌ No email found in Webex user info');
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?error=no_email`;
+      return res.redirect(redirectUrl);
+    }
+
+    // Create or update user
+    let user;
+    if (existingUserId) {
+      user = await prisma.user.findUnique({
+        where: { id: existingUserId },
+        include: {
+          preferences: true,
+          calendarAccounts: true,
+        },
+      });
+
+      if (!user) {
+        logger.error('❌ User not found for multi-calendar addition', { existingUserId });
+        const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?error=user_not_found`;
+        return res.redirect(redirectUrl);
+      }
+
+      logger.info('✅ Adding Webex calendar to existing user', {
+        userId: user.id,
+        email: user.email,
+      });
+    } else {
+      user = await prisma.user.upsert({
+        where: { email },
+        update: {
+          name: userInfo.displayName,
+          profilePicture: userInfo.avatar || null,
+        },
+        create: {
+          email,
+          name: userInfo.displayName,
+          profilePicture: userInfo.avatar || null,
+          preferences: {
+            create: {
+              workdayStart: '09:00',
+              workdayEnd: '18:00',
+              enablePresleyFlow: true,
+              enableFocusSound: true,
+              focusSoundType: 'calm-ocean',
+            },
+          },
+        },
+        include: {
+          preferences: true,
+          calendarAccounts: true,
+        },
+      });
+
+      logger.info('✅ User created/updated', {
+        userId: user.id,
+        email: user.email,
+        isNew: !user.preferences,
+      });
+    }
+
+    // Check if this Webex account is already connected
+    const existingAccount = await prisma.calendarAccount.findFirst({
+      where: {
+        userId: user.id,
+        provider: 'webex',
+        email: email,
+      },
+    });
+
+    const defaultLabel = `Webex (${email})`;
+
+    if (!existingAccount) {
+      await prisma.calendarAccount.deleteMany({
+        where: { userId: user.id, provider: 'webex' },
+      });
+
+      await prisma.calendarAccount.create({
+        data: {
+          userId: user.id,
+          provider: 'webex',
+          email: email,
+          label: defaultLabel,
+          color: null,
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+          tokenExpiry: new Date(Date.now() + tokens.expires_in * 1000),
+        },
+      });
+
+      logger.info('✅ Webex calendar account created', {
+        userId: user.id,
+        email: email,
+      });
+    } else {
+      await prisma.calendarAccount.update({
+        where: { id: existingAccount.id },
+        data: {
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+          tokenExpiry: new Date(Date.now() + tokens.expires_in * 1000),
+        },
+      });
+
+      logger.info('✅ Webex calendar account updated', {
+        userId: user.id,
+        email: email,
+      });
+    }
+
+    // Generate JWT token
+    const jwtToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
+      expiresIn: '30d',
+    });
+
+    // Redirect to frontend with token
+    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${jwtToken}`;
+    logger.info('🎉 Webex OAuth flow completed', {
+      userId: user.id,
+      redirectUrl: process.env.FRONTEND_URL,
+    });
+
+    return res.redirect(redirectUrl);
   })
 );
 
