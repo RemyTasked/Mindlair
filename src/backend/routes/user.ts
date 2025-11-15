@@ -357,6 +357,158 @@ router.patch(
   })
 );
 
+// Get user behavioral metadata for personalized insights
+router.get(
+  '/metadata',
+  authenticate,
+  asyncHandler(async (req: Request, res) => {
+    const userId = req.userId!;
+
+    // Get total focus sessions
+    const totalFocusSessions = await prisma.focusSession.count({
+      where: { userId },
+    });
+
+    // Get preferred prep modes (from recent focus sessions)
+    const recentSessions = await prisma.focusSession.findMany({
+      where: { 
+        userId,
+        prepMode: { not: null },
+      },
+      select: { prepMode: true },
+      orderBy: { startedAt: 'desc' },
+      take: 50, // Last 50 sessions
+    });
+
+    const preferredPrepModes: Record<string, number> = {};
+    recentSessions.forEach(session => {
+      if (session.prepMode) {
+        preferredPrepModes[session.prepMode] = (preferredPrepModes[session.prepMode] || 0) + 1;
+      }
+    });
+
+    // Get recent prep choices (last 10 with meeting titles)
+    const recentPrepChoices = await prisma.focusSession.findMany({
+      where: { 
+        userId,
+        prepMode: { not: null },
+      },
+      select: {
+        prepMode: true,
+        startedAt: true,
+        meeting: {
+          select: { title: true },
+        },
+      },
+      orderBy: { startedAt: 'desc' },
+      take: 10,
+    });
+
+    const formattedPrepChoices = recentPrepChoices.map(session => ({
+      meetingTitle: session.meeting?.title || 'Unknown Meeting',
+      prepMode: session.prepMode!,
+      timestamp: session.startedAt.toISOString(),
+    }));
+
+    // Get meeting patterns
+    const meetings = await prisma.meeting.findMany({
+      where: { userId },
+      select: {
+        startTime: true,
+        endTime: true,
+        title: true,
+      },
+      orderBy: { startTime: 'desc' },
+      take: 100, // Last 100 meetings for pattern analysis
+    });
+
+    let averageDuration = 0;
+    let backToBackCount = 0;
+    const meetingTypes: Record<string, number> = {};
+    const timeOfDayCount = { morning: 0, afternoon: 0, evening: 0 };
+
+    if (meetings.length > 0) {
+      // Calculate average duration
+      const durations = meetings.map(m => {
+        const start = new Date(m.startTime);
+        const end = new Date(m.endTime);
+        return (end.getTime() - start.getTime()) / (1000 * 60); // minutes
+      });
+      averageDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
+
+      // Detect back-to-back meetings
+      const sortedMeetings = [...meetings].sort((a, b) => 
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+      );
+      for (let i = 0; i < sortedMeetings.length - 1; i++) {
+        const currentEnd = new Date(sortedMeetings[i].endTime);
+        const nextStart = new Date(sortedMeetings[i + 1].startTime);
+        const gap = (nextStart.getTime() - currentEnd.getTime()) / (1000 * 60); // minutes
+        if (gap <= 5) backToBackCount++;
+      }
+
+      // Detect meeting types from titles
+      meetings.forEach(m => {
+        const title = m.title.toLowerCase();
+        if (title.includes('1:1') || title.includes('1-on-1') || title.includes('one on one')) {
+          meetingTypes['1:1'] = (meetingTypes['1:1'] || 0) + 1;
+        } else if (title.includes('team') || title.includes('standup') || title.includes('sync')) {
+          meetingTypes['Team'] = (meetingTypes['Team'] || 0) + 1;
+        } else if (title.includes('client') || title.includes('customer') || title.includes('demo')) {
+          meetingTypes['Client'] = (meetingTypes['Client'] || 0) + 1;
+        }
+
+        // Time of day analysis
+        const hour = new Date(m.startTime).getHours();
+        if (hour < 12) timeOfDayCount.morning++;
+        else if (hour < 17) timeOfDayCount.afternoon++;
+        else timeOfDayCount.evening++;
+      });
+    }
+
+    const backToBackFrequency = meetings.length > 1 
+      ? (backToBackCount / (meetings.length - 1)) * 100 
+      : 0;
+
+    const mostCommonMeetingType = Object.entries(meetingTypes)
+      .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    const preferredMeetingTime = Object.entries(timeOfDayCount)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] as 'morning' | 'afternoon' | 'evening' | undefined;
+
+    // Get sound preferences
+    const preferences = await prisma.userPreferences.findUnique({
+      where: { userId },
+      select: { focusSoundType: true },
+    });
+
+    const soundSessions = await prisma.focusSession.count({
+      where: { 
+        userId,
+        // Assuming sessions with sound enabled
+      },
+    });
+
+    res.json({
+      metadata: {
+        totalFocusSessions,
+        preferredPrepModes,
+        meetingPatterns: {
+          averageDuration: Math.round(averageDuration),
+          mostCommonMeetingType,
+          backToBackFrequency: Math.round(backToBackFrequency),
+          preferredMeetingTime,
+        },
+        recentPrepChoices: formattedPrepChoices,
+        soundPreferences: {
+          mostUsedSound: preferences?.focusSoundType || 'calm-ocean',
+          totalSoundSessions: soundSessions,
+        },
+      },
+    });
+  })
+);
+
 export default router;
 
 

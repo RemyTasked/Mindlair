@@ -22,6 +22,26 @@ interface DirectorsInsightsProps {
   };
   todaysMeetingCount?: number;
   upcomingMeetings?: any[];
+  // New: User behavior metadata for personalization
+  userMetadata?: {
+    totalFocusSessions?: number;
+    preferredPrepModes?: Record<string, number>; // e.g., { "Clarity": 5, "Connection": 3 }
+    meetingPatterns?: {
+      averageDuration?: number;
+      mostCommonMeetingType?: string; // e.g., "1:1", "Team", "Client"
+      backToBackFrequency?: number; // percentage
+      preferredMeetingTime?: 'morning' | 'afternoon' | 'evening';
+    };
+    recentPrepChoices?: Array<{
+      meetingTitle: string;
+      prepMode: string;
+      timestamp: string;
+    }>;
+    soundPreferences?: {
+      mostUsedSound?: string;
+      totalSoundSessions?: number;
+    };
+  };
 }
 
 export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
@@ -30,7 +50,8 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
   privateMode = false,
   meetingStats,
   todaysMeetingCount = 0,
-  upcomingMeetings = []
+  upcomingMeetings = [],
+  userMetadata
 }) => {
   const [currentInsightIndex, setCurrentInsightIndex] = useState(0);
   const [isRotating, setIsRotating] = useState(false);
@@ -428,6 +449,157 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
     ...getRandomInsights(5)
   ];
 
+  // Generate behavioral insights from user metadata (available from day 1)
+  const generateBehavioralInsights = (): Insight[] => {
+    const insights: Insight[] = [];
+
+    if (!userMetadata) return insights;
+
+    // Prep mode preferences
+    if (userMetadata.preferredPrepModes) {
+      const modes = Object.entries(userMetadata.preferredPrepModes);
+      if (modes.length > 0) {
+        const [topMode, count] = modes.sort((a, b) => b[1] - a[1])[0];
+        if (count >= 3) {
+          insights.push({
+            id: 'behavior-prep-mode',
+            sceneNumber: '50',
+            title: 'Your Prep Signature',
+            content: `${topMode} Mode is your go-to (${count}x). You know what centers you before a scene.`,
+            type: 'ai',
+            icon: '🎯'
+          });
+        }
+      }
+    }
+
+    // Focus session milestone
+    if (userMetadata.totalFocusSessions) {
+      if (userMetadata.totalFocusSessions === 1) {
+        insights.push({
+          id: 'behavior-first-session',
+          sceneNumber: '51',
+          title: 'First Scene Prepared',
+          content: 'You completed your first 5-minute prep. That\'s the hardest one — momentum builds from here.',
+          type: 'ai',
+          icon: '🎬'
+        });
+      } else if (userMetadata.totalFocusSessions === 10) {
+        insights.push({
+          id: 'behavior-ten-sessions',
+          sceneNumber: '52',
+          title: 'Building Ritual',
+          content: '10 prep sessions completed. You\'re not just preparing anymore — you\'re building a practice.',
+          type: 'ai',
+          icon: '🔥'
+        });
+      } else if (userMetadata.totalFocusSessions >= 25) {
+        insights.push({
+          id: 'behavior-veteran',
+          sceneNumber: '53',
+          title: 'Veteran Director',
+          content: `${userMetadata.totalFocusSessions} prep sessions. You\'ve mastered the art of showing up intentionally.`,
+          type: 'ai',
+          icon: '👑'
+        });
+      }
+    }
+
+    // Meeting patterns
+    if (userMetadata.meetingPatterns) {
+      const { backToBackFrequency, averageDuration, mostCommonMeetingType } = userMetadata.meetingPatterns;
+      
+      if (backToBackFrequency && backToBackFrequency > 60) {
+        insights.push({
+          id: 'behavior-back-to-back',
+          sceneNumber: '54',
+          title: 'Marathon Runner',
+          content: `${Math.round(backToBackFrequency)}% of your meetings are back-to-back. Remember: even 2 minutes between scenes restores clarity.`,
+          type: 'ai',
+          icon: '⚡'
+        });
+      }
+
+      if (averageDuration && averageDuration > 50) {
+        insights.push({
+          id: 'behavior-long-meetings',
+          sceneNumber: '55',
+          title: 'Epic Scenes',
+          content: `Your meetings average ${Math.round(averageDuration)} minutes. Longer scenes demand more energy — pace yourself.`,
+          type: 'ai',
+          icon: '🎞️'
+        });
+      }
+
+      if (mostCommonMeetingType) {
+        const typeAdvice: Record<string, string> = {
+          '1:1': 'Most of your meetings are 1:1s. Connection Mode might be your secret weapon.',
+          'Team': 'You run a lot of team meetings. Clarity Mode helps you set direction for the room.',
+          'Client': 'Client meetings are your main stage. Confidence Mode keeps you steady under pressure.',
+        };
+        const advice = typeAdvice[mostCommonMeetingType];
+        if (advice) {
+          insights.push({
+            id: 'behavior-meeting-type',
+            sceneNumber: '56',
+            title: 'Your Main Stage',
+            content: advice,
+            type: 'ai',
+            icon: '🎭'
+          });
+        }
+      }
+    }
+
+    // Recent prep choices (learning patterns)
+    if (userMetadata.recentPrepChoices && userMetadata.recentPrepChoices.length >= 3) {
+      const recentModes = userMetadata.recentPrepChoices.slice(0, 3).map(c => c.prepMode);
+      const allSame = recentModes.every(m => m === recentModes[0]);
+      
+      if (allSame) {
+        insights.push({
+          id: 'behavior-consistency',
+          sceneNumber: '57',
+          title: 'Consistency Pattern',
+          content: `You\'ve chosen ${recentModes[0]} Mode 3 times in a row. Consistency builds confidence.`,
+          type: 'ai',
+          icon: '🔄'
+        });
+      } else {
+        insights.push({
+          id: 'behavior-adaptability',
+          sceneNumber: '58',
+          title: 'Adaptive Director',
+          content: 'You switch prep modes based on the scene ahead. That\'s emotional intelligence in action.',
+          type: 'ai',
+          icon: '🎨'
+        });
+      }
+    }
+
+    // Sound preferences
+    if (userMetadata.soundPreferences?.mostUsedSound) {
+      const soundNames: Record<string, string> = {
+        'rain': 'Rain',
+        'calm-ocean': 'Ocean Waves',
+        'forest': 'Forest',
+        'meditation-bell': 'Meditation Bell',
+        'white-noise': 'White Noise'
+      };
+      const soundName = soundNames[userMetadata.soundPreferences.mostUsedSound] || userMetadata.soundPreferences.mostUsedSound;
+      insights.push({
+        id: 'behavior-sound',
+        sceneNumber: '59',
+        title: 'Your Anchor Sound',
+        content: `${soundName} is your go-to. You\'ve found what grounds you — that\'s self-awareness.`,
+        type: 'ai',
+        icon: '🎵'
+      });
+    }
+
+    return insights;
+  };
+
   // Generate AI-powered insights from reflection data
   const generateAIInsights = (): Insight[] => {
     const insights: Insight[] = [];
@@ -482,10 +654,15 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
     return insights;
   };
 
-  // Combine base and AI insights
-  const allInsights = hasReflectionData 
-    ? [...generateAIInsights(), ...baseInsights]
-    : baseInsights;
+  // Combine behavioral insights, AI insights (from reflections), and base insights
+  const behavioralInsights = generateBehavioralInsights();
+  const aiInsights = generateAIInsights();
+  
+  const allInsights = [
+    ...behavioralInsights, // Always include behavioral insights (from metadata)
+    ...(hasReflectionData ? aiInsights : []), // Add reflection-based AI insights if available
+    ...baseInsights // Always include contextual + random general insights
+  ];
 
   const currentInsight = allInsights[currentInsightIndex];
 
@@ -599,9 +776,14 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
       </div>
 
       {/* Subtle hint for new users */}
-      {!hasReflectionData && (
+      {!hasReflectionData && behavioralInsights.length === 0 && (
         <p className="text-xs text-gray-500 text-center mt-3">
-          💡 Complete post-meeting reflections to unlock personalized AI insights
+          💡 As you use Meet-Cute, insights will become personalized to your patterns
+        </p>
+      )}
+      {!hasReflectionData && behavioralInsights.length > 0 && (
+        <p className="text-xs text-gray-500 text-center mt-3">
+          ✨ Learning your patterns • Complete reflections to unlock deeper insights
         </p>
       )}
 

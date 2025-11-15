@@ -83,6 +83,7 @@ export default function Dashboard() {
   const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
   const [activeMeetings, setActiveMeetings] = useState<Meeting[]>([]);
   const [activeCues, setActiveCues] = useState<any[]>([]);
+  const [userMetadata, setUserMetadata] = useState<any>(null);
   
   const ensureAuthToken = async (): Promise<string | null> => {
     let token = localStorage.getItem('meetcute_token');
@@ -279,7 +280,7 @@ export default function Dashboard() {
       // Show UI now - load non-critical data in background
       setLoading(false);
 
-      // DEFERRED: Load stats and reflection insights in background (non-blocking)
+      // DEFERRED: Load stats, reflection insights, and user metadata in background (non-blocking)
       Promise.all([
         api.get('/api/user/stats', {
           params: {
@@ -287,10 +288,12 @@ export default function Dashboard() {
           },
         }).catch(() => ({ data: { stats: null } })),
         api.get('/api/reflections/insights').catch(() => ({ data: { hasData: false, stats: null } })),
-      ]).then(([statsResponse, reflectionInsightsResponse]) => {
+        api.get('/api/user/metadata').catch(() => ({ data: { metadata: null } })),
+      ]).then(([statsResponse, reflectionInsightsResponse, metadataResponse]) => {
         console.log('✅ Background data loaded');
         setStats(statsResponse.data.stats);
         setReflectionInsights(reflectionInsightsResponse.data);
+        setUserMetadata(metadataResponse.data.metadata);
       }).catch(err => {
         console.warn('⚠️ Background data load failed (non-critical):', err);
       });
@@ -560,6 +563,7 @@ export default function Dashboard() {
               return meetingDate.toDateString() === today.toDateString();
             }).length}
             upcomingMeetings={meetings.filter(m => new Date(m.startTime) > new Date())}
+            userMetadata={userMetadata}
           />
         </div>
 
