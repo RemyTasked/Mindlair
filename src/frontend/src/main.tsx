@@ -64,11 +64,17 @@ bootstrap().catch((error) => {
 
 // Listen for service worker cache updates
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', (event) => {
+  navigator.serviceWorker.addEventListener('message', async (event) => {
     if (event.data && event.data.type === 'CACHE_UPDATED') {
       console.log('🎬 Service Worker: Cache updated to', event.data.version);
-      // Force hard reload to get new assets
-      window.location.reload();
+      
+      // Show update notification instead of auto-reloading
+      // This gives users control over when to update (better UX during meetings)
+      const { showUpdateNotification } = await import('./components/UpdateNotification');
+      showUpdateNotification(() => {
+        console.log('🔄 User initiated update - reloading...');
+        window.location.reload();
+      });
     }
   });
 }
