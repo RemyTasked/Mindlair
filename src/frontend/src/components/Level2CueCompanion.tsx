@@ -38,6 +38,10 @@ export default function Level2CueCompanion({
     const startAnalyzer = async () => {
       if (enabled && !isActive) {
         try {
+          // Signal that Level 2 is active (suppresses Level 1 cues)
+          localStorage.setItem('meetcute_level2_active', 'true');
+          console.log('🎯 Level 2 activated - Level 1 cues will be suppressed');
+          
           await analyzer.current.start();
           setIsActive(true);
           setIsCalibrating(true);
@@ -107,6 +111,10 @@ export default function Level2CueCompanion({
     if (enabled) {
       startAnalyzer();
     } else if (isActive) {
+      // Signal that Level 2 is no longer active (re-enable Level 1 cues)
+      localStorage.removeItem('meetcute_level2_active');
+      console.log('🔄 Level 2 deactivated - Level 1 cues will resume');
+      
       // Generate summary before stopping
       if (showSummary) {
         const meetingSummary = analyzer.current.getMeetingSummary();
@@ -418,7 +426,10 @@ export default function Level2CueCompanion({
                     What This Does
                   </h4>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    Level 2 listens to <strong>how you sound</strong> (not what you say) to give you real-time cues about your pace, volume, and composure during the meeting.
+                    Level 2 listens to <strong>how you sound</strong> (not what you say) to give you real-time, personalized cues about your pace, volume, and composure during the meeting.
+                  </p>
+                  <p className="text-xs text-purple-600 mt-2 font-medium">
+                    💡 When Level 2 is active, generic Level 1 cues are automatically suppressed so you only get personalized feedback.
                   </p>
                 </div>
                 

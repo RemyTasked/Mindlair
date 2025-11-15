@@ -318,20 +318,27 @@ export default function Dashboard() {
 
   const pollActiveCues = async () => {
     try {
+      // Check if Level 2 is active - if so, skip Level 1 cues
+      const level2Active = localStorage.getItem('meetcute_level2_active') === 'true';
+      if (level2Active) {
+        console.log('🎯 Level 2 is active - suppressing Level 1 cues');
+        return;
+      }
+
       const token = await ensureAuthToken();
       if (!token) {
         console.log('⚠️ No token available for cue polling');
         return;
       }
 
-      console.log('🔄 Polling for active cues...');
+      console.log('🔄 Polling for Level 1 active cues...');
       const response = await api.get('/api/cues/active', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       const { activeMeetings: newActiveMeetings, activeCues: newActiveCues } = response.data;
       
-      console.log('📊 Active cues response:', {
+      console.log('📊 Level 1 active cues response:', {
         activeMeetings: newActiveMeetings?.length || 0,
         activeCues: newActiveCues?.length || 0,
         cues: newActiveCues
@@ -341,14 +348,14 @@ export default function Dashboard() {
       
       // Display new cues as toasts
       if (newActiveCues && newActiveCues.length > 0) {
-        console.log('🔔 Processing cues for toast display...');
+        console.log('🔔 Processing Level 1 cues for toast display...');
         newActiveCues.forEach((cue: any) => {
           // Check if this cue was already shown
           const alreadyShown = activeCues.some(existing => existing.cueId === cue.cueId);
-          console.log(`Cue ${cue.cueId}: alreadyShown=${alreadyShown}`);
+          console.log(`Level 1 Cue ${cue.cueId}: alreadyShown=${alreadyShown}`);
           
           if (!alreadyShown) {
-            console.log('🔔 Dispatching NEW cue toast event:', cue);
+            console.log('🔔 Dispatching NEW Level 1 cue toast event:', cue);
             // Trigger cue toast event
             const event = new CustomEvent('cue-toast', {
               detail: {
@@ -359,11 +366,11 @@ export default function Dashboard() {
               }
             });
             window.dispatchEvent(event);
-            console.log('✅ Toast event dispatched');
+            console.log('✅ Level 1 toast event dispatched');
           }
         });
       } else {
-        console.log('ℹ️ No active cues at this time');
+        console.log('ℹ️ No Level 1 active cues at this time');
       }
       
       setActiveCues(newActiveCues || []);
