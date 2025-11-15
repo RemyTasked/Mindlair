@@ -662,12 +662,10 @@ router.get(
         where: { email },
         update: {
           name: userInfo.displayName,
-          profilePicture: userInfo.avatar || null,
         },
         create: {
           email,
           name: userInfo.displayName,
-          profilePicture: userInfo.avatar || null,
           preferences: {
             create: {},
           },
@@ -709,7 +707,7 @@ router.get(
           color: null,
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
-          tokenExpiry: new Date(Date.now() + tokens.expires_in * 1000),
+          expiresAt: new Date(Date.now() + tokens.expires_in * 1000),
         },
       });
 
@@ -723,7 +721,7 @@ router.get(
         data: {
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
-          tokenExpiry: new Date(Date.now() + tokens.expires_in * 1000),
+          expiresAt: new Date(Date.now() + tokens.expires_in * 1000),
         },
       });
 
@@ -811,7 +809,7 @@ router.post(
         data: {
           // Store encrypted password (in production, use proper encryption!)
           accessToken: Buffer.from(password).toString('base64'),
-          tokenExpiry: null, // CalDAV doesn't expire
+          expiresAt: null, // CalDAV doesn't expire
         },
       });
 
@@ -831,7 +829,7 @@ router.post(
           // Store encrypted password (in production, use proper encryption!)
           accessToken: Buffer.from(password).toString('base64'),
           refreshToken: null,
-          tokenExpiry: null,
+          expiresAt: null,
         },
       });
 
