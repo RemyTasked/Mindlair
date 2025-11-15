@@ -52,7 +52,7 @@ class WebexCalendarService {
 
     const scopes = [
       'spark:people_read',
-      'spark:meetings_read',
+      'spark-compliance:meetings_read',
     ].join(' ');
 
     // Encode userId in state parameter for multi-calendar support
