@@ -35,7 +35,6 @@ export async function recommendPrepMode(context: RecommendationContext): Promise
     attendeeCount, 
     userId, 
     timeOfDay, 
-    dayOfWeek,
     meetingDuration,
     isBackToBack,
     recurringAttendees,
