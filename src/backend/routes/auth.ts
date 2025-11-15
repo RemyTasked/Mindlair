@@ -877,5 +877,122 @@ router.post(
   })
 );
 
+// CalDAV Sign-In (creates user + returns JWT)
+router.post(
+  '/caldav/signin',
+  asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    logger.info('🔐 CalDAV sign-in attempt', { email });
+
+    // Validate input
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400);
+    }
+
+    // Test CalDAV connection
+    const isValid = await caldavCalendarService.testConnection({
+      email,
+      password,
+    });
+
+    if (!isValid) {
+      throw new AppError('Invalid CalDAV credentials or server unreachable', 401);
+    }
+
+    const providerName = caldavCalendarService.getProviderName(email);
+
+    // Create or get user
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: {
+        // Update last login
+      },
+      create: {
+        email,
+        name: email.split('@')[0], // Use email prefix as default name
+        preferences: {
+          create: {},
+        },
+      },
+      include: {
+        calendarAccounts: true,
+      },
+    });
+
+    logger.info('✅ User authenticated via CalDAV', {
+      userId: user.id,
+      email: user.email,
+      isNew: !user.calendarAccounts.length,
+    });
+
+    // Check if this CalDAV account is already connected
+    const existingAccount = await prisma.calendarAccount.findFirst({
+      where: {
+        userId: user.id,
+        provider: 'caldav',
+        email: email,
+      },
+    });
+
+    const defaultLabel = `${providerName} (${email})`;
+
+    if (existingAccount) {
+      // Update existing account
+      await prisma.calendarAccount.update({
+        where: { id: existingAccount.id },
+        data: {
+          // Store encrypted password (in production, use proper encryption!)
+          accessToken: Buffer.from(password).toString('base64'),
+          expiresAt: null, // CalDAV doesn't expire
+        },
+      });
+
+      logger.info('✅ CalDAV account updated', {
+        userId: user.id,
+        email: email,
+      });
+    } else {
+      // Create new account
+      await prisma.calendarAccount.create({
+        data: {
+          userId: user.id,
+          provider: 'caldav',
+          email: email,
+          label: defaultLabel,
+          color: null,
+          // Store encrypted password (in production, use proper encryption!)
+          accessToken: Buffer.from(password).toString('base64'),
+          refreshToken: null,
+          expiresAt: null,
+        },
+      });
+
+      logger.info('✅ CalDAV account created', {
+        userId: user.id,
+        email: email,
+      });
+    }
+
+    // Generate JWT token (same as other OAuth providers)
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+      },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    // Return token to frontend (matches OAuth callback pattern)
+    return res.json({
+      success: true,
+      token,
+      provider: providerName,
+      message: `Signed in with ${providerName}`,
+    });
+  })
+);
+
 export default router;
 

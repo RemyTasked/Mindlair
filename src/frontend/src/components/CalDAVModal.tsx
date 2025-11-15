@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import api from '../lib/axios';
+import { saveToken } from '../utils/persistentStorage';
 
 interface CalDAVModalProps {
   isOpen: boolean;
@@ -27,17 +28,30 @@ export default function CalDAVModal({ isOpen, onClose, onSuccess }: CalDAVModalP
     setLoading(true);
 
     try {
-      await api.post('/api/auth/caldav/connect', {
+      // Use the signin endpoint that creates user + returns JWT token
+      const response = await api.post('/api/auth/caldav/signin', {
         email,
         password,
       });
 
+      const { token, provider } = response.data;
+
+      // Store token in both localStorage AND IndexedDB for PWA persistence
+      await saveToken(token);
+      localStorage.setItem('meetcute_session_active', 'true');
+
+      console.log('✅ CalDAV signin successful:', {
+        provider,
+        tokenStored: !!localStorage.getItem('meetcute_token'),
+      });
+
       setSuccess(true);
       setTimeout(() => {
-        onSuccess();
+        onSuccess(); // Navigate to dashboard
         onClose();
       }, 1500);
     } catch (err: any) {
+      console.error('CalDAV signin error:', err);
       setError(
         err.response?.data?.message ||
         'Failed to connect. Please check your credentials and try again.'
