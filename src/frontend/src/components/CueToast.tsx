@@ -33,50 +33,49 @@ export function CueToast({ cue, onDismiss }: CueToastProps) {
   }, []);
 
   const handleAction = async (action: string) => {
-    try {
-      // Record telemetry
-      await api.post('/api/cues/telemetry', {
-        cueId: cue.cueId,
-        meetingId: cue.meetingId,
-        action: 'clicked',
-        actionType: action,
-        timestamp: new Date().toISOString(),
-      });
-
-      // Handle specific actions
-      if (action === 'breathe') {
-        // TODO: Trigger breathing exercise modal
-        console.log('🫁 Starting breathing exercise...');
-      } else if (action === 'focus-note') {
-        // TODO: Open quick note modal
-        console.log('📝 Opening focus note...');
-      } else if (action === 'hide') {
-        handleDismiss();
-      } else if (action === 'snooze') {
-        // Snooze for 5 minutes
-        console.log('⏰ Snoozed for 5 minutes');
-        handleDismiss();
-      }
-    } catch (error) {
-      console.error('Failed to record cue action:', error);
+    // Handle action FIRST, then record telemetry (don't block on API call)
+    if (action === 'breathe') {
+      // TODO: Trigger breathing exercise modal
+      console.log('🫁 Starting breathing exercise...');
+      handleDismiss();
+    } else if (action === 'focus-note') {
+      // TODO: Open quick note modal
+      console.log('📝 Opening focus note...');
+      handleDismiss();
+    } else if (action === 'hide') {
+      handleDismiss();
+    } else if (action === 'snooze') {
+      // Snooze for 5 minutes
+      console.log('⏰ Snoozed for 5 minutes');
+      handleDismiss();
     }
+
+    // Record telemetry in background (don't await)
+    api.post('/api/cues/telemetry', {
+      cueId: cue.cueId,
+      meetingId: cue.meetingId,
+      action: 'clicked',
+      actionType: action,
+      timestamp: new Date().toISOString(),
+    }).catch(error => {
+      console.warn('Failed to record cue action telemetry:', error);
+    });
   };
 
-  const handleDismiss = async () => {
-    try {
-      // Record telemetry
-      await api.post('/api/cues/telemetry', {
-        cueId: cue.cueId,
-        meetingId: cue.meetingId,
-        action: 'dismissed',
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Failed to record cue dismissal:', error);
-    }
-
+  const handleDismiss = () => {
+    // Dismiss immediately (don't wait for API)
     setIsVisible(false);
     setTimeout(onDismiss, 300); // Wait for animation
+    
+    // Record telemetry in background (don't await)
+    api.post('/api/cues/telemetry', {
+      cueId: cue.cueId,
+      meetingId: cue.meetingId,
+      action: 'dismissed',
+      timestamp: new Date().toISOString(),
+    }).catch(error => {
+      console.warn('Failed to record cue dismissal telemetry:', error);
+    });
   };
 
   if (!isVisible) return null;
@@ -149,12 +148,21 @@ export function CueToast({ cue, onDismiss }: CueToastProps) {
 // Toast Manager Component
 export function CueToastManager() {
   const [activeCue, setActiveCue] = useState<CueData | null>(null);
+  const [dismissedCues, setDismissedCues] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const handleCueEvent = (event: Event) => {
       const customEvent = event as CustomEvent<CueData>;
-      console.log('🔔 Cue received:', customEvent.detail);
-      setActiveCue(customEvent.detail);
+      const cueData = customEvent.detail;
+      
+      // Don't show if already dismissed
+      if (dismissedCues.has(cueData.cueId)) {
+        console.log('🚫 Cue already dismissed, skipping:', cueData.cueId);
+        return;
+      }
+      
+      console.log('🔔 Cue received:', cueData);
+      setActiveCue(cueData);
     };
 
     window.addEventListener('cue-toast', handleCueEvent);
@@ -162,14 +170,23 @@ export function CueToastManager() {
     return () => {
       window.removeEventListener('cue-toast', handleCueEvent);
     };
-  }, []);
+  }, [dismissedCues]);
+
+  const handleDismiss = () => {
+    if (activeCue) {
+      // Mark this cue as dismissed
+      setDismissedCues(prev => new Set(prev).add(activeCue.cueId));
+      console.log('✅ Cue dismissed and marked:', activeCue.cueId);
+    }
+    setActiveCue(null);
+  };
 
   if (!activeCue) return null;
 
   return (
     <CueToast
       cue={activeCue}
-      onDismiss={() => setActiveCue(null)}
+      onDismiss={handleDismiss}
     />
   );
 }
