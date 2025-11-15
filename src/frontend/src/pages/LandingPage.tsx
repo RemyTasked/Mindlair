@@ -178,23 +178,15 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
           >
-            5 Minutes to Meeting Mastery
+            5 Minutes to Alignment
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-xl sm:text-2xl text-gray-700 mb-4 leading-relaxed max-w-3xl mx-auto"
+            className="text-xl sm:text-2xl text-gray-700 mb-8 leading-relaxed max-w-3xl mx-auto"
           >
-            Choose your mode: <strong className="text-indigo-700">Clarity</strong>, <strong className="text-purple-700">Confidence</strong>, <strong className="text-pink-700">Connection</strong>, <strong className="text-indigo-600">Composure</strong>, or <strong className="text-purple-600">Momentum</strong>.
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.45 }}
-            className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto"
-          >
-            AI-powered prep flows + smart in-meeting cues. Walk in ready.
+            Your next scene deserves the best version of you.
           </motion.p>
           
           {/* Visual Preview */}

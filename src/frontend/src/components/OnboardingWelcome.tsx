@@ -33,7 +33,7 @@ export default function OnboardingWelcome({ onContinue }: OnboardingWelcomeProps
               Welcome to Meet Cute
             </h1>
             <p className="text-lg text-indigo-100 max-w-2xl mx-auto leading-relaxed">
-              Before we open the dashboard, let's craft your personal flow. The cinematic onboarding you're about to experience sets your schedule, tone, and focus so every Presley Flow knows exactly how to support you.
+              Meet-Cute helps you align your intention, energy, and communication before every meeting.
             </p>
             <div className="grid sm:grid-cols-3 gap-4 text-left text-sm text-indigo-100/80">
               <div className="bg-white/10 border border-white/20 rounded-2xl p-4">
