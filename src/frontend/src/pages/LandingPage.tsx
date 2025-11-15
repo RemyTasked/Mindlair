@@ -164,7 +164,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-xl sm:text-2xl text-gray-700 mb-4 leading-relaxed max-w-3xl mx-auto"
           >
-            AI-powered pre-meeting preparation that transforms how you show up.
+            Choose your mode: <strong className="text-indigo-700">Clarity</strong>, <strong className="text-purple-700">Confidence</strong>, <strong className="text-pink-700">Connection</strong>, <strong className="text-indigo-600">Composure</strong>, or <strong className="text-purple-600">Momentum</strong>.
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -172,8 +172,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto"
           >
-            Get <strong className="text-indigo-700">smart meeting cues</strong>, guided breathing, and calming sounds before every meeting. 
-            <strong className="text-gray-900"> Walk in prepared, composed, and confident.</strong>
+            AI-powered prep flows + smart in-meeting cues. Walk in ready.
           </motion.p>
           
           {/* Visual Preview */}
