@@ -20,22 +20,163 @@ interface DirectorsInsightsProps {
     mostCommonWord?: string;
     energyTrend?: string;
   };
+  todaysMeetingCount?: number;
+  upcomingMeetings?: any[];
 }
 
 export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
   hasReflectionData = false,
   recentReflections: _recentReflections = [],
   privateMode = false,
-  meetingStats
+  meetingStats,
+  todaysMeetingCount = 0,
+  upcomingMeetings = []
 }) => {
   const [currentInsightIndex, setCurrentInsightIndex] = useState(0);
   const [isRotating, setIsRotating] = useState(false);
 
-  // Base insights for users without reflection data
-  const baseInsights: Insight[] = [
+  // Helper: Get time of day
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 17) return 'afternoon';
+    return 'evening';
+  };
+
+  // Helper: Get day of week
+  const getDayOfWeek = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[new Date().getDay()];
+  };
+
+  // Helper: Is it a weekend?
+  const isWeekend = () => {
+    const day = new Date().getDay();
+    return day === 0 || day === 6;
+  };
+
+  // Generate contextual base insights
+  const generateBaseInsights = (): Insight[] => {
+    const insights: Insight[] = [];
+    const timeOfDay = getTimeOfDay();
+    const dayOfWeek = getDayOfWeek();
+
+    // Time-aware greeting insights
+    if (timeOfDay === 'morning') {
+      insights.push({
+        id: 'time-morning',
+        sceneNumber: '01',
+        title: 'Opening Scene',
+        content: `Good morning. ${dayOfWeek} begins with intention — how you start shapes the entire act.`,
+        type: 'reflection',
+        icon: '☀️'
+      });
+    } else if (timeOfDay === 'afternoon') {
+      insights.push({
+        id: 'time-afternoon',
+        sceneNumber: '01',
+        title: 'Midday Momentum',
+        content: `${dayOfWeek} afternoon. The story is halfway written — stay present for the scenes ahead.`,
+        type: 'reflection',
+        icon: '⚡'
+      });
+    } else {
+      insights.push({
+        id: 'time-evening',
+        sceneNumber: '01',
+        title: 'Closing Credits',
+        content: `${dayOfWeek} evening. Every scene you showed up for today counts — even the difficult ones.`,
+        type: 'reflection',
+        icon: '🌙'
+      });
+    }
+
+    // Meeting count insights
+    if (todaysMeetingCount === 0) {
+      insights.push({
+        id: 'meetings-zero',
+        sceneNumber: '02',
+        title: 'Blank Canvas',
+        content: isWeekend() 
+          ? 'No meetings scheduled. This is your intermission — rest is part of the performance.'
+          : 'No meetings today. A rare gift of uninterrupted time — use it like the director you are.',
+        type: 'reflection',
+        icon: '🎨'
+      });
+    } else if (todaysMeetingCount === 1) {
+      insights.push({
+        id: 'meetings-one',
+        sceneNumber: '02',
+        title: 'Single Scene Focus',
+        content: 'One meeting today. Give it your full presence — a single scene can change the entire story.',
+        type: 'reflection',
+        icon: '🎯'
+      });
+    } else if (todaysMeetingCount <= 3) {
+      insights.push({
+        id: 'meetings-few',
+        sceneNumber: '02',
+        title: 'Measured Pace',
+        content: `${todaysMeetingCount} meetings today. A sustainable rhythm — you have space to breathe between scenes.`,
+        type: 'reflection',
+        icon: '🎬'
+      });
+    } else if (todaysMeetingCount <= 5) {
+      insights.push({
+        id: 'meetings-busy',
+        sceneNumber: '02',
+        title: 'Full Schedule',
+        content: `${todaysMeetingCount} meetings today. Stay grounded between scenes — your energy is your most valuable asset.`,
+        type: 'reflection',
+        icon: '📅'
+      });
+    } else {
+      insights.push({
+        id: 'meetings-packed',
+        sceneNumber: '02',
+        title: 'Marathon Day',
+        content: `${todaysMeetingCount} meetings today. This is a test of composure — remember to pause, even for 60 seconds.`,
+        type: 'reflection',
+        icon: '🏃'
+      });
+    }
+
+    // Upcoming meeting insights
+    if (upcomingMeetings.length > 0) {
+      const nextMeeting = upcomingMeetings[0];
+      const meetingTime = new Date(nextMeeting.startTime);
+      const now = new Date();
+      const minutesUntil = Math.floor((meetingTime.getTime() - now.getTime()) / 60000);
+
+      if (minutesUntil <= 5 && minutesUntil > 0) {
+        insights.push({
+          id: 'upcoming-imminent',
+          sceneNumber: '03',
+          title: 'Scene Starting Soon',
+          content: `"${nextMeeting.title}" begins in ${minutesUntil} minutes. Take one deep breath before you enter.`,
+          type: 'reflection',
+          icon: '⏰'
+        });
+      } else if (minutesUntil <= 30 && minutesUntil > 5) {
+        insights.push({
+          id: 'upcoming-soon',
+          sceneNumber: '03',
+          title: 'Next Scene Approaching',
+          content: `"${nextMeeting.title}" in ${minutesUntil} minutes. What version of you do you want to bring?`,
+          type: 'reflection',
+          icon: '🎭'
+        });
+      }
+    }
+
+    return insights;
+  };
+
+  // Large pool of rotating general insights (30+ variations)
+  const generalInsights: Insight[] = [
     {
       id: 'stat-1',
-      sceneNumber: '01',
+      sceneNumber: '04',
       title: 'The Meeting Paradox',
       content: 'Most professionals spend 37% of their day in meetings. You\'ve reclaimed that time today — use it intentionally.',
       type: 'stat',
@@ -43,23 +184,15 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
     },
     {
       id: 'stat-2',
-      sceneNumber: '02',
+      sceneNumber: '05',
       title: 'The Power of Pause',
       content: 'People who pause for one minute of deep breathing report 21% higher focus before calls.',
       type: 'stat',
       icon: '🧘'
     },
     {
-      id: 'reflection-1',
-      sceneNumber: '03',
-      title: 'Unwritten Scenes',
-      content: 'Today\'s mood tone: unwritten. Every blank calendar is a scene waiting for you.',
-      type: 'reflection',
-      icon: '✨'
-    },
-    {
       id: 'stat-3',
-      sceneNumber: '04',
+      sceneNumber: '06',
       title: 'The Golden Hour',
       content: 'Morning meetings under 45 minutes have 34% higher satisfaction ratings than afternoon marathons.',
       type: 'stat',
@@ -67,12 +200,232 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
     },
     {
       id: 'stat-4',
-      sceneNumber: '05',
+      sceneNumber: '07',
       title: 'The Preparation Effect',
       content: 'Just 3 minutes of intentional prep can transform a routine call into a memorable conversation.',
       type: 'stat',
       icon: '🎬'
+    },
+    {
+      id: 'stat-5',
+      sceneNumber: '08',
+      title: 'The Composure Advantage',
+      content: 'Leaders who speak 20% slower are perceived as 34% more confident and trustworthy.',
+      type: 'stat',
+      icon: '🎙️'
+    },
+    {
+      id: 'stat-6',
+      sceneNumber: '09',
+      title: 'The Silence Strategy',
+      content: 'A 3-second pause before responding increases perceived thoughtfulness by 40%.',
+      type: 'stat',
+      icon: '⏸️'
+    },
+    {
+      id: 'stat-7',
+      sceneNumber: '10',
+      title: 'The Energy Window',
+      content: 'Your cognitive peak is typically 2-4 hours after waking. Schedule important meetings accordingly.',
+      type: 'stat',
+      icon: '⚡'
+    },
+    {
+      id: 'stat-8',
+      sceneNumber: '11',
+      title: 'The Back-to-Back Trap',
+      content: 'Back-to-back meetings reduce focus by 47%. Even a 5-minute buffer restores clarity.',
+      type: 'stat',
+      icon: '🔄'
+    },
+    {
+      id: 'stat-9',
+      sceneNumber: '12',
+      title: 'The First Impression Window',
+      content: 'People form 80% of their impression of you in the first 7 seconds. Your opening matters.',
+      type: 'stat',
+      icon: '👁️'
+    },
+    {
+      id: 'stat-10',
+      sceneNumber: '13',
+      title: 'The Question Advantage',
+      content: 'Meetings that start with a question have 28% higher engagement than those that start with statements.',
+      type: 'stat',
+      icon: '❓'
+    },
+    {
+      id: 'wisdom-1',
+      sceneNumber: '14',
+      title: 'Scene Direction',
+      content: 'Every meeting is a scene. You can\'t control the script, but you can control your performance.',
+      type: 'reflection',
+      icon: '🎭'
+    },
+    {
+      id: 'wisdom-2',
+      sceneNumber: '15',
+      title: 'The Rehearsal Principle',
+      content: 'Great actors rehearse. Great professionals prepare. The 5 minutes before a meeting define the 50 minutes during.',
+      type: 'reflection',
+      icon: '🎪'
+    },
+    {
+      id: 'wisdom-3',
+      sceneNumber: '16',
+      title: 'Presence Over Performance',
+      content: 'You don\'t need to be perfect. You need to be present. That\'s the whole scene.',
+      type: 'reflection',
+      icon: '✨'
+    },
+    {
+      id: 'wisdom-4',
+      sceneNumber: '17',
+      title: 'The Director\'s Cut',
+      content: 'You can\'t edit a meeting in real-time, but you can pause, breathe, and choose your next line.',
+      type: 'reflection',
+      icon: '✂️'
+    },
+    {
+      id: 'wisdom-5',
+      sceneNumber: '18',
+      title: 'Energy Management',
+      content: 'Your energy is the currency of leadership. Spend it wisely — not every scene deserves the same investment.',
+      type: 'reflection',
+      icon: '🔋'
+    },
+    {
+      id: 'wisdom-6',
+      sceneNumber: '19',
+      title: 'The Listening Scene',
+      content: 'The best performances aren\'t monologues. Listen like you\'re learning the other character\'s story.',
+      type: 'reflection',
+      icon: '👂'
+    },
+    {
+      id: 'wisdom-7',
+      sceneNumber: '20',
+      title: 'Intermission Matters',
+      content: 'Even the best films have intermissions. Your breaks between meetings aren\'t wasted time — they\'re essential.',
+      type: 'reflection',
+      icon: '☕'
+    },
+    {
+      id: 'wisdom-8',
+      sceneNumber: '21',
+      title: 'The Tone You Set',
+      content: 'Your tone in the first 30 seconds sets the emotional temperature for the entire room.',
+      type: 'reflection',
+      icon: '🌡️'
+    },
+    {
+      id: 'wisdom-9',
+      sceneNumber: '22',
+      title: 'Rewrite Tomorrow',
+      content: 'Today\'s performance doesn\'t define tomorrow\'s. Every morning is a fresh script.',
+      type: 'reflection',
+      icon: '📝'
+    },
+    {
+      id: 'wisdom-10',
+      sceneNumber: '23',
+      title: 'The Unspoken Scene',
+      content: 'What you don\'t say is as important as what you do. Silence is a tool, not a gap.',
+      type: 'reflection',
+      icon: '🤫'
+    },
+    {
+      id: 'tip-1',
+      sceneNumber: '24',
+      title: 'The 4-7-8 Breath',
+      content: 'Inhale for 4, hold for 7, exhale for 8. One round calms your nervous system before any high-stakes call.',
+      type: 'stat',
+      icon: '🌬️'
+    },
+    {
+      id: 'tip-2',
+      sceneNumber: '25',
+      title: 'The Posture Shift',
+      content: 'Sitting upright increases confidence hormones by 20%. Your body language shapes your mental state.',
+      type: 'stat',
+      icon: '🪑'
+    },
+    {
+      id: 'tip-3',
+      sceneNumber: '26',
+      title: 'The Water Strategy',
+      content: 'Drinking water mid-meeting gives you a 2-second pause to think. It\'s a composure hack disguised as hydration.',
+      type: 'stat',
+      icon: '💧'
+    },
+    {
+      id: 'tip-4',
+      sceneNumber: '27',
+      title: 'The Agenda Advantage',
+      content: 'Meetings with a clear agenda finish 18 minutes faster on average. Set the structure, own the scene.',
+      type: 'stat',
+      icon: '📋'
+    },
+    {
+      id: 'tip-5',
+      sceneNumber: '28',
+      title: 'The Closing Line',
+      content: 'End every meeting with one clear next step. Ambiguity kills momentum.',
+      type: 'stat',
+      icon: '🎯'
+    },
+    {
+      id: 'tip-6',
+      sceneNumber: '29',
+      title: 'The Name Effect',
+      content: 'Using someone\'s name increases their engagement by 30%. It\'s the simplest connection tool.',
+      type: 'stat',
+      icon: '🏷️'
+    },
+    {
+      id: 'tip-7',
+      sceneNumber: '30',
+      title: 'The Gratitude Close',
+      content: 'Ending with "Thank you for your time" increases perceived professionalism by 25%.',
+      type: 'stat',
+      icon: '🙏'
+    },
+    {
+      id: 'tip-8',
+      sceneNumber: '31',
+      title: 'The Video Advantage',
+      content: 'Meetings with video on have 41% higher trust ratings. Your face tells the story your words can\'t.',
+      type: 'stat',
+      icon: '📹'
+    },
+    {
+      id: 'tip-9',
+      sceneNumber: '32',
+      title: 'The Early Arrival',
+      content: 'Joining 2 minutes early signals respect and gives you time to settle. First impressions start before the meeting does.',
+      type: 'stat',
+      icon: '⏰'
+    },
+    {
+      id: 'tip-10',
+      sceneNumber: '33',
+      title: 'The Reflection Ritual',
+      content: 'Spending 60 seconds after a meeting to reflect increases retention by 23% and reduces repeat mistakes.',
+      type: 'stat',
+      icon: '🪞'
     }
+  ];
+
+  // Shuffle and select random general insights
+  const getRandomInsights = (count: number) => {
+    const shuffled = [...generalInsights].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  };
+
+  // Combine contextual + random general insights
+  const baseInsights = [
+    ...generateBaseInsights(),
+    ...getRandomInsights(5)
   ];
 
   // Generate AI-powered insights from reflection data

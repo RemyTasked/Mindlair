@@ -554,6 +554,12 @@ export default function Dashboard() {
             recentReflections={reflectionInsights?.recentReflections || []}
             privateMode={reflectionInsights?.privateMode || false}
             meetingStats={reflectionInsights?.stats || undefined}
+            todaysMeetingCount={meetings.filter(m => {
+              const meetingDate = new Date(m.startTime);
+              const today = new Date();
+              return meetingDate.toDateString() === today.toDateString();
+            }).length}
+            upcomingMeetings={meetings.filter(m => new Date(m.startTime) > new Date())}
           />
         </div>
 
