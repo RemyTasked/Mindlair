@@ -30,7 +30,7 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
   clarity: [
     {
       title: 'Anchor Intention',
-      prompt: 'In one sentence — why does this meeting exist?',
+      prompt: 'In one sentence - why does this meeting exist?',
       inputType: 'text',
       placeholder: 'This meeting exists to...',
     },
@@ -42,7 +42,7 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
     },
     {
       title: 'Decision Win',
-      prompt: 'What's the action, approval, or outcome you need by the end?',
+      prompt: 'What\'s the action, approval, or outcome you need by the end?',
       inputType: 'text',
       placeholder: 'By the end, I need...',
     },
@@ -54,16 +54,16 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
     },
     {
       title: 'First Line Ready',
-      prompt: 'What's your opener — one sentence that sets direction?',
+      prompt: 'What\'s your opener - one sentence that sets direction?',
       inputType: 'text',
-      placeholder: 'I'll open with...',
-      toneCue: 'You're here to shape the story, not watch it.',
+      placeholder: 'I\'ll open with...',
+      toneCue: 'You\'re here to shape the story, not watch it.',
     },
   ],
   confidence: [
     {
       title: 'Body Reset',
-      prompt: 'Deep inhale x 3 → lengthen exhale → shoulders down, jaw unlocked.',
+      prompt: 'Deep inhale x 3 - lengthen exhale - shoulders down, jaw unlocked.',
       inputType: 'breathing',
     },
     {
@@ -86,9 +86,9 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
     },
     {
       title: 'Spotlight Moment',
-      prompt: 'Visualize the key line landing — and silence afterward.',
+      prompt: 'Visualize the key line landing - and silence afterward.',
       inputType: 'visualization',
-      toneCue: 'Own the moment. They're lucky to have you in the room.',
+      toneCue: 'Own the moment. They\'re lucky to have you in the room.',
     },
   ],
   connection: [
@@ -106,9 +106,9 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
     },
     {
       title: 'Curiosity Question',
-      prompt: 'What's one question that opens the room? Prepare to listen.',
+      prompt: 'What\'s one question that opens the room? Prepare to listen.',
       inputType: 'text',
-      placeholder: 'I'll ask...',
+      placeholder: 'I\'ll ask...',
     },
     {
       title: 'Emotional Guardrails',
@@ -118,7 +118,7 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
     },
     {
       title: 'Appreciation Cue',
-      prompt: 'Acknowledge something real about them — truth builds trust.',
+      prompt: 'Acknowledge something real about them - truth builds trust.',
       inputType: 'text',
       placeholder: 'I appreciate that they...',
       toneCue: 'Lead with connection. The work will follow.',
@@ -127,14 +127,14 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
   composure: [
     {
       title: 'Nervous System Reset',
-      prompt: 'Box breathing (4–4–4–4) or guided inhale 4 → exhale 6.',
+      prompt: 'Box breathing (4-4-4-4) or guided inhale 4 - exhale 6.',
       inputType: 'breathing',
     },
     {
       title: 'Boundary Belief',
-      prompt: 'It's not all on me. What can I let go of?',
+      prompt: 'It\'s not all on me. What can I let go of?',
       inputType: 'text',
-      placeholder: 'I don't need to...',
+      placeholder: 'I don\'t need to...',
     },
     {
       title: 'Slow the Pace',
@@ -149,7 +149,7 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
     },
     {
       title: 'One Success Cue',
-      prompt: 'If all else fails — what's the one win?',
+      prompt: 'If all else fails - what\'s the one win?',
       inputType: 'text',
       placeholder: 'Success means...',
       toneCue: 'Nothing rushes you. You set the tempo.',
@@ -158,7 +158,7 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
   momentum: [
     {
       title: 'Name the Block',
-      prompt: 'What's the friction point?',
+      prompt: 'What\'s the friction point?',
       inputType: 'text',
       placeholder: 'The block is...',
     },
@@ -170,21 +170,21 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
     },
     {
       title: 'Micro-Goal',
-      prompt: 'What's a 1–day success from this meeting?',
+      prompt: 'What\'s a 1-day success from this meeting?',
       inputType: 'text',
-      placeholder: 'By tomorrow, we'll have...',
+      placeholder: 'By tomorrow, we\'ll have...',
     },
     {
       title: 'Remove Swirl',
-      prompt: 'What's the distraction that doesn't belong in this meeting?',
+      prompt: 'What\'s the distraction that doesn\'t belong in this meeting?',
       inputType: 'text',
-      placeholder: 'We won't discuss...',
+      placeholder: 'We won\'t discuss...',
     },
     {
       title: 'Close Strong',
-      prompt: 'I'll summarize next steps before we end.',
+      prompt: 'I\'ll summarize next steps before we end.',
       inputType: 'visualization',
-      toneCue: 'A scene isn't done until something changes.',
+      toneCue: 'A scene isn\'t done until something changes.',
     },
   ],
 };
