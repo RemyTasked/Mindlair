@@ -681,7 +681,6 @@ router.get(
       logger.info('✅ User created/updated', {
         userId: user.id,
         email: user.email,
-        isNew: !user.preferences,
       });
     }
 
