@@ -29,9 +29,17 @@ export default function Level2CueCompanion({
   const [summary, setSummary] = useState<MeetingSummary | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
+  const [hasSeenExplanation, setHasSeenExplanation] = useState(false);
+  const [explanationStep, setExplanationStep] = useState(0);
   
   const analyzer = useRef(getAudioAnalyzer());
   const cueTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Check if user has seen the explanation before
+  useEffect(() => {
+    const seen = localStorage.getItem('meetcute_level2_explanation_seen');
+    setHasSeenExplanation(seen === 'true');
+  }, []);
   
   // Initialize analyzer when enabled
   useEffect(() => {
@@ -138,20 +146,28 @@ export default function Level2CueCompanion({
     };
   }, [enabled, isActive, showSummary, onToggle]);
   
-  // Handle manual toggle - show consent modal first if enabling
+  // Handle manual toggle - show consent modal first if enabling (only if not seen before)
   const handleToggle = () => {
     if (!enabled && !isActive) {
-      // Show consent modal before enabling
-      setShowConsentModal(true);
+      // If they've seen the explanation before, skip straight to enabling
+      if (hasSeenExplanation) {
+        onToggle(true);
+      } else {
+        // First time - show interactive explanation
+        setShowConsentModal(true);
+        setExplanationStep(0);
+      }
     } else {
       // Disable without modal
       onToggle(false);
     }
   };
   
-  // Handle consent approval
+  // Handle consent approval (mark explanation as seen)
   const handleConsentApprove = () => {
     setShowConsentModal(false);
+    localStorage.setItem('meetcute_level2_explanation_seen', 'true');
+    setHasSeenExplanation(true);
     onToggle(true);
   };
   
@@ -392,114 +408,156 @@ export default function Level2CueCompanion({
         )}
       </AnimatePresence>
       
-      {/* Consent Modal - Shows BEFORE requesting microphone access */}
+      {/* Interactive Explanation Slides - Shows only FIRST time */}
       <AnimatePresence>
         {showConsentModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={handleConsentDecline}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              key={explanationStep}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
+              className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden"
             >
-              {/* Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-                <div className="flex items-center gap-3">
-                  <Mic className="w-6 h-6 text-white" />
-                  <h3 className="text-xl font-bold text-white">Enable Level 2 Real-Time Coach?</h3>
-                </div>
-              </div>
-              
-              {/* Content */}
-              <div className="p-6 space-y-4">
-                {/* What it does */}
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-purple-600" />
-                    What This Does
-                  </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    Level 2 listens to <strong>how you sound</strong> (not what you say) to give you real-time, personalized cues about your pace, volume, and composure during the meeting.
+              {/* Slide 1: What it does */}
+              {explanationStep === 0 && (
+                <div className="p-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 0.2 }}
+                    className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center"
+                  >
+                    <Activity className="w-12 h-12 text-white" />
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Level 2 Real-Time Coach</h3>
+                  <p className="text-lg text-gray-700 mb-2">
+                    Listens to <strong className="text-purple-600">how you sound</strong>
                   </p>
-                  <p className="text-xs text-purple-600 mt-2 font-medium">
-                    💡 When Level 2 is active, generic Level 1 cues are automatically suppressed so you only get personalized feedback.
+                  <p className="text-sm text-gray-500">
+                    (not what you say)
                   </p>
+                  <div className="mt-8 flex gap-3">
+                    <button
+                      onClick={handleConsentDecline}
+                      className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                    >
+                      Not Now
+                    </button>
+                    <button
+                      onClick={() => setExplanationStep(1)}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-4">1 of 3</p>
                 </div>
-                
-                {/* How it works */}
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                  <h4 className="text-sm font-bold text-purple-900 mb-3">How It Works</h4>
-                  <ul className="space-y-2 text-xs text-purple-800">
-                    <li className="flex items-start gap-2">
-                      <span className="text-purple-600 font-bold">1.</span>
-                      <span><strong>First 60 seconds:</strong> Learns YOUR normal speaking patterns (volume, pace, pauses)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-purple-600 font-bold">2.</span>
-                      <span><strong>During meeting:</strong> Continuously analyzes your voice and sends cues when you deviate (e.g., speaking too fast, too loud, or without pauses)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-purple-600 font-bold">3.</span>
-                      <span><strong>Gets smarter:</strong> Adapts to your patterns and meeting context over time</span>
-                    </li>
-                  </ul>
+              )}
+
+              {/* Slide 2: How it works */}
+              {explanationStep === 1 && (
+                <div className="p-8">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 0.2 }}
+                    className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center"
+                  >
+                    <span className="text-4xl">⏱️</span>
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">60 Seconds to Learn You</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-purple-600 font-bold">1</span>
+                      </div>
+                      <p className="text-gray-700 pt-1">Learns your normal pace & volume</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-indigo-600 font-bold">2</span>
+                      </div>
+                      <p className="text-gray-700 pt-1">Gives real-time cues if you deviate</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-purple-600 font-bold">3</span>
+                      </div>
+                      <p className="text-gray-700 pt-1">Gets smarter over time</p>
+                    </div>
+                  </div>
+                  <div className="mt-8 flex gap-3">
+                    <button
+                      onClick={() => setExplanationStep(0)}
+                      className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      onClick={() => setExplanationStep(2)}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-4 text-center">2 of 3</p>
                 </div>
-                
-                {/* Privacy guarantees */}
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <h4 className="text-sm font-bold text-green-900 mb-3 flex items-center gap-2">
-                    🔒 Privacy Guarantees
-                  </h4>
-                  <ul className="space-y-2 text-xs text-green-800">
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span><strong>No recording:</strong> Audio is analyzed in real-time and immediately discarded</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span><strong>No transcription:</strong> We don't know WHAT you're saying, only HOW you sound</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span><strong>100% local:</strong> All processing happens on your device, nothing sent to servers</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span><strong>You control it:</strong> Turn it off anytime with one click</span>
-                    </li>
-                  </ul>
+              )}
+
+              {/* Slide 3: Privacy */}
+              {explanationStep === 2 && (
+                <div className="p-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 0.2 }}
+                    className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center"
+                  >
+                    <span className="text-4xl">🔒</span>
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">100% Private</h3>
+                  <div className="space-y-3 text-left mb-8">
+                    <div className="flex items-center gap-3">
+                      <span className="text-green-500 text-xl">✓</span>
+                      <p className="text-gray-700">No recording</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-green-500 text-xl">✓</span>
+                      <p className="text-gray-700">No transcription</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-green-500 text-xl">✓</span>
+                      <p className="text-gray-700">All local processing</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-green-500 text-xl">✓</span>
+                      <p className="text-gray-700">Turn off anytime</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setExplanationStep(1)}
+                      className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      onClick={handleConsentApprove}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                    >
+                      Enable Level 2 ✨
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-4">3 of 3</p>
                 </div>
-                
-                {/* Note about microphone permission */}
-                <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                  <p className="text-xs text-amber-900">
-                    <strong>Note:</strong> Your browser will ask for microphone permission. This is required for Level 2 to analyze your voice in real-time.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Actions */}
-              <div className="px-6 pb-6 flex gap-3">
-                <button
-                  onClick={handleConsentDecline}
-                  className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-colors"
-                >
-                  Not Now
-                </button>
-                <button
-                  onClick={handleConsentApprove}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition-colors shadow-lg"
-                >
-                  Enable Level 2
-                </button>
-              </div>
+              )}
             </motion.div>
           </motion.div>
         )}
