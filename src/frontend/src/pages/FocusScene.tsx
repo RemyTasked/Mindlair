@@ -27,6 +27,7 @@ interface MeetingData {
   startTime: string;
   cueContent: string;
   recommendedMode?: PrepMode;
+  recommendationReason?: string;
   soundPreferences?: {
     enabled: boolean;
     soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
@@ -326,12 +327,24 @@ export default function FocusScene() {
               </p>
               {meeting?.recommendedMode && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-4 inline-block px-4 py-2 bg-purple-500/20 border border-purple-400/30 rounded-full text-sm text-purple-200"
+                  className="mt-6 max-w-md mx-auto"
                 >
-                  💡 Recommended: {PREP_MODES.find(m => m.id === meeting.recommendedMode)?.name}
+                  <div className="px-5 py-3 bg-purple-500/20 border border-purple-400/30 rounded-2xl">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">💡</span>
+                      <span className="text-sm font-bold text-purple-300">
+                        Recommended: {PREP_MODES.find(m => m.id === meeting.recommendedMode)?.name}
+                      </span>
+                    </div>
+                    {meeting?.recommendationReason && (
+                      <p className="text-xs text-purple-200/80 leading-relaxed">
+                        {meeting.recommendationReason}
+                      </p>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </motion.div>

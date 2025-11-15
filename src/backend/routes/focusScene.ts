@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { logger } from '../utils/logger';
 import { aiService } from '../services/ai/aiService';
 import { analyzeMindStatePatterns } from '../services/ai/mindStateAnalyzer';
+import { recommendPrepMode, getRecommendationReason } from '../services/prepModeRecommender';
 import { prisma } from '../utils/prisma';
 
 const router = express.Router();
@@ -44,11 +45,34 @@ router.get(
       data: { focusSceneOpened: true },
     });
 
+    // Get recommended prep mode based on meeting context
+    const meetingTime = new Date(meeting.startTime);
+    const timeOfDay = meetingTime.getHours() < 12 ? 'morning' : meetingTime.getHours() < 17 ? 'afternoon' : 'evening';
+    const dayOfWeek = meetingTime.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    const recommendedMode = await recommendPrepMode({
+      meetingTitle: meeting.title,
+      attendeeCount: meeting.attendeeCount || 3, // Default to 3 if not set
+      userId,
+      timeOfDay,
+      dayOfWeek,
+    });
+    
+    const recommendationReason = getRecommendationReason(recommendedMode, {
+      meetingTitle: meeting.title,
+      attendeeCount: meeting.attendeeCount || 3,
+      userId,
+      timeOfDay,
+      dayOfWeek,
+    });
+
     res.json({
       meeting: {
         title: meeting.title,
         startTime: meeting.startTime,
         cueContent: meeting.cueContent,
+        recommendedMode, // AI-recommended prep mode
+        recommendationReason, // Why this mode was recommended
         soundPreferences: {
           enabled: userPreferences?.enableFocusSound ?? true,
           soundType: userPreferences?.focusSoundType ?? 'calm-ocean',
