@@ -2,14 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
 import Level2CueCompanion from '../components/Level2CueCompanion';
 import PrepModeFlow from '../components/PrepModeFlow';
 import { LOGO_PATHS } from '../config/constants';
-
-type MindState = 'calm' | 'stressed' | 'focused' | 'unclear';
 
 type PrepMode = 'clarity' | 'confidence' | 'connection' | 'composure' | 'momentum';
 
@@ -403,7 +400,6 @@ export default function FocusScene() {
           >
             <PrepModeFlow
               mode={selectedMode}
-              meetingTitle={meeting.title}
               onComplete={(responses) => {
                 setPrepFlowResponses(responses);
                 setCurrentPhase('reflection');

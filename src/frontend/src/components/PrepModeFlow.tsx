@@ -13,7 +13,6 @@ type PrepMode = 'clarity' | 'confidence' | 'connection' | 'composure' | 'momentu
 
 interface PrepModeFlowProps {
   mode: PrepMode;
-  meetingTitle: string;
   onComplete: (responses: Record<string, string>) => void;
 }
 
@@ -189,7 +188,7 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
   ],
 };
 
-export default function PrepModeFlow({ mode, meetingTitle, onComplete }: PrepModeFlowProps) {
+export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [currentResponse, setCurrentResponse] = useState('');
