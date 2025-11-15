@@ -102,6 +102,9 @@ model UserPreferences {
   enableMorningFlow    Boolean @default(true)  // Enable morning prep/recap
   enableEveningFlow    Boolean @default(true)  // Enable evening wrap-up + mental rehearsal
   
+  // Prep Mode defaults (JSON: { "1:1": "connection", "presentation": "confidence" })
+  defaultPrepModes     Json?   @default("{}")
+  
   // Wellness reminders (9am-6pm window)
   enableWellnessReminders Boolean @default(true)  // Enable daily wellness check-ins
   wellnessReminderFrequency Int @default(3)      // Hours between reminders (default: 3 hours)

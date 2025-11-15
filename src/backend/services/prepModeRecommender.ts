@@ -27,7 +27,26 @@ export async function recommendPrepMode(context: RecommendationContext): Promise
   logger.info('🎯 Recommending prep mode', { context });
   
   // Step 1: Check for user's default mode for this meeting type
-  // TODO: Implement when user preferences schema is updated
+  try {
+    const userPreferences = await prisma.userPreferences.findUnique({
+      where: { userId },
+    });
+    
+    if (userPreferences?.defaultPrepModes) {
+      const defaults = userPreferences.defaultPrepModes as Record<string, PrepMode>;
+      
+      // Check for exact meeting title match (case-insensitive)
+      const titleLower = meetingTitle.toLowerCase();
+      for (const [pattern, mode] of Object.entries(defaults)) {
+        if (titleLower.includes(pattern.toLowerCase())) {
+          logger.info('✅ Using user default mode for meeting type', { pattern, mode });
+          return mode;
+        }
+      }
+    }
+  } catch (error) {
+    logger.error('❌ Error checking user default modes', { error });
+  }
   
   // Step 2: Analyze meeting title for keywords
   const titleLower = meetingTitle.toLowerCase();

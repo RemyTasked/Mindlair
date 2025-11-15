@@ -43,6 +43,7 @@ interface Preferences {
   privateReflectionMode: boolean;
   reflectionDataSharing: boolean;
   storeReflectionText: boolean;
+  defaultPrepModes: Record<string, string>;
 }
 
 interface DeliverySettings {
@@ -262,6 +263,7 @@ export default function Settings() {
     enableWindingDown: true,
     windingDownTime: '21:00',
     enableWellnessReminders: true,
+    defaultPrepModes: {},
     wellnessReminderFrequency: 3,
     enableReflections: true,
     privateReflectionMode: false,
@@ -780,6 +782,97 @@ export default function Settings() {
                   setPreferences({ ...preferences, enableFocusScene: checked })
                 }
               />
+            </div>
+          </Section>
+
+          {/* Prep Mode Defaults */}
+          <Section title="Prep Mode Defaults" id="prep-modes" isExpanded={expandedSections.has('prep-modes')} onToggle={toggleSection}>
+            <div className="space-y-6">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-900 leading-relaxed">
+                  <strong>Set your go-to prep modes for different meeting types.</strong> When a meeting title matches a pattern you've set, that mode will be automatically recommended. You can always choose a different mode if needed.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-gray-700">Common Patterns</h4>
+                
+                {Object.entries(preferences.defaultPrepModes).length === 0 && (
+                  <p className="text-sm text-gray-500 italic">No default modes set yet. Add patterns below to get started.</p>
+                )}
+
+                {Object.entries(preferences.defaultPrepModes).map(([pattern, mode]) => (
+                  <div key={pattern} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">
+                        Meetings containing "{pattern}"
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        → {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newModes = { ...preferences.defaultPrepModes };
+                        delete newModes[pattern];
+                        setPreferences({ ...preferences, defaultPrepModes: newModes });
+                      }}
+                      className="px-3 py-1 text-xs text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+
+                <div className="pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Add New Pattern</h4>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      id="new-pattern"
+                      placeholder="e.g., '1:1' or 'standup'"
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <select
+                      id="new-mode"
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select mode...</option>
+                      <option value="clarity">Clarity</option>
+                      <option value="confidence">Confidence</option>
+                      <option value="connection">Connection</option>
+                      <option value="composure">Composure</option>
+                      <option value="momentum">Momentum</option>
+                    </select>
+                    <button
+                      onClick={() => {
+                        const patternInput = document.getElementById('new-pattern') as HTMLInputElement;
+                        const modeSelect = document.getElementById('new-mode') as HTMLSelectElement;
+                        const pattern = patternInput.value.trim();
+                        const mode = modeSelect.value;
+                        
+                        if (pattern && mode) {
+                          setPreferences({
+                            ...preferences,
+                            defaultPrepModes: {
+                              ...preferences.defaultPrepModes,
+                              [pattern]: mode,
+                            },
+                          });
+                          patternInput.value = '';
+                          modeSelect.value = '';
+                        }
+                      }}
+                      className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Examples: "1:1" → Connection, "standup" → Clarity, "presentation" → Confidence
+                  </p>
+                </div>
+              </div>
             </div>
           </Section>
 
