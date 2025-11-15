@@ -41,6 +41,15 @@ interface DirectorsInsightsProps {
       mostUsedSound?: string;
       totalSoundSessions?: number;
     };
+    audioInsights?: {
+      totalCuesReceived?: number;
+      mostCommonCueType?: string;
+      cueTypeBreakdown?: Record<string, number>;
+      cueEngagementRate?: number;
+      cuesActedOn?: number;
+      cuesDismissed?: number;
+      hasStressPattern?: boolean;
+    };
   };
 }
 
@@ -595,6 +604,113 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
         type: 'ai',
         icon: '🎵'
       });
+    }
+
+    // Audio insights from Level 2 cues
+    if (userMetadata.audioInsights) {
+      const { totalCuesReceived, mostCommonCueType, cueEngagementRate, hasStressPattern, cuesActedOn } = userMetadata.audioInsights;
+
+      // First cue milestone
+      if (totalCuesReceived === 1) {
+        insights.push({
+          id: 'audio-first-cue',
+          sceneNumber: '60',
+          title: 'Real-Time Awareness',
+          content: 'You received your first live cue. That\'s the system learning your voice in real-time.',
+          type: 'ai',
+          icon: '🎙️'
+        });
+      }
+
+      // Cue engagement pattern
+      if (totalCuesReceived && totalCuesReceived >= 10) {
+        if (cueEngagementRate && cueEngagementRate > 70) {
+          insights.push({
+            id: 'audio-high-engagement',
+            sceneNumber: '61',
+            title: 'Active Listener',
+            content: `You act on ${cueEngagementRate}% of cues. You\'re not just receiving feedback — you\'re using it.`,
+            type: 'ai',
+            icon: '🎯'
+          });
+        } else if (cueEngagementRate && cueEngagementRate < 30) {
+          insights.push({
+            id: 'audio-low-engagement',
+            sceneNumber: '62',
+            title: 'Cue Awareness',
+            content: `${totalCuesReceived} cues received. Even if you don\'t act on them, awareness itself shifts behavior.`,
+            type: 'ai',
+            icon: '👁️'
+          });
+        }
+      }
+
+      // Most common cue type (speaking pattern)
+      if (mostCommonCueType && totalCuesReceived && totalCuesReceived >= 5) {
+        const cueTypeMessages: Record<string, { title: string; content: string; icon: string }> = {
+          'pace': {
+            title: 'Pace Pattern Detected',
+            content: 'You tend to speed up under pressure. The system is helping you find your steady rhythm.',
+            icon: '⏱️'
+          },
+          'volume': {
+            title: 'Volume Awareness',
+            content: 'Your voice rises when engaged. That\'s passion — the cues help you channel it with composure.',
+            icon: '🔊'
+          },
+          'breathless': {
+            title: 'Breath Pattern',
+            content: 'You sometimes rush through thoughts. The cues remind you: pausing is powerful.',
+            icon: '🌬️'
+          },
+          'monologue': {
+            title: 'Dialogue Balance',
+            content: 'You\'re learning to create space for others. That\'s the mark of a thoughtful leader.',
+            icon: '💬'
+          },
+          'stuck': {
+            title: 'Clarity Cues',
+            content: 'When you repeat yourself, the system notices. It\'s helping you move forward with confidence.',
+            icon: '🔄'
+          }
+        };
+
+        const cueMessage = cueTypeMessages[mostCommonCueType];
+        if (cueMessage) {
+          insights.push({
+            id: `audio-pattern-${mostCommonCueType}`,
+            sceneNumber: '63',
+            title: cueMessage.title,
+            content: cueMessage.content,
+            type: 'ai',
+            icon: cueMessage.icon
+          });
+        }
+      }
+
+      // Stress pattern detection
+      if (hasStressPattern) {
+        insights.push({
+          id: 'audio-stress-pattern',
+          sceneNumber: '64',
+          title: 'Pressure Response',
+          content: 'Recent meetings show elevated stress signals. Consider Composure Mode before your next high-stakes call.',
+          type: 'ai',
+          icon: '🛡️'
+        });
+      }
+
+      // Cue milestone (using the system)
+      if (cuesActedOn && cuesActedOn >= 25) {
+        insights.push({
+          id: 'audio-cue-veteran',
+          sceneNumber: '65',
+          title: 'Composure Master',
+          content: `You\'ve acted on ${cuesActedOn} real-time cues. You\'re building a practice of self-regulation.`,
+          type: 'ai',
+          icon: '🧘'
+        });
+      }
     }
 
     return insights;

@@ -489,6 +489,49 @@ router.get(
       },
     });
 
+    // Get Level 2 audio cue insights
+    const cueTelemetry = await prisma.cueTelemetry.findMany({
+      where: { userId },
+      select: {
+        cueId: true,
+        action: true,
+        actionType: true,
+        timestamp: true,
+      },
+      orderBy: { timestamp: 'desc' },
+      take: 100, // Last 100 cue interactions
+    });
+
+    // Analyze cue patterns
+    const cueTypeCount: Record<string, number> = {};
+    const cueActionCount: Record<string, number> = {};
+    let totalCuesReceived = cueTelemetry.length;
+    let cuesActedOn = 0;
+    let cuesDismissed = 0;
+
+    cueTelemetry.forEach(cue => {
+      // Extract cue type from cueId (e.g., "pace-123" -> "pace")
+      const cueType = cue.cueId.split('-')[0];
+      cueTypeCount[cueType] = (cueTypeCount[cueType] || 0) + 1;
+      
+      cueActionCount[cue.action] = (cueActionCount[cue.action] || 0) + 1;
+      
+      if (cue.action === 'clicked') cuesActedOn++;
+      if (cue.action === 'dismissed') cuesDismissed++;
+    });
+
+    const mostCommonCueType = Object.entries(cueTypeCount)
+      .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    const cueEngagementRate = totalCuesReceived > 0 
+      ? Math.round((cuesActedOn / totalCuesReceived) * 100) 
+      : 0;
+
+    // Detect stress patterns from cue frequency
+    const recentCues = cueTelemetry.slice(0, 20); // Last 20 cues
+    const recentCueTypes = recentCues.map(c => c.cueId.split('-')[0]);
+    const hasStressPattern = recentCueTypes.filter(t => t === 'pace' || t === 'volume').length > 10;
+
     res.json({
       metadata: {
         totalFocusSessions,
@@ -503,6 +546,15 @@ router.get(
         soundPreferences: {
           mostUsedSound: preferences?.focusSoundType || 'calm-ocean',
           totalSoundSessions: soundSessions,
+        },
+        audioInsights: {
+          totalCuesReceived,
+          mostCommonCueType,
+          cueTypeBreakdown: cueTypeCount,
+          cueEngagementRate,
+          cuesActedOn,
+          cuesDismissed,
+          hasStressPattern,
         },
       },
     });
