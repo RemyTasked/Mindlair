@@ -14,12 +14,14 @@ interface Level2CueCompanionProps {
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
   showSummary?: boolean;  // Show end-of-meeting summary
+  onCalibrationChange?: (isCalibrating: boolean) => void;  // Notify parent when calibration starts/stops
 }
 
 export default function Level2CueCompanion({
   enabled,
   onToggle,
   showSummary = false,
+  onCalibrationChange,
 }: Level2CueCompanionProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentCue, setCurrentCue] = useState<CueTrigger | null>(null);
@@ -40,6 +42,13 @@ export default function Level2CueCompanion({
     const seen = localStorage.getItem('meetcute_level2_explanation_seen');
     setHasSeenExplanation(seen === 'true');
   }, []);
+  
+  // Notify parent when calibration state changes (so ambient sound can be muted)
+  useEffect(() => {
+    if (onCalibrationChange) {
+      onCalibrationChange(isCalibrating);
+    }
+  }, [isCalibrating, onCalibrationChange]);
   
   // Initialize analyzer when enabled
   useEffect(() => {

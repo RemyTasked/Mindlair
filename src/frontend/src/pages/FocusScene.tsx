@@ -84,6 +84,7 @@ export default function FocusScene() {
   const [prepFlowResponses, setPrepFlowResponses] = useState<Record<string, string>>({});
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [level2Enabled, setLevel2Enabled] = useState(false); // Level 2 is opt-in per meeting
+  const [isCalibrating, setIsCalibrating] = useState(false); // Track Level 2 calibration state
 
   useEffect(() => {
     loadMeetingData();
@@ -184,11 +185,11 @@ export default function FocusScene() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
-      {/* Ambient Sound Player - Primary calming element */}
+      {/* Ambient Sound Player - Primary calming element (muted during Level 2 calibration) */}
       {(currentPhase === 'prep-flow' || currentPhase === 'reflection' || currentPhase === 'complete') && (
         <AmbientSound
           soundType={meeting?.soundPreferences?.soundType || 'calm-ocean'}
-          enabled={meeting?.soundPreferences?.enabled ?? true}
+          enabled={(meeting?.soundPreferences?.enabled ?? true) && !isCalibrating}
           stopOnNavigation={false}
         />
       )}
@@ -198,6 +199,7 @@ export default function FocusScene() {
         <Level2CueCompanion
           enabled={level2Enabled}
           onToggle={setLevel2Enabled}
+          onCalibrationChange={setIsCalibrating}
         />
       )}
       

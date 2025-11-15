@@ -32,7 +32,6 @@ function getAudioBuffer(context: AudioContext, type: SoundType): AudioBuffer {
 function generateSamples(type: SoundType): Float32Array {
   const length = SAMPLE_RATE * DURATION_SECONDS;
   const data = new Float32Array(length);
-  const fadeLength = SAMPLE_RATE * 0.1; // 100ms crossfade
 
   switch (type) {
     case 'calm-ocean': {
@@ -115,22 +114,10 @@ function generateSamples(type: SoundType): Float32Array {
     }
   }
 
-  // Apply crossfade at loop boundaries to eliminate clicks
-  // Fade in at start, fade out at end
-  for (let i = 0; i < fadeLength; i++) {
-    const fadeIn = i / fadeLength; // 0 to 1
-    const fadeOut = (fadeLength - i) / fadeLength; // 1 to 0
-    
-    // Fade in at start
-    data[i] *= fadeIn;
-    
-    // Fade out at end
-    const endIndex = length - fadeLength + i;
-    if (endIndex < length) {
-      data[endIndex] *= fadeOut;
-    }
-  }
-
+  // NO crossfade needed - native loop property handles seamless looping
+  // The audio will loop perfectly without any fade in/out
+  // (Crossfading actually creates silence gaps that are audible)
+  
   return data;
 }
 
