@@ -13,7 +13,7 @@ declare global {
 
 type SoundType = 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
 const SAMPLE_RATE = 44100;
-const DURATION_SECONDS = 4;
+const DURATION_SECONDS = 30; // 30 seconds for seamless looping
 const dataUrlCache = new Map<SoundType, string>();
 const bufferCache = new Map<SoundType, AudioBuffer>();
 
@@ -32,6 +32,7 @@ function getAudioBuffer(context: AudioContext, type: SoundType): AudioBuffer {
 function generateSamples(type: SoundType): Float32Array {
   const length = SAMPLE_RATE * DURATION_SECONDS;
   const data = new Float32Array(length);
+  const fadeLength = SAMPLE_RATE * 0.1; // 100ms crossfade
 
   switch (type) {
     case 'calm-ocean': {
@@ -111,6 +112,22 @@ function generateSamples(type: SoundType): Float32Array {
     default: {
       data.fill(0);
       break;
+    }
+  }
+
+  // Apply crossfade at loop boundaries to eliminate clicks
+  // Fade in at start, fade out at end
+  for (let i = 0; i < fadeLength; i++) {
+    const fadeIn = i / fadeLength; // 0 to 1
+    const fadeOut = (fadeLength - i) / fadeLength; // 1 to 0
+    
+    // Fade in at start
+    data[i] *= fadeIn;
+    
+    // Fade out at end
+    const endIndex = length - fadeLength + i;
+    if (endIndex < length) {
+      data[endIndex] *= fadeOut;
     }
   }
 
