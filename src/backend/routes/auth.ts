@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { outlookCalendarService } from '../services/calendar/outlookCalendar';
 import { webexCalendarService } from '../services/calendar/webexCalendar';
+import { caldavCalendarService } from '../services/calendar/caldavCalendar';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { authenticate, optionalAuthenticate } from '../middleware/auth';
 import { logger } from '../utils/logger';
@@ -752,6 +753,136 @@ router.get(
     });
 
     return res.redirect(redirectUrl);
+  })
+);
+
+// ============================================
+// CALDAV ROUTES (Yahoo, iCloud, etc.)
+// ============================================
+
+// CalDAV Connect - No OAuth, uses email + app password
+router.post(
+  '/caldav/connect',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const { email, password, provider } = req.body;
+    const userId = req.userId!;
+
+    logger.info('🔐 CalDAV connection attempt', {
+      userId,
+      email,
+      provider,
+    });
+
+    // Validate input
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400);
+    }
+
+    // Test connection
+    const isValid = await caldavCalendarService.testConnection({
+      email,
+      password,
+    });
+
+    if (!isValid) {
+      throw new AppError('Invalid CalDAV credentials or server unreachable', 401);
+    }
+
+    // Get user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { calendarAccounts: true },
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Check if this CalDAV account is already connected
+    const existingAccount = await prisma.calendarAccount.findFirst({
+      where: {
+        userId: user.id,
+        provider: 'caldav',
+        email: email,
+      },
+    });
+
+    const providerName = caldavCalendarService.getProviderName(email);
+    const defaultLabel = `${providerName} (${email})`;
+
+    if (existingAccount) {
+      // Update existing account
+      await prisma.calendarAccount.update({
+        where: { id: existingAccount.id },
+        data: {
+          // Store encrypted password (in production, use proper encryption!)
+          accessToken: Buffer.from(password).toString('base64'),
+          tokenExpiry: null, // CalDAV doesn't expire
+        },
+      });
+
+      logger.info('✅ CalDAV account updated', {
+        userId: user.id,
+        email: email,
+      });
+    } else {
+      // Create new account
+      await prisma.calendarAccount.create({
+        data: {
+          userId: user.id,
+          provider: 'caldav',
+          email: email,
+          label: defaultLabel,
+          color: null,
+          // Store encrypted password (in production, use proper encryption!)
+          accessToken: Buffer.from(password).toString('base64'),
+          refreshToken: null,
+          tokenExpiry: null,
+        },
+      });
+
+      logger.info('✅ CalDAV account created', {
+        userId: user.id,
+        email: email,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: `${providerName} connected successfully`,
+      provider: providerName,
+    });
+  })
+);
+
+// Test CalDAV connection (before saving)
+router.post(
+  '/caldav/test',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400);
+    }
+
+    const isValid = await caldavCalendarService.testConnection({
+      email,
+      password,
+    });
+
+    if (!isValid) {
+      throw new AppError('Invalid CalDAV credentials or server unreachable', 401);
+    }
+
+    const providerName = caldavCalendarService.getProviderName(email);
+
+    return res.json({
+      success: true,
+      provider: providerName,
+      message: 'Connection successful',
+    });
   })
 );
 

@@ -5,11 +5,13 @@ import { LOGO_PATHS } from '../config/constants';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { Calendar, Sparkles, Mail, Moon, Sun, Star, Music, Heart, Brain } from 'lucide-react';
+import CalDAVModal from '../components/CalDAVModal';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [showCalDAVModal, setShowCalDAVModal] = useState(false);
 
   // Check if user is already logged in (PWA persistence)
   useEffect(() => {
@@ -90,6 +92,15 @@ export default function LandingPage() {
       console.error('Error initiating Webex auth:', error);
       setLoading(false);
     }
+  };
+
+  const handleCalDAVAuth = () => {
+    setShowCalDAVModal(true);
+  };
+
+  const handleCalDAVSuccess = () => {
+    // Redirect to dashboard after successful connection
+    navigate('/dashboard');
   };
 
   return (
@@ -283,7 +294,27 @@ export default function LandingPage() {
               </svg>
               Continue with Webex
             </button>
+
+            <button
+              onClick={handleCalDAVAuth}
+              disabled={loading}
+              aria-label="Sign in with Yahoo or iCloud Calendar"
+              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-semibold disabled:opacity-50"
+            >
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#6001D2"/>
+                <path d="M13 11h-2v6h2v-6zm0-4h-2v2h2V7z" fill="white"/>
+              </svg>
+              Continue with Yahoo / iCloud
+            </button>
           </motion.div>
+
+          {/* CalDAV Modal */}
+          <CalDAVModal
+            isOpen={showCalDAVModal}
+            onClose={() => setShowCalDAVModal(false)}
+            onSuccess={handleCalDAVSuccess}
+          />
 
           <motion.div
             initial={{ opacity: 0 }}
