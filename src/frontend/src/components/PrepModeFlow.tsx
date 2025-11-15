@@ -100,7 +100,7 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
     },
     {
       title: 'Shared Purpose',
-      prompt: 'What's the "us" goal? Not "my" goal.',
+      prompt: 'What\'s the "us" goal? Not "my" goal.',
       inputType: 'text',
       placeholder: 'Together, we want to...',
     },
