@@ -221,12 +221,16 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   const gainRef = useRef<GainNode | null>(null);
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Detect iOS - MUST use HTML Audio to bypass silent mode
+  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  
   const supportsWebAudio =
     typeof window !== 'undefined' &&
-    ('AudioContext' in window || 'webkitAudioContext' in window);
+    ('AudioContext' in window || 'webkitAudioContext' in window) &&
+    !isIOS; // Force HTML Audio on iOS for silent mode compatibility
 
   const getVolume = useCallback(
-    (muted: boolean) => (muted ? 0 : dimVolume ? 0.15 : 0.3),
+    (muted: boolean) => (muted ? 0 : dimVolume ? 0.4 : 0.7),
     [dimVolume]
   );
 
@@ -301,12 +305,27 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     cleanupSource();
     cleanupFallback();
 
+    console.log('🎵 Using HTML Audio (iOS silent mode compatible)', { isIOS, soundType });
+
     const audio = new Audio(audioUrl);
     audio.loop = true;
     audio.volume = getVolume(isMuted);
     audio.preload = 'auto';
     audio.setAttribute('playsinline', 'true');
     audio.setAttribute('webkit-playsinline', 'true');
+    
+    // iOS-specific: Set audio category to playback (bypasses silent mode)
+    if (isIOS) {
+      try {
+        // @ts-ignore - iOS-specific API
+        if (audio.setSinkId) {
+          // @ts-ignore
+          await audio.setSinkId('');
+        }
+      } catch (e) {
+        console.log('ℹ️ setSinkId not available (expected on iOS)');
+      }
+    }
 
     if (
       typeof window !== 'undefined' &&
@@ -333,7 +352,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       setNeedsInteraction(true);
       throw error;
     }
-  }, [cleanupFallback, cleanupSource, enabled, getVolume, isMuted, soundType, stopAudio]);
+  }, [cleanupFallback, cleanupSource, enabled, getVolume, isMuted, soundType, stopAudio, isIOS]);
 
   const startWebAudio = useCallback(
     async (sourceLabel: string) => {
