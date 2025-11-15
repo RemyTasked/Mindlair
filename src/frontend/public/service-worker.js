@@ -5,9 +5,9 @@
 // - Server sends Cache-Control headers to prevent stale content
 // - Service worker cache version bumped on each deployment
 // - ETags enabled for efficient cache validation
-// DEPLOYMENT: 2025-11-08 19:25 EST - New logo v4 + audio silent mode support
-const CACHE_NAME = 'meetcute-v14-logo-v4';
-const RUNTIME_CACHE = 'meetcute-runtime-v14';
+// DEPLOYMENT: 2025-11-15 - Notification sounds + 5 prep modes
+const CACHE_NAME = 'meetcute-v15-notification-sounds';
+const RUNTIME_CACHE = 'meetcute-runtime-v15';
 
 // Assets to cache on install
 // Using NEW filename that iOS has never cached before
@@ -160,7 +160,7 @@ async function syncReflections() {
   console.log('🎬 Service Worker: Syncing offline reflections...');
 }
 
-// Push notifications (future enhancement)
+// Push notifications with sound and vibration
 self.addEventListener('push', (event) => {
   console.log('🎬 Service Worker: Push notification received', event);
   
@@ -170,7 +170,13 @@ self.addEventListener('push', (event) => {
     body: data.body || 'You have a new notification',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
-    vibrate: [200, 100, 200],
+    // Enhanced vibration pattern: double chime feel
+    vibrate: [100, 50, 100, 50, 200],
+    // Sound plays automatically on most platforms when notification shows
+    silent: false, // Ensure sound plays
+    requireInteraction: false, // Auto-dismiss after a few seconds
+    tag: data.tag || 'meetcute-notification', // Prevent duplicate notifications
+    renotify: true, // Play sound even if notification with same tag exists
     data: data.url || '/',
     actions: [
       { action: 'open', title: 'Open', icon: '/icons/icon-72x72.png' },

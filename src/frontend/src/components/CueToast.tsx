@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import api from '../lib/axios';
+import { playNotificationSound } from '../utils/notificationSound';
 
 interface CueAction {
   label: string;
@@ -163,6 +164,9 @@ export function CueToastManager() {
       
       console.log('🔔 Cue received:', cueData);
       setActiveCue(cueData);
+      
+      // Play notification sound
+      playNotificationSound();
     };
 
     window.addEventListener('cue-toast', handleCueEvent);
