@@ -47,8 +47,37 @@ router.get(
 
     // Get recommended prep mode based on meeting context
     const meetingTime = new Date(meeting.startTime);
+    const meetingEndTime = new Date(meeting.endTime);
     const timeOfDay = meetingTime.getHours() < 12 ? 'morning' : meetingTime.getHours() < 17 ? 'afternoon' : 'evening';
     const dayOfWeek = meetingTime.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    // Calculate meeting duration in minutes
+    const meetingDuration = Math.round((meetingEndTime.getTime() - meetingTime.getTime()) / (1000 * 60));
+    
+    // Detect back-to-back meetings (check if there's another meeting within 15 minutes before or after)
+    const backToBackWindow = 15 * 60 * 1000; // 15 minutes in milliseconds
+    const nearbyMeetings = await prisma.meeting.findMany({
+      where: {
+        userId,
+        OR: [
+          {
+            // Meeting ending within 15 minutes before this one starts
+            endTime: {
+              gte: new Date(meetingTime.getTime() - backToBackWindow),
+              lte: meetingTime,
+            },
+          },
+          {
+            // Meeting starting within 15 minutes after this one ends
+            startTime: {
+              gte: meetingEndTime,
+              lte: new Date(meetingEndTime.getTime() + backToBackWindow),
+            },
+          },
+        ],
+      },
+    });
+    const isBackToBack = nearbyMeetings.length > 0;
     
     const recommendedMode = await recommendPrepMode({
       meetingTitle: meeting.title,
@@ -56,6 +85,9 @@ router.get(
       userId,
       timeOfDay,
       dayOfWeek,
+      meetingDuration,
+      isBackToBack,
+      // TODO: Add recurringAttendees detection from calendar data
     });
     
     const recommendationReason = getRecommendationReason(recommendedMode, {
@@ -64,6 +96,8 @@ router.get(
       userId,
       timeOfDay,
       dayOfWeek,
+      meetingDuration,
+      isBackToBack,
     });
 
     res.json({
