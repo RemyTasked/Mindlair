@@ -13,7 +13,8 @@ declare global {
 
 type SoundType = 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
 const SAMPLE_RATE = 44100;
-const DURATION_SECONDS = 30; // 30 seconds for seamless looping
+const DURATION_SECONDS = 120; // 2 minutes for longer, more natural loops
+const FADE_DURATION_SECONDS = 3; // 3-second crossfade for smooth transitions
 const dataUrlCache = new Map<SoundType, string>();
 const bufferCache = new Map<SoundType, AudioBuffer>();
 
@@ -114,9 +115,20 @@ function generateSamples(type: SoundType): Float32Array {
     }
   }
 
-  // NO crossfade needed - native loop property handles seamless looping
-  // The audio will loop perfectly without any fade in/out
-  // (Crossfading actually creates silence gaps that are audible)
+  // Apply smooth crossfade at loop boundaries for seamless transitions
+  const fadeSamples = SAMPLE_RATE * FADE_DURATION_SECONDS;
+  
+  // Fade in at the beginning
+  for (let i = 0; i < fadeSamples; i++) {
+    const fadeIn = i / fadeSamples; // 0 to 1
+    data[i] *= fadeIn;
+  }
+  
+  // Fade out at the end
+  for (let i = 0; i < fadeSamples; i++) {
+    const fadeOut = 1 - (i / fadeSamples); // 1 to 0
+    data[length - fadeSamples + i] *= fadeOut;
+  }
   
   return data;
 }
@@ -234,7 +246,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     !isIOS; // Force HTML Audio on iOS for silent mode compatibility
 
   const getVolume = useCallback(
-    (muted: boolean) => (muted ? 0 : dimVolume ? 0.4 : 0.7),
+    (muted: boolean) => (muted ? 0 : dimVolume ? 0.6 : 0.85),
     [dimVolume]
   );
 
