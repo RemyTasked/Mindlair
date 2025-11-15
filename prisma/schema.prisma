@@ -286,6 +286,10 @@ model FocusSession {
   mindState       String?   // "calm", "stressed", "focused", "unclear"
   breathingFlowType String? // Type of breathing flow used based on mind state
   
+  // Prep mode tracking (for behavioral insights)
+  prepMode        String?   // "Clarity", "Confidence", "Connection", "Composure", "Momentum"
+  prepFlowResponses Json?   // Responses from the prep flow steps
+  
   createdAt       DateTime  @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
