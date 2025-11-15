@@ -10,22 +10,78 @@ import { LOGO_PATHS } from '../config/constants';
 
 type MindState = 'calm' | 'stressed' | 'focused' | 'unclear';
 
+type PrepMode = 'clarity' | 'confidence' | 'connection' | 'composure' | 'momentum';
+
+interface PrepModeInfo {
+  id: PrepMode;
+  name: string;
+  tagline: string;
+  icon: string;
+  bestFor: string;
+  color: string;
+}
+
 interface MeetingData {
   title: string;
   startTime: string;
   cueContent: string;
+  recommendedMode?: PrepMode;
   soundPreferences?: {
     enabled: boolean;
     soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
   };
 }
 
+const PREP_MODES: PrepModeInfo[] = [
+  {
+    id: 'clarity',
+    name: 'Clarity Mode',
+    tagline: 'What matters most?',
+    icon: '🧠',
+    bestFor: 'Messy agendas, decision meetings, fast-paced teams',
+    color: 'from-blue-600 to-cyan-600',
+  },
+  {
+    id: 'confidence',
+    name: 'Confidence Mode',
+    tagline: 'Steady & strong',
+    icon: '💪',
+    bestFor: 'Presentations, interviews, high-stakes rooms',
+    color: 'from-purple-600 to-pink-600',
+  },
+  {
+    id: 'connection',
+    name: 'Connection Mode',
+    tagline: 'Human first',
+    icon: '❤️',
+    bestFor: '1:1s, feedback, conflict resolution',
+    color: 'from-rose-600 to-orange-600',
+  },
+  {
+    id: 'composure',
+    name: 'Composure Mode',
+    tagline: 'Protect your energy',
+    icon: '🌿',
+    bestFor: 'Stressful meetings, overwhelm, back-to-back days',
+    color: 'from-green-600 to-teal-600',
+  },
+  {
+    id: 'momentum',
+    name: 'Momentum Mode',
+    tagline: 'Let\'s move this forward',
+    icon: '🏃',
+    bestFor: 'Standups, status updates, projects you\'re stuck on',
+    color: 'from-indigo-600 to-blue-600',
+  },
+];
+
 export default function FocusScene() {
   const { userId, meetingId } = useParams();
   const navigate = useNavigate();
   const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPhase, setCurrentPhase] = useState<'intro' | 'mindstate' | 'ai-message' | 'breathing' | 'reflection' | 'complete'>('intro');
+  const [currentPhase, setCurrentPhase] = useState<'intro' | 'mode-select' | 'mindstate' | 'ai-message' | 'breathing' | 'reflection' | 'complete'>('intro');
+  const [selectedMode, setSelectedMode] = useState<PrepMode | null>(null);
   const [mindState, setMindState] = useState<MindState | null>(null);
   const [aiMessage, setAiMessage] = useState<string>('');
   const [loadingAiMessage, setLoadingAiMessage] = useState(false);
@@ -67,8 +123,8 @@ export default function FocusScene() {
       setMeeting(response.data.meeting);
       setLoading(false);
 
-      // Auto-progress to mind state selector (increased from 3s to 5s for better pacing)
-      setTimeout(() => setCurrentPhase('mindstate'), 5000);
+      // Auto-progress to mode selector (increased from 3s to 5s for better pacing)
+      setTimeout(() => setCurrentPhase('mode-select'), 5000);
     } catch (error: any) {
       console.error('Error loading meeting data:', error);
       setLoading(false);
@@ -94,10 +150,11 @@ export default function FocusScene() {
     setCurrentPhase('ai-message');
     
     try {
-      // Generate AI message based on mind state
+      // Generate AI message based on mind state AND prep mode
       // Fallback chain: OpenAI → Gemini → Template messages
       const response = await api.post(`/api/focus-scene/${userId}/${meetingId}/ai-message`, {
         mindState: state,
+        prepMode: selectedMode, // Include selected prep mode
       });
       
       setAiMessage(response.data.message);
@@ -297,6 +354,80 @@ export default function FocusScene() {
               >
                 Preparing your focus moment...
               </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Mode Selection Phase */}
+        {currentPhase === 'mode-select' && (
+          <motion.div
+            key="mode-select"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8"
+          >
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="text-center mb-8 sm:mb-12 max-w-3xl"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Choose Your Prep Mode</h2>
+              <p className="text-lg sm:text-xl text-purple-200">
+                Different meetings need different preparation. What do you need most right now?
+              </p>
+              {meeting?.recommendedMode && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-4 inline-block px-4 py-2 bg-purple-500/20 border border-purple-400/30 rounded-full text-sm text-purple-200"
+                >
+                  💡 Recommended: {PREP_MODES.find(m => m.id === meeting.recommendedMode)?.name}
+                </motion.div>
+              )}
+            </motion.div>
+
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl w-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {PREP_MODES.map((mode, index) => (
+                <motion.button
+                  key={mode.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  onClick={() => {
+                    setSelectedMode(mode.id);
+                    setCurrentPhase('mindstate');
+                  }}
+                  className={`
+                    relative p-6 rounded-2xl text-left transition-all duration-300
+                    bg-white/5 backdrop-blur-sm border-2 border-white/10
+                    hover:bg-white/10 hover:border-white/30 hover:scale-105
+                    ${meeting?.recommendedMode === mode.id ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-gray-900' : ''}
+                  `}
+                >
+                  {meeting?.recommendedMode === mode.id && (
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-purple-500 text-white text-xs font-bold rounded-full">
+                      RECOMMENDED
+                    </div>
+                  )}
+                  
+                  <div className={`text-4xl mb-3 bg-gradient-to-br ${mode.color} bg-clip-text text-transparent`}>
+                    {mode.icon}
+                  </div>
+                  
+                  <h3 className="text-xl font-bold mb-1">{mode.name}</h3>
+                  <p className="text-purple-300 text-sm mb-3 italic">"{mode.tagline}"</p>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Best for: {mode.bestFor}
+                  </p>
+                </motion.button>
+              ))}
             </motion.div>
           </motion.div>
         )}

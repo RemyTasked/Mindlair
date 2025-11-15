@@ -61,13 +61,14 @@ router.get(
 // Generate AI message based on mind state
 const aiMessageSchema = z.object({
   mindState: z.enum(['calm', 'stressed', 'focused', 'unclear']),
+  prepMode: z.enum(['clarity', 'confidence', 'connection', 'composure', 'momentum']).optional(),
 });
 
 router.post(
   '/:userId/:meetingId/ai-message',
   asyncHandler(async (req, res) => {
     const { userId, meetingId } = req.params;
-    const { mindState } = aiMessageSchema.parse(req.body);
+    const { mindState, prepMode } = aiMessageSchema.parse(req.body);
 
     const meeting = await prisma.meeting.findFirst({
       where: {
@@ -111,13 +112,30 @@ router.post(
         contextNotes += `\n${meeting.meetingType} meetings are typically stressful (${Math.round(stressRate || 0)}% stress rate).`;
       }
 
-      // Generate AI message based on mind state
+      // Generate AI message based on mind state AND prep mode
       const mindStateDescriptions = {
         calm: 'The user is feeling calm and centered',
         stressed: 'The user is feeling stressed, tense, or overwhelmed',
         focused: 'The user is feeling focused, alert, and ready',
         unclear: 'The user is feeling foggy, uncertain, or unclear',
       };
+
+      const prepModeDescriptions = {
+        clarity: 'User chose CLARITY MODE - needs to identify the one key outcome, top 3 points, and what decision they need from others',
+        confidence: 'User chose CONFIDENCE MODE - needs to feel steady, strong, and in control of their nervous system',
+        connection: 'User chose CONNECTION MODE - wants to focus on the human relationship, empathy, and understanding the other person',
+        composure: 'User chose COMPOSURE MODE - needs to protect their energy, stay grounded, and not feel overwhelmed',
+        momentum: 'User chose MOMENTUM MODE - wants to push things forward, unblock progress, and identify clear next steps',
+      };
+
+      const prepModeContext = prepMode ? `\n\nPREP MODE: ${prepModeDescriptions[prepMode]}
+      
+IMPORTANT: Your message should align with their chosen prep mode. For example:
+- Clarity: Help them identify what matters most
+- Confidence: Ground them in their strength and capability
+- Connection: Remind them to see the human first
+- Composure: Help them protect their energy and set boundaries
+- Momentum: Focus on moving things forward` : '';
 
       const roleContext = meeting.isOrganizer
         ? 'USER ROLE: Meeting Organizer/Host - They are leading this meeting'
@@ -133,7 +151,7 @@ MEETING CONTEXT:
 - User's tone preference: ${tone}
 - ${roleContext}
 
-MIND STATE: ${mindStateDescriptions[mindState]}${contextNotes}
+MIND STATE: ${mindStateDescriptions[mindState]}${contextNotes}${prepModeContext}
 
 IMPORTANT GUIDELINES:
 1. Be GROUNDED and PRACTICAL - no generic motivation
