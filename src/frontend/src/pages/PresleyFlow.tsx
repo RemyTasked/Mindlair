@@ -202,7 +202,7 @@ export default function PresleyFlow() {
                 animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                {flowData.timeOfDay === 'morning' 
+                {flowData.meetingDay === 'today' 
                   ? "Preparing today's scenes..." 
                   : "Preparing tomorrow's scenes..."}
               </motion.div>
@@ -327,15 +327,15 @@ export default function PresleyFlow() {
                 {/* Improvement Notes */}
                 <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8">
                   <h3 className="text-xl font-semibold mb-4 text-purple-200">
-                    What Would Help Tomorrow?
+                    What Would Help Next Time?
                   </h3>
                   <p className="text-purple-100 mb-6">
-                    Reflect on what you'd like to improve or adjust for tomorrow's meetings.
+                    Reflect on what you'd like to improve or adjust for your next meetings.
                   </p>
                   <textarea
                     value={improvementNotes}
                     onChange={(e) => setImprovementNotes(e.target.value)}
-                    placeholder="I want to work on... I need to focus more on... Tomorrow I'll try..."
+                    placeholder="I want to work on... I need to focus more on... Next time I'll try..."
                     className="w-full h-32 px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                   />
                   <p className="text-purple-300 text-sm mt-3">
@@ -379,7 +379,7 @@ export default function PresleyFlow() {
               <div className="flex items-center justify-center gap-3 mb-12">
                 <Calendar className="w-8 h-8 text-purple-300" />
                 <h2 className="text-4xl font-bold">
-                  {flowData.timeOfDay === 'morning' ? "Today's Line-Up" : "Tomorrow's Line-Up"}
+                  {flowData.meetingDay === 'today' ? "Today's Line-Up" : "Tomorrow's Line-Up"}
                 </h2>
               </div>
 
@@ -420,7 +420,7 @@ export default function PresleyFlow() {
                 onClick={() => setCurrentPhase('mindset')}
                 className="mt-12 mx-auto block px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition-all"
               >
-                Set Tomorrow's Mindset →
+                Set {flowData.meetingDay === 'today' ? "Today's" : "Tomorrow's"} Mindset →
               </motion.button>
             </motion.div>
           </motion.div>
@@ -441,7 +441,7 @@ export default function PresleyFlow() {
                 animate={{ y: 0, opacity: 1 }}
                 className="text-4xl font-bold text-center mb-8"
               >
-                Tomorrow's Mindset
+                {flowData.meetingDay === 'today' ? "Today's" : "Tomorrow's"} Mindset
               </motion.h2>
 
               <motion.div
@@ -461,12 +461,12 @@ export default function PresleyFlow() {
                 transition={{ delay: 0.6 }}
               >
                 <label className="block text-purple-200 mb-3 text-center">
-                  What intention will you carry tomorrow?
+                  What intention will you carry {flowData.meetingDay === 'today' ? 'today' : 'tomorrow'}?
                 </label>
                 <textarea
                   value={journalNote}
                   onChange={(e) => setJournalNote(e.target.value)}
-                  placeholder="Optional: Write your intention for tomorrow..."
+                  placeholder={`Optional: Write your intention for ${flowData.meetingDay === 'today' ? 'today' : 'tomorrow'}...`}
                   className="w-full h-32 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                 />
               </motion.div>
@@ -688,7 +688,7 @@ export default function PresleyFlow() {
                 transition={{ delay: 0.3 }}
                 className="text-lg text-purple-200 mb-12 max-w-2xl mx-auto"
               >
-                Now, see yourself in tomorrow's meetings. Confident, calm, and in control. 
+                Now, see yourself in {flowData.meetingDay === 'today' ? "today's" : "tomorrow's"} meetings. Confident, calm, and in control. 
                 Watch yourself succeed with clarity and grace.
               </motion.p>
 
@@ -754,7 +754,7 @@ export default function PresleyFlow() {
                   You leave each meeting feeling accomplished and energized...
                 </p>
                 <p className="text-purple-200 font-semibold">
-                  Tomorrow is already a success. You've got this. 🌙
+                  {flowData.meetingDay === 'today' ? 'Today' : 'Tomorrow'} is already a success. You've got this. 🌙
                 </p>
               </motion.div>
 
@@ -831,7 +831,9 @@ export default function PresleyFlow() {
 
             <h2 className="text-4xl font-bold mb-4">Session Complete</h2>
             <p className="text-xl text-purple-200 mb-8 text-center max-w-md">
-              Tomorrow's rehearsal is complete. Rest well—your morning recap awaits.
+              {flowData?.timeOfDay === 'evening' 
+                ? "Tomorrow's rehearsal is complete. Rest well—your morning recap awaits." 
+                : "You're ready. Go show them what you've got."}
             </p>
 
             <motion.button

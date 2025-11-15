@@ -28,6 +28,7 @@ export default function Level2CueCompanion({
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [summary, setSummary] = useState<MeetingSummary | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
   
   const analyzer = useRef(getAudioAnalyzer());
   const cueTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -129,9 +130,26 @@ export default function Level2CueCompanion({
     };
   }, [enabled, isActive, showSummary, onToggle]);
   
-  // Handle manual toggle
+  // Handle manual toggle - show consent modal first if enabling
   const handleToggle = () => {
-    onToggle(!enabled);
+    if (!enabled && !isActive) {
+      // Show consent modal before enabling
+      setShowConsentModal(true);
+    } else {
+      // Disable without modal
+      onToggle(false);
+    }
+  };
+  
+  // Handle consent approval
+  const handleConsentApprove = () => {
+    setShowConsentModal(false);
+    onToggle(true);
+  };
+  
+  // Handle consent decline
+  const handleConsentDecline = () => {
+    setShowConsentModal(false);
   };
   
   // Handle cue dismiss
@@ -319,9 +337,12 @@ export default function Level2CueCompanion({
             <div className="flex items-center gap-2 mb-2">
               <Loader className="w-4 h-4 text-purple-600 animate-spin" />
               <span className="text-xs font-semibold text-gray-700">
-                Learning your baseline...
+                Learning your speaking patterns...
               </span>
             </div>
+            <p className="text-xs text-purple-700 mb-2 font-medium">
+              💬 Speak normally to set your baseline
+            </p>
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
@@ -331,7 +352,7 @@ export default function Level2CueCompanion({
               />
             </div>
             <p className="text-[10px] text-gray-500 mt-1 text-center">
-              {Math.floor(calibrationProgress)}% • ~{Math.ceil((100 - calibrationProgress) * 0.6)}s
+              {Math.floor(calibrationProgress)}% • ~{Math.ceil((100 - calibrationProgress) * 0.6)}s remaining
             </p>
           </motion.div>
         )}
@@ -363,22 +384,115 @@ export default function Level2CueCompanion({
         )}
       </AnimatePresence>
       
-      {/* Privacy Notice (shows once per session on first enable) */}
-      {enabled && isCalibrating && calibrationProgress < 10 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ delay: 0.5 }}
-          className="fixed bottom-24 right-6 z-40 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl p-3 max-w-xs border border-purple-200"
-        >
-          <p className="text-xs text-gray-700 leading-relaxed">
-            <span className="font-semibold text-purple-600">🔒 Privacy:</span>{' '}
-            Meet Cute analyzes your voice <span className="font-semibold">locally</span> to help with
-            pace and calm. Audio <span className="font-semibold">never leaves your device</span>.
-          </p>
-        </motion.div>
-      )}
+      {/* Consent Modal - Shows BEFORE requesting microphone access */}
+      <AnimatePresence>
+        {showConsentModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={handleConsentDecline}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <Mic className="w-6 h-6 text-white" />
+                  <h3 className="text-xl font-bold text-white">Enable Level 2 Real-Time Coach?</h3>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                {/* What it does */}
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-purple-600" />
+                    What This Does
+                  </h4>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Level 2 listens to <strong>how you sound</strong> (not what you say) to give you real-time cues about your pace, volume, and composure during the meeting.
+                  </p>
+                </div>
+                
+                {/* How it works */}
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                  <h4 className="text-sm font-bold text-purple-900 mb-3">How It Works</h4>
+                  <ul className="space-y-2 text-xs text-purple-800">
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 font-bold">1.</span>
+                      <span><strong>First 60 seconds:</strong> Learns YOUR normal speaking patterns (volume, pace, pauses)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 font-bold">2.</span>
+                      <span><strong>During meeting:</strong> Continuously analyzes your voice and sends cues when you deviate (e.g., speaking too fast, too loud, or without pauses)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 font-bold">3.</span>
+                      <span><strong>Gets smarter:</strong> Adapts to your patterns and meeting context over time</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                {/* Privacy guarantees */}
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <h4 className="text-sm font-bold text-green-900 mb-3 flex items-center gap-2">
+                    🔒 Privacy Guarantees
+                  </h4>
+                  <ul className="space-y-2 text-xs text-green-800">
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span><strong>No recording:</strong> Audio is analyzed in real-time and immediately discarded</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span><strong>No transcription:</strong> We don't know WHAT you're saying, only HOW you sound</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span><strong>100% local:</strong> All processing happens on your device, nothing sent to servers</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600">✓</span>
+                      <span><strong>You control it:</strong> Turn it off anytime with one click</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                {/* Note about microphone permission */}
+                <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                  <p className="text-xs text-amber-900">
+                    <strong>Note:</strong> Your browser will ask for microphone permission. This is required for Level 2 to analyze your voice in real-time.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Actions */}
+              <div className="px-6 pb-6 flex gap-3">
+                <button
+                  onClick={handleConsentDecline}
+                  className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-colors"
+                >
+                  Not Now
+                </button>
+                <button
+                  onClick={handleConsentApprove}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition-colors shadow-lg"
+                >
+                  Enable Level 2
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
