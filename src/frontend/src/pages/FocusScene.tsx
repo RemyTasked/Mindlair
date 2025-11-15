@@ -6,6 +6,7 @@ import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
 import Level2CueCompanion from '../components/Level2CueCompanion';
+import PrepModeFlow from '../components/PrepModeFlow';
 import { LOGO_PATHS } from '../config/constants';
 
 type MindState = 'calm' | 'stressed' | 'focused' | 'unclear';
@@ -80,13 +81,10 @@ export default function FocusScene() {
   const navigate = useNavigate();
   const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPhase, setCurrentPhase] = useState<'intro' | 'mode-select' | 'mindstate' | 'ai-message' | 'breathing' | 'reflection' | 'complete'>('intro');
+  const [currentPhase, setCurrentPhase] = useState<'intro' | 'mode-select' | 'prep-flow' | 'reflection' | 'complete'>('intro');
   const [selectedMode, setSelectedMode] = useState<PrepMode | null>(null);
-  const [mindState, setMindState] = useState<MindState | null>(null);
-  const [aiMessage, setAiMessage] = useState<string>('');
-  const [loadingAiMessage, setLoadingAiMessage] = useState(false);
+  const [prepFlowResponses, setPrepFlowResponses] = useState<Record<string, string>>({});
   const [reflectionNotes, setReflectionNotes] = useState('');
-  const [breathingCompleted, setBreathingCompleted] = useState(false);
   const [level2Enabled, setLevel2Enabled] = useState(false); // Level 2 is opt-in per meeting
 
   useEffect(() => {
@@ -138,62 +136,12 @@ export default function FocusScene() {
     }
   };
 
-  const handleBreathingComplete = () => {
-    setBreathingCompleted(true);
-    // Add 2-second pause after breathing before reflection (increased from 1s)
-    setTimeout(() => setCurrentPhase('reflection'), 2000);
-  };
-
-  const handleMindStateSelect = async (state: MindState) => {
-    setMindState(state);
-    setLoadingAiMessage(true);
-    setCurrentPhase('ai-message');
-    
-    try {
-      // Generate AI message based on mind state AND prep mode
-      // Fallback chain: OpenAI → Gemini → Template messages
-      const response = await api.post(`/api/focus-scene/${userId}/${meetingId}/ai-message`, {
-        mindState: state,
-        prepMode: selectedMode, // Include selected prep mode
-      });
-      
-      setAiMessage(response.data.message);
-      setLoadingAiMessage(false);
-      
-      // Log which provider was used
-      if (response.data.fallback) {
-        console.log('⚠️ Using template message fallback (OpenAI & Gemini unavailable)');
-      } else {
-        console.log('✅ AI-generated message received');
-      }
-      
-      // Auto-progress to breathing after showing message (10 seconds for reading)
-      setTimeout(() => setCurrentPhase('breathing'), 10000);
-    } catch (error) {
-      console.error('❌ Error generating AI message:', error);
-      // Client-side fallback (should rarely happen as server has fallbacks)
-      setAiMessage(getFallbackMessage(state));
-      setLoadingAiMessage(false);
-      setTimeout(() => setCurrentPhase('breathing'), 10000);
-    }
-  };
-  
-  const getFallbackMessage = (state: MindState): string => {
-    const messages = {
-      calm: "You're already in a good place. Let's maintain that centered energy as you prepare.",
-      stressed: "I see you're feeling the pressure. Let's take a moment to ground yourself and release that tension.",
-      focused: "Great energy! Let's channel that focus and sharpen your presence for this meeting.",
-      unclear: "Feeling foggy is normal. Let's bring some clarity and presence to this moment together.",
-    };
-    return messages[state];
-  };
-
   const handleComplete = async () => {
     try {
       await api.post(`/api/focus-scene/${userId}/${meetingId}/complete`, {
-        breathingExerciseCompleted: breathingCompleted,
+        prepMode: selectedMode,
+        prepFlowResponses: prepFlowResponses,
         intention: reflectionNotes || undefined, // User's stated focus for the meeting
-        mindState: mindState || undefined,
       });
       setCurrentPhase('complete');
       
@@ -239,7 +187,7 @@ export default function FocusScene() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
       {/* Ambient Sound Player - Primary calming element */}
-      {(currentPhase === 'mindstate' || currentPhase === 'ai-message' || currentPhase === 'breathing' || currentPhase === 'reflection' || currentPhase === 'complete') && (
+      {(currentPhase === 'prep-flow' || currentPhase === 'reflection' || currentPhase === 'complete') && (
         <AmbientSound
           soundType={meeting?.soundPreferences?.soundType || 'calm-ocean'}
           enabled={meeting?.soundPreferences?.enabled ?? true}
@@ -402,7 +350,7 @@ export default function FocusScene() {
                   transition={{ delay: 0.1 * index }}
                   onClick={() => {
                     setSelectedMode(mode.id);
-                    setCurrentPhase('mindstate');
+                    setCurrentPhase('prep-flow');
                   }}
                   className={`
                     relative p-6 rounded-2xl text-left transition-all duration-300
@@ -432,148 +380,22 @@ export default function FocusScene() {
           </motion.div>
         )}
 
-        {currentPhase === 'mindstate' && (
+        {/* Prep Mode Flow - 5-step scripted flow based on selected mode */}
+        {currentPhase === 'prep-flow' && selectedMode && meeting && (
           <motion.div
-            key="mindstate"
+            key="prep-flow"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8"
           >
-            <motion.div
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="text-center mb-8 sm:mb-12 max-w-2xl"
-            >
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">How are you feeling right now?</h2>
-              <p className="text-lg sm:text-xl text-purple-200">
-                We'll adapt your breathing flow to support your current state
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-2xl"
-            >
-              {[
-                { state: 'calm' as MindState, emoji: '😌', label: 'Calm', description: 'Centered and peaceful', color: 'from-blue-500 to-cyan-500' },
-                { state: 'stressed' as MindState, emoji: '😰', label: 'Stressed', description: 'Tense or overwhelmed', color: 'from-red-500 to-orange-500' },
-                { state: 'focused' as MindState, emoji: '🎯', label: 'Focused', description: 'Alert and ready', color: 'from-amber-500 to-yellow-500' },
-                { state: 'unclear' as MindState, emoji: '🌫️', label: 'Unclear', description: 'Foggy or uncertain', color: 'from-purple-500 to-pink-500' },
-              ].map((option, index) => (
-                <motion.button
-                  key={option.state}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.3 + index * 0.1, type: 'spring', stiffness: 200 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleMindStateSelect(option.state)}
-                  className={`p-6 sm:p-8 rounded-2xl bg-gradient-to-br ${option.color} text-white text-left transition-all hover:shadow-2xl`}
-                >
-                  <div className="text-4xl sm:text-5xl mb-3">{option.emoji}</div>
-                  <div className="text-xl sm:text-2xl font-bold mb-2">{option.label}</div>
-                  <div className="text-sm sm:text-base text-white/80">{option.description}</div>
-                </motion.button>
-              ))}
-            </motion.div>
-          </motion.div>
-        )}
-
-        {currentPhase === 'ai-message' && (
-          <motion.div
-            key="ai-message"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="text-center max-w-2xl"
-            >
-              {loadingAiMessage ? (
-                <>
-                  <motion.div
-                    className="text-6xl mb-6"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  >
-                    ✨
-                  </motion.div>
-                  <p className="text-2xl text-purple-200">
-                    Personalizing your experience...
-                  </p>
-                </>
-              ) : (
-                <>
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
-                    className="text-6xl mb-6"
-                  >
-                    {mindState === 'calm' && '😌'}
-                    {mindState === 'stressed' && '😰'}
-                    {mindState === 'focused' && '🎯'}
-                    {mindState === 'unclear' && '🌫️'}
-                  </motion.div>
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-2xl sm:text-3xl text-white leading-relaxed mb-8"
-                  >
-                    {aiMessage}
-                  </motion.p>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    className="text-purple-300 text-sm"
-                  >
-                    Preparing your breathing flow...
-                  </motion.div>
-                </>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-
-        {currentPhase === 'breathing' && mindState && (
-          <motion.div
-            key="breathing"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 pt-24 sm:pt-8"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="absolute top-4 right-4 sm:top-8 sm:right-8"
-            >
-              <CountdownTimer
-                startTime={new Date(meeting.startTime)}
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <AdaptiveBreathingFlow
-                mindState={mindState}
-                onComplete={handleBreathingComplete}
-              />
-            </motion.div>
+            <PrepModeFlow
+              mode={selectedMode}
+              meetingTitle={meeting.title}
+              onComplete={(responses) => {
+                setPrepFlowResponses(responses);
+                setCurrentPhase('reflection');
+              }}
+            />
           </motion.div>
         )}
 

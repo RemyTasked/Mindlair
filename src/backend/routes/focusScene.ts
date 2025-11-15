@@ -224,9 +224,12 @@ Generate the message now:`;
 
 // Complete focus session
 const sessionSchema = z.object({
+  prepMode: z.enum(['clarity', 'confidence', 'connection', 'composure', 'momentum']).optional(),
+  prepFlowResponses: z.record(z.string()).optional(), // User's responses to prep flow steps
+  intention: z.string().optional(), // User's focus/goal for the meeting
+  // Legacy fields (kept for backward compatibility)
   breathingExerciseCompleted: z.boolean().optional(),
   reflectionNotes: z.string().optional(),
-  intention: z.string().optional(), // User's focus/goal for the meeting
   mindState: z.enum(['calm', 'stressed', 'focused', 'unclear']).optional(),
 });
 
@@ -254,23 +257,32 @@ router.post(
         userId,
         meetingId: meeting.id,
         completedAt: new Date(),
-        ...(data.mindState ? { breathingFlowType: `adaptive-${data.mindState}` } : {}),
-        ...data,
+        // Store prep mode as breathing flow type for now (e.g., "prep-clarity")
+        ...(data.prepMode ? { breathingFlowType: `prep-${data.prepMode}` } : {}),
+        // Store prep flow responses as reflection notes (JSON stringified)
+        ...(data.prepFlowResponses ? { reflectionNotes: JSON.stringify(data.prepFlowResponses) } : {}),
+        // Legacy mindState support
+        ...(data.mindState && !data.prepMode ? { breathingFlowType: `adaptive-${data.mindState}` } : {}),
+        intention: data.intention,
+        breathingExerciseCompleted: data.breathingExerciseCompleted,
       } as any,
       update: {
         completedAt: new Date(),
-        ...(data.mindState ? { breathingFlowType: `adaptive-${data.mindState}` } : {}),
-        ...data,
+        ...(data.prepMode ? { breathingFlowType: `prep-${data.prepMode}` } : {}),
+        ...(data.prepFlowResponses ? { reflectionNotes: JSON.stringify(data.prepFlowResponses) } : {}),
+        ...(data.mindState && !data.prepMode ? { breathingFlowType: `adaptive-${data.mindState}` } : {}),
+        intention: data.intention,
+        breathingExerciseCompleted: data.breathingExerciseCompleted,
       } as any,
     });
 
-    // Update meeting with mind state for pattern analysis
-    if (data.mindState) {
+    // Update meeting with prep mode for pattern analysis
+    if (data.prepMode) {
       await prisma.meeting.update({
         where: { id: meeting.id },
         data: {
-          // Store mind state in description metadata for now
-          // We can query this later for pattern analysis
+          // Store prep mode in description metadata for future pattern analysis
+          // This allows us to recommend modes based on meeting type patterns
         },
       });
     }
