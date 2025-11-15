@@ -27,7 +27,7 @@ export default function CalDAVModal({ isOpen, onClose, onSuccess }: CalDAVModalP
     setLoading(true);
 
     try {
-      const response = await api.post('/api/auth/caldav/connect', {
+      await api.post('/api/auth/caldav/connect', {
         email,
         password,
       });
