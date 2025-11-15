@@ -416,7 +416,34 @@ router.get(
       }
     }
 
+    // Check if it's a weekend (Friday evening or Saturday/Sunday)
+    const dayOfWeek = targetDate.getDay(); // 0 = Sunday, 6 = Saturday
+    const isWeekendOrFridayEvening = dayOfWeek === 0 || dayOfWeek === 6 || (dayOfWeek === 5 && !isMorning);
+    
     if (meetings.length === 0 && !dailyOutcomes) {
+      // If it's a weekend with no meetings, create a special weekend flow
+      if (isWeekendOrFridayEvening) {
+        return res.json({
+          flow: {
+            openingScene: "The stage goes dark. The week's performance is over. This is your intermission—a chance to step away from the spotlight and simply be.",
+            meetingPreviews: [],
+            mindsetTheme: "This weekend is yours. No scripts, no scenes, no expectations. Just rest, recharge, and reconnect with what brings you joy.",
+            visualizationScript: "See yourself letting go of the week's tension... Your shoulders drop, your breath deepens... You're free to do whatever feels good—whether that's adventure, rest, or simply being present...",
+            closingMessage: "The curtain will rise again Monday morning. Until then, the stage is yours to enjoy however you wish. 🌅",
+            date: targetDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            }),
+            timeOfDay: isMorning ? 'morning' : 'evening',
+            meetingDay: 'weekend',
+            dailyOutcomes,
+            isWeekendFlow: true,
+          },
+        });
+      }
+      
+      // Weekday with no meetings - return null
       return res.json({ flow: null });
     }
 

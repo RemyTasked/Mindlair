@@ -19,6 +19,7 @@ interface PresleyFlowData {
   timeOfDay?: string;
   meetingDay?: string;
   dailyOutcomes?: string; // AI summary of today's meetings (evening only)
+  isWeekendFlow?: boolean; // Weekend intermission flow
 }
 
 type Phase = 'opening' | 'wrapup' | 'reflection' | 'lineup' | 'mindset' | 'visualization' | 'unwind-breathing' | 'extended-visualization' | 'closing' | 'complete';
@@ -58,11 +59,16 @@ export default function PresleyFlow() {
       setFlowData(flow);
       setLoading(false);
       
-      // Auto-progress from opening: evening with wrap-up goes to 'wrapup', otherwise 'lineup'
+      // Auto-progress from opening
       setTimeout(() => {
-        if (flow.timeOfDay === 'evening' && flow.dailyOutcomes) {
+        if (flow.isWeekendFlow) {
+          // Weekend flow: skip to mindset (no meetings to review)
+          setCurrentPhase('mindset');
+        } else if (flow.timeOfDay === 'evening' && flow.dailyOutcomes) {
+          // Evening with wrap-up
           setCurrentPhase('wrapup');
         } else {
+          // Normal flow: go to lineup
           setCurrentPhase('lineup');
         }
       }, 5000);
@@ -362,8 +368,8 @@ export default function PresleyFlow() {
           </motion.div>
         )}
 
-        {/* Tomorrow's Line-Up */}
-        {currentPhase === 'lineup' && (
+        {/* Tomorrow's Line-Up (skip for weekend flow) */}
+        {currentPhase === 'lineup' && !flowData.isWeekendFlow && (
           <motion.div
             key="lineup"
             initial={{ opacity: 0 }}
@@ -441,7 +447,7 @@ export default function PresleyFlow() {
                 animate={{ y: 0, opacity: 1 }}
                 className="text-4xl font-bold text-center mb-8"
               >
-                {flowData.meetingDay === 'today' ? "Today's" : "Tomorrow's"} Mindset
+                {flowData.isWeekendFlow ? "Weekend Mindset" : flowData.meetingDay === 'today' ? "Today's Mindset" : "Tomorrow's Mindset"}
               </motion.h2>
 
               <motion.div
@@ -461,12 +467,16 @@ export default function PresleyFlow() {
                 transition={{ delay: 0.6 }}
               >
                 <label className="block text-purple-200 mb-3 text-center">
-                  What intention will you carry {flowData.meetingDay === 'today' ? 'today' : 'tomorrow'}?
+                  {flowData.isWeekendFlow 
+                    ? "What would feel good this weekend?" 
+                    : `What intention will you carry ${flowData.meetingDay === 'today' ? 'today' : 'tomorrow'}?`}
                 </label>
                 <textarea
                   value={journalNote}
                   onChange={(e) => setJournalNote(e.target.value)}
-                  placeholder={`Optional: Write your intention for ${flowData.meetingDay === 'today' ? 'today' : 'tomorrow'}...`}
+                  placeholder={flowData.isWeekendFlow 
+                    ? "Optional: What brings you joy? What helps you recharge?..." 
+                    : `Optional: Write your intention for ${flowData.meetingDay === 'today' ? 'today' : 'tomorrow'}...`}
                   className="w-full h-32 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                 />
               </motion.div>
@@ -688,8 +698,9 @@ export default function PresleyFlow() {
                 transition={{ delay: 0.3 }}
                 className="text-lg text-purple-200 mb-12 max-w-2xl mx-auto"
               >
-                Now, see yourself in {flowData.meetingDay === 'today' ? "today's" : "tomorrow's"} meetings. Confident, calm, and in control. 
-                Watch yourself succeed with clarity and grace.
+                {flowData.isWeekendFlow 
+                  ? "See yourself letting go of the week's tension... Your shoulders drop, your breath deepens... You're free to enjoy this time however you wish."
+                  : `Now, see yourself in ${flowData.meetingDay === 'today' ? "today's" : "tomorrow's"} meetings. Confident, calm, and in control. Watch yourself succeed with clarity and grace.`}
               </motion.p>
 
               {/* Larger, More Immersive Visualization Circle */}
