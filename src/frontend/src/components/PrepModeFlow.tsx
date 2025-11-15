@@ -114,7 +114,7 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
       title: 'Emotional Guardrails',
       prompt: 'How do I stay grounded if tension rises?',
       inputType: 'choice',
-      choices: ['Pause and breathe', 'Ask a clarifying question', 'Name what I'm noticing', 'Return to shared goal'],
+      choices: ['Pause and breathe', 'Ask a clarifying question', 'Name what I\'m noticing', 'Return to shared goal'],
     },
     {
       title: 'Appreciation Cue',
