@@ -912,7 +912,11 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function MeetingCard({ meeting }: { meeting: Meeting }) {
+  const [level2Enabled, setLevel2Enabled] = React.useState(false);
+  const navigate = useNavigate();
+  
   const startTime = new Date(meeting.startTime);
+  const endTime = new Date(meeting.endTime);
   const timeString = startTime.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -923,6 +927,8 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
   const hoursUntilMeeting = Math.floor(minutesUntilMeeting / 60);
   const isCompleted = meeting.focusSession?.completedAt != null;
   const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 10 && !isCompleted; // Within 10 minutes and not completed
+  const meetingIsActive = now >= startTime && now <= endTime;
+  const canEnableLevel2 = isCompleted && !meetingIsActive && minutesUntilMeeting > 0; // Prep done, meeting hasn't started yet
 
   // Format time until meeting
   let timeUntilText = '';
@@ -975,9 +981,37 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
 
       <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
         {isCompleted ? (
-          <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium">
-            ✓ Session Completed
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium">
+              ✓ Prep Complete
+            </span>
+            {canEnableLevel2 && (
+              <button
+                onClick={() => {
+                  if (!level2Enabled) {
+                    // Enable Level 2 and navigate to focus scene
+                    setLevel2Enabled(true);
+                    localStorage.setItem(`meetcute_level2_meeting_${meeting.id}`, 'true');
+                    if (meeting.focusSceneUrl) {
+                      navigate(meeting.focusSceneUrl);
+                    }
+                  } else {
+                    // Disable Level 2
+                    setLevel2Enabled(false);
+                    localStorage.removeItem(`meetcute_level2_meeting_${meeting.id}`);
+                  }
+                }}
+                className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium transition-all ${
+                  level2Enabled
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                }`}
+                title={level2Enabled ? 'Level 2 Audio Coaching Enabled' : 'Enable Level 2 Audio Coaching'}
+              >
+                {level2Enabled ? '🎙️ Level 2 Active' : '🎙️ Enable Level 2'}
+              </button>
+            )}
+          </div>
         ) : (
           <>
             {canStartFocusSession && meeting.focusSceneUrl && (
