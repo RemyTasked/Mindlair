@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
@@ -899,7 +899,7 @@ function formatEveningTime(timeString: string): string {
   return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
   return (
     <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
       <div className="flex items-center sm:items-start justify-between mb-2 sm:mb-4">
