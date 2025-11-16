@@ -912,7 +912,7 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function MeetingCard({ meeting }: { meeting: Meeting }) {
-  const [level2Enabled, setLevel2Enabled] = React.useState(false);
+  const [level2Enabled, setLevel2Enabled] = useState(false);
   const navigate = useNavigate();
   
   const startTime = new Date(meeting.startTime);
