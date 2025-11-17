@@ -84,8 +84,14 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
 let updateNotificationCallback: (() => void) | null = null;
 
 export const showUpdateNotification = (onUpdate: () => void) => {
+  console.log('🔔 showUpdateNotification called - showing notification');
   updateNotificationCallback = onUpdate;
+  // Dispatch event immediately to show notification
   window.dispatchEvent(new CustomEvent('show-update-notification'));
+  // Also try a small delay in case event listener isn't ready
+  setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('show-update-notification'));
+  }, 100);
 };
 
 export const hideUpdateNotification = () => {
@@ -99,8 +105,13 @@ export const UpdateNotificationManager: React.FC = () => {
 
   useEffect(() => {
     const handleShow = () => {
-      setShowNotification(true);
-      setUpdateCallback(() => updateNotificationCallback);
+      console.log('🔔 UpdateNotificationManager: show-update-notification event received');
+      if (updateNotificationCallback) {
+        setUpdateCallback(() => updateNotificationCallback);
+        setShowNotification(true);
+      } else {
+        console.warn('⚠️ UpdateNotificationManager: No callback set yet');
+      }
     };
 
     const handleHide = () => {

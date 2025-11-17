@@ -12,13 +12,15 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
 
   // Change sound type based on active scene
   useEffect(() => {
+    // Always stop any previous sound first (ambient or lofi)
+    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+      detail: { source: 'scene-library' }
+    }));
+    
     // Stop any previous sound first
     if (!activeScene) {
       onSoundTypeChange('none');
       localStorage.removeItem('meetcute_autoplay_sound');
-      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-        detail: { source: 'scene-library' }
-      }));
       return;
     }
 
@@ -42,12 +44,14 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       soundType = 'lofi-calm';
     }
 
-    onSoundTypeChange(soundType);
-
-    localStorage.setItem('meetcute_autoplay_sound', 'true');
-    window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-      detail: { source: 'scene-library', sceneId: activeScene, soundType }
-    }));
+    // Small delay to ensure previous sound stops before starting new one
+    setTimeout(() => {
+      onSoundTypeChange(soundType);
+      localStorage.setItem('meetcute_autoplay_sound', 'true');
+      window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+        detail: { source: 'scene-library', sceneId: activeScene, soundType }
+      }));
+    }, 100);
   }, [activeScene, onSoundTypeChange]);
 
   // Time-of-day aware content

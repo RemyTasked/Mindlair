@@ -168,8 +168,7 @@ export function CueToastManager() {
       console.log('🔔 Cue received:', cueData);
       setActiveCue(cueData);
       
-      // Play notification sound
-      playNotificationSound();
+      // Notification sound removed - no clicking sounds
     };
 
     window.addEventListener('cue-toast', handleCueEvent);

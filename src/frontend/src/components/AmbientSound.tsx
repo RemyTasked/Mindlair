@@ -367,13 +367,8 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       gainRef.current.disconnect();
       gainRef.current = null;
     }
-    // Also close the audio context to fully stop all audio
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      audioContextRef.current.close().catch((err) => {
-        console.warn('⚠️ Error closing audio context', err);
-      });
-      audioContextRef.current = null;
-    }
+    // Don't close the audio context - just stop the source
+    // Closing the context prevents new sounds from playing
   }, []);
 
   const cleanupFallback = useCallback(() => {
@@ -398,7 +393,9 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }
 
     let context = audioContextRef.current;
-    if (!context) {
+    
+    // If context doesn't exist or is closed, create a new one
+    if (!context || context.state === 'closed') {
       const AudioContextCtor =
         typeof window !== 'undefined'
           ? (window.AudioContext || (window as any).webkitAudioContext)
@@ -414,6 +411,13 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       }) as AudioContext;
 
       audioContextRef.current = context;
+    }
+    
+    // Resume context if it's suspended
+    if (context.state === 'suspended') {
+      context.resume().catch((err) => {
+        console.warn('⚠️ Error resuming audio context', err);
+      });
     }
 
     return context;
@@ -659,20 +663,19 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       return;
     }
 
-    // Always stop previous audio completely before starting new one
-    stopAudio();
+    // Stop previous audio source (but keep context alive)
+    cleanupSource();
+    cleanupFallback();
     
-    // Longer delay to ensure cleanup completes and audio context is fully closed
+    // Small delay to ensure cleanup completes before starting new sound
     const timer = setTimeout(() => {
       if (!needsInteraction) {
-        // Reset audio context ref to ensure fresh context
-        audioContextRef.current = null;
         startAudio('sound-change');
       }
-    }, 150);
+    }, 50);
 
     return () => clearTimeout(timer);
-  }, [enabled, soundType, needsInteraction, startAudio, stopAudio]);
+  }, [enabled, soundType, needsInteraction, startAudio, cleanupSource, cleanupFallback]);
 
   useEffect(() => {
     const volume = getVolume(isMuted);
