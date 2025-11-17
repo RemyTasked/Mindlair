@@ -92,11 +92,14 @@ router.get(
     const morningFlowTimeInMinutes = morningFlowHour * 60 + morningFlowMinute;
     const eveningFlowTimeInMinutes = eveningFlowHour * 60 + eveningFlowMinute;
     
-    // Check if we're in the morning or evening window (now using minutes for precision)
+    // Check if we're in the evening window (now using minutes for precision)
+    // Evening window: from configured evening time (e.g., 6 PM) until midnight
+    // After midnight, rehearsal flow is hidden - those meetings are now "today"
+    const midnightInMinutes = 24 * 60; // 23:59
     const isMorningWindow = currentTimeInMinutes >= morningFlowTimeInMinutes && currentTimeInMinutes < eveningFlowTimeInMinutes;
-    const isEveningWindow = currentTimeInMinutes >= eveningFlowTimeInMinutes;
+    const isEveningWindow = currentTimeInMinutes >= eveningFlowTimeInMinutes && currentTimeInMinutes < midnightInMinutes;
     
-    logger.info('🕐 Presley Flow time check (TIMEZONE-AWARE v3.0)', {
+    logger.info('🕐 Presley Flow time check (TIMEZONE-AWARE v4.0 - Midnight Cutoff)', {
       userId,
       userTimezone,
       serverTime: now.toISOString(),
@@ -107,32 +110,37 @@ router.get(
       morningFlowTimeInMinutes,
       eveningFlowTime,
       eveningFlowTimeInMinutes,
+      midnightInMinutes,
       isMorningWindow,
       isEveningWindow,
+      isAfterMidnight: currentTimeInMinutes < morningFlowTimeInMinutes,
     });
     
     // Check if flows are enabled
-    const morningFlowEnabled = (user as any).preferences?.enableMorningFlow !== false;
     const eveningFlowEnabled = (user as any).preferences?.enableEveningFlow !== false;
     
-    // CRITICAL: Evening flow requires BOTH time window AND meetings to be done
-    // Don't just check isEveningWindow - check the actual conditions
-    let flowTypeAvailable: 'morning' | 'evening' | null = null;
-    
-    if (isMorningWindow && morningFlowEnabled) {
-      flowTypeAvailable = 'morning';
-    } else if (isEveningWindow && eveningFlowEnabled) {
-      // FIXED: Only mark evening as available if we're ACTUALLY in the evening window
-      // This prevents showing evening flow before the configured time
-      flowTypeAvailable = 'evening';
+    // REHEARSAL FLOW AVAILABILITY:
+    // - Only available in evening window (configured time until midnight)
+    // - After midnight, flow disappears (meetings are now "today", use 5-min prep)
+    // - Before evening time, flow is locked
+    if (!isEveningWindow) {
+      const isAfterMidnight = currentTimeInMinutes < morningFlowTimeInMinutes;
+      return res.json({ 
+        available: false, 
+        reason: isAfterMidnight 
+          ? 'Rehearsal flow is not available after midnight - those meetings are now today! Use the 5-minute prep instead.'
+          : `Rehearsal flow unlocks at ${eveningFlowTime} (${eveningFlowHour > 12 ? eveningFlowHour - 12 : eveningFlowHour} PM)`,
+        locked: true,
+      });
     }
     
-    if (!flowTypeAvailable) {
-      return res.json({ available: false, reason: 'No flow type available at this time' });
+    if (!eveningFlowEnabled) {
+      return res.json({ available: false, reason: 'Evening flow is disabled in your settings' });
     }
 
-    // For morning: Check today's meetings
-    // For evening: Check tomorrow's meetings (or show wrap-up if today had meetings)
+    // PRESLEY FLOW (Rehearsal) LOGIC:
+    // - ALWAYS shows TOMORROW's meetings for evening rehearsal
+    // - This is the "preview tomorrow" flow, not a morning prep
     const today = new Date();
     const startOfDay = new Date(today);
     startOfDay.setHours(0, 0, 0, 0);
@@ -146,154 +154,26 @@ router.get(
     const endOfTomorrow = new Date(tomorrow);
     endOfTomorrow.setHours(23, 59, 59, 999);
 
+    // ALWAYS check tomorrow's meetings (this is a rehearsal/preview flow)
     const relevantMeetings = await prisma.meeting.findMany({
       where: {
         userId,
-        startTime: isMorningWindow
-          ? { gte: startOfDay, lte: endOfDay }
-          : { gte: startOfTomorrow, lte: endOfTomorrow },
+        startTime: { gte: startOfTomorrow, lte: endOfTomorrow },
       },
       orderBy: {
         startTime: 'asc',
       },
     });
     
-    // CRITICAL: Lock morning flow 1 hour before first meeting starts
-    if (isMorningWindow && relevantMeetings.length > 0) {
-      const firstMeetingStart = new Date(relevantMeetings[0].startTime);
-      const oneHourBeforeFirstMeeting = new Date(firstMeetingStart.getTime() - 60 * 60 * 1000);
-      
-      if (now >= oneHourBeforeFirstMeeting) {
-        logger.info('Morning flow locked - within 1 hour of first meeting', {
-          userId,
-          firstMeetingStart: firstMeetingStart.toISOString(),
-          lockTime: oneHourBeforeFirstMeeting.toISOString(),
-          currentTime: now.toISOString(),
-        });
-        return res.json({ 
-          available: false,
-          reason: 'Morning flow locks 1 hour before your first meeting',
-          locked: true,
-          lockTime: oneHourBeforeFirstMeeting.toISOString(),
-        });
-      }
-    }
-    
-    // CRITICAL: If no meetings today, lock morning flow when wellness reminders start
-    if (isMorningWindow && relevantMeetings.length === 0) {
-      const wellnessEnabled = (user as any).preferences?.enableWellnessReminders !== false;
-      
-      if (wellnessEnabled) {
-        // Wellness reminders start at 9 AM by default
-        const wellnessStartHour = 9;
-        
-        if (currentHour >= wellnessStartHour) {
-          logger.info('Morning flow locked - no meetings today and wellness reminders active', {
-            userId,
-            currentHour,
-            wellnessStartHour,
-          });
-          return res.json({ 
-            available: false,
-            reason: 'Morning flow is not available when you have no meetings scheduled',
-            locked: true,
-          });
-        }
-      }
-    }
-    
-    // CRITICAL: Lock evening flow until BOTH conditions met:
-    // 1. It's past the evening flow time (e.g., 6 PM)
-    // 2. ALL today's meetings are done
-    if (flowTypeAvailable === 'evening') {
-      // First check: Is it actually evening time yet?
-      if (!isEveningWindow) {
-        logger.info('Evening flow locked - not evening time yet', {
-          userId,
-          currentHour,
-          eveningFlowHour,
-          hoursUntilEvening: eveningFlowHour - currentHour,
-        });
-        return res.json({ 
-          available: false,
-          reason: `Evening flow is only available after ${eveningFlowHour}:00 (${eveningFlowHour > 12 ? eveningFlowHour - 12 : eveningFlowHour} PM)`,
-          locked: true,
-          unlockTime: `${eveningFlowHour}:00`,
-        });
-      }
-      
-      // Second check: Are all meetings done?
-      const todayMeetings = await prisma.meeting.findMany({
-        where: {
-          userId,
-          startTime: { gte: startOfDay, lte: endOfDay },
-        },
-        orderBy: {
-          startTime: 'asc',
-        },
-      });
-      
-      if (todayMeetings.length > 0) {
-        const lastMeeting = todayMeetings[todayMeetings.length - 1];
-        const lastMeetingEnd = new Date(lastMeeting.endTime);
-        
-        if (now < lastMeetingEnd) {
-          logger.info('Evening flow locked - meetings still in progress', {
-            userId,
-            lastMeetingEnd: lastMeetingEnd.toISOString(),
-            currentTime: now.toISOString(),
-            remainingMeetings: todayMeetings.filter(m => new Date(m.endTime) > now).length,
-          });
-          return res.json({ 
-            available: false,
-            reason: 'Evening flow is only available after all today\'s meetings are complete',
-            locked: true,
-            remainingMeetings: todayMeetings.filter(m => new Date(m.endTime) > now).length,
-          });
-        }
-      }
-    }
-    
-    // For evening, also check if today had meetings (for wrap-up)
-    let todayMeetingCount = 0;
-    if (isEveningWindow) {
-      const todayMeetings = await prisma.meeting.findMany({
-        where: {
-          userId,
-          startTime: { gte: startOfDay, lte: endOfDay },
-        },
-      });
-      todayMeetingCount = todayMeetings.length;
-    }
-
-    // CRITICAL: Show flow only if there are relevant meetings
-    // Morning: Show if today has meetings
-    // Evening: Show if today had meetings (for wrap-up) OR tomorrow has meetings (for rehearsal)
-    // Weekend check: If tomorrow is weekend with no meetings, don't show evening flow
-    let hasRelevantMeetings = false;
-    
-    if (isMorningWindow) {
-      // Morning: Only show if TODAY has meetings
-      hasRelevantMeetings = relevantMeetings.length > 0;
-    } else if (isEveningWindow) {
-      // Evening: Show if today had meetings OR tomorrow has meetings
-      // This allows wrap-up (today) and/or rehearsal (tomorrow)
-      hasRelevantMeetings = todayMeetingCount > 0 || relevantMeetings.length > 0;
-    }
-    
-    if (!hasRelevantMeetings) {
-      logger.info('No relevant meetings for flow', {
+    // CRITICAL: Show rehearsal flow only if tomorrow has meetings
+    if (relevantMeetings.length === 0) {
+      logger.info('No meetings tomorrow for rehearsal flow', {
         userId,
-        isMorningWindow,
-        isEveningWindow,
-        todayMeetingCount,
         tomorrowMeetingCount: relevantMeetings.length,
       });
       return res.json({ 
         available: false,
-        reason: isMorningWindow 
-          ? 'No meetings scheduled for today'
-          : 'No meetings today or tomorrow - enjoy your weekend!',
+        reason: 'No meetings scheduled for tomorrow',
       });
     }
 
@@ -305,7 +185,7 @@ router.get(
       meetingCount: relevantMeetings.length,
       presleyFlowUrl,
       date: dateString,
-      flowType: isMorningWindow ? 'morning' : 'evening',
+      flowType: 'evening', // Always evening rehearsal flow
     });
   })
 );

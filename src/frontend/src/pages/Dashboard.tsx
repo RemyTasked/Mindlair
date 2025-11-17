@@ -585,7 +585,7 @@ export default function Dashboard() {
                   Rehearsal Flow
                 </h3>
                 <p className="text-xs sm:text-sm text-purple-600 font-medium">
-                  {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} {presleyFlow.flowType === 'evening' ? 'tomorrow' : 'today'}
+                  {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} tomorrow
                 </p>
               </div>
             </div>
