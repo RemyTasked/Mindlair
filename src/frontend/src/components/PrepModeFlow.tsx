@@ -321,15 +321,15 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
             )}
 
             {step.inputType === 'breathing' && (
-              <div className="text-center">
+              <div className="text-center flex flex-col items-center justify-center min-h-[400px]">
                 <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
+                  animate={{ scale: [1, 1.15, 1] }}
                   transition={{ duration: 4, repeat: Infinity }}
-                  className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center"
+                  className="w-24 h-24 sm:w-32 sm:h-32 mb-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg"
                 >
-                  <span className="text-4xl">🫁</span>
+                  <span className="text-3xl sm:text-4xl">🫁</span>
                 </motion.div>
-                <p className="text-purple-200 mb-4">
+                <p className="text-purple-200 mb-4 text-sm sm:text-base px-4">
                   Breathe in (4) → Hold (4) → Breathe out (4) → Hold (4)
                 </p>
                 <p className="text-sm text-purple-400">
@@ -345,15 +345,15 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
             )}
 
             {step.inputType === 'visualization' && (
-              <div className="text-center">
+              <div className="text-center flex flex-col items-center justify-center min-h-[400px]">
                 <motion.div
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center"
+                  className="w-24 h-24 sm:w-32 sm:h-32 mb-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg"
                 >
-                  <span className="text-4xl">✨</span>
+                  <span className="text-3xl sm:text-4xl">✨</span>
                 </motion.div>
-                <p className="text-purple-200 mb-6">
+                <p className="text-purple-200 mb-6 text-sm sm:text-base px-4">
                   Take 30 seconds to visualize this moment...
                 </p>
               </div>
