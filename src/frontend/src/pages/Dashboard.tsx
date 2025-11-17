@@ -350,9 +350,12 @@ export default function Dashboard() {
       setActiveMeetings(newActiveMeetings || []);
       
       // Display new cues as toasts (only if Level 2 is not active)
-      const level2Active = localStorage.getItem('meetcute_level2_active') === 'true';
-      if (level2Active) {
+      // Note: We already checked Level 2 at the start, but double-check here in case
+      // Level 2 was activated between the check and API response
+      const level2StillActive = localStorage.getItem('meetcute_level2_active') === 'true';
+      if (level2StillActive) {
         console.log('🎯 Level 2 is active - suppressing Level 1 cue toasts');
+        setActiveCues(newActiveCues || []);
         return; // Don't show Level 1 cues when Level 2 is active
       }
       
@@ -360,8 +363,8 @@ export default function Dashboard() {
         console.log('🔔 Processing Level 1 cues for toast display...');
         newActiveCues.forEach((cue: any) => {
           // Double-check Level 2 status before showing each cue
-          const level2StillActive = localStorage.getItem('meetcute_level2_active') === 'true';
-          if (level2StillActive) {
+          const level2NowActive = localStorage.getItem('meetcute_level2_active') === 'true';
+          if (level2NowActive) {
             console.log('🎯 Level 2 activated during cue processing - skipping cue', cue.cueId);
             return;
           }
