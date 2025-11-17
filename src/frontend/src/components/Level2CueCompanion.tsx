@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Activity, Loader } from 'lucide-react';
 import { getAudioAnalyzer, type CueTrigger, type MeetingSummary } from '../services/audioAnalyzer';
+import { LOGO_PATHS } from '../config/constants';
 
 interface Level2CueCompanionProps {
   enabled: boolean;
@@ -413,7 +414,12 @@ export default function Level2CueCompanion({
             className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999]"
             onClick={dismissCue}
           >
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-full shadow-2xl border-2 border-purple-300 cursor-pointer hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-full shadow-2xl border-2 border-purple-300 cursor-pointer hover:scale-105 transition-transform flex items-center gap-3">
+              <img
+                src={LOGO_PATHS.main}
+                alt="Meet Cute"
+                className="w-6 h-6 object-contain flex-shrink-0"
+              />
               <p className="text-lg font-bold tracking-wide text-center whitespace-nowrap">
                 {currentCue.message}
               </p>
