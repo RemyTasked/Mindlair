@@ -678,6 +678,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     
     // Longer delay to ensure cleanup fully completes before starting new sound
     // Note: soundType cannot be 'none' here because we returned early if it was
+    // TypeScript knows this, so no need to check soundType !== 'none'
     const timer = setTimeout(() => {
       if (!needsInteraction && enabled) {
         // Double-check we're still supposed to play
