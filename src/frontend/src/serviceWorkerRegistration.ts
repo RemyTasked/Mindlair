@@ -61,9 +61,10 @@ function registerValidSW(swUrl: string, config?: Config) {
         installingWorker.onstatechange = () => {
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
-              // New content available, notify user
-              console.log('🎬 New content available; please refresh.');
+              // New content available, notify user immediately
+              console.log('🎬 New content available; showing update notification.');
               if (config && config.onUpdate) {
+                // Call onUpdate immediately when new service worker is installed
                 config.onUpdate(registration);
               }
             } else {
@@ -76,6 +77,14 @@ function registerValidSW(swUrl: string, config?: Config) {
           }
         };
       };
+      
+      // Also check for waiting service worker on registration
+      if (registration.waiting) {
+        console.log('🎬 Waiting service worker found; showing update notification.');
+        if (config && config.onUpdate) {
+          config.onUpdate(registration);
+        }
+      }
     })
     .catch((error) => {
       console.error('🎬 Error registering service worker:', error);

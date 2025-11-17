@@ -349,10 +349,23 @@ export default function Dashboard() {
 
       setActiveMeetings(newActiveMeetings || []);
       
-      // Display new cues as toasts
+      // Display new cues as toasts (only if Level 2 is not active)
+      const level2Active = localStorage.getItem('meetcute_level2_active') === 'true';
+      if (level2Active) {
+        console.log('🎯 Level 2 is active - suppressing Level 1 cue toasts');
+        return; // Don't show Level 1 cues when Level 2 is active
+      }
+      
       if (newActiveCues && newActiveCues.length > 0) {
         console.log('🔔 Processing Level 1 cues for toast display...');
         newActiveCues.forEach((cue: any) => {
+          // Double-check Level 2 status before showing each cue
+          const level2StillActive = localStorage.getItem('meetcute_level2_active') === 'true';
+          if (level2StillActive) {
+            console.log('🎯 Level 2 activated during cue processing - skipping cue', cue.cueId);
+            return;
+          }
+          
           // Check if this cue was already shown
           const alreadyShown = activeCues.some(existing => existing.cueId === cue.cueId);
           console.log(`Level 1 Cue ${cue.cueId}: alreadyShown=${alreadyShown}`);
@@ -1018,7 +1031,11 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
           </div>
         ) : (
           <>
-            {canStartFocusSession && meeting.focusSceneUrl && (
+            {isCompleted ? (
+              <span className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm sm:text-base font-semibold text-center whitespace-nowrap cursor-not-allowed">
+                ✓ Prep Complete
+              </span>
+            ) : canStartFocusSession && meeting.focusSceneUrl ? (
               <a
                 href={meeting.focusSceneUrl}
                 target="_blank"
@@ -1033,7 +1050,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
               >
                 🎬 Start Focus Session
               </a>
-            )}
+            ) : null}
             {!canStartFocusSession && minutesUntilMeeting > 15 && (
               <span className="px-2 sm:px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs sm:text-sm whitespace-nowrap">
                 Available in {minutesUntilMeeting - 15} min

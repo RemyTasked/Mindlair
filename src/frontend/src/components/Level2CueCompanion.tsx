@@ -105,12 +105,22 @@ export default function Level2CueCompanion({
           // Listen for features to track calibration
           analyzer.current.onFeatures((features) => {
             const baseline = analyzer.current.getBaseline();
+            
+            // Update progress based on samples collected
+            const progress = (baseline.samplesCollected / 60) * 100;
+            
             if (!baseline.calibrationComplete) {
-              const progress = (baseline.samplesCollected / 60) * 100;
+              // Update progress up to 100%
               setCalibrationProgress(Math.min(progress, 100));
-            } else if (isCalibrating) {
-              setIsCalibrating(false);
-              setCalibrationProgress(100);
+            } else {
+              // Calibration is complete - ensure progress is 100%
+              if (isCalibrating) {
+                setIsCalibrating(false);
+                setCalibrationProgress(100);
+              } else {
+                // Keep progress at 100% if already complete
+                setCalibrationProgress(100);
+              }
             }
             
             // Update speaking indicator

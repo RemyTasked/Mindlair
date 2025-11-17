@@ -367,12 +367,21 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       gainRef.current.disconnect();
       gainRef.current = null;
     }
+    // Also close the audio context to fully stop all audio
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close().catch((err) => {
+        console.warn('⚠️ Error closing audio context', err);
+      });
+      audioContextRef.current = null;
+    }
   }, []);
 
   const cleanupFallback = useCallback(() => {
     if (fallbackAudioRef.current) {
       fallbackAudioRef.current.pause();
       fallbackAudioRef.current.currentTime = 0;
+      fallbackAudioRef.current.src = '';
+      fallbackAudioRef.current.load(); // Reset the audio element
       fallbackAudioRef.current = null;
     }
   }, []);
@@ -650,15 +659,17 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       return;
     }
 
-    // Always stop previous audio before starting new one
+    // Always stop previous audio completely before starting new one
     stopAudio();
     
-    // Small delay to ensure cleanup completes before starting new sound
+    // Longer delay to ensure cleanup completes and audio context is fully closed
     const timer = setTimeout(() => {
       if (!needsInteraction) {
+        // Reset audio context ref to ensure fresh context
+        audioContextRef.current = null;
         startAudio('sound-change');
       }
-    }, 50);
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [enabled, soundType, needsInteraction, startAudio, stopAudio]);
