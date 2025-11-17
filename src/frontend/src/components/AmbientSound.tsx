@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-type SoundType = 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
+type SoundType = 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none';
 const SAMPLE_RATE = 44100;
 const DURATION_SECONDS = 120; // 2 minutes for longer, more natural loops
 const FADE_DURATION_SECONDS = 3; // 3-second crossfade for smooth transitions
@@ -106,6 +106,109 @@ function generateSamples(type: SoundType): Float32Array {
         // Low-pass filter for smoother white noise
         prev += 0.05 * (noise - prev);
         data[i] = prev * 0.35;
+      }
+      break;
+    }
+    case 'lofi-chill': {
+      // Lofi Chill: Mellow chords, soft drums, vinyl crackle
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Warm chord progression (Cmaj7 -> Am7 -> Fmaj7 -> G7)
+        const chordPhase = Math.floor((t / 8) % 4);
+        const chordFreqs = [
+          [261.63, 329.63, 392.00, 493.88], // Cmaj7
+          [220.00, 261.63, 329.63, 415.30], // Am7
+          [174.61, 220.00, 261.63, 329.63], // Fmaj7
+          [196.00, 246.94, 293.66, 369.99], // G7
+        ][chordPhase];
+        const chord = chordFreqs.reduce((sum, freq) => 
+          sum + Math.sin(2 * Math.PI * freq * t) * 0.08, 0);
+        // Soft kick and snare
+        const beat = (t % 2 < 0.1) ? Math.exp(-20 * (t % 2)) * 0.3 : 0;
+        const snare = ((t % 2 > 0.9 && t % 2 < 1.1)) ? (Math.random() * 0.15) : 0;
+        // Vinyl crackle
+        const crackle = (Math.random() * 2 - 1) * 0.02;
+        data[i] = chord + beat + snare + crackle;
+      }
+      break;
+    }
+    case 'lofi-focus': {
+      // Lofi Focus: Minimal beats, subtle melody, perfect for concentration
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Simple pentatonic melody
+        const melodyNote = [220, 247, 277, 330, 370][Math.floor((t / 2) % 5)];
+        const melody = Math.sin(2 * Math.PI * melodyNote * t) * 0.12 * Math.exp(-2 * (t % 2));
+        // Minimal kick
+        const kick = (t % 1.5 < 0.08) ? Math.exp(-25 * (t % 1.5)) * 0.25 : 0;
+        // Warm bass
+        const bass = Math.sin(2 * Math.PI * 110 * t) * 0.15;
+        // Light vinyl texture
+        const vinyl = (Math.random() * 2 - 1) * 0.015;
+        data[i] = melody + kick + bass + vinyl;
+      }
+      break;
+    }
+    case 'lofi-morning': {
+      // Lofi Morning: Bright, uplifting, gentle energy
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Bright major chords (G -> D -> Em -> C)
+        const chordPhase = Math.floor((t / 6) % 4);
+        const chordFreqs = [
+          [196.00, 246.94, 293.66], // G major
+          [146.83, 185.00, 220.00], // D major
+          [164.81, 196.00, 246.94], // E minor
+          [130.81, 164.81, 196.00], // C major
+        ][chordPhase];
+        const chord = chordFreqs.reduce((sum, freq) => 
+          sum + Math.sin(2 * Math.PI * freq * t) * 0.1, 0);
+        // Light percussion
+        const hihat = ((t * 4) % 1 < 0.05) ? (Math.random() * 0.08) : 0;
+        const kick = (t % 2 < 0.08) ? Math.exp(-22 * (t % 2)) * 0.2 : 0;
+        // Warm vinyl
+        const crackle = (Math.random() * 2 - 1) * 0.018;
+        data[i] = chord + hihat + kick + crackle;
+      }
+      break;
+    }
+    case 'lofi-evening': {
+      // Lofi Evening: Mellow, introspective, winding down
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Soft minor chords (Am -> Dm -> G -> C)
+        const chordPhase = Math.floor((t / 10) % 4);
+        const chordFreqs = [
+          [220.00, 261.63, 329.63], // A minor
+          [146.83, 174.61, 220.00], // D minor
+          [196.00, 246.94, 293.66], // G major
+          [130.81, 164.81, 196.00], // C major
+        ][chordPhase];
+        const chord = chordFreqs.reduce((sum, freq) => 
+          sum + Math.sin(2 * Math.PI * freq * t) * 0.09, 0);
+        // Very soft beat
+        const kick = (t % 2.5 < 0.1) ? Math.exp(-18 * (t % 2.5)) * 0.18 : 0;
+        // Deep bass
+        const bass = Math.sin(2 * Math.PI * 82.41 * t) * 0.12;
+        // Gentle vinyl
+        const vinyl = (Math.random() * 2 - 1) * 0.02;
+        data[i] = chord + kick + bass + vinyl;
+      }
+      break;
+    }
+    case 'lofi-calm': {
+      // Lofi Calm: Ultra-minimal, ambient, deeply relaxing
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Sustained pad-like chords
+        const pad1 = Math.sin(2 * Math.PI * 220 * t) * 0.08;
+        const pad2 = Math.sin(2 * Math.PI * 277 * t) * 0.07;
+        const pad3 = Math.sin(2 * Math.PI * 330 * t) * 0.06;
+        // Subtle pulse (no drums)
+        const pulse = Math.sin(2 * Math.PI * 0.5 * t) * 0.03;
+        // Soft vinyl atmosphere
+        const atmosphere = (Math.random() * 2 - 1) * 0.025;
+        data[i] = pad1 + pad2 + pad3 + (pulse * atmosphere) + atmosphere;
       }
       break;
     }
