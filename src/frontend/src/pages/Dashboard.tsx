@@ -322,6 +322,7 @@ export default function Dashboard() {
   const pollActiveCues = async () => {
     try {
       // Check if Level 2 is active - if so, skip Level 1 cues
+      // Note: Only one level2Active declaration in this function scope
       const level2Active = localStorage.getItem('meetcute_level2_active') === 'true';
       if (level2Active) {
         console.log('🎯 Level 2 is active - suppressing Level 1 cues');
