@@ -44,14 +44,15 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       soundType = 'lofi-calm';
     }
 
-    // Small delay to ensure previous sound stops before starting new one
+    // Longer delay to ensure previous sound fully stops before starting new one
+    // This prevents ambient and lofi sounds from playing simultaneously
     setTimeout(() => {
       onSoundTypeChange(soundType);
       localStorage.setItem('meetcute_autoplay_sound', 'true');
       window.dispatchEvent(new CustomEvent('ambient-sound-play', {
         detail: { source: 'scene-library', sceneId: activeScene, soundType }
       }));
-    }, 100);
+    }, 200);
   }, [activeScene, onSoundTypeChange]);
 
   // Time-of-day aware content

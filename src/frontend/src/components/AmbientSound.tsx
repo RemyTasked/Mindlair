@@ -382,9 +382,12 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   }, []);
 
   const stopAudio = useCallback(() => {
+    // Stop all audio sources immediately
     cleanupSource();
     cleanupFallback();
     setIsPlaying(false);
+    // Clear any pending autoplay flags
+    localStorage.removeItem('meetcute_autoplay_sound');
   }, [cleanupFallback, cleanupSource]);
 
   const ensureAudioContext = useCallback((): AudioContext | null => {
@@ -594,12 +597,19 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
     const playHandler = () => {
       console.log('🎵 ambient-sound-play event received');
-      startAudio('event-dispatch');
+      // Stop any currently playing audio first
+      stopAudio();
+      // Small delay to ensure stop completes before starting new sound
+      setTimeout(() => {
+        if (enabled && soundType !== 'none') {
+          startAudio('event-dispatch');
+        }
+      }, 100);
     };
 
     const stopHandler = () => {
       console.log('🛑 ambient-sound-stop event received');
-      localStorage.removeItem('meetcute_autoplay_sound');
+      // Immediately stop all audio
       stopAudio();
       setNeedsInteraction(true);
     };
@@ -663,19 +673,19 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       return;
     }
 
-    // Stop previous audio source (but keep context alive)
-    cleanupSource();
-    cleanupFallback();
+    // Always stop ALL previous audio completely before starting new sound
+    stopAudio();
     
-    // Small delay to ensure cleanup completes before starting new sound
+    // Longer delay to ensure cleanup fully completes before starting new sound
     const timer = setTimeout(() => {
-      if (!needsInteraction) {
+      if (!needsInteraction && enabled && soundType !== 'none') {
+        // Double-check we're still supposed to play
         startAudio('sound-change');
       }
-    }, 50);
+    }, 150);
 
     return () => clearTimeout(timer);
-  }, [enabled, soundType, needsInteraction, startAudio, cleanupSource, cleanupFallback]);
+  }, [enabled, soundType, needsInteraction, startAudio, stopAudio]);
 
   useEffect(() => {
     const volume = getVolume(isMuted);
