@@ -171,14 +171,14 @@ export default function WindingDown() {
               {/* Extended Breathing Circle - Slower, Longer */}
               <motion.div
                 animate={{
-                  scale: [1, 1.4, 1],
+                  scale: [1, 1.2, 1],
                 }}
                 transition={{
                   duration: 12, // Longer breath cycles
                   repeat: 8,    // More cycles for deeper relaxation
                   ease: "easeInOut",
                 }}
-                className="mx-auto w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-purple-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
+                className="mx-auto w-56 h-56 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-purple-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
               >
                 {/* Inner glow effect */}
                 <motion.div

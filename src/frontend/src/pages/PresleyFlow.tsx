@@ -515,25 +515,25 @@ export default function PresleyFlow() {
               {/* Breathing Circle */}
               <motion.div
                 animate={{
-                  scale: [1, 1.3, 1],
+                  scale: [1, 1.15, 1],
                 }}
                 transition={{
                   duration: 6,
                   repeat: 5,
                   ease: "easeInOut",
                 }}
-                className="mx-auto w-64 h-64 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 backdrop-blur-xl border-4 border-purple-500/50 flex items-center justify-center mb-12"
+                className="mx-auto w-48 h-48 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 backdrop-blur-xl border-4 border-purple-500/50 flex items-center justify-center mb-12"
               >
                 <motion.div
                   animate={{
-                    scale: [1, 1.2, 1],
+                    scale: [1, 1.1, 1],
                   }}
                   transition={{
                     duration: 6,
                     repeat: 5,
                     ease: "easeInOut",
                   }}
-                  className="text-6xl"
+                  className="text-5xl sm:text-6xl"
                 >
                   ✨
                 </motion.div>
@@ -599,19 +599,19 @@ export default function PresleyFlow() {
               {/* Extended Breathing Circle - Slower, Longer */}
               <motion.div
                 animate={{
-                  scale: [1, 1.4, 1],
+                  scale: [1, 1.2, 1],
                 }}
                 transition={{
                   duration: 12, // Longer breath cycles (was 6)
                   repeat: 8,    // More cycles for deeper relaxation
                   ease: "easeInOut",
                 }}
-                className="mx-auto w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-purple-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
+                className="mx-auto w-56 h-56 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-purple-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
               >
                 {/* Pulsing inner glow */}
                 <motion.div
                   animate={{
-                    scale: [1, 1.3, 1],
+                    scale: [1, 1.2, 1],
                     opacity: [0.3, 0.6, 0.3],
                   }}
                   transition={{
@@ -624,7 +624,7 @@ export default function PresleyFlow() {
                 
                 <motion.div
                   animate={{
-                    scale: [1, 1.2, 1],
+                    scale: [1, 1.1, 1],
                   }}
                   transition={{
                     duration: 12,
@@ -714,13 +714,13 @@ export default function PresleyFlow() {
                   repeat: 3,
                   ease: "linear",
                 }}
-                className="mx-auto w-96 h-96 rounded-full bg-gradient-to-br from-purple-600/30 via-indigo-600/30 to-pink-600/30 backdrop-blur-xl border-4 border-purple-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
+                className="mx-auto w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-gradient-to-br from-purple-600/30 via-indigo-600/30 to-pink-600/30 backdrop-blur-xl border-4 border-purple-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
               >
                 {/* Animated gradient overlay */}
                 <motion.div
                   animate={{
                     opacity: [0.2, 0.5, 0.2],
-                    scale: [1, 1.5, 1],
+                    scale: [1, 1.3, 1],
                   }}
                   transition={{
                     duration: 10,
@@ -732,7 +732,7 @@ export default function PresleyFlow() {
                 
                 <motion.div
                   animate={{
-                    scale: [1, 1.3, 1],
+                    scale: [1, 1.2, 1],
                     rotate: [0, -360, 0],
                   }}
                   transition={{
