@@ -27,8 +27,37 @@ interface MeetingData {
   recommendationReason?: string;
   soundPreferences?: {
     enabled: boolean;
-    soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none';
+    soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none';
   };
+}
+
+// AI-powered sound recommendation based on prep mode
+function getRecommendedSound(mode: PrepMode): 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' {
+  const soundMap: Record<PrepMode, 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm'> = {
+    'clarity': 'lofi-focus',      // Focus beats for clear thinking
+    'confidence': 'lofi-morning',  // Uplifting energy for confidence
+    'connection': 'lofi-calm',     // Calm ambient for empathy
+    'composure': 'rain',           // Soothing rain for staying grounded
+    'momentum': 'lofi-chill',      // Energizing beats for forward motion
+  };
+  return soundMap[mode];
+}
+
+// Get display name for sound type
+function getSoundDisplayName(soundType: string): string {
+  const nameMap: Record<string, string> = {
+    'lofi-focus': 'Lofi Focus',
+    'lofi-morning': 'Lofi Morning',
+    'lofi-calm': 'Lofi Calm',
+    'rain': 'Gentle Rain',
+    'lofi-chill': 'Lofi Chill',
+    'calm-ocean': 'Ocean Waves',
+    'forest': 'Forest Sounds',
+    'meditation-bell': 'Meditation Bell',
+    'white-noise': 'White Noise',
+    'lofi-evening': 'Lofi Evening',
+  };
+  return nameMap[soundType] || soundType;
 }
 
 const PREP_MODES: PrepModeInfo[] = [
@@ -81,6 +110,8 @@ export default function FocusScene() {
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<'intro' | 'mode-select' | 'prep-flow' | 'reflection' | 'complete'>('intro');
   const [selectedMode, setSelectedMode] = useState<PrepMode | null>(null);
+  const [recommendedSound, setRecommendedSound] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm'>('calm-ocean');
+  const [useAISound, setUseAISound] = useState(true); // Toggle between AI recommendation and default
   const [prepFlowResponses, setPrepFlowResponses] = useState<Record<string, string>>({});
   const [reflectionNotes, setReflectionNotes] = useState('');
   const [level2Enabled, setLevel2Enabled] = useState(false); // Level 2 is opt-in per meeting
@@ -185,10 +216,10 @@ export default function FocusScene() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
-      {/* Ambient Sound Player - Primary calming element (muted during Level 2 calibration) */}
+      {/* Ambient Sound Player - AI-recommended or default sound based on user preference (muted during Level 2 calibration) */}
       {(currentPhase === 'prep-flow' || currentPhase === 'reflection' || currentPhase === 'complete') && (
         <AmbientSound
-          soundType={meeting?.soundPreferences?.soundType || 'calm-ocean'}
+          soundType={useAISound ? recommendedSound : (meeting?.soundPreferences?.soundType || 'rain')}
           enabled={(meeting?.soundPreferences?.enabled ?? true) && !isCalibrating}
           stopOnNavigation={false}
         />
@@ -346,10 +377,57 @@ export default function FocusScene() {
                   </div>
                 </motion.div>
               )}
+              
+              {/* Sound Preference Toggle */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mt-6 max-w-md mx-auto"
+              >
+                <div className="px-5 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🎵</span>
+                      <div>
+                        <p className="text-sm font-semibold text-white">Background Sound</p>
+                        <p className="text-xs text-gray-400">
+                          {useAISound ? 'AI-optimized for your mode' : 'Default ambient sound'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setUseAISound(!useAISound)}
+                      className={`
+                        relative w-14 h-7 rounded-full transition-all duration-300
+                        ${useAISound ? 'bg-purple-500' : 'bg-gray-600'}
+                      `}
+                    >
+                      <motion.div
+                        layout
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        className={`
+                          absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg
+                          ${useAISound ? 'left-8' : 'left-1'}
+                        `}
+                      />
+                    </button>
+                  </div>
+                  {useAISound && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="text-xs text-purple-300 mt-3 leading-relaxed"
+                    >
+                      💡 Each mode gets a unique soundscape designed to enhance your focus
+                    </motion.p>
+                  )}
+                </div>
+              </motion.div>
             </motion.div>
 
             <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl w-full"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl w-full mt-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -362,6 +440,7 @@ export default function FocusScene() {
                   transition={{ delay: 0.1 * index }}
                   onClick={() => {
                     setSelectedMode(mode.id);
+                    setRecommendedSound(getRecommendedSound(mode.id));
                     setCurrentPhase('prep-flow');
                   }}
                   className={`
@@ -399,7 +478,29 @@ export default function FocusScene() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="relative"
           >
+            {/* Sound indicator - shows which sound is playing */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="absolute top-6 right-6 z-10"
+            >
+              <div className="px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center gap-2">
+                <span className="text-lg">🎵</span>
+                <span className="text-xs text-white/90 font-medium">
+                  {useAISound 
+                    ? getSoundDisplayName(recommendedSound)
+                    : getSoundDisplayName(meeting?.soundPreferences?.soundType || 'rain')
+                  }
+                </span>
+                {useAISound && (
+                  <span className="text-[10px] px-1.5 py-0.5 bg-purple-500/50 rounded-full">AI</span>
+                )}
+              </div>
+            </motion.div>
+            
             <PrepModeFlow
               mode={selectedMode}
               onComplete={(responses) => {
