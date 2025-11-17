@@ -654,6 +654,7 @@ export default function Dashboard() {
             <div className="space-y-4">
               {activeMeetings.map((meeting: any) => {
                 const activeCue = activeCues.find((c: any) => c.meetingId === meeting.id);
+                
                 return (
                   <div key={meeting.id} className="bg-white rounded-xl p-4 border-2 border-red-300">
                     <div className="flex items-start justify-between mb-2">
@@ -673,6 +674,8 @@ export default function Dashboard() {
                         LIVE
                       </span>
                     </div>
+                    
+                    {/* No Level 2 toggle during live meetings - must be enabled before meeting starts */}
                     
                     {activeCue && (
                       <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
@@ -926,7 +929,8 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
   const minutesUntilMeeting = Math.floor((startTime.getTime() - now.getTime()) / (1000 * 60));
   const hoursUntilMeeting = Math.floor(minutesUntilMeeting / 60);
   const isCompleted = meeting.focusSession?.completedAt != null;
-  const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 10 && !isCompleted; // Within 10 minutes and not completed
+  // Allow prep 15 minutes before meeting (avoids conflicts with back-to-back 30min meetings)
+  const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 15 && !isCompleted;
   const meetingIsActive = now >= startTime && now <= endTime;
   const canEnableLevel2 = isCompleted && !meetingIsActive && minutesUntilMeeting > 0; // Prep done, meeting hasn't started yet
 
@@ -1030,9 +1034,9 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                 🎬 Start Focus Session
               </a>
             )}
-            {!canStartFocusSession && minutesUntilMeeting > 10 && (
+            {!canStartFocusSession && minutesUntilMeeting > 15 && (
               <span className="px-2 sm:px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs sm:text-sm whitespace-nowrap">
-                Available in {minutesUntilMeeting - 10} min
+                Available in {minutesUntilMeeting - 15} min
               </span>
             )}
             {meeting.cueDelivered && (

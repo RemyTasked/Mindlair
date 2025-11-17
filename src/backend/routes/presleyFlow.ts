@@ -140,30 +140,27 @@ router.get(
 
     // PRESLEY FLOW (Rehearsal) LOGIC:
     // - ALWAYS shows TOMORROW's meetings for evening rehearsal
-    // - CRITICAL: Use user's timezone to determine "tomorrow", not server time
-    // Get user's local date (not server date)
-    const userLocalDate = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
+    // - Use same logic as the full flow endpoint (lines 262-267)
     
-    // Calculate tomorrow in user's timezone
-    const tomorrowInUserTZ = new Date(userLocalDate);
-    tomorrowInUserTZ.setDate(tomorrowInUserTZ.getDate() + 1);
+    // Get today's date in user's local time
+    const today = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
     
-    // Create start/end of tomorrow in user's timezone, then convert to UTC for DB query
-    const startOfTomorrowLocal = new Date(tomorrowInUserTZ);
-    startOfTomorrowLocal.setHours(0, 0, 0, 0);
-    const endOfTomorrowLocal = new Date(tomorrowInUserTZ);
-    endOfTomorrowLocal.setHours(23, 59, 59, 999);
+    // Calculate tomorrow
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    // Convert to UTC for database query
-    const startOfTomorrow = new Date(startOfTomorrowLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
-    const endOfTomorrow = new Date(endOfTomorrowLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
+    // Set to start and end of tomorrow
+    const startOfTomorrow = new Date(tomorrow);
+    startOfTomorrow.setHours(0, 0, 0, 0);
+    const endOfTomorrow = new Date(tomorrow);
+    endOfTomorrow.setHours(23, 59, 59, 999);
 
     logger.info('🗓️ Rehearsal Flow date calculation', {
       userId,
       userTimezone,
       serverNow: now.toISOString(),
-      userLocalDate: userLocalDate.toISOString(),
-      tomorrowInUserTZ: tomorrowInUserTZ.toISOString(),
+      userToday: today.toISOString(),
+      tomorrow: tomorrow.toISOString(),
       startOfTomorrow: startOfTomorrow.toISOString(),
       endOfTomorrow: endOfTomorrow.toISOString(),
     });
@@ -192,7 +189,7 @@ router.get(
     }
 
     // Use user's local date for the URL (not server date)
-    const dateString = userLocalDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    const dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
     const presleyFlowUrl = `${process.env.BASE_URL}/presley-flow/${userId}/${dateString}`;
 
     return res.json({

@@ -28,6 +28,11 @@ interface FlowStep {
 const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
   clarity: [
     {
+      title: 'Center Yourself',
+      prompt: 'Take 3 deep breaths. Inhale clarity, exhale confusion.',
+      inputType: 'breathing',
+    },
+    {
       title: 'Anchor Intention',
       prompt: 'In one sentence - why does this meeting exist?',
       inputType: 'text',
@@ -44,12 +49,6 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
       prompt: 'What\'s the action, approval, or outcome you need by the end?',
       inputType: 'text',
       placeholder: 'By the end, I need...',
-    },
-    {
-      title: 'Risk Check',
-      prompt: 'What happens if we leave this unclear?',
-      inputType: 'text',
-      placeholder: 'If unclear, we risk...',
     },
     {
       title: 'First Line Ready',
@@ -92,6 +91,11 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
   ],
   connection: [
     {
+      title: 'Open Your Heart',
+      prompt: 'Take 3 deep breaths. Inhale empathy, exhale judgment.',
+      inputType: 'breathing',
+    },
+    {
       title: 'Who Are They Today?',
       prompt: 'What might this person be feeling walking in? Pick an empathy posture.',
       inputType: 'textarea',
@@ -108,12 +112,6 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
       prompt: 'What\'s one question that opens the room? Prepare to listen.',
       inputType: 'text',
       placeholder: 'I\'ll ask...',
-    },
-    {
-      title: 'Emotional Guardrails',
-      prompt: 'How do I stay grounded if tension rises?',
-      inputType: 'choice',
-      choices: ['Pause and breathe', 'Ask a clarifying question', 'Name what I\'m noticing', 'Return to shared goal'],
     },
     {
       title: 'Appreciation Cue',
@@ -156,6 +154,11 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
   ],
   momentum: [
     {
+      title: 'Energize',
+      prompt: 'Take 3 powerful breaths. Inhale energy, exhale hesitation.',
+      inputType: 'breathing',
+    },
+    {
       title: 'Name the Block',
       prompt: 'What\'s the friction point?',
       inputType: 'text',
@@ -172,12 +175,6 @@ const PREP_MODE_FLOWS: Record<PrepMode, FlowStep[]> = {
       prompt: 'What\'s a 1-day success from this meeting?',
       inputType: 'text',
       placeholder: 'By tomorrow, we\'ll have...',
-    },
-    {
-      title: 'Remove Swirl',
-      prompt: 'What\'s the distraction that doesn\'t belong in this meeting?',
-      inputType: 'text',
-      placeholder: 'We won\'t discuss...',
     },
     {
       title: 'Close Strong',
