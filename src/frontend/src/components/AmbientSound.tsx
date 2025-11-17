@@ -650,10 +650,18 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       return;
     }
 
-    if (isPlaying && !needsInteraction) {
-      startAudio('sound-change');
-    }
-  }, [enabled, soundType, isPlaying, needsInteraction, startAudio, stopAudio]);
+    // Always stop previous audio before starting new one
+    stopAudio();
+    
+    // Small delay to ensure cleanup completes before starting new sound
+    const timer = setTimeout(() => {
+      if (!needsInteraction) {
+        startAudio('sound-change');
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [enabled, soundType, needsInteraction, startAudio, stopAudio]);
 
   useEffect(() => {
     const volume = getVolume(isMuted);

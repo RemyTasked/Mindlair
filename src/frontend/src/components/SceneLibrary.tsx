@@ -8,9 +8,20 @@ interface SceneLibraryProps {
 
 export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibraryProps) {
   const [activeScene, setActiveScene] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'scenes' | 'lofi'>('scenes');
 
   // Change sound type based on active scene
   useEffect(() => {
+    // Stop any previous sound first
+    if (!activeScene) {
+      onSoundTypeChange('none');
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'scene-library' }
+      }));
+      return;
+    }
+
     let soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none' = 'none';
 
     if (activeScene === 'listen') {
@@ -33,17 +44,10 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
 
     onSoundTypeChange(soundType);
 
-    if (activeScene) {
-      localStorage.setItem('meetcute_autoplay_sound', 'true');
-      window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-        detail: { source: 'scene-library', sceneId: activeScene, soundType }
-      }));
-    } else {
-      localStorage.removeItem('meetcute_autoplay_sound');
-      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-        detail: { source: 'scene-library' }
-      }));
-    }
+    localStorage.setItem('meetcute_autoplay_sound', 'true');
+    window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+      detail: { source: 'scene-library', sceneId: activeScene, soundType }
+    }));
   }, [activeScene, onSoundTypeChange]);
 
   // Time-of-day aware content
@@ -67,7 +71,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
 
   const currentPrompt = journalingPrompts[timeOfDay][Math.floor(Math.random() * journalingPrompts[timeOfDay].length)];
 
-  const scenes = [
+  // Original scenes (Listen, Focus, Reflect)
+  const originalScenes = [
     {
       id: 'listen',
       icon: <Headphones className="w-6 h-6" />,
@@ -213,7 +218,10 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
         </div>
       ),
     },
-    // Lofi Soundscapes
+  ];
+
+  // Lofi Soundscapes
+  const lofiScenes = [
     {
       id: 'lofi-chill',
       icon: <Sparkles className="w-6 h-6" />,
@@ -401,8 +409,12 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
     },
   ];
 
+  // Combine all scenes for lookup
+  const allScenes = [...originalScenes, ...lofiScenes];
+  const currentScenes = activeTab === 'scenes' ? originalScenes : lofiScenes;
+
   if (activeScene) {
-    const scene = scenes.find(s => s.id === activeScene);
+    const scene = allScenes.find(s => s.id === activeScene);
     if (!scene) return null;
 
     return (
@@ -435,49 +447,82 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
   }
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl shadow-lg p-8 border-2 border-purple-200">
-      <div className="text-center mb-8">
+    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl shadow-lg p-6 sm:p-8 border-2 border-purple-200">
+      <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm mb-4">
           <Sparkles className="w-4 h-4 text-purple-600" />
           <span className="text-sm font-medium text-gray-700">Scene Library</span>
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           Your Moment of Calm
         </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          No meetings right now? Perfect. Take a moment for yourself with these micro-rituals.
+        <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
+          No meetings right now? Perfect. Take a moment for yourself.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {scenes.map((scene) => (
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-purple-200">
+        <button
+          onClick={() => {
+            setActiveTab('scenes');
+            setActiveScene(null); // Close any open scene when switching tabs
+          }}
+          className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+            activeTab === 'scenes'
+              ? 'border-purple-600 text-purple-700'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Scenes
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('lofi');
+            setActiveScene(null); // Close any open scene when switching tabs
+          }}
+          className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+            activeTab === 'lofi'
+              ? 'border-purple-600 text-purple-700'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Lofi Soundscapes
+        </button>
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {currentScenes.map((scene) => (
           <button
             key={scene.id}
-            onClick={() => setActiveScene(scene.id)}
-            className={`group relative bg-gradient-to-br ${scene.bgGradient} rounded-xl p-6 border-2 border-transparent hover:border-purple-300 transition-all hover:shadow-xl hover:scale-105 text-left`}
+            onClick={() => {
+              // Stop previous sound before starting new one
+              if (activeScene && activeScene !== scene.id) {
+                setActiveScene(null);
+                setTimeout(() => setActiveScene(scene.id), 100);
+              } else {
+                setActiveScene(scene.id);
+              }
+            }}
+            className={`group relative bg-gradient-to-br ${scene.bgGradient} rounded-xl p-4 sm:p-5 border-2 border-transparent hover:border-purple-300 transition-all hover:shadow-xl hover:scale-105 text-left`}
           >
-            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className={`p-2 rounded-full bg-gradient-to-r ${scene.gradient} text-white shadow-lg`}>
-                <Play className="w-4 h-4" />
+            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className={`p-1.5 rounded-full bg-gradient-to-r ${scene.gradient} text-white shadow-lg`}>
+                <Play className="w-3 h-3" />
               </div>
             </div>
 
-            <div className="text-5xl mb-4">{scene.emoji}</div>
+            <div className="text-4xl sm:text-5xl mb-3">{scene.emoji}</div>
             
-            <h3 className="text-xl font-bold text-gray-900 mb-1">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
               {scene.title}
             </h3>
-            <p className="text-sm font-medium text-gray-600 mb-2">
+            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
               {scene.subtitle}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
               {scene.description}
             </p>
-
-            <div className="mt-4 flex items-center gap-2 text-xs font-medium text-gray-500">
-              <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${scene.gradient}`}></div>
-              <span>Start anytime</span>
-            </div>
           </button>
         ))}
       </div>
