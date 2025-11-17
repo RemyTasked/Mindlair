@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma';
+import { getSoundInsights } from '../services/soundLearningService';
 
 const router = express.Router();
 
@@ -532,6 +533,9 @@ router.get(
     const recentCueTypes = recentCues.map(c => c.cueId.split('-')[0]);
     const hasStressPattern = recentCueTypes.filter(t => t === 'pace' || t === 'volume').length > 10;
 
+    // Get sound learning insights
+    const soundInsights = await getSoundInsights(userId);
+
     res.json({
       metadata: {
         totalFocusSessions,
@@ -546,6 +550,7 @@ router.get(
         soundPreferences: {
           mostUsedSound: preferences?.focusSoundType || 'calm-ocean',
           totalSoundSessions: soundSessions,
+          insights: soundInsights, // Learned sound preferences and patterns
         },
         audioInsights: {
           totalCuesReceived,

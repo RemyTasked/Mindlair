@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 import { aiService } from '../services/ai/aiService';
 import { analyzeMindStatePatterns } from '../services/ai/mindStateAnalyzer';
 import { recommendPrepMode, getRecommendationReason } from '../services/prepModeRecommender';
+import { getPreferredSound, getSmartSoundRecommendation } from '../services/soundLearningService';
 import { prisma } from '../utils/prisma';
 
 const router = express.Router();
@@ -100,6 +101,10 @@ router.get(
       isBackToBack,
     });
 
+    // Get learned sound preference for the recommended mode
+    const learnedSound = await getPreferredSound(userId, recommendedMode);
+    const smartSoundRecommendation = getSmartSoundRecommendation(recommendedMode, learnedSound);
+
     res.json({
       meeting: {
         title: meeting.title,
@@ -107,6 +112,8 @@ router.get(
         cueContent: meeting.cueContent,
         recommendedMode, // AI-recommended prep mode
         recommendationReason, // Why this mode was recommended
+        recommendedSound: smartSoundRecommendation, // Learned or AI-recommended sound
+        hasLearnedPreference: learnedSound !== null, // Whether this is based on user's history
         soundPreferences: {
           enabled: userPreferences?.enableFocusSound ?? true,
           soundType: userPreferences?.focusSoundType ?? 'calm-ocean',
@@ -285,6 +292,9 @@ const sessionSchema = z.object({
   prepMode: z.enum(['clarity', 'confidence', 'connection', 'composure', 'momentum']).optional(),
   prepFlowResponses: z.record(z.string()).optional(), // User's responses to prep flow steps
   intention: z.string().optional(), // User's focus/goal for the meeting
+  // Sound preference learning
+  soundType: z.string().optional(), // Which sound was played
+  usedAISound: z.boolean().optional(), // Did user use AI recommendation or override?
   // Legacy fields (kept for backward compatibility)
   breathingExerciseCompleted: z.boolean().optional(),
   reflectionNotes: z.string().optional(),
@@ -315,6 +325,10 @@ router.post(
         userId,
         meetingId: meeting.id,
         completedAt: new Date(),
+        prepMode: data.prepMode,
+        prepFlowResponses: data.prepFlowResponses ? data.prepFlowResponses : undefined,
+        soundType: data.soundType,
+        usedAISound: data.usedAISound ?? true,
         // Store prep mode as breathing flow type for now (e.g., "prep-clarity")
         ...(data.prepMode ? { breathingFlowType: `prep-${data.prepMode}` } : {}),
         // Store prep flow responses as reflection notes (JSON stringified)
@@ -326,6 +340,10 @@ router.post(
       } as any,
       update: {
         completedAt: new Date(),
+        prepMode: data.prepMode,
+        prepFlowResponses: data.prepFlowResponses ? data.prepFlowResponses : undefined,
+        soundType: data.soundType,
+        usedAISound: data.usedAISound ?? true,
         ...(data.prepMode ? { breathingFlowType: `prep-${data.prepMode}` } : {}),
         ...(data.prepFlowResponses ? { reflectionNotes: JSON.stringify(data.prepFlowResponses) } : {}),
         ...(data.mindState && !data.prepMode ? { breathingFlowType: `adaptive-${data.mindState}` } : {}),

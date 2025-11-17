@@ -25,6 +25,8 @@ interface MeetingData {
   cueContent: string;
   recommendedMode?: PrepMode;
   recommendationReason?: string;
+  recommendedSound?: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm';
+  hasLearnedPreference?: boolean;
   soundPreferences?: {
     enabled: boolean;
     soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none';
@@ -172,6 +174,8 @@ export default function FocusScene() {
         prepMode: selectedMode,
         prepFlowResponses: prepFlowResponses,
         intention: reflectionNotes || undefined, // User's stated focus for the meeting
+        soundType: useAISound ? recommendedSound : (meeting?.soundPreferences?.soundType || 'rain'),
+        usedAISound: useAISound,
       });
       setCurrentPhase('complete');
       
@@ -419,7 +423,10 @@ export default function FocusScene() {
                       animate={{ opacity: 1, height: 'auto' }}
                       className="text-xs text-purple-300 mt-3 leading-relaxed"
                     >
-                      💡 Each mode gets a unique soundscape designed to enhance your focus
+                      {meeting?.hasLearnedPreference 
+                        ? '🎯 Sound recommendation based on your preferences'
+                        : '💡 Each mode gets a unique soundscape designed to enhance your focus'
+                      }
                     </motion.p>
                   )}
                 </div>
@@ -440,7 +447,11 @@ export default function FocusScene() {
                   transition={{ delay: 0.1 * index }}
                   onClick={() => {
                     setSelectedMode(mode.id);
-                    setRecommendedSound(getRecommendedSound(mode.id));
+                    // Use learned recommendation if available, otherwise use default AI recommendation
+                    const soundForMode = meeting?.recommendedMode === mode.id && meeting?.recommendedSound
+                      ? meeting.recommendedSound
+                      : getRecommendedSound(mode.id);
+                    setRecommendedSound(soundForMode);
                     setCurrentPhase('prep-flow');
                   }}
                   className={`

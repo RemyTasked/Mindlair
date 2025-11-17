@@ -290,6 +290,10 @@ model FocusSession {
   prepMode        String?   // "Clarity", "Confidence", "Connection", "Composure", "Momentum"
   prepFlowResponses Json?   // Responses from the prep flow steps
   
+  // Sound preference learning
+  soundType       String?   // Which sound was played during this session
+  usedAISound     Boolean   @default(true)  // Did user use AI recommendation or override?
+  
   createdAt       DateTime  @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)

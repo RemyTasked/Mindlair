@@ -40,6 +40,7 @@ interface DirectorsInsightsProps {
     soundPreferences?: {
       mostUsedSound?: string;
       totalSoundSessions?: number;
+      insights?: string[]; // Learned sound preference insights
     };
     audioInsights?: {
       totalCuesReceived?: number;
@@ -586,14 +587,31 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
       }
     }
 
-    // Sound preferences
-    if (userMetadata.soundPreferences?.mostUsedSound) {
+    // Sound preferences and learned insights
+    if (userMetadata.soundPreferences?.insights && userMetadata.soundPreferences.insights.length > 0) {
+      // Use the first learned insight
+      const insight = userMetadata.soundPreferences.insights[0];
+      insights.push({
+        id: 'behavior-sound-learned',
+        sceneNumber: '59',
+        title: 'Your Sound Signature',
+        content: insight,
+        type: 'ai',
+        icon: '🎵'
+      });
+    } else if (userMetadata.soundPreferences?.mostUsedSound) {
+      // Fallback to basic sound preference
       const soundNames: Record<string, string> = {
         'rain': 'Rain',
         'calm-ocean': 'Ocean Waves',
         'forest': 'Forest',
         'meditation-bell': 'Meditation Bell',
-        'white-noise': 'White Noise'
+        'white-noise': 'White Noise',
+        'lofi-focus': 'Lofi Focus',
+        'lofi-morning': 'Lofi Morning',
+        'lofi-calm': 'Lofi Calm',
+        'lofi-chill': 'Lofi Chill',
+        'lofi-evening': 'Lofi Evening',
       };
       const soundName = soundNames[userMetadata.soundPreferences.mostUsedSound] || userMetadata.soundPreferences.mostUsedSound;
       insights.push({
