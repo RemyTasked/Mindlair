@@ -41,6 +41,18 @@ function registerValidSW(swUrl: string, config?: Config) {
     .then((registration) => {
       console.log('🎬 Service Worker registered:', registration);
 
+      // Check for updates immediately on registration
+      registration.update().then(() => {
+        console.log('🎬 Checked for service worker updates');
+      });
+
+      // Check for updates every 60 seconds
+      setInterval(() => {
+        registration.update().then(() => {
+          console.log('🎬 Periodic update check completed');
+        });
+      }, 60000);
+
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
         if (installingWorker == null) {

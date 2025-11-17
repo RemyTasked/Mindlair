@@ -140,19 +140,33 @@ router.get(
 
     // PRESLEY FLOW (Rehearsal) LOGIC:
     // - ALWAYS shows TOMORROW's meetings for evening rehearsal
-    // - This is the "preview tomorrow" flow, not a morning prep
-    const today = new Date();
-    const startOfDay = new Date(today);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(today);
-    endOfDay.setHours(23, 59, 59, 999);
+    // - CRITICAL: Use user's timezone to determine "tomorrow", not server time
+    // Get user's local date (not server date)
+    const userLocalDate = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
     
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const startOfTomorrow = new Date(tomorrow);
-    startOfTomorrow.setHours(0, 0, 0, 0);
-    const endOfTomorrow = new Date(tomorrow);
-    endOfTomorrow.setHours(23, 59, 59, 999);
+    // Calculate tomorrow in user's timezone
+    const tomorrowInUserTZ = new Date(userLocalDate);
+    tomorrowInUserTZ.setDate(tomorrowInUserTZ.getDate() + 1);
+    
+    // Create start/end of tomorrow in user's timezone, then convert to UTC for DB query
+    const startOfTomorrowLocal = new Date(tomorrowInUserTZ);
+    startOfTomorrowLocal.setHours(0, 0, 0, 0);
+    const endOfTomorrowLocal = new Date(tomorrowInUserTZ);
+    endOfTomorrowLocal.setHours(23, 59, 59, 999);
+    
+    // Convert to UTC for database query
+    const startOfTomorrow = new Date(startOfTomorrowLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const endOfTomorrow = new Date(endOfTomorrowLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
+
+    logger.info('🗓️ Rehearsal Flow date calculation', {
+      userId,
+      userTimezone,
+      serverNow: now.toISOString(),
+      userLocalDate: userLocalDate.toISOString(),
+      tomorrowInUserTZ: tomorrowInUserTZ.toISOString(),
+      startOfTomorrow: startOfTomorrow.toISOString(),
+      endOfTomorrow: endOfTomorrow.toISOString(),
+    });
 
     // ALWAYS check tomorrow's meetings (this is a rehearsal/preview flow)
     const relevantMeetings = await prisma.meeting.findMany({
@@ -177,7 +191,8 @@ router.get(
       });
     }
 
-    const dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    // Use user's local date for the URL (not server date)
+    const dateString = userLocalDate.toISOString().split('T')[0]; // YYYY-MM-DD
     const presleyFlowUrl = `${process.env.BASE_URL}/presley-flow/${userId}/${dateString}`;
 
     return res.json({
