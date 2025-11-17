@@ -677,8 +677,9 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     stopAudio();
     
     // Longer delay to ensure cleanup fully completes before starting new sound
+    // Note: soundType cannot be 'none' here because we returned early if it was
     const timer = setTimeout(() => {
-      if (!needsInteraction && enabled && soundType !== 'none') {
+      if (!needsInteraction && enabled) {
         // Double-check we're still supposed to play
         startAudio('sound-change');
       }
