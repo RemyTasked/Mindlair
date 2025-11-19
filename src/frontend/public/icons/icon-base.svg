@@ -3,7 +3,7 @@
   <defs>
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:1" />
     </linearGradient>
     <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
@@ -31,7 +31,7 @@
     
     <!-- Center play/focus symbol -->
     <circle cx="150" cy="150" r="50" fill="url(#iconGradient)" opacity="0.9"/>
-    <path d="M 135 130 L 135 170 L 170 150 Z" fill="#6366f1"/>
+    <path d="M 135 130 L 135 170 L 170 150 Z" fill="#14b8a6"/>
   </g>
   
   <!-- Subtle sparkle effect -->

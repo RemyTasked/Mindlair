@@ -85,7 +85,7 @@ export default function PWAInstallPrompt() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 animate-slide-up">
-      <div className="max-w-2xl mx-auto bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-6 text-white">
+      <div className="max-w-2xl mx-auto bg-gradient-to-r from-indigo-600 to-teal-600 rounded-2xl shadow-2xl p-6 text-white">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">

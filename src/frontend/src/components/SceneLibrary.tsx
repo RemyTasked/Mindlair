@@ -137,8 +137,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       title: 'Focus',
       subtitle: '2-minute calm scene',
       description: 'White noise + breathing to enhance concentration',
-      gradient: 'from-purple-500 to-pink-500',
-      bgGradient: 'from-purple-50 to-pink-50',
+      gradient: 'from-teal-500 to-pink-500',
+      bgGradient: 'from-teal-50 to-pink-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
@@ -234,8 +234,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       title: 'Lofi Chill',
       subtitle: 'Mellow beats',
       description: 'Warm chords, soft drums, vinyl crackle',
-      gradient: 'from-indigo-500 to-purple-500',
-      bgGradient: 'from-indigo-50 to-purple-50',
+      gradient: 'from-indigo-500 to-teal-500',
+      bgGradient: 'from-indigo-50 to-teal-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
@@ -345,8 +345,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       title: 'Lofi Evening',
       subtitle: 'Mellow & introspective',
       description: 'Wind down with soft minor chords',
-      gradient: 'from-purple-500 to-pink-500',
-      bgGradient: 'from-purple-50 to-pink-50',
+      gradient: 'from-teal-500 to-pink-500',
+      bgGradient: 'from-teal-50 to-pink-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
@@ -452,10 +452,10 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
   }
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl shadow-lg p-6 sm:p-8 border-2 border-purple-200">
+    <div className="bg-gradient-to-br from-indigo-50 via-teal-50 to-pink-50 rounded-2xl shadow-lg p-6 sm:p-8 border-2 border-teal-200">
       <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm mb-4">
-          <Sparkles className="w-4 h-4 text-purple-600" />
+          <Sparkles className="w-4 h-4 text-teal-600" />
           <span className="text-sm font-medium text-gray-700">Scene Library</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
@@ -467,7 +467,7 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-purple-200">
+      <div className="flex gap-2 mb-6 border-b border-teal-200">
         <button
           onClick={() => {
             setActiveTab('scenes');
@@ -475,7 +475,7 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
           }}
           className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
             activeTab === 'scenes'
-              ? 'border-purple-600 text-purple-700'
+              ? 'border-teal-600 text-teal-700'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -488,7 +488,7 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
           }}
           className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
             activeTab === 'lofi'
-              ? 'border-purple-600 text-purple-700'
+              ? 'border-teal-600 text-teal-700'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -509,7 +509,7 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
                 setActiveScene(scene.id);
               }
             }}
-            className={`group relative bg-gradient-to-br ${scene.bgGradient} rounded-xl p-4 sm:p-5 border-2 border-transparent hover:border-purple-300 transition-all hover:shadow-xl hover:scale-105 text-left`}
+            className={`group relative bg-gradient-to-br ${scene.bgGradient} rounded-xl p-4 sm:p-5 border-2 border-transparent hover:border-teal-300 transition-all hover:shadow-xl hover:scale-105 text-left`}
           >
             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
               <div className={`p-1.5 rounded-full bg-gradient-to-r ${scene.gradient} text-white shadow-lg`}>
@@ -565,7 +565,7 @@ function BreathingExercise() {
   const phaseConfig = {
     ready: { text: 'Ready to begin?', emoji: '✨', color: 'text-gray-600', scale: 'scale-100' },
     inhale: { text: 'Breathe in...', emoji: '🌬️', color: 'text-blue-600', scale: 'scale-110' },
-    hold: { text: 'Hold...', emoji: '⏸️', color: 'text-purple-600', scale: 'scale-110' },
+    hold: { text: 'Hold...', emoji: '⏸️', color: 'text-teal-600', scale: 'scale-110' },
     exhale: { text: 'Breathe out...', emoji: '💨', color: 'text-green-600', scale: 'scale-90' },
   };
 
@@ -584,7 +584,7 @@ function BreathingExercise() {
       {!isActive && phase === 'ready' && (
         <button
           onClick={startExercise}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all shadow-md hover:shadow-lg"
+          className="px-6 py-3 bg-gradient-to-r from-teal-600 to-pink-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-pink-700 transition-all shadow-md hover:shadow-lg"
         >
           Start Breathing Exercise
         </button>
@@ -592,16 +592,16 @@ function BreathingExercise() {
 
       {isActive && (
         <div className="flex items-center justify-center gap-2">
-          <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse"></div>
-          <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-          <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          <div className="w-2 h-2 bg-teal-600 rounded-full animate-pulse"></div>
+          <div className="w-2 h-2 bg-teal-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+          <div className="w-2 h-2 bg-teal-600 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
         </div>
       )}
 
       {!isActive && phase !== 'ready' && (
         <button
           onClick={startExercise}
-          className="px-6 py-3 bg-white border-2 border-purple-300 text-purple-700 rounded-lg font-semibold hover:bg-purple-50 transition-all"
+          className="px-6 py-3 bg-white border-2 border-teal-300 text-teal-700 rounded-lg font-semibold hover:bg-teal-50 transition-all"
         >
           Continue Another Cycle
         </button>

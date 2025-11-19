@@ -243,7 +243,7 @@ export default function Level2CueCompanion({
       >
         <motion.div
           onClick={(e) => e.stopPropagation()}
-          className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-2xl border-2 border-indigo-200 p-6 max-w-md w-full"
+          className="bg-gradient-to-br from-indigo-50 to-teal-50 rounded-2xl shadow-2xl border-2 border-indigo-200 p-6 max-w-md w-full"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
@@ -293,7 +293,7 @@ export default function Level2CueCompanion({
           )}
           
           {/* Suggestion */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg p-4 text-white">
+          <div className="bg-gradient-to-r from-teal-600 to-indigo-600 rounded-lg p-4 text-white">
             <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-90">
               💡 Best Next Step
             </p>
@@ -328,7 +328,7 @@ export default function Level2CueCompanion({
             transition-all duration-300 border-2
             ${
               enabled
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-400 hover:from-purple-700 hover:to-indigo-700'
+                ? 'bg-gradient-to-r from-teal-600 to-indigo-600 border-teal-400 hover:from-teal-700 hover:to-indigo-700'
                 : 'bg-gray-700 border-gray-600 hover:bg-gray-600'
             }
             text-white font-medium
@@ -379,12 +379,12 @@ export default function Level2CueCompanion({
             className="absolute bottom-full mb-2 right-0 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl p-3 min-w-[200px]"
           >
             <div className="flex items-center gap-2 mb-2">
-              <Loader className="w-4 h-4 text-purple-600 animate-spin" />
+              <Loader className="w-4 h-4 text-teal-600 animate-spin" />
               <span className="text-xs font-semibold text-gray-700">
                 Learning your speaking patterns...
               </span>
             </div>
-            <p className="text-xs text-purple-700 mb-2 font-medium">
+            <p className="text-xs text-teal-700 mb-2 font-medium">
               💬 Speak normally to set your baseline
             </p>
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -392,7 +392,7 @@ export default function Level2CueCompanion({
                 initial={{ width: 0 }}
                 animate={{ width: `${calibrationProgress}%` }}
                 transition={{ duration: 0.3 }}
-                className="h-full bg-gradient-to-r from-purple-600 to-indigo-600"
+                className="h-full bg-gradient-to-r from-teal-600 to-indigo-600"
               />
             </div>
             <p className="text-[10px] text-gray-500 mt-1 text-center">
@@ -414,7 +414,7 @@ export default function Level2CueCompanion({
             className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999]"
             onClick={dismissCue}
           >
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-full shadow-2xl border-2 border-purple-300 cursor-pointer hover:scale-105 transition-transform flex items-center gap-3">
+            <div className="bg-gradient-to-r from-teal-600 to-indigo-600 text-white px-6 py-4 rounded-full shadow-2xl border-2 border-teal-300 cursor-pointer hover:scale-105 transition-transform flex items-center gap-3">
               <img
                 src={LOGO_PATHS.main}
                 alt="Meet Cute"
@@ -457,13 +457,13 @@ export default function Level2CueCompanion({
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', delay: 0.2 }}
-                    className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center"
+                    className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-teal-500 to-indigo-500 rounded-full flex items-center justify-center"
                   >
                     <Activity className="w-12 h-12 text-white" />
                   </motion.div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Level 2 Real-Time Coach</h3>
                   <p className="text-lg text-gray-700 mb-2">
-                    Listens to <strong className="text-purple-600">how you sound</strong>
+                    Listens to <strong className="text-teal-600">how you sound</strong>
                   </p>
                   <p className="text-sm text-gray-500">
                     (not what you say)
@@ -477,7 +477,7 @@ export default function Level2CueCompanion({
                     </button>
                     <button
                       onClick={() => setExplanationStep(1)}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
                     >
                       Next →
                     </button>
@@ -493,15 +493,15 @@ export default function Level2CueCompanion({
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', delay: 0.2 }}
-                    className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center"
+                    className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-indigo-500 to-teal-500 rounded-full flex items-center justify-center"
                   >
                     <span className="text-4xl">⏱️</span>
                   </motion.div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">60 Seconds to Learn You</h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                        <span className="text-purple-600 font-bold">1</span>
+                      <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-teal-600 font-bold">1</span>
                       </div>
                       <p className="text-gray-700 pt-1">Learns your normal pace & volume</p>
                     </div>
@@ -512,8 +512,8 @@ export default function Level2CueCompanion({
                       <p className="text-gray-700 pt-1">Gives real-time cues if you deviate</p>
                     </div>
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                        <span className="text-purple-600 font-bold">3</span>
+                      <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-teal-600 font-bold">3</span>
                       </div>
                       <p className="text-gray-700 pt-1">Gets smarter over time</p>
                     </div>
@@ -527,7 +527,7 @@ export default function Level2CueCompanion({
                     </button>
                     <button
                       onClick={() => setExplanationStep(2)}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
                     >
                       Next →
                     </button>

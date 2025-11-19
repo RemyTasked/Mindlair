@@ -48,7 +48,7 @@ export default function LandingPage() {
   // Show loading state while checking auth
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-teal-50 to-pink-100">
         <div className="text-center">
           <img
             src={LOGO_PATHS.main}
@@ -104,7 +104,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-teal-50 to-pink-100 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -114,7 +114,7 @@ export default function LandingPage() {
             opacity: [0.3, 0.5, 0.3],
           }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-indigo-400/30 to-purple-400/30 rounded-full blur-3xl"
+          className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-indigo-400/30 to-teal-400/30 rounded-full blur-3xl"
         />
         <motion.div
           animate={{
@@ -123,7 +123,7 @@ export default function LandingPage() {
             opacity: [0.3, 0.6, 0.3],
           }}
           transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-pink-400/30 to-purple-400/30 rounded-full blur-3xl"
+          className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-pink-400/30 to-teal-400/30 rounded-full blur-3xl"
         />
         <motion.div
           animate={{
@@ -152,7 +152,7 @@ export default function LandingPage() {
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
               className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
             />
-            <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-teal-600 to-pink-600 bg-clip-text text-transparent">
               Meet Cute
             </div>
           </div>
@@ -166,9 +166,9 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-indigo-200/80 to-purple-200/80 rounded-full backdrop-blur-sm"
+            className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-indigo-200/80 to-teal-200/80 rounded-full backdrop-blur-sm"
           >
-            <span className="text-sm font-semibold bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent">
+            <span className="text-sm font-semibold bg-gradient-to-r from-indigo-700 to-teal-700 bg-clip-text text-transparent">
               🎬 5-minute pre-meeting preparation
             </span>
           </motion.div>
@@ -176,7 +176,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
+            className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-teal-600 to-pink-600 bg-clip-text text-transparent leading-tight"
           >
             5 Minutes to Alignment
           </motion.h1>
@@ -196,7 +196,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="mb-12 max-w-2xl mx-auto"
           >
-            <div className="bg-gradient-to-br from-indigo-200/80 to-purple-200/80 rounded-2xl p-8 shadow-2xl backdrop-blur-sm border border-white/50">
+            <div className="bg-gradient-to-br from-indigo-200/80 to-teal-200/80 rounded-2xl p-8 shadow-2xl backdrop-blur-sm border border-white/50">
               <div className="flex items-center justify-center gap-4 mb-4">
                 <img 
                   src={LOGO_PATHS.main} 
@@ -387,7 +387,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-2xl border-2 border-purple-200 shadow-lg"
+            className="bg-gradient-to-br from-teal-50 to-indigo-50 p-6 rounded-2xl border-2 border-teal-200 shadow-lg"
           >
             <div className="text-4xl mb-3">🌙</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Evening Flow</h3>
@@ -418,7 +418,7 @@ export default function LandingPage() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="max-w-4xl mx-auto p-8 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-300 shadow-xl"
+          className="max-w-4xl mx-auto p-8 bg-gradient-to-br from-teal-100 to-pink-100 rounded-2xl border-2 border-teal-300 shadow-xl"
         >
           <div className="text-center">
             <div className="text-4xl mb-3">🎬</div>
@@ -442,13 +442,13 @@ export default function LandingPage() {
         
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
           <FeatureCard
-            icon={<Brain className="w-8 h-8 text-purple-600" />}
+            icon={<Brain className="w-8 h-8 text-teal-600" />}
             title="Adaptive Breathing"
             description="4 custom flows: Calm, Stressed, Focused, Unclear"
             isNew={true}
           />
           <FeatureCard
-            icon={<Music className="w-8 h-8 text-purple-600" />}
+            icon={<Music className="w-8 h-8 text-teal-600" />}
             title="Ambient Sounds"
             description="Ocean, rain, forest, bells, or silence"
             isNew={true}
@@ -485,7 +485,7 @@ export default function LandingPage() {
             description="Access focus sessions anytime"
           />
           <FeatureCard
-            icon={<Moon className="w-8 h-8 text-purple-600" />}
+            icon={<Moon className="w-8 h-8 text-teal-600" />}
             title="PWA Ready"
             description="Install on your phone like an app"
           />
@@ -493,7 +493,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="container mx-auto px-6 py-20 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 rounded-3xl shadow-2xl max-w-6xl relative z-10 border border-white/50">
+      <section className="container mx-auto px-6 py-20 bg-gradient-to-br from-indigo-100 via-teal-100 to-pink-100 rounded-3xl shadow-2xl max-w-6xl relative z-10 border border-white/50">
         <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
         
         <div className="space-y-8">
@@ -524,10 +524,10 @@ export default function LandingPage() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mt-16 p-8 bg-gradient-to-r from-white to-purple-50 rounded-2xl border-2 border-purple-300 shadow-xl"
+          className="mt-16 p-8 bg-gradient-to-r from-white to-teal-50 rounded-2xl border-2 border-teal-300 shadow-xl"
         >
           <p className="text-center text-lg text-gray-800">
-            <strong className="text-transparent bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text">The more you use it, the better it gets.</strong> AI learns which meeting types stress you and adapts your cues accordingly.
+            <strong className="text-transparent bg-gradient-to-r from-teal-600 to-pink-600 bg-clip-text">The more you use it, the better it gets.</strong> AI learns which meeting types stress you and adapts your cues accordingly.
           </p>
         </motion.div>
       </section>
@@ -635,7 +635,7 @@ function Step({ number, title, description }: { number: string; title: string; d
       <motion.div
         whileHover={{ scale: 1.2, rotate: [0, -10, 10, 0] }}
         transition={{ duration: 0.3 }}
-        className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 shadow-lg flex items-center justify-center text-4xl border-2 border-white"
+        className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-teal-100 shadow-lg flex items-center justify-center text-4xl border-2 border-white"
       >
         {number}
       </motion.div>

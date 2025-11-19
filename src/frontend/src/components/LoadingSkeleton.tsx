@@ -29,21 +29,21 @@ export const MeetingCardSkeleton = () => (
 );
 
 export const InsightCardSkeleton = () => (
-  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 animate-pulse border-2 border-purple-200">
+  <div className="bg-gradient-to-br from-teal-50 to-indigo-50 rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 animate-pulse border-2 border-teal-200">
     <div className="flex items-center justify-between mb-4">
-      <div className="h-6 bg-purple-200 rounded w-48"></div>
-      <div className="w-10 h-10 bg-purple-200 rounded-full"></div>
+      <div className="h-6 bg-teal-200 rounded w-48"></div>
+      <div className="w-10 h-10 bg-teal-200 rounded-full"></div>
     </div>
     <div className="space-y-3">
-      <div className="h-4 bg-purple-200 rounded w-full"></div>
-      <div className="h-4 bg-purple-200 rounded w-5/6"></div>
-      <div className="h-4 bg-purple-200 rounded w-4/6"></div>
+      <div className="h-4 bg-teal-200 rounded w-full"></div>
+      <div className="h-4 bg-teal-200 rounded w-5/6"></div>
+      <div className="h-4 bg-teal-200 rounded w-4/6"></div>
     </div>
   </div>
 );
 
 export const DashboardSkeleton = () => (
-  <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+  <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-pink-50">
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">

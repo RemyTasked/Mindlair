@@ -19,7 +19,7 @@ const MOOD_OPTIONS = [
   { value: 'confident', label: 'Confident', emoji: '💪', color: 'from-blue-500 to-cyan-500' },
   { value: 'calm', label: 'Calm', emoji: '😌', color: 'from-green-500 to-teal-500' },
   { value: 'energized', label: 'Energized', emoji: '⚡', color: 'from-yellow-500 to-orange-500' },
-  { value: 'focused', label: 'Focused', emoji: '🎯', color: 'from-purple-500 to-indigo-500' },
+  { value: 'focused', label: 'Focused', emoji: '🎯', color: 'from-teal-500 to-indigo-500' },
   { value: 'overwhelmed', label: 'Overwhelmed', emoji: '😰', color: 'from-red-500 to-pink-500' },
   { value: 'uncertain', label: 'Uncertain', emoji: '🤔', color: 'from-gray-500 to-slate-500' },
 ];

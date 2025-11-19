@@ -18,8 +18,8 @@ export default function InsightCards({ hasData }: InsightCardsProps) {
     },
     {
       icon: <Brain className="w-5 h-5" />,
-      gradient: 'from-purple-500 to-pink-500',
-      bgGradient: 'from-purple-50 to-pink-50',
+      gradient: 'from-teal-500 to-pink-500',
+      bgGradient: 'from-teal-50 to-pink-50',
       stat: '2 min',
       label: 'of prep',
       description: 'Can transform your meeting performance',
@@ -40,8 +40,8 @@ export default function InsightCards({ hasData }: InsightCardsProps) {
   const connectedInsights = [
     {
       icon: <Sparkles className="w-5 h-5" />,
-      gradient: 'from-indigo-500 to-purple-500',
-      bgGradient: 'from-indigo-50 to-purple-50',
+      gradient: 'from-indigo-500 to-teal-500',
+      bgGradient: 'from-indigo-50 to-teal-50',
       stat: '✨',
       label: 'Clear calendar',
       description: 'Perfect time to prepare intentionally',
@@ -72,7 +72,7 @@ export default function InsightCards({ hasData }: InsightCardsProps) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="w-5 h-5 text-purple-600" />
+        <Sparkles className="w-5 h-5 text-teal-600" />
         <h3 className="text-lg font-semibold text-gray-900">
           {hasData ? 'Your Meeting Insights' : 'Did You Know?'}
         </h3>
@@ -82,7 +82,7 @@ export default function InsightCards({ hasData }: InsightCardsProps) {
         {insights.map((insight, index) => (
           <div
             key={index}
-            className={`bg-gradient-to-br ${insight.bgGradient} rounded-xl p-6 border-2 border-transparent hover:border-purple-200 transition-all hover:shadow-lg group`}
+            className={`bg-gradient-to-br ${insight.bgGradient} rounded-xl p-6 border-2 border-transparent hover:border-teal-200 transition-all hover:shadow-lg group`}
           >
             <div className="flex items-start justify-between mb-4">
               <div className={`p-3 rounded-lg bg-gradient-to-r ${insight.gradient} text-white shadow-md`}>
@@ -104,7 +104,7 @@ export default function InsightCards({ hasData }: InsightCardsProps) {
 
             <div className="pt-3 border-t border-gray-200">
               <p className="text-xs text-gray-600 flex items-start gap-2">
-                <span className="text-purple-600 font-bold">💡</span>
+                <span className="text-teal-600 font-bold">💡</span>
                 <span>{insight.tip}</span>
               </p>
             </div>

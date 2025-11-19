@@ -37,7 +37,7 @@ export default function WeekendFlow() {
       icon: <Sparkles className="w-12 h-12" />,
       title: 'Creative',
       description: 'Open exploration and play',
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-teal-500 to-pink-500',
       prompt: 'Intermission begins — explore, create, and let inspiration flow naturally.',
       closing: 'The stage rests. Your creativity has room to breathe.',
     },
@@ -65,7 +65,7 @@ export default function WeekendFlow() {
 
   if (phase === 'select') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-teal-900/20 to-gray-900 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -119,7 +119,7 @@ export default function WeekendFlow() {
   if (phase === 'experience' && selectedTone) {
     const config = tones[selectedTone];
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-teal-900/20 to-gray-900 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -172,7 +172,7 @@ export default function WeekendFlow() {
   if (phase === 'complete' && selectedTone) {
     const config = tones[selectedTone];
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-teal-900/20 to-gray-900 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}

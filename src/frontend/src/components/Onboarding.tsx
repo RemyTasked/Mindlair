@@ -132,7 +132,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         transition={{ delay: 0.3, duration: 1 }}
         className="relative"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 blur-3xl rounded-full"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-teal-600/20 to-indigo-600/20 blur-3xl rounded-full"></div>
         <Film className="w-24 h-24 mx-auto text-indigo-600 relative z-10" />
       </motion.div>
       
@@ -142,7 +142,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         transition={{ delay: 0.6 }}
         className="space-y-4"
       >
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-teal-600 bg-clip-text text-transparent">
           Scene Opens
         </h1>
         <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
@@ -417,7 +417,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/30 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-indigo-50/30 to-teal-50/30 z-50 overflow-y-auto">
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
           {/* Progress Bar */}
@@ -432,7 +432,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-indigo-600 to-purple-600"
+                className="h-full bg-gradient-to-r from-indigo-600 to-teal-600"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentScene + 1) / totalScenes) * 100}%` }}
                 transition={{ duration: 0.5 }}
@@ -461,7 +461,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
               <button
                 onClick={nextScene}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl"
               >
                 {currentScene === totalScenes - 1 ? 'Begin Your Journey' : 'Continue'}
                 <ChevronRight className="w-5 h-5" />

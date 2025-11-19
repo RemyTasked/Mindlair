@@ -62,7 +62,7 @@ export default function BreathingCircle({ onComplete, duration = 60 }: Breathing
             duration: phase === 'hold' ? 4 : 4,
             ease: phase === 'hold' ? 'linear' : 'easeInOut',
           }}
-          className="absolute inset-0 rounded-full bg-purple-400 blur-3xl"
+          className="absolute inset-0 rounded-full bg-teal-400 blur-3xl"
         />
 
         {/* Main breathing circle */}
@@ -74,7 +74,7 @@ export default function BreathingCircle({ onComplete, duration = 60 }: Breathing
             duration: phase === 'hold' ? 4 : 4,
             ease: phase === 'hold' ? 'linear' : 'easeInOut',
           }}
-          className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 opacity-80 flex items-center justify-center"
+          className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-400 to-indigo-500 opacity-80 flex items-center justify-center"
         >
           <div className="text-white text-2xl font-semibold">
             {phaseText[phase]}
@@ -95,7 +95,7 @@ export default function BreathingCircle({ onComplete, duration = 60 }: Breathing
       </div>
 
       <div className="text-center">
-        <div className="text-lg text-purple-200">
+        <div className="text-lg text-teal-200">
           Cycle {cycleCount + 1} of {totalCycles}
         </div>
       </div>

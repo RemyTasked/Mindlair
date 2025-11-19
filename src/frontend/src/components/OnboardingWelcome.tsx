@@ -7,7 +7,7 @@ interface OnboardingWelcomeProps {
 
 export default function OnboardingWelcome({ onContinue }: OnboardingWelcomeProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-teal-900 to-slate-900 text-white flex items-center justify-center p-6">
       <div className="max-w-3xl w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden">
         <div className="p-10 text-center space-y-8">
           <motion.div
@@ -29,7 +29,7 @@ export default function OnboardingWelcome({ onContinue }: OnboardingWelcomeProps
             transition={{ delay: 0.2, duration: 0.6 }}
             className="space-y-4"
           >
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-200 via-teal-200 to-pink-200 bg-clip-text text-transparent">
               Welcome to Meet Cute
             </h1>
             <p className="text-lg text-indigo-100 max-w-2xl mx-auto leading-relaxed">
@@ -59,7 +59,7 @@ export default function OnboardingWelcome({ onContinue }: OnboardingWelcomeProps
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
             onClick={onContinue}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 transition-all shadow-lg text-white font-semibold"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 transition-all shadow-lg text-white font-semibold"
           >
             Begin Cinematic Onboarding
           </motion.button>

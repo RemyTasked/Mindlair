@@ -65,8 +65,8 @@ const BREATHING_PROMPTS: Record<MindState, string[]> = {
 const BREATHING_FLOWS: Record<MindState, BreathingPhase[]> = {
   calm: [
     { action: 'Breathe In', duration: 5, instruction: '', color: 'from-blue-400 to-cyan-400' },
-    { action: 'Hold', duration: 5, instruction: '', color: 'from-purple-400 to-blue-400' },
-    { action: 'Breathe Out', duration: 7, instruction: '', color: 'from-indigo-400 to-purple-400' },
+    { action: 'Hold', duration: 5, instruction: '', color: 'from-teal-400 to-blue-400' },
+    { action: 'Breathe Out', duration: 7, instruction: '', color: 'from-indigo-400 to-teal-400' },
   ],
   stressed: [
     { action: 'Breathe In', duration: 5, instruction: '', color: 'from-green-400 to-emerald-400' },
@@ -79,8 +79,8 @@ const BREATHING_FLOWS: Record<MindState, BreathingPhase[]> = {
     { action: 'Breathe Out', duration: 4, instruction: '', color: 'from-amber-400 to-yellow-400' },
   ],
   unclear: [
-    { action: 'Breathe In', duration: 6, instruction: '', color: 'from-violet-400 to-purple-400' },
-    { action: 'Hold', duration: 6, instruction: '', color: 'from-purple-400 to-fuchsia-400' },
+    { action: 'Breathe In', duration: 6, instruction: '', color: 'from-violet-400 to-teal-400' },
+    { action: 'Hold', duration: 6, instruction: '', color: 'from-teal-400 to-fuchsia-400' },
     { action: 'Breathe Out', duration: 8, instruction: '', color: 'from-pink-400 to-violet-400' },
   ],
 };
@@ -155,7 +155,7 @@ export default function AdaptiveBreathingFlow({ mindState, onComplete }: Adaptiv
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-6 sm:mb-8 px-4"
       >
-        <p className="text-base sm:text-lg text-purple-200">
+        <p className="text-base sm:text-lg text-teal-200">
           {FLOW_DESCRIPTIONS[mindState]}
         </p>
       </motion.div>
@@ -220,7 +220,7 @@ export default function AdaptiveBreathingFlow({ mindState, onComplete }: Adaptiv
 
       {/* Progress Indicator */}
       <div className="flex items-center gap-2 sm:gap-3">
-        <span className="text-sm sm:text-base text-purple-200">Cycle {currentCycle + 1} of {totalCycles}</span>
+        <span className="text-sm sm:text-base text-teal-200">Cycle {currentCycle + 1} of {totalCycles}</span>
         <div className="flex gap-1 sm:gap-2">
           {[...Array(totalCycles)].map((_, i) => (
             <div

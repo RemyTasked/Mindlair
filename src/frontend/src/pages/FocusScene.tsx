@@ -77,7 +77,7 @@ const PREP_MODES: PrepModeInfo[] = [
     tagline: 'Steady & strong',
     icon: '💪',
     bestFor: 'Presentations, interviews, high-stakes rooms',
-    color: 'from-purple-600 to-pink-600',
+    color: 'from-teal-600 to-pink-600',
   },
   {
     id: 'connection',
@@ -197,7 +197,7 @@ export default function FocusScene() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-teal-900 to-blue-900">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -211,7 +211,7 @@ export default function FocusScene() {
 
   if (!meeting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-teal-900 to-blue-900">
         <div className="text-white text-xl">Meeting not found</div>
       </div>
     );
@@ -219,7 +219,7 @@ export default function FocusScene() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-teal-900 to-blue-900 text-white overflow-hidden">
       {/* Ambient Sound Player - AI-recommended or default sound based on user preference (muted during Level 2 calibration) */}
       {(currentPhase === 'prep-flow' || currentPhase === 'reflection' || currentPhase === 'complete') && (
         <AmbientSound
@@ -314,7 +314,7 @@ export default function FocusScene() {
                 {meeting.title}
               </motion.h1>
               <motion.p 
-                className="text-2xl text-purple-200 leading-relaxed"
+                className="text-2xl text-teal-200 leading-relaxed"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.9, duration: 0.8 }}
@@ -356,7 +356,7 @@ export default function FocusScene() {
               className="text-center mb-8 sm:mb-12 max-w-3xl"
             >
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">Choose Your Prep Mode</h2>
-              <p className="text-lg sm:text-xl text-purple-200">
+              <p className="text-lg sm:text-xl text-teal-200">
                 Different meetings need different preparation. What do you need most right now?
               </p>
               {meeting?.recommendedMode && (
@@ -366,15 +366,15 @@ export default function FocusScene() {
                   transition={{ delay: 0.3 }}
                   className="mt-6 max-w-md mx-auto"
                 >
-                  <div className="px-5 py-3 bg-purple-500/20 border border-purple-400/30 rounded-2xl">
+                  <div className="px-5 py-3 bg-teal-500/20 border border-teal-400/30 rounded-2xl">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-lg">💡</span>
-                      <span className="text-sm font-bold text-purple-300">
+                      <span className="text-sm font-bold text-teal-300">
                         Recommended: {PREP_MODES.find(m => m.id === meeting.recommendedMode)?.name}
                       </span>
                     </div>
                     {meeting?.recommendationReason && (
-                      <p className="text-xs text-purple-200/80 leading-relaxed">
+                      <p className="text-xs text-teal-200/80 leading-relaxed">
                         {meeting.recommendationReason}
                       </p>
                     )}
@@ -404,7 +404,7 @@ export default function FocusScene() {
                       onClick={() => setUseAISound(!useAISound)}
                       className={`
                         relative w-14 h-7 rounded-full transition-all duration-300
-                        ${useAISound ? 'bg-purple-500' : 'bg-gray-600'}
+                        ${useAISound ? 'bg-teal-500' : 'bg-gray-600'}
                       `}
                     >
                       <motion.div
@@ -421,7 +421,7 @@ export default function FocusScene() {
                     <motion.p
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="text-xs text-purple-300 mt-3 leading-relaxed"
+                      className="text-xs text-teal-300 mt-3 leading-relaxed"
                     >
                       {meeting?.hasLearnedPreference 
                         ? '🎯 Sound recommendation based on your preferences'
@@ -458,11 +458,11 @@ export default function FocusScene() {
                     relative p-6 rounded-2xl text-left transition-all duration-300
                     bg-white/5 backdrop-blur-sm border-2 border-white/10
                     hover:bg-white/10 hover:border-white/30 hover:scale-105
-                    ${meeting?.recommendedMode === mode.id ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-gray-900' : ''}
+                    ${meeting?.recommendedMode === mode.id ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-gray-900' : ''}
                   `}
                 >
                   {meeting?.recommendedMode === mode.id && (
-                    <div className="absolute top-2 right-2 px-2 py-1 bg-purple-500 text-white text-xs font-bold rounded-full">
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-teal-500 text-white text-xs font-bold rounded-full">
                       RECOMMENDED
                     </div>
                   )}
@@ -472,7 +472,7 @@ export default function FocusScene() {
                   </div>
                   
                   <h3 className="text-xl font-bold mb-1">{mode.name}</h3>
-                  <p className="text-purple-300 text-sm mb-3 italic">"{mode.tagline}"</p>
+                  <p className="text-teal-300 text-sm mb-3 italic">"{mode.tagline}"</p>
                   <p className="text-xs text-gray-400 leading-relaxed">
                     Best for: {mode.bestFor}
                   </p>
@@ -507,7 +507,7 @@ export default function FocusScene() {
                   }
                 </span>
                 {useAISound && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-purple-500/50 rounded-full">AI</span>
+                  <span className="text-[10px] px-1.5 py-0.5 bg-teal-500/50 rounded-full">AI</span>
                 )}
               </div>
             </motion.div>
@@ -543,7 +543,7 @@ export default function FocusScene() {
                 className="text-center mb-12"
               >
                 <h2 className="text-3xl font-semibold mb-4">Set Your Intention</h2>
-                <p className="text-xl text-purple-200">
+                <p className="text-xl text-teal-200">
                   What's your focus for this meeting?
                 </p>
               </motion.div>
@@ -557,7 +557,7 @@ export default function FocusScene() {
                 value={reflectionNotes}
                 onChange={(e) => setReflectionNotes(e.target.value)}
                 placeholder="Optional: Write your intention..."
-                className="w-full h-32 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                className="w-full h-32 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-white placeholder-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none"
                 aria-label="Meeting intention notes"
               />
 
@@ -569,7 +569,7 @@ export default function FocusScene() {
               >
                 <button
                   onClick={handleComplete}
-                  className="flex-1 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 rounded-lg font-semibold text-lg transition-all transform hover:scale-105"
+                  className="flex-1 py-4 bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 rounded-lg font-semibold text-lg transition-all transform hover:scale-105"
                 >
                   I'm Ready →
                 </button>
@@ -649,7 +649,7 @@ export default function FocusScene() {
               className="text-center relative z-10"
             >
               <motion.h2 
-                className="text-5xl font-bold mb-6 bg-gradient-to-r from-yellow-200 via-pink-200 to-purple-200 bg-clip-text text-transparent"
+                className="text-5xl font-bold mb-6 bg-gradient-to-r from-yellow-200 via-pink-200 to-teal-200 bg-clip-text text-transparent"
                 animate={{ 
                   backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
                 }}
@@ -658,7 +658,7 @@ export default function FocusScene() {
                 Scene Wrapped
               </motion.h2>
               <motion.p 
-                className="text-3xl text-purple-100 font-light"
+                className="text-3xl text-teal-100 font-light"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
@@ -705,7 +705,7 @@ export default function FocusScene() {
 
             {/* Pulsing glow effect */}
             <motion.div
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl"
               animate={{
                 scale: [1, 1.2, 1],
                 opacity: [0.3, 0.5, 0.3],
@@ -721,7 +721,7 @@ export default function FocusScene() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 2, duration: 0.6 }}
-              className="mt-16 text-center text-purple-300 relative z-10"
+              className="mt-16 text-center text-teal-300 relative z-10"
             >
               <motion.p
                 animate={{ opacity: [0.5, 1, 0.5] }}
@@ -736,7 +736,7 @@ export default function FocusScene() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 2.5 }}
                 onClick={() => navigate('/dashboard')}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl text-white"
+                className="px-8 py-4 bg-gradient-to-r from-teal-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-teal-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl text-white"
               >
                 Return to Dashboard
               </motion.button>

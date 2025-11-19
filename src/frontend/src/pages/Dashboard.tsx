@@ -519,7 +519,7 @@ export default function Dashboard() {
                 alt="Meet Cute Logo" 
                 className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
               />
-              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-teal-600 bg-clip-text text-transparent">
                 Meet Cute
               </h1>
             </div>
@@ -556,7 +556,7 @@ export default function Dashboard() {
             value={meetings.length}
           />
           <StatCard
-            icon={<TrendingUp className="w-5 h-5 sm:w-8 sm:h-8 text-purple-600" />}
+            icon={<TrendingUp className="w-5 h-5 sm:w-8 sm:h-8 text-teal-600" />}
             label="Total (30d)"
             value={stats?.totalMeetings || 0}
           />
@@ -594,14 +594,14 @@ export default function Dashboard() {
 
         {/* Presley Flow Card - Compact on Mobile */}
         {presleyFlow?.available && (
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-purple-200">
+          <div className="bg-gradient-to-br from-teal-50 to-indigo-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-teal-200">
             <div className="flex items-center gap-3 mb-3">
               <div className="text-2xl sm:text-4xl">🌙</div>
               <div className="flex-1">
                 <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
                   Rehearsal Flow
                 </h3>
-                <p className="text-xs sm:text-sm text-purple-600 font-medium">
+                <p className="text-xs sm:text-sm text-teal-600 font-medium">
                   {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} tomorrow
                 </p>
               </div>
@@ -616,7 +616,7 @@ export default function Dashboard() {
                   detail: { source: 'dashboard', flow: 'presley-flow' }
                 }));
               }}
-              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-teal-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               🎬 Start Flow
             </a>
@@ -695,7 +695,7 @@ export default function Dashboard() {
                     {/* No Level 2 toggle during live meetings - must be enabled before meeting starts */}
                     
                     {activeCue && (
-                      <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+                      <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-teal-50 rounded-lg border border-indigo-200">
                         <p className="text-sm font-medium text-indigo-900">
                           💡 {activeCue.text}
                         </p>
@@ -769,13 +769,13 @@ export default function Dashboard() {
                     <Calendar className="w-5 h-5" />
                     {date}
                     {isLocked && (
-                      <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                      <span className="ml-2 px-2 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">
                         🔒 Unlocks at evening flow
                       </span>
                     )}
                   </h3>
                   {isLocked ? (
-                    <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-200 text-center">
+                    <div className="p-6 bg-gradient-to-br from-teal-50 to-indigo-50 rounded-lg border-2 border-teal-200 text-center">
                       <div className="text-4xl mb-3">🌙</div>
                       <p className="text-gray-700 font-medium mb-2">
                         Tomorrow's meetings are hidden until evening flow
@@ -1024,8 +1024,8 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                 }}
                 className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium transition-all ${
                   level2Enabled
-                    ? 'bg-purple-600 text-white hover:bg-purple-700'
-                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                    ? 'bg-teal-600 text-white hover:bg-teal-700'
+                    : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
                 }`}
                 title={level2Enabled ? 'Level 2 Audio Coaching Enabled' : 'Enable Level 2 Audio Coaching'}
               >
@@ -1050,7 +1050,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                     detail: { source: 'dashboard', flow: 'focus-session', meetingId: meeting.id }
                   }));
                 }}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg text-center whitespace-nowrap"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-indigo-700 hover:to-teal-700 transition-all shadow-md hover:shadow-lg text-center whitespace-nowrap"
               >
                 🎬 Start Focus Session
               </a>

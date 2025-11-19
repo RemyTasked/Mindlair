@@ -125,14 +125,14 @@ export default function CueLevelSelector({
             relative p-6 rounded-xl border-2 text-left transition-all
             ${
               currentLevel === 2
-                ? 'border-purple-500 bg-purple-50 shadow-lg'
-                : 'border-gray-200 bg-white hover:border-purple-300'
+                ? 'border-teal-500 bg-teal-50 shadow-lg'
+                : 'border-gray-200 bg-white hover:border-teal-300'
             }
           `}
         >
           {/* Badge */}
           <div className="absolute top-4 right-4">
-            <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
+            <span className="px-2 py-1 bg-teal-100 text-teal-700 text-xs font-semibold rounded-full">
               Advanced
             </span>
           </div>
@@ -141,7 +141,7 @@ export default function CueLevelSelector({
           <div
             className={`
               w-12 h-12 rounded-full flex items-center justify-center mb-4
-              ${currentLevel === 2 ? 'bg-purple-600' : 'bg-gray-100'}
+              ${currentLevel === 2 ? 'bg-teal-600' : 'bg-gray-100'}
             `}
           >
             <Mic
@@ -162,15 +162,15 @@ export default function CueLevelSelector({
           {/* Features */}
           <ul className="space-y-2 text-sm">
             <li className="flex items-start gap-2">
-              <Zap className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+              <Zap className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
               <span className="text-gray-700">Real-time pace & volume detection</span>
             </li>
             <li className="flex items-start gap-2">
-              <TrendingUp className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+              <TrendingUp className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
               <span className="text-gray-700">Adaptive learning over time</span>
             </li>
             <li className="flex items-start gap-2">
-              <Lock className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+              <Lock className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
               <span className="text-gray-700">100% on-device, no recording</span>
             </li>
           </ul>
@@ -180,7 +180,7 @@ export default function CueLevelSelector({
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute bottom-4 right-4 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center"
+              className="absolute bottom-4 right-4 w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center"
             >
               <svg
                 className="w-4 h-4 text-white"

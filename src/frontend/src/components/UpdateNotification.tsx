@@ -14,7 +14,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-2xl p-4 border border-indigo-400">
+      <div className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-xl shadow-2xl p-4 border border-indigo-400">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-1">
             <RefreshCw className={`w-6 h-6 text-white ${isUpdating ? 'animate-spin' : ''}`} />

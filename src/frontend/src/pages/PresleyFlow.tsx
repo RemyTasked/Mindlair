@@ -102,7 +102,7 @@ export default function PresleyFlow() {
     const isMorning = currentHour < 14;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-950 via-teal-950 to-slate-950">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -123,18 +123,18 @@ export default function PresleyFlow() {
 
   if (!flowData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-950 via-teal-950 to-slate-950">
         <div className="text-white text-center">
           <div className="text-6xl mb-4">📅</div>
           <h2 className="text-2xl font-bold mb-2">No Presley Flow Available</h2>
-          <p className="text-purple-200">No meetings scheduled for tomorrow.</p>
+          <p className="text-teal-200">No meetings scheduled for tomorrow.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-teal-950 to-slate-950 text-white overflow-hidden">
       {/* Ambient Sound - calm ocean for Presley Flow morning ritual */}
       <AmbientSound 
         soundType="calm-ocean" 
@@ -190,10 +190,10 @@ export default function PresleyFlow() {
               transition={{ delay: 0.8 }}
               className="text-center max-w-3xl"
             >
-              <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-200 via-indigo-200 to-blue-200 bg-clip-text text-transparent">
+              <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-teal-200 via-indigo-200 to-blue-200 bg-clip-text text-transparent">
                 Presley Flow Session
               </h1>
-              <p className="text-2xl text-purple-200 leading-relaxed">
+              <p className="text-2xl text-teal-200 leading-relaxed">
                 {flowData.openingScene}
               </p>
             </motion.div>
@@ -202,7 +202,7 @@ export default function PresleyFlow() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 2 }}
-              className="absolute bottom-12 text-purple-300 text-sm"
+              className="absolute bottom-12 text-teal-300 text-sm"
             >
               <motion.div
                 animate={{ y: [0, 8, 0] }}
@@ -238,7 +238,7 @@ export default function PresleyFlow() {
                 >
                   ☀️
                 </motion.div>
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-200 via-purple-200 to-blue-200 bg-clip-text text-transparent">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-200 via-teal-200 to-blue-200 bg-clip-text text-transparent">
                   Today's Reflection
                 </h2>
               </div>
@@ -249,7 +249,7 @@ export default function PresleyFlow() {
                 transition={{ delay: 0.3 }}
                 className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8"
               >
-                <p className="text-xl text-purple-100 leading-relaxed whitespace-pre-line">
+                <p className="text-xl text-teal-100 leading-relaxed whitespace-pre-line">
                   {flowData.dailyOutcomes}
                 </p>
               </motion.div>
@@ -259,7 +259,7 @@ export default function PresleyFlow() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
                 onClick={() => setCurrentPhase('reflection')}
-                className="mt-12 mx-auto block px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-semibold text-lg hover:scale-105 transition-transform shadow-lg shadow-purple-500/30"
+                className="mt-12 mx-auto block px-8 py-4 bg-gradient-to-r from-teal-600 to-indigo-600 rounded-full font-semibold text-lg hover:scale-105 transition-transform shadow-lg shadow-teal-500/30"
               >
                 Reflect & Plan Ahead →
               </motion.button>
@@ -289,7 +289,7 @@ export default function PresleyFlow() {
                 >
                   💭
                 </motion.div>
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 bg-clip-text text-transparent">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-teal-200 via-pink-200 to-indigo-200 bg-clip-text text-transparent">
                   How Did Today Go?
                 </h2>
               </div>
@@ -302,10 +302,10 @@ export default function PresleyFlow() {
               >
                 {/* Performance Rating */}
                 <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8">
-                  <h3 className="text-xl font-semibold mb-4 text-purple-200">
+                  <h3 className="text-xl font-semibold mb-4 text-teal-200">
                     Rate Your Performance Today
                   </h3>
-                  <p className="text-purple-100 mb-6">
+                  <p className="text-teal-100 mb-6">
                     How satisfied are you with how you showed up in today's meetings?
                   </p>
                   <div className="flex gap-4 justify-center">
@@ -318,33 +318,33 @@ export default function PresleyFlow() {
                         className={`w-16 h-16 rounded-full font-bold text-2xl transition-all ${
                           performanceRating === rating
                             ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg shadow-yellow-500/50'
-                            : 'bg-white/10 text-purple-200 hover:bg-white/20'
+                            : 'bg-white/10 text-teal-200 hover:bg-white/20'
                         }`}
                       >
                         {rating}⭐
                       </motion.button>
                     ))}
                   </div>
-                  <p className="text-center text-purple-300 text-sm mt-4">
+                  <p className="text-center text-teal-300 text-sm mt-4">
                     1 = Struggled • 5 = Thrived
                   </p>
                 </div>
 
                 {/* Improvement Notes */}
                 <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8">
-                  <h3 className="text-xl font-semibold mb-4 text-purple-200">
+                  <h3 className="text-xl font-semibold mb-4 text-teal-200">
                     What Would Help Next Time?
                   </h3>
-                  <p className="text-purple-100 mb-6">
+                  <p className="text-teal-100 mb-6">
                     Reflect on what you'd like to improve or adjust for your next meetings.
                   </p>
                   <textarea
                     value={improvementNotes}
                     onChange={(e) => setImprovementNotes(e.target.value)}
                     placeholder="I want to work on... I need to focus more on... Next time I'll try..."
-                    className="w-full h-32 px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                    className="w-full h-32 px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-teal-300/50 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                   />
-                  <p className="text-purple-300 text-sm mt-3">
+                  <p className="text-teal-300 text-sm mt-3">
                     💡 Your insights help our AI provide better support and track your growth over time
                   </p>
                 </div>
@@ -358,7 +358,7 @@ export default function PresleyFlow() {
                   className={`mt-8 mx-auto block px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-lg ${
                     performanceRating === null
                       ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-105 shadow-purple-500/30'
+                      : 'bg-gradient-to-r from-teal-600 to-indigo-600 hover:scale-105 shadow-teal-500/30'
                   }`}
                 >
                   {performanceRating === null ? 'Rate Your Day First' : 'Continue to Tomorrow →'}
@@ -383,7 +383,7 @@ export default function PresleyFlow() {
               className="w-full max-w-4xl"
             >
               <div className="flex items-center justify-center gap-3 mb-12">
-                <Calendar className="w-8 h-8 text-purple-300" />
+                <Calendar className="w-8 h-8 text-teal-300" />
                 <h2 className="text-4xl font-bold">
                   {flowData.meetingDay === 'today' ? "Today's Line-Up" : "Tomorrow's Line-Up"}
                 </h2>
@@ -402,17 +402,17 @@ export default function PresleyFlow() {
                       <motion.div
                         animate={{ rotate: [0, 360] }}
                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg"
+                        className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg"
                       >
                         {index + 1}
                       </motion.div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Clock className="w-4 h-4 text-purple-300" />
-                          <span className="text-purple-300 text-sm">{meeting.time}</span>
+                          <Clock className="w-4 h-4 text-teal-300" />
+                          <span className="text-teal-300 text-sm">{meeting.time}</span>
                         </div>
                         <h3 className="text-xl font-semibold mb-2">{meeting.title}</h3>
-                        <p className="text-purple-200 italic">"{meeting.focusCue}"</p>
+                        <p className="text-teal-200 italic">"{meeting.focusCue}"</p>
                       </div>
                     </div>
                   </motion.div>
@@ -424,7 +424,7 @@ export default function PresleyFlow() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: flowData.meetingPreviews.length * 0.2 + 0.5 }}
                 onClick={() => setCurrentPhase('mindset')}
-                className="mt-12 mx-auto block px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition-all"
+                className="mt-12 mx-auto block px-8 py-4 bg-gradient-to-r from-teal-600 to-indigo-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-teal-500/50 transition-all"
               >
                 Set {flowData.meetingDay === 'today' ? "Today's" : "Tomorrow's"} Mindset →
               </motion.button>
@@ -454,9 +454,9 @@ export default function PresleyFlow() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-md border border-purple-500/30 rounded-3xl p-12 mb-8"
+                className="bg-gradient-to-br to-teal-900/50 to-indigo-900/50 backdrop-blur-md border border-teal-500/30 rounded-3xl p-12 mb-8"
               >
-                <p className="text-2xl text-center leading-relaxed text-purple-100">
+                <p className="text-2xl text-center leading-relaxed text-teal-100">
                   {flowData.mindsetTheme}
                 </p>
               </motion.div>
@@ -466,7 +466,7 @@ export default function PresleyFlow() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
               >
-                <label className="block text-purple-200 mb-3 text-center">
+                <label className="block text-teal-200 mb-3 text-center">
                   {flowData.isWeekendFlow 
                     ? "What would feel good this weekend?" 
                     : `What intention will you carry ${flowData.meetingDay === 'today' ? 'today' : 'tomorrow'}?`}
@@ -477,7 +477,7 @@ export default function PresleyFlow() {
                   placeholder={flowData.isWeekendFlow 
                     ? "Optional: What brings you joy? What helps you recharge?..." 
                     : `Optional: Write your intention for ${flowData.meetingDay === 'today' ? 'today' : 'tomorrow'}...`}
-                  className="w-full h-32 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="w-full h-32 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-white placeholder-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                 />
               </motion.div>
 
@@ -486,7 +486,7 @@ export default function PresleyFlow() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.9 }}
                 onClick={() => setCurrentPhase('visualization')}
-                className="mt-8 mx-auto block px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition-all"
+                className="mt-8 mx-auto block px-8 py-4 bg-gradient-to-r from-teal-600 to-indigo-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-teal-500/50 transition-all"
               >
                 Begin Visualization →
               </motion.button>
@@ -522,7 +522,7 @@ export default function PresleyFlow() {
                   repeat: 5,
                   ease: "easeInOut",
                 }}
-                className="mx-auto w-48 h-48 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 backdrop-blur-xl border-4 border-purple-500/50 flex items-center justify-center mb-12"
+                className="mx-auto w-48 h-48 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-teal-500/30 to-indigo-500/30 backdrop-blur-xl border-4 border-teal-500/50 flex items-center justify-center mb-12"
               >
                 <motion.div
                   animate={{
@@ -543,7 +543,7 @@ export default function PresleyFlow() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-xl leading-relaxed text-purple-100 max-w-2xl mx-auto"
+                className="text-xl leading-relaxed text-teal-100 max-w-2xl mx-auto"
               >
                 {flowData.visualizationScript}
               </motion.p>
@@ -590,7 +590,7 @@ export default function PresleyFlow() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-lg text-purple-200 mb-12 max-w-2xl mx-auto"
+                className="text-lg text-teal-200 mb-12 max-w-2xl mx-auto"
               >
                 Let's release the day's tension with a longer, deeper breathing exercise. 
                 Allow yourself to fully relax and prepare for restful sleep.
@@ -606,7 +606,7 @@ export default function PresleyFlow() {
                   repeat: 8,    // More cycles for deeper relaxation
                   ease: "easeInOut",
                 }}
-                className="mx-auto w-56 h-56 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-purple-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
+                className="mx-auto w-56 h-56 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-teal-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
               >
                 {/* Pulsing inner glow */}
                 <motion.div
@@ -619,7 +619,7 @@ export default function PresleyFlow() {
                     repeat: 8,
                     ease: "easeInOut",
                   }}
-                  className="absolute inset-0 bg-gradient-to-br from-blue-400/30 to-purple-400/30 rounded-full"
+                  className="absolute inset-0 bg-gradient-to-br from-blue-400/30 to-teal-400/30 rounded-full"
                 />
                 
                 <motion.div
@@ -647,7 +647,7 @@ export default function PresleyFlow() {
                   repeat: 8,
                   ease: "easeInOut",
                 }}
-                className="text-2xl font-light text-purple-100 mb-8"
+                className="text-2xl font-light text-teal-100 mb-8"
               >
                 Breathe deeply... Release... Relax...
               </motion.div>
@@ -656,7 +656,7 @@ export default function PresleyFlow() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
-                className="text-sm text-purple-300 mb-8"
+                className="text-sm text-teal-300 mb-8"
               >
                 8 slow breath cycles • 12 seconds each • Total: ~2 minutes
               </motion.p>
@@ -696,7 +696,7 @@ export default function PresleyFlow() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-lg text-purple-200 mb-12 max-w-2xl mx-auto"
+                className="text-lg text-teal-200 mb-12 max-w-2xl mx-auto"
               >
                 {flowData.isWeekendFlow 
                   ? "See yourself letting go of the week's tension... Your shoulders drop, your breath deepens... You're free to enjoy this time however you wish."
@@ -714,7 +714,7 @@ export default function PresleyFlow() {
                   repeat: 3,
                   ease: "linear",
                 }}
-                className="mx-auto w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-gradient-to-br from-purple-600/30 via-indigo-600/30 to-pink-600/30 backdrop-blur-xl border-4 border-purple-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
+                className="mx-auto w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-gradient-to-br from-teal-600/30 via-indigo-600/30 to-pink-600/30 backdrop-blur-xl border-4 border-teal-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
               >
                 {/* Animated gradient overlay */}
                 <motion.div
@@ -727,7 +727,7 @@ export default function PresleyFlow() {
                     repeat: 6,
                     ease: "easeInOut",
                   }}
-                  className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full"
+                  className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 via-teal-500/20 to-pink-500/20 rounded-full"
                 />
                 
                 <motion.div
@@ -750,7 +750,7 @@ export default function PresleyFlow() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                className="space-y-6 text-xl leading-relaxed text-purple-100 max-w-2xl mx-auto mb-12"
+                className="space-y-6 text-xl leading-relaxed text-teal-100 max-w-2xl mx-auto mb-12"
               >
                 <p>
                   You walk into each meeting feeling prepared and confident...
@@ -764,7 +764,7 @@ export default function PresleyFlow() {
                 <p>
                   You leave each meeting feeling accomplished and energized...
                 </p>
-                <p className="text-purple-200 font-semibold">
+                <p className="text-teal-200 font-semibold">
                   {flowData.meetingDay === 'today' ? 'Today' : 'Tomorrow'} is already a success. You've got this. 🌙
                 </p>
               </motion.div>
@@ -774,7 +774,7 @@ export default function PresleyFlow() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 60 }} // After ~1 minute of visualization
                 onClick={() => setCurrentPhase('closing')}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600/80 to-indigo-600/80 hover:from-purple-600 hover:to-indigo-600 rounded-full font-semibold transition-all shadow-lg"
+                className="px-8 py-4 bg-gradient-to-r from-teal-600/80 to-indigo-600/80 hover:from-teal-600 hover:to-indigo-600 rounded-full font-semibold transition-all shadow-lg"
               >
                 Complete Evening Flow →
               </motion.button>
@@ -806,7 +806,7 @@ export default function PresleyFlow() {
               transition={{ delay: 0.3 }}
               className="text-center max-w-2xl"
             >
-              <p className="text-3xl leading-relaxed text-purple-100 mb-8">
+              <p className="text-3xl leading-relaxed text-teal-100 mb-8">
                 {flowData.closingMessage}
               </p>
 
@@ -815,7 +815,7 @@ export default function PresleyFlow() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6 }}
                 onClick={handleComplete}
-                className="px-12 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-bold text-xl hover:shadow-2xl hover:shadow-purple-500/50 transition-all"
+                className="px-12 py-5 bg-gradient-to-r from-teal-600 to-indigo-600 rounded-full font-bold text-xl hover:shadow-2xl hover:shadow-teal-500/50 transition-all"
               >
                 Complete Session
               </motion.button>
@@ -841,7 +841,7 @@ export default function PresleyFlow() {
             </motion.div>
 
             <h2 className="text-4xl font-bold mb-4">Session Complete</h2>
-            <p className="text-xl text-purple-200 mb-8 text-center max-w-md">
+            <p className="text-xl text-teal-200 mb-8 text-center max-w-md">
               {flowData?.timeOfDay === 'evening' 
                 ? "Tomorrow's rehearsal is complete. Rest well—your morning recap awaits." 
                 : "You're ready. Go show them what you've got."}
@@ -852,7 +852,7 @@ export default function PresleyFlow() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
               onClick={() => navigate('/dashboard')}
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+              className="px-8 py-4 bg-gradient-to-r from-teal-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-teal-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
             >
               Return to Dashboard
             </motion.button>

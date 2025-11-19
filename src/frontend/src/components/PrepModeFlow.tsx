@@ -222,16 +222,16 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
       {/* Progress Bar */}
       <div className="w-full max-w-2xl mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-purple-300">
+          <span className="text-sm text-teal-300">
             Step {currentStep + 1} of {steps.length}
           </span>
-          <span className="text-sm text-purple-300">
+          <span className="text-sm text-teal-300">
             {Math.round(((currentStep + 1) / steps.length) * 100)}%
           </span>
         </div>
         <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-purple-600 to-indigo-600"
+            className="h-full bg-gradient-to-r from-teal-600 to-indigo-600"
             initial={{ width: 0 }}
             animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
             transition={{ duration: 0.5 }}
@@ -260,7 +260,7 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
 
           {/* Step Prompt */}
           <motion.p
-            className="text-lg sm:text-xl text-purple-200 mb-8 text-center leading-relaxed"
+            className="text-lg sm:text-xl text-teal-200 mb-8 text-center leading-relaxed"
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -281,7 +281,7 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
                 value={currentResponse}
                 onChange={(e) => setCurrentResponse(e.target.value)}
                 placeholder={step.placeholder}
-                className="w-full px-6 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"
+                className="w-full px-6 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-lg"
                 autoFocus
               />
             )}
@@ -292,7 +292,7 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
                 onChange={(e) => setCurrentResponse(e.target.value)}
                 placeholder={step.placeholder}
                 rows={4}
-                className="w-full px-6 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg resize-none"
+                className="w-full px-6 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-lg resize-none"
                 autoFocus
               />
             )}
@@ -306,7 +306,7 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
                     className={`
                       px-6 py-4 rounded-xl text-left transition-all duration-200
                       ${currentResponse === choice
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 border-2 border-purple-400 scale-105'
+                        ? 'bg-gradient-to-r from-teal-600 to-indigo-600 border-2 border-teal-400 scale-105'
                         : 'bg-white/5 border-2 border-white/10 hover:bg-white/10 hover:border-white/30'
                       }
                     `}
@@ -325,19 +325,19 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
                 <motion.div
                   animate={{ scale: [1, 1.15, 1] }}
                   transition={{ duration: 4, repeat: Infinity }}
-                  className="w-24 h-24 sm:w-32 sm:h-32 mb-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg"
+                  className="w-24 h-24 sm:w-32 sm:h-32 mb-8 rounded-full bg-gradient-to-br from-teal-600 to-indigo-600 flex items-center justify-center shadow-lg"
                 >
                   <span className="text-3xl sm:text-4xl">🫁</span>
                 </motion.div>
-                <p className="text-purple-200 mb-4 text-sm sm:text-base px-4">
+                <p className="text-teal-200 mb-4 text-sm sm:text-base px-4">
                   Breathe in (4) → Hold (4) → Breathe out (4) → Hold (4)
                 </p>
-                <p className="text-sm text-purple-400">
+                <p className="text-sm text-teal-400">
                   Completed: {breathingCount} / 3
                 </p>
                 <button
                   onClick={handleBreathingComplete}
-                  className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+                  className="mt-6 px-6 py-3 bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors"
                 >
                   Complete Breath
                 </button>
@@ -349,11 +349,11 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
                 <motion.div
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="w-24 h-24 sm:w-32 sm:h-32 mb-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg"
+                  className="w-24 h-24 sm:w-32 sm:h-32 mb-8 rounded-full bg-gradient-to-br from-teal-600 to-indigo-600 flex items-center justify-center shadow-lg"
                 >
                   <span className="text-3xl sm:text-4xl">✨</span>
                 </motion.div>
-                <p className="text-purple-200 mb-6 text-sm sm:text-base px-4">
+                <p className="text-teal-200 mb-6 text-sm sm:text-base px-4">
                   Take 30 seconds to visualize this moment...
                 </p>
               </div>
@@ -366,9 +366,9 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mb-8 p-4 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-400/30 rounded-lg text-center"
+              className="mb-8 p-4 bg-gradient-to-r from-teal-500/20 to-indigo-500/20 border border-teal-400/30 rounded-lg text-center"
             >
-              <p className="text-purple-200 italic">
+              <p className="text-teal-200 italic">
                 🎬 "{step.toneCue}"
               </p>
             </motion.div>
@@ -392,7 +392,7 @@ export default function PrepModeFlow({ mode, onComplete }: PrepModeFlowProps) {
                 (step.inputType === 'choice' && !currentResponse) ||
                 (step.inputType === 'breathing' && breathingCount < 3)
                 ? 'bg-gray-600 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 hover:scale-105'
+                : 'bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700 hover:scale-105'
               }
             `}
           >

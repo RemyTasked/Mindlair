@@ -47,7 +47,7 @@ export default function FocusSceneDemo() {
 
   if (currentPhase === 'complete') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br to-teal-900 via-indigo-900 to-blue-900 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -64,7 +64,7 @@ export default function FocusSceneDemo() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             You're Ready
           </h1>
-          <p className="text-xl text-purple-200">
+          <p className="text-xl text-teal-200">
             Step into your meeting with confidence
           </p>
         </motion.div>
@@ -73,7 +73,7 @@ export default function FocusSceneDemo() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br to-teal-900 via-indigo-900 to-blue-900 text-white overflow-hidden">
       <AmbientSound soundType="calm-ocean" enabled stopOnNavigation={false} />
       <AnimatePresence mode="wait">
         {/* Intro Phase */}
@@ -96,7 +96,7 @@ export default function FocusSceneDemo() {
                 alt="Meet Cute Logo"
                 className="w-20 h-20 mx-auto mb-8"
               />
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-200 to-pink-200">
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-teal-200 to-pink-200">
                 {meeting.title}
               </h1>
               <CountdownTimer startTime={meeting.startTime} />
@@ -107,7 +107,7 @@ export default function FocusSceneDemo() {
                 transition={{ delay: 0.6 }}
                 className="mt-12 p-8 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20"
               >
-                <p className="text-xl md:text-2xl leading-relaxed text-purple-100">
+                <p className="text-xl md:text-2xl leading-relaxed text-teal-100">
                   {meeting.cueContent}
                 </p>
               </motion.div>
@@ -117,7 +117,7 @@ export default function FocusSceneDemo() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.9 }}
                 onClick={startBreathing}
-                className="mt-12 px-12 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-xl font-semibold hover:scale-105 transition-transform shadow-2xl"
+                className="mt-12 px-12 py-4 bg-gradient-to-r from-teal-500 to-pink-500 rounded-full text-xl font-semibold hover:scale-105 transition-transform shadow-2xl"
               >
                 Begin Focus Ritual
               </motion.button>
@@ -148,7 +148,7 @@ export default function FocusSceneDemo() {
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-12 text-xl text-purple-200 text-center max-w-md"
+              className="mt-12 text-xl text-teal-200 text-center max-w-md"
             >
               Follow the circle. Breathe in as it expands, breathe out as it contracts.
             </motion.p>
@@ -183,7 +183,7 @@ export default function FocusSceneDemo() {
                   value={reflectionNotes}
                   onChange={(e) => setReflectionNotes(e.target.value)}
                   placeholder="What do you want to achieve in this meeting? (optional)"
-                  className="w-full h-40 p-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 text-white placeholder-purple-300 text-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full h-40 p-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 text-white placeholder-teal-300 text-lg resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
                 />
               </motion.div>
 
@@ -192,7 +192,7 @@ export default function FocusSceneDemo() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
                 onClick={handleComplete}
-                className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-xl font-semibold hover:scale-105 transition-transform shadow-2xl"
+                className="w-full py-4 bg-gradient-to-r from-teal-500 to-pink-500 rounded-full text-xl font-semibold hover:scale-105 transition-transform shadow-2xl"
               >
                 I'm Ready
               </motion.button>

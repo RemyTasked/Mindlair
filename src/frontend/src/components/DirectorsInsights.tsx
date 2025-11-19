@@ -864,9 +864,9 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
               </span>
             </div>
             {currentInsight.type === 'ai' && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-purple-500/10 rounded-full border border-purple-500/20">
-                <Sparkles className="w-3 h-3 text-purple-400" />
-                <span className="text-xs text-purple-400 font-medium">AI</span>
+              <div className="flex items-center gap-1 px-2 py-1 bg-teal-500/10 rounded-full border border-teal-500/20">
+                <Sparkles className="w-3 h-3 text-teal-400" />
+                <span className="text-xs text-teal-400 font-medium">AI</span>
               </div>
             )}
           </div>

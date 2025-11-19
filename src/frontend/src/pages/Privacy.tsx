@@ -25,7 +25,7 @@ export default function Privacy() {
                 alt="Meet Cute Logo" 
                 className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
               />
-              <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hidden sm:inline">
+              <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-teal-600 bg-clip-text text-transparent hidden sm:inline">
                 Meet Cute
               </span>
             </div>
@@ -35,7 +35,7 @@ export default function Privacy() {
 
       <main className="container mx-auto px-6 py-12 max-w-4xl">
         {/* Hero Section */}
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 mb-12 border border-indigo-200">
+        <div className="bg-gradient-to-br from-indigo-50 to-teal-50 rounded-2xl p-8 mb-12 border border-indigo-200">
           <div className="flex items-start gap-4">
             <Shield className="w-12 h-12 text-indigo-600 flex-shrink-0" />
             <div>
@@ -68,7 +68,7 @@ export default function Privacy() {
           />
 
           <SecurityFeature
-            icon={<Eye className="w-8 h-8 text-purple-600" />}
+            icon={<Eye className="w-8 h-8 text-teal-600" />}
             title="Read-Only Calendar Access"
             description="We only request read-only access to your calendar. We cannot create, modify, or delete any of your meetings or calendar events."
           />

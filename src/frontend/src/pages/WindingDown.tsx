@@ -74,14 +74,14 @@ export default function WindingDown() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-teal-900 to-indigo-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading your winding down session...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 text-white overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-teal-900 to-indigo-900 text-white overflow-hidden relative">
       {/* Ambient Sound */}
       <AmbientSound
         soundType={sessionData?.focusSoundType || 'calm-ocean'}
@@ -114,7 +114,7 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-200 to-indigo-200 bg-clip-text text-transparent"
+                className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-teal-200 to-indigo-200 bg-clip-text text-transparent"
               >
                 Time to Wind Down
               </motion.h1>
@@ -123,7 +123,7 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="text-xl sm:text-2xl text-purple-200 mb-12 max-w-2xl"
+                className="text-xl sm:text-2xl text-teal-200 mb-12 max-w-2xl"
               >
                 The day is done. Let's release the tension, quiet your mind, and prepare your body for restful sleep.
               </motion.p>
@@ -134,7 +134,7 @@ export default function WindingDown() {
                 transition={{ delay: 0.8 }}
                 onClick={() => handlePhaseTransition('breathing')}
                 disabled={transitioning}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-4 bg-gradient-to-r from-teal-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-teal-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Begin Winding Down →
               </motion.button>
@@ -153,7 +153,7 @@ export default function WindingDown() {
               <motion.h2
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="text-4xl sm:text-5xl font-bold mb-8 bg-gradient-to-r from-indigo-200 to-purple-200 bg-clip-text text-transparent"
+                className="text-4xl sm:text-5xl font-bold mb-8 bg-gradient-to-r from-indigo-200 to-teal-200 bg-clip-text text-transparent"
               >
                 Deep Breathing
               </motion.h2>
@@ -162,7 +162,7 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-lg text-purple-200 mb-12 max-w-2xl mx-auto"
+                className="text-lg text-teal-200 mb-12 max-w-2xl mx-auto"
               >
                 Let's release the day's tension with a longer, deeper breathing exercise. 
                 Allow yourself to fully relax and prepare for restful sleep.
@@ -178,7 +178,7 @@ export default function WindingDown() {
                   repeat: 8,    // More cycles for deeper relaxation
                   ease: "easeInOut",
                 }}
-                className="mx-auto w-56 h-56 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-purple-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
+                className="mx-auto w-56 h-56 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-indigo-500/40 to-teal-500/40 backdrop-blur-xl border-4 border-indigo-400/60 flex items-center justify-center mb-12 relative overflow-hidden"
               >
                 {/* Inner glow effect */}
                 <motion.div
@@ -190,7 +190,7 @@ export default function WindingDown() {
                     repeat: 8,
                     ease: "easeInOut",
                   }}
-                  className="absolute inset-0 bg-gradient-to-br from-purple-400/30 to-indigo-400/30 rounded-full blur-2xl"
+                  className="absolute inset-0 bg-gradient-to-br from-teal-400/30 to-indigo-400/30 rounded-full blur-2xl"
                 />
 
                 <div className="relative z-10 text-center">
@@ -223,7 +223,7 @@ export default function WindingDown() {
                   repeat: 8,
                   ease: "easeInOut",
                 }}
-                className="text-purple-200 text-lg mb-12"
+                className="text-teal-200 text-lg mb-12"
               >
                 Inhale for 4 seconds • Hold for 4 seconds • Exhale for 4 seconds
               </motion.div>
@@ -253,7 +253,7 @@ export default function WindingDown() {
               <motion.h2
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="text-4xl sm:text-5xl font-bold mb-8 bg-gradient-to-r from-purple-200 to-indigo-200 bg-clip-text text-transparent"
+                className="text-4xl sm:text-5xl font-bold mb-8 bg-gradient-to-r from-teal-200 to-indigo-200 bg-clip-text text-transparent"
               >
                 Release & Rest
               </motion.h2>
@@ -262,7 +262,7 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="space-y-8 text-lg text-purple-100 max-w-2xl"
+                className="space-y-8 text-lg text-teal-100 max-w-2xl"
               >
                 <p className="leading-relaxed">
                   Imagine the day's energy gently flowing out of your body with each exhale...
@@ -316,7 +316,7 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-200 to-indigo-200 bg-clip-text text-transparent"
+                className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-teal-200 to-indigo-200 bg-clip-text text-transparent"
               >
                 Rest Well
               </motion.h2>
@@ -325,7 +325,7 @@ export default function WindingDown() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="text-xl text-purple-200 mb-12 max-w-2xl"
+                className="text-xl text-teal-200 mb-12 max-w-2xl"
               >
                 Your mind and body are ready for restorative sleep. Dream well, and we'll see you tomorrow.
               </motion.p>
@@ -336,7 +336,7 @@ export default function WindingDown() {
                 transition={{ delay: 0.8 }}
                 onClick={completeSession}
                 disabled={transitioning}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-4 bg-gradient-to-r from-teal-600 to-indigo-600 rounded-full text-lg font-semibold hover:from-teal-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {transitioning ? 'Completing...' : 'Return to Dashboard'}
               </motion.button>
@@ -347,7 +347,7 @@ export default function WindingDown() {
 
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
       </div>
     </div>
