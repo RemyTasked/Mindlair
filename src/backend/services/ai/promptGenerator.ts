@@ -258,6 +258,125 @@ Generate the message now:`;
     return templates[tone];
   }
 
+  /**
+   * Generate a targeted fallback focus cue based on meeting context
+   * This is used when AI generation fails or returns generic cues
+   */
+  private generateTargetedFallbackCue(meeting: {
+    title: string;
+    attendees: string[];
+    description?: string;
+    meetingType?: string;
+  }): string {
+    const attendeeCount = meeting.attendees.length;
+    const title = meeting.title.toLowerCase();
+    const description = (meeting.description || '').toLowerCase();
+    const meetingType = (meeting.meetingType || '').toLowerCase();
+    
+    // Determine meeting characteristics
+    const isOneOnOne = attendeeCount === 1;
+    const isLarge = attendeeCount > 5;
+    const isPresentation = title.includes('present') || title.includes('demo') || title.includes('pitch') || meetingType.includes('presentation');
+    const isClient = title.includes('client') || title.includes('customer') || meetingType.includes('client');
+    const isReview = title.includes('review') || title.includes('retro') || title.includes('post-mortem');
+    const isSync = title.includes('sync') || title.includes('standup') || title.includes('huddle') || meetingType.includes('sync');
+    const isPlanning = title.includes('plan') || title.includes('roadmap') || title.includes('strategy') || meetingType.includes('planning');
+    const isInterview = title.includes('interview') || meetingType.includes('interview');
+    const isFeedback = title.includes('feedback') || title.includes('1:1') || title.includes('one-on-one');
+    
+    // Generate targeted cue based on context
+    if (isOneOnOne || isFeedback) {
+      const cues = [
+        'Listen deeply and create space for their perspective',
+        'Be fully present and show genuine interest',
+        'Ask thoughtful questions and build connection',
+        'Create a safe space for honest conversation',
+      ];
+      return cues[Math.floor(Math.random() * cues.length)];
+    }
+    
+    if (isPresentation) {
+      const cues = [
+        'Speak with conviction and let your expertise shine',
+        'Share your vision clearly and confidently',
+        'Engage your audience and make it memorable',
+        'Own the room with clarity and presence',
+      ];
+      return cues[Math.floor(Math.random() * cues.length)];
+    }
+    
+    if (isClient) {
+      const cues = [
+        'Build trust through clarity and responsiveness',
+        'Show value and demonstrate understanding',
+        'Listen actively and address their needs',
+        'Be professional, warm, and solution-focused',
+      ];
+      return cues[Math.floor(Math.random() * cues.length)];
+    }
+    
+    if (isReview || title.includes('retro')) {
+      const cues = [
+        'Reflect honestly and focus on growth',
+        'Share insights constructively and openly',
+        'Learn from what worked and what didn\'t',
+        'Be candid and forward-looking',
+      ];
+      return cues[Math.floor(Math.random() * cues.length)];
+    }
+    
+    if (isSync || title.includes('standup')) {
+      const cues = [
+        'Facilitate connection and keep momentum flowing',
+        'Share updates clearly and listen to others',
+        'Keep it concise and action-oriented',
+        'Build team alignment and energy',
+      ];
+      return cues[Math.floor(Math.random() * cues.length)];
+    }
+    
+    if (isPlanning || title.includes('strategy')) {
+      const cues = [
+        'Think strategically and connect the dots',
+        'Contribute ideas and help shape direction',
+        'Stay focused on outcomes and priorities',
+        'Collaborate to build a clear path forward',
+      ];
+      return cues[Math.floor(Math.random() * cues.length)];
+    }
+    
+    if (isInterview) {
+      const cues = [
+        'Be authentic and show your best self',
+        'Listen carefully and respond thoughtfully',
+        'Ask questions that show genuine interest',
+        'Present yourself confidently and clearly',
+      ];
+      return cues[Math.floor(Math.random() * cues.length)];
+    }
+    
+    if (isLarge) {
+      const cues = [
+        'Speak with purpose and make your points count',
+        'Listen actively and contribute when it matters',
+        'Stay engaged and help move the group forward',
+        'Be concise and clear in your communication',
+      ];
+      return cues[Math.floor(Math.random() * cues.length)];
+    }
+    
+    // Default fallback - still varied
+    const defaultCues = [
+      'Bring clarity and presence to this moment',
+      'Step in with intention and focus',
+      'Be fully present and engaged',
+      'Lead with confidence and authenticity',
+      'Create value through thoughtful participation',
+      'Show up as your best self',
+    ];
+    return defaultCues[Math.floor(Math.random() * defaultCues.length)];
+  }
+
   async generatePresleyFlowSession(meetings: Array<{
     title: string;
     startTime: Date;
@@ -286,7 +405,10 @@ Generate the message now:`;
           hour12: true
         });
         const duration = Math.round((m.endTime.getTime() - m.startTime.getTime()) / 60000);
-        return `${i + 1}. ${m.title} - ${timeStr} (${duration} min, ${m.attendees.length} attendees)`;
+        const meetingType = m.meetingType ? ` [${m.meetingType}]` : '';
+        const description = m.description ? ` - ${m.description.substring(0, 100)}` : '';
+        const attendeeInfo = m.attendees.length > 0 ? ` (${m.attendees.length} attendee${m.attendees.length > 1 ? 's' : ''})` : '';
+        return `${i + 1}. ${m.title}${meetingType} - ${timeStr} (${duration} min)${attendeeInfo}${description}`;
       }).join('\n');
 
       let historicalContext = '';
@@ -343,8 +465,26 @@ Create a cinematic, calming mental preparation experience with these components:
    - ${openingGuidance}
 
 2. MEETING PREVIEWS:
-   For each meeting, provide a brief focus cue (1 sentence) that helps them mentally ${flowType === 'morning' ? 'prepare for' : 'rehearse'} their role:
-   ${meetings.map((m, i) => `   ${i + 1}. ${m.title} - Focus cue for this scene`).join('\n')}
+   For EACH meeting, provide a UNIQUE, TARGETED focus cue (1 sentence) that helps them mentally ${flowType === 'morning' ? 'prepare for' : 'rehearse'} their role.
+   Each focusCue must be SPECIFIC to that meeting's context - consider the meeting title, type, attendees, and description.
+   Make each one DIFFERENT and RELEVANT to what that specific meeting requires.
+   
+   Examples of targeted cues:
+   - For a 1-on-1: "Listen deeply and create space for their perspective"
+   - For a presentation: "Speak with conviction and let your expertise shine"
+   - For a team sync: "Facilitate connection and keep momentum flowing"
+   - For a client meeting: "Build trust through clarity and responsiveness"
+   - For a brainstorming: "Stay open and build on ideas together"
+   
+   Generate unique cues for each meeting:
+   ${meetings.map((m, i) => {
+     const meetingType = m.meetingType ? ` (Type: ${m.meetingType})` : '';
+     const attendeeCount = m.attendees.length;
+     const isOneOnOne = attendeeCount === 1;
+     const isLarge = attendeeCount > 5;
+     const context = `${m.title}${meetingType}${isOneOnOne ? ' [1-on-1]' : ''}${isLarge ? ' [Large group]' : ''}${m.description ? ` - ${m.description.substring(0, 80)}` : ''}`;
+     return `   ${i + 1}. ${context} - Generate a specific, targeted focus cue`;
+   }).join('\n')}
 
 3. MINDSET THEME (2 sentences):
    - ${themeGuidance}
@@ -414,7 +554,7 @@ Return as JSON:
               minute: '2-digit',
               hour12: true
             }),
-        focusCue: parsed.meetingPreviews?.[i]?.focusCue || `Bring clarity and presence to this ${m.meetingType || 'meeting'}.`,
+        focusCue: parsed.meetingPreviews?.[i]?.focusCue || this.generateTargetedFallbackCue(m),
       }));
 
       logger.info('Generated Presley Flow session', { meetingCount: meetings.length });
@@ -439,7 +579,7 @@ Return as JSON:
                 minute: '2-digit',
                 hour12: true
               }),
-          focusCue: `Breathe and lead the moment.`,
+          focusCue: this.generateTargetedFallbackCue(m),
         })),
         mindsetTheme: `${dayRef}'s tone is focused and calm. Trust your preparation.`,
         visualizationScript: `Picture yourself moving through ${dayRefLower}'s scenes. The camera follows your composure. Each meeting unfolds smoothly. You transition with ease, centered and clear.`,
