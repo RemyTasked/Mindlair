@@ -273,16 +273,26 @@ Generate the message now:`;
     const description = (meeting.description || '').toLowerCase();
     const meetingType = (meeting.meetingType || '').toLowerCase();
     
-    // Determine meeting characteristics
+    // Determine meeting characteristics (check title, description, and meetingType)
     const isOneOnOne = attendeeCount === 1;
     const isLarge = attendeeCount > 5;
-    const isPresentation = title.includes('present') || title.includes('demo') || title.includes('pitch') || meetingType.includes('presentation');
-    const isClient = title.includes('client') || title.includes('customer') || meetingType.includes('client');
-    const isReview = title.includes('review') || title.includes('retro') || title.includes('post-mortem');
-    const isSync = title.includes('sync') || title.includes('standup') || title.includes('huddle') || meetingType.includes('sync');
-    const isPlanning = title.includes('plan') || title.includes('roadmap') || title.includes('strategy') || meetingType.includes('planning');
-    const isInterview = title.includes('interview') || meetingType.includes('interview');
-    const isFeedback = title.includes('feedback') || title.includes('1:1') || title.includes('one-on-one');
+    const isPresentation = title.includes('present') || title.includes('demo') || title.includes('pitch') || 
+                          description.includes('present') || description.includes('demo') || description.includes('pitch') ||
+                          meetingType.includes('presentation');
+    const isClient = title.includes('client') || title.includes('customer') || 
+                    description.includes('client') || description.includes('customer') ||
+                    meetingType.includes('client');
+    const isReview = title.includes('review') || title.includes('retro') || title.includes('post-mortem') ||
+                    description.includes('review') || description.includes('retro') || description.includes('post-mortem');
+    const isSync = title.includes('sync') || title.includes('standup') || title.includes('huddle') ||
+                  description.includes('sync') || description.includes('standup') || description.includes('huddle') ||
+                  meetingType.includes('sync');
+    const isPlanning = title.includes('plan') || title.includes('roadmap') || title.includes('strategy') ||
+                      description.includes('plan') || description.includes('roadmap') || description.includes('strategy') ||
+                      meetingType.includes('planning');
+    const isInterview = title.includes('interview') || description.includes('interview') || meetingType.includes('interview');
+    const isFeedback = title.includes('feedback') || title.includes('1:1') || title.includes('one-on-one') ||
+                      description.includes('feedback') || description.includes('1:1') || description.includes('one-on-one');
     
     // Generate targeted cue based on context
     if (isOneOnOne || isFeedback) {
