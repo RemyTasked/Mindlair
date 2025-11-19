@@ -575,12 +575,16 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       const next = !prev;
       const volume = getVolume(next);
 
+      // Update volume on existing refs immediately
       if (gainRef.current) {
         gainRef.current.gain.value = volume;
       }
       if (fallbackAudioRef.current) {
         fallbackAudioRef.current.volume = volume;
       }
+
+      // If refs don't exist yet (sound is starting), the useEffect will sync when they're created
+      // This ensures mute state is always respected, even during sound transitions
 
       return next;
     });
@@ -692,6 +696,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   useEffect(() => {
     const volume = getVolume(isMuted);
 
+    // Update volume on existing refs immediately
     if (gainRef.current) {
       gainRef.current.gain.value = volume;
     }
@@ -699,6 +704,32 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       fallbackAudioRef.current.volume = volume;
     }
   }, [dimVolume, getVolume, isMuted]);
+
+  // Ensure mute state is applied when new audio sources are created
+  // This fixes the issue where mute button stops working after Scene Library plays a sound
+  useEffect(() => {
+    if (!isPlaying) return;
+    
+    const volume = getVolume(isMuted);
+    
+    // Sync volume whenever refs are available (handles case where sound was restarted)
+    const syncVolume = () => {
+      if (gainRef.current) {
+        gainRef.current.gain.value = volume;
+      }
+      if (fallbackAudioRef.current) {
+        fallbackAudioRef.current.volume = volume;
+      }
+    };
+    
+    // Try to sync immediately
+    syncVolume();
+    
+    // Also sync after a short delay to catch cases where refs are created asynchronously
+    const timeout = setTimeout(syncVolume, 100);
+    
+    return () => clearTimeout(timeout);
+  }, [isMuted, isPlaying, getVolume]);
 
   useEffect(() => {
     if (!stopOnNavigation) {

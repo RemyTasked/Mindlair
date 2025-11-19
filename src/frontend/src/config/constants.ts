@@ -1,6 +1,6 @@
 // Cache-busting timestamp for logo assets
 // Update this timestamp whenever logo files change to force browser refresh
-export const LOGO_VERSION = '20251117200000'; // YYYYMMDDHHMMSS - Updated to teal color scheme
+export const LOGO_VERSION = '20251118000000'; // YYYYMMDDHHMMSS - Updated logo background gradient to teal
 
 // Logo paths - using M logo with circle
 export const LOGO_PATHS = {
