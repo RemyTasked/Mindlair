@@ -19,7 +19,7 @@ export default function Logo({ className = '', size = 'md' }: LogoProps) {
   return (
     <div className={`inline-flex items-center ${className}`}>
       <span 
-        className={`${sizeClass} font-bold tracking-tight`}
+        className={`${sizeClass} font-bold tracking-tight relative`}
         style={{
           fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           fontWeight: 700,
@@ -30,25 +30,25 @@ export default function Logo({ className = '', size = 'md' }: LogoProps) {
           backgroundClip: 'text',
         }}
       >
-        Mee
+        <span>Mee</span>
         <span className="relative inline-block">
-          t
-          {/* Artistic flowing connection from 't' to 'C' */}
+          <span>t</span>
+          {/* Artistic flowing connection from 't' to 'C' - decorative line connecting the two words */}
           <svg 
             className="absolute left-full top-1/2 -translate-y-1/2 pointer-events-none"
-            width="12" 
-            height="8" 
-            viewBox="0 0 12 8" 
+            width="14" 
+            height="10" 
+            viewBox="0 0 14 10" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              transform: 'translateY(-50%) translateX(2px)',
+              transform: 'translateY(-50%) translateX(3px)',
             }}
           >
             <path 
-              d="M 0 4 Q 4 1, 6 2.5 T 12 4" 
+              d="M 0 5 Q 3 2, 5 3 Q 7 4, 9 3 Q 11 2, 14 5" 
               stroke={`url(#${gradientId})`}
-              strokeWidth="2" 
+              strokeWidth="1.8" 
               strokeLinecap="round"
               fill="none"
             />
@@ -60,10 +60,10 @@ export default function Logo({ className = '', size = 'md' }: LogoProps) {
             </defs>
           </svg>
         </span>
-        <span className="relative inline-block" style={{ marginLeft: '0.3em' }}>
-          C
+        <span className="relative inline-block" style={{ marginLeft: '0.4em' }}>
+          <span>C</span>
         </span>
-        ute
+        <span>ute</span>
       </span>
     </div>
   );
