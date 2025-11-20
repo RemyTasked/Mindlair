@@ -536,6 +536,11 @@ router.get(
     // Get sound learning insights
     const soundInsights = await getSoundInsights(userId);
 
+    // Get Focus Room insights
+    const { getFocusRoomInsights, getMeetingPrepInsights } = await import('../services/focusRoomInsightsService');
+    const focusRoomInsights = await getFocusRoomInsights(userId);
+    const meetingPrepInsights = await getMeetingPrepInsights(userId);
+
     // Check Spotify connection
     const spotifyAccount = await prisma.spotifyAccount.findUnique({
       where: { userId },
@@ -567,6 +572,19 @@ router.get(
           cuesActedOn,
           cuesDismissed,
           hasStressPattern,
+        },
+        focusRoomInsights: {
+          totalSessions: focusRoomInsights.totalSessions,
+          totalMinutes: focusRoomInsights.totalMinutes,
+          preferredRooms: focusRoomInsights.preferredRooms,
+          averageSessionDuration: focusRoomInsights.averageSessionDuration,
+          completionRate: focusRoomInsights.completionRate,
+          creditsEarned: focusRoomInsights.creditsEarned,
+          roomEffectiveness: focusRoomInsights.roomEffectiveness,
+          usagePatterns: focusRoomInsights.usagePatterns,
+          insights: focusRoomInsights.insights,
+          recommendations: focusRoomInsights.recommendations,
+          meetingPrepInsights: meetingPrepInsights,
         },
         spotify: {
           connected: !!spotifyAccount,

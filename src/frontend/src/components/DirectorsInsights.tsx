@@ -51,6 +51,30 @@ interface DirectorsInsightsProps {
       cuesDismissed?: number;
       hasStressPattern?: boolean;
     };
+    focusRoomInsights?: {
+      totalSessions?: number;
+      totalMinutes?: number;
+      preferredRooms?: Record<string, number>;
+      averageSessionDuration?: number;
+      completionRate?: number;
+      creditsEarned?: number;
+      roomEffectiveness?: Array<{
+        roomId: string;
+        roomName: string;
+        sessions: number;
+        averageDuration: number;
+        completionRate: number;
+      }>;
+      usagePatterns?: {
+        preferredTimer?: string;
+        preferredAudioSource?: string;
+        mostActiveTimeOfDay?: 'morning' | 'afternoon' | 'evening';
+        weeklyPattern?: Record<string, number>;
+      };
+      insights?: string[];
+      recommendations?: string[];
+      meetingPrepInsights?: string[];
+    };
   };
 }
 
@@ -727,6 +751,239 @@ export const DirectorsInsights: React.FC<DirectorsInsightsProps> = ({
           content: `You\'ve acted on ${cuesActedOn} real-time cues. You\'re building a practice of self-regulation.`,
           type: 'ai',
           icon: '🧘'
+        });
+      }
+    }
+
+    // Focus Room insights - meeting prep, calmness, and performance
+    if (userMetadata.focusRoomInsights) {
+      const focusRoom = userMetadata.focusRoomInsights;
+
+      // Total sessions milestone
+      if (focusRoom.totalSessions && focusRoom.totalSessions >= 1) {
+        if (focusRoom.totalSessions === 1) {
+          insights.push({
+            id: 'focus-room-first',
+            sceneNumber: '70',
+            title: 'First Focus Room Session',
+            content: 'You completed your first Focus Room session. This is the foundation of your focus practice.',
+            type: 'ai',
+            icon: '🎯'
+          });
+        } else if (focusRoom.totalSessions >= 10) {
+          insights.push({
+            id: 'focus-room-milestone',
+            sceneNumber: '71',
+            title: 'Focus Practice Established',
+            content: `${focusRoom.totalSessions} Focus Room sessions completed. You're building a consistent focus ritual.`,
+            type: 'ai',
+            icon: '🔥'
+          });
+        } else if (focusRoom.totalSessions >= 25) {
+          insights.push({
+            id: 'focus-room-veteran',
+            sceneNumber: '72',
+            title: 'Focus Master',
+            content: `${focusRoom.totalSessions} sessions and ${focusRoom.totalMinutes || 0} minutes of focused time. You've mastered the art of intentional focus.`,
+            type: 'ai',
+            icon: '👑'
+          });
+        }
+      }
+
+      // Room preference insights
+      if (focusRoom.roomEffectiveness && focusRoom.roomEffectiveness.length > 0) {
+        const topRoom = focusRoom.roomEffectiveness[0];
+        if (topRoom.sessions >= 3) {
+          const roomBenefits: Record<string, string> = {
+            'deep-focus': 'deep concentration and clarity',
+            'soft-composure': 'calm and nervous system regulation',
+            'warm-connection': 'empathy and interpersonal warmth',
+            'pitch-pulse': 'confidence and energy',
+            'recovery-lounge': 'restoration and decompression',
+          };
+          const benefit = roomBenefits[topRoom.roomId] || 'focus and clarity';
+          
+          insights.push({
+            id: 'focus-room-preference',
+            sceneNumber: '73',
+            title: 'Your Focus Sanctuary',
+            content: `${topRoom.roomName} is your go-to room (${topRoom.sessions} sessions). You're optimizing for ${benefit}.`,
+            type: 'ai',
+            icon: '🏠'
+          });
+        }
+      }
+
+      // Completion rate insights (calmness indicator)
+      if (focusRoom.completionRate !== undefined) {
+        if (focusRoom.completionRate >= 80) {
+          insights.push({
+            id: 'focus-room-completion-high',
+            sceneNumber: '74',
+            title: 'Strong Follow-Through',
+            content: `Your ${focusRoom.completionRate}% completion rate shows you commit to your focus sessions. This builds mental resilience.`,
+            type: 'ai',
+            icon: '✅'
+          });
+        } else if (focusRoom.completionRate < 50 && focusRoom.totalSessions && focusRoom.totalSessions >= 5) {
+          insights.push({
+            id: 'focus-room-completion-low',
+            sceneNumber: '75',
+            title: 'Optimize Your Sessions',
+            content: `Your ${focusRoom.completionRate}% completion rate suggests shorter sessions (5-10 min) might work better for you.`,
+            type: 'ai',
+            icon: '⏱️'
+          });
+        }
+      }
+
+      // Duration insights (performance indicator)
+      if (focusRoom.averageSessionDuration) {
+        if (focusRoom.averageSessionDuration >= 15) {
+          insights.push({
+            id: 'focus-room-duration-deep',
+            sceneNumber: '76',
+            title: 'Deep Focus Practice',
+            content: `You average ${focusRoom.averageSessionDuration} minutes per session. This deep focus time enhances your meeting performance.`,
+            type: 'ai',
+            icon: '🧠'
+          });
+        }
+      }
+
+      // Timer preference insights (meeting prep optimization)
+      if (focusRoom.usagePatterns?.preferredTimer) {
+        const timer = focusRoom.usagePatterns.preferredTimer;
+        if (timer === '∞') {
+          insights.push({
+            id: 'focus-room-timer-unlimited',
+            sceneNumber: '77',
+            title: 'Flexible Focus',
+            content: 'You prefer unlimited sessions, showing you value open-ended focus time for meeting prep.',
+            type: 'ai',
+            icon: '♾️'
+          });
+        } else if (timer === '20') {
+          insights.push({
+            id: 'focus-room-timer-pomodoro',
+            sceneNumber: '78',
+            title: 'Pomodoro Alignment',
+            content: 'Your 20-minute preference aligns with the Pomodoro technique — optimal for sustained focus before meetings.',
+            type: 'ai',
+            icon: '🍅'
+          });
+        } else if (timer === '5' || timer === '10') {
+          insights.push({
+            id: 'focus-room-timer-quick',
+            sceneNumber: '79',
+            title: 'Quick Reset Master',
+            content: `Your ${timer}-minute sessions show you've mastered quick mental resets — perfect for back-to-back meetings.`,
+            type: 'ai',
+            icon: '⚡'
+          });
+        }
+      }
+
+      // Time of day insights (calmness patterns)
+      if (focusRoom.usagePatterns?.mostActiveTimeOfDay) {
+        const timeOfDay = focusRoom.usagePatterns.mostActiveTimeOfDay;
+        if (timeOfDay === 'morning') {
+          insights.push({
+            id: 'focus-room-morning',
+            sceneNumber: '80',
+            title: 'Morning Focus Ritual',
+            content: 'You use Focus Rooms most in the morning. Starting your day with intention sets the tone for better meeting performance.',
+            type: 'ai',
+            icon: '🌅'
+          });
+        } else if (timeOfDay === 'evening') {
+          insights.push({
+            id: 'focus-room-evening',
+            sceneNumber: '81',
+            title: 'Evening Decompression',
+            content: 'Your evening Focus Room sessions suggest you use them to decompress and transition after work — smart recovery practice.',
+            type: 'ai',
+            icon: '🌙'
+          });
+        }
+      }
+
+      // Audio source insights
+      if (focusRoom.usagePatterns?.preferredAudioSource) {
+        const audioSource = focusRoom.usagePatterns.preferredAudioSource;
+        if (audioSource === 'spotify') {
+          insights.push({
+            id: 'focus-room-spotify',
+            sceneNumber: '82',
+            title: 'Curated Audio Experience',
+            content: 'You prefer Spotify playlists, showing you value curated audio experiences for your focus practice.',
+            type: 'ai',
+            icon: '🎵'
+          });
+        } else if (audioSource === 'apple-music') {
+          insights.push({
+            id: 'focus-room-apple-music',
+            sceneNumber: '83',
+            title: 'Apple Music Integration',
+            content: 'Your Apple Music preference shows you value seamless audio integration for focus sessions.',
+            type: 'ai',
+            icon: '🍎'
+          });
+        }
+      }
+
+      // Credits earned (performance metric)
+      if (focusRoom.creditsEarned && focusRoom.creditsEarned >= 50) {
+        insights.push({
+          id: 'focus-room-credits',
+          sceneNumber: '84',
+          title: 'Consistent Practice Rewarded',
+          content: `You've earned ${focusRoom.creditsEarned} credits from Focus Rooms. Your consistent practice is building real value.`,
+          type: 'ai',
+          icon: '🏆'
+        });
+      }
+
+      // Meeting prep insights (from backend analysis)
+      if (focusRoom.meetingPrepInsights && focusRoom.meetingPrepInsights.length > 0) {
+        focusRoom.meetingPrepInsights.slice(0, 2).forEach((insight, idx) => {
+          insights.push({
+            id: `focus-room-meeting-prep-${idx}`,
+            sceneNumber: `${85 + idx}`,
+            title: 'Meeting Prep Intelligence',
+            content: insight,
+            type: 'ai',
+            icon: '🎬'
+          });
+        });
+      }
+
+      // Backend-generated insights
+      if (focusRoom.insights && focusRoom.insights.length > 0) {
+        focusRoom.insights.slice(0, 2).forEach((insight, idx) => {
+          insights.push({
+            id: `focus-room-insight-${idx}`,
+            sceneNumber: `${87 + idx}`,
+            title: 'Focus Intelligence',
+            content: insight,
+            type: 'ai',
+            icon: '💡'
+          });
+        });
+      }
+
+      // Recommendations
+      if (focusRoom.recommendations && focusRoom.recommendations.length > 0) {
+        focusRoom.recommendations.slice(0, 1).forEach((rec, idx) => {
+          insights.push({
+            id: `focus-room-recommendation-${idx}`,
+            sceneNumber: `${89 + idx}`,
+            title: 'Optimization Tip',
+            content: rec,
+            type: 'ai',
+            icon: '💡'
+          });
         });
       }
     }
