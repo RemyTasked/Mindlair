@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-type SoundType = 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none';
+type SoundType = 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'lofi-deep-focus' | 'lofi-soft-composure' | 'lofi-warm-connection' | 'lofi-pitch-pulse' | 'lofi-recovery-lounge' | 'none';
 const SAMPLE_RATE = 44100;
 const DURATION_SECONDS = 120; // 2 minutes for longer, more natural loops
 const FADE_DURATION_SECONDS = 3; // 3-second crossfade for smooth transitions
@@ -209,6 +209,120 @@ function generateSamples(type: SoundType): Float32Array {
         // Soft vinyl atmosphere
         const atmosphere = (Math.random() * 2 - 1) * 0.025;
         data[i] = pad1 + pad2 + pad3 + (pulse * atmosphere) + atmosphere;
+      }
+      break;
+    }
+    case 'lofi-deep-focus': {
+      // Deep Focus Room: Intense concentration, minimal distractions
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Deep, sustained bass note (C2)
+        const bass = Math.sin(2 * Math.PI * 65.41 * t) * 0.12;
+        // Subtle high-frequency pad (C5)
+        const pad = Math.sin(2 * Math.PI * 523.25 * t) * 0.05;
+        // Very minimal kick (every 2 seconds)
+        const kick = (t % 2 < 0.06) ? Math.exp(-30 * (t % 2)) * 0.2 : 0;
+        // Soft vinyl texture
+        const vinyl = (Math.random() * 2 - 1) * 0.01;
+        // Subtle melody (pentatonic, very slow)
+        const melodyFreq = [261.63, 293.66, 329.63, 392.00, 440.00][Math.floor((t / 4) % 5)];
+        const melody = Math.sin(2 * Math.PI * melodyFreq * t) * 0.08 * Math.exp(-0.5 * (t % 4));
+        data[i] = bass + pad + kick + vinyl + melody;
+      }
+      break;
+    }
+    case 'lofi-soft-composure': {
+      // Soft Composure Room: Calm nervous system, gentle and soothing
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Soft major 7th chords (Cmaj7 -> Am7) - very slow progression
+        const chordPhase = Math.floor((t / 12) % 2);
+        const chordFreqs = [
+          [261.63, 329.63, 392.00, 493.88], // Cmaj7
+          [220.00, 261.63, 329.63, 415.30], // Am7
+        ][chordPhase];
+        const chord = chordFreqs.reduce((sum, freq) => 
+          sum + Math.sin(2 * Math.PI * freq * t) * 0.07, 0);
+        // Very gentle pulse (no drums, just breathing rhythm)
+        const pulse = Math.sin(2 * Math.PI * 0.25 * t) * 0.02;
+        // Warm vinyl atmosphere
+        const atmosphere = (Math.random() * 2 - 1) * 0.015;
+        // Soft high-frequency shimmer
+        const shimmer = Math.sin(2 * Math.PI * 880 * t) * 0.03 * Math.exp(-0.3 * (t % 2));
+        data[i] = chord + pulse + atmosphere + shimmer;
+      }
+      break;
+    }
+    case 'lofi-warm-connection': {
+      // Warm Connection Room: Empathy for 1:1s, warm and inviting
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Warm jazz chords (Dm7 -> G7 -> Cmaj7 -> Am7)
+        const chordPhase = Math.floor((t / 8) % 4);
+        const chordFreqs = [
+          [146.83, 174.61, 220.00, 261.63], // Dm7
+          [196.00, 246.94, 293.66, 369.99], // G7
+          [261.63, 329.63, 392.00, 493.88], // Cmaj7
+          [220.00, 261.63, 329.63, 415.30], // Am7
+        ][chordPhase];
+        const chord = chordFreqs.reduce((sum, freq) => 
+          sum + Math.sin(2 * Math.PI * freq * t) * 0.09, 0);
+        // Gentle swing beat
+        const kick = (t % 2 < 0.08) ? Math.exp(-20 * (t % 2)) * 0.22 : 0;
+        const snare = ((t % 2 > 0.95 && t % 2 < 1.05)) ? (Math.random() * 0.12) : 0;
+        // Warm bass line
+        const bass = Math.sin(2 * Math.PI * 98 * t) * 0.13;
+        // Vinyl warmth
+        const vinyl = (Math.random() * 2 - 1) * 0.018;
+        data[i] = chord + kick + snare + bass + vinyl;
+      }
+      break;
+    }
+    case 'lofi-pitch-pulse': {
+      // Pitch Pulse Room: Confidence boost, energizing but not overwhelming
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Uplifting major chord progression (C -> G -> Am -> F)
+        const chordPhase = Math.floor((t / 6) % 4);
+        const chordFreqs = [
+          [130.81, 164.81, 196.00], // C major
+          [196.00, 246.94, 293.66], // G major
+          [220.00, 261.63, 329.63], // A minor
+          [174.61, 220.00, 261.63], // F major
+        ][chordPhase];
+        const chord = chordFreqs.reduce((sum, freq) => 
+          sum + Math.sin(2 * Math.PI * freq * t) * 0.11, 0);
+        // Energetic but controlled beat
+        const kick = (t % 1.5 < 0.07) ? Math.exp(-25 * (t % 1.5)) * 0.28 : 0;
+        const hihat = ((t * 2) % 1 < 0.03) ? (Math.random() * 0.1) : 0;
+        // Driving bass
+        const bass = Math.sin(2 * Math.PI * 110 * t) * 0.16;
+        // Bright melody
+        const melodyFreq = [330, 370, 415, 440, 494][Math.floor((t / 1.5) % 5)];
+        const melody = Math.sin(2 * Math.PI * melodyFreq * t) * 0.1 * Math.exp(-1.5 * (t % 1.5));
+        // Light vinyl
+        const vinyl = (Math.random() * 2 - 1) * 0.015;
+        data[i] = chord + kick + hihat + bass + melody + vinyl;
+      }
+      break;
+    }
+    case 'lofi-recovery-lounge': {
+      // Recovery Lounge: Decompress after tough scenes, ambient and restorative
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Very slow, ambient pad progression
+        const pad1 = Math.sin(2 * Math.PI * 164.81 * t) * 0.06;
+        const pad2 = Math.sin(2 * Math.PI * 196.00 * t) * 0.055;
+        const pad3 = Math.sin(2 * Math.PI * 246.94 * t) * 0.05;
+        // Deep, slow bass (breathing-like)
+        const bass = Math.sin(2 * Math.PI * 55 * t) * 0.1;
+        // Very gentle, sparse percussion (every 4 seconds)
+        const kick = (t % 4 < 0.1) ? Math.exp(-15 * (t % 4)) * 0.15 : 0;
+        // Ambient texture (like distant rain)
+        const texture = (Math.random() * 2 - 1) * 0.02;
+        // Soft high-frequency sparkle
+        const sparkle = Math.sin(2 * Math.PI * 1100 * t) * 0.025 * Math.exp(-0.2 * (t % 3));
+        data[i] = pad1 + pad2 + pad3 + bass + kick + texture + sparkle;
       }
       break;
     }

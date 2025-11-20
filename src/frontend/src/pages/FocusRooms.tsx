@@ -13,7 +13,7 @@ interface FocusRoom {
   gradient: string;
   bgGradient: string;
   spotifyPlaylistId?: string;
-  meetCuteSoundType?: 'lofi-focus' | 'lofi-chill' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise';
+  meetCuteSoundType?: 'lofi-deep-focus' | 'lofi-soft-composure' | 'lofi-warm-connection' | 'lofi-pitch-pulse' | 'lofi-recovery-lounge' | 'lofi-focus' | 'lofi-chill' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise';
 }
 
 const FOCUS_ROOMS: FocusRoom[] = [
@@ -25,7 +25,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-indigo-600 to-blue-600',
     bgGradient: 'from-indigo-50 to-blue-50',
     spotifyPlaylistId: 'deep-focus-lofi', // Will be replaced with actual playlist ID
-    meetCuteSoundType: 'lofi-focus', // Uses existing lofi-focus sound
+    meetCuteSoundType: 'lofi-deep-focus', // Custom lo-fi for deep focus
   },
   {
     id: 'soft-composure',
@@ -35,7 +35,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-teal-600 to-cyan-600',
     bgGradient: 'from-teal-50 to-cyan-50',
     spotifyPlaylistId: 'soft-composure-lofi',
-    meetCuteSoundType: 'rain', // Soothing rain for composure
+    meetCuteSoundType: 'lofi-soft-composure', // Custom lo-fi for composure
   },
   {
     id: 'warm-connection',
@@ -45,7 +45,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-pink-600 to-rose-600',
     bgGradient: 'from-pink-50 to-rose-50',
     spotifyPlaylistId: 'warm-connection-lofi',
-    meetCuteSoundType: 'lofi-chill', // Warm, chill vibes
+    meetCuteSoundType: 'lofi-warm-connection', // Custom lo-fi for connection
   },
   {
     id: 'pitch-pulse',
@@ -55,7 +55,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-yellow-600 to-orange-600',
     bgGradient: 'from-yellow-50 to-orange-50',
     spotifyPlaylistId: 'pitch-pulse-lofi',
-    meetCuteSoundType: 'lofi-morning', // Energizing morning beats
+    meetCuteSoundType: 'lofi-pitch-pulse', // Custom lo-fi for confidence
   },
   {
     id: 'recovery-lounge',
@@ -65,7 +65,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-purple-600 to-indigo-600',
     bgGradient: 'from-purple-50 to-indigo-50',
     spotifyPlaylistId: 'recovery-lounge-lofi',
-    meetCuteSoundType: 'calm-ocean', // Calming ocean waves for recovery
+    meetCuteSoundType: 'lofi-recovery-lounge', // Custom lo-fi for recovery
   },
 ];
 
