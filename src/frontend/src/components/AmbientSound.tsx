@@ -448,6 +448,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(true);
+  const [eventSoundType, setEventSoundType] = useState<SoundType | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -541,12 +542,13 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   }, [supportsWebAudio]);
 
   const startFallbackAudio = useCallback(async () => {
-    if (!enabled || soundType === 'none') {
+    const currentSoundType = eventSoundType || soundType;
+    if (!enabled || currentSoundType === 'none') {
       stopAudio();
       return;
     }
 
-    const audioUrl = createDataUrl(soundType);
+    const audioUrl = createDataUrl(currentSoundType);
     if (!audioUrl) {
       throw new Error('No audio URL available for fallback playback');
     }
@@ -554,7 +556,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     cleanupSource();
     cleanupFallback();
 
-    console.log('🎵 Using HTML Audio (iOS silent mode compatible)', { isIOS, soundType });
+    console.log('🎵 Using HTML Audio (iOS silent mode compatible)', { isIOS, soundType: currentSoundType });
 
     const audio = new Audio(audioUrl);
     audio.loop = true;
@@ -651,20 +653,22 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       sourceRef.current = sourceNode;
       gainRef.current = gainNode;
 
+      const currentSoundType = eventSoundType || soundType;
       console.log(`🎵 WebAudio ambient sound started [${sourceLabel}]`, {
-        soundType,
+        soundType: currentSoundType,
       });
 
       setIsPlaying(true);
       setNeedsInteraction(false);
       localStorage.removeItem('meetcute_autoplay_sound');
     },
-    [cleanupFallback, cleanupSource, ensureAudioContext, getVolume, isMuted, soundType]
+    [cleanupFallback, cleanupSource, ensureAudioContext, getVolume, isMuted, eventSoundType, soundType]
   );
 
   const startAudio = useCallback(
     async (sourceLabel: string) => {
-      if (!enabled || soundType === 'none') {
+      const currentSoundType = eventSoundType || soundType;
+      if (!enabled || currentSoundType === 'none') {
         stopAudio();
         return;
       }
@@ -681,7 +685,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         }
       }
     },
-    [enabled, soundType, startWebAudio, startFallbackAudio, stopAudio]
+    [enabled, eventSoundType, soundType, startWebAudio, startFallbackAudio, stopAudio]
   );
 
   const toggleMute = useCallback(() => {
@@ -713,13 +717,27 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       return;
     }
 
-    const playHandler = () => {
-      console.log('🎵 ambient-sound-play event received');
+    const playHandler = (e: Event) => {
+      const customEvent = e as CustomEvent<{ source?: string; roomId?: string; soundType?: SoundType }>;
+      const eventSoundTypeValue = customEvent.detail?.soundType;
+      console.log('🎵 ambient-sound-play event received', { 
+        eventSoundType: eventSoundTypeValue, 
+        currentSoundType: soundType,
+        detail: customEvent.detail 
+      });
+      
+      // Update event soundType if provided
+      if (eventSoundTypeValue) {
+        setEventSoundType(eventSoundTypeValue);
+      }
+      
       // Stop any currently playing audio first
       stopAudio();
+      
       // Small delay to ensure stop completes before starting new sound
       setTimeout(() => {
-        if (enabled && soundType !== 'none') {
+        const soundToPlay = eventSoundTypeValue || soundType;
+        if (enabled && soundToPlay && soundToPlay !== 'none') {
           startAudio('event-dispatch');
         }
       }, 100);
@@ -758,7 +776,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       window.removeEventListener('ambient-sound-stop', stopHandler);
       window.removeEventListener('ambient-sound-volume', volumeHandler);
     };
-  }, [enabled, startAudio, stopAudio]);
+  }, [enabled, startAudio, stopAudio, soundType]);
 
   useEffect(() => {
     if (!enabled) {

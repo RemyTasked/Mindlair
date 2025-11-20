@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward, ChevronDown, ChevronUp } from 'lucide-react';
 import Logo from '../components/Logo';
+import AmbientSound from '../components/AmbientSound';
 import api from '../lib/axios';
 
 interface FocusRoom {
@@ -432,7 +433,7 @@ export default function FocusRooms() {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        {/* Timer Section - At Top, Collapsible */}
+        {/* Timer Section - At Top, Collapsible with Volume Control */}
         {activeRoom && selectedRoom && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -469,10 +470,15 @@ export default function FocusRooms() {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="pt-4 border-t border-gray-200"
+                  className="pt-4 border-t border-gray-200 space-y-4"
                 >
-                <div className="flex gap-2 flex-wrap">
-                  {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
+                {/* Timer Options */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Set Timer
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
                     <button
                       key={option}
                       onClick={async () => {
@@ -539,6 +545,92 @@ export default function FocusRooms() {
                       {option === '∞' ? '∞' : `${option} min`}
                     </button>
                   ))}
+                  </div>
+                </div>
+                
+                {/* Volume Control */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <Volume2 className="w-4 h-4 inline mr-1" />
+                    Volume
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={async () => {
+                        const newMuted = !isMuted;
+                        setIsMuted(newMuted);
+                        setVolume(newMuted ? 0 : volume || 0.7);
+                        
+                        // Update audio volume
+                        if (audioProvider === 'spotify' && isPlaying) {
+                          try {
+                            await api.post('/api/spotify/volume', {
+                              volumePercent: newMuted ? 0 : Math.round(volume * 100),
+                            });
+                          } catch (error) {
+                            console.error('Error muting Spotify:', error);
+                          }
+                        } else if (audioProvider === 'apple-music' && isPlaying) {
+                          if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                            try {
+                              const musicKit = (window as any).MusicKit.getInstance();
+                              musicKit.volume = newMuted ? 0 : volume;
+                            } catch (error) {
+                              console.error('Error setting Apple Music volume:', error);
+                            }
+                          }
+                        } else if (audioProvider === 'meetcute') {
+                          window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
+                            detail: { volume: newMuted ? 0 : volume }
+                          }));
+                        }
+                      }}
+                      className="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all"
+                      title={isMuted ? 'Unmute' : 'Mute'}
+                    >
+                      {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={isMuted ? 0 : volume}
+                      onChange={async (e) => {
+                        const newVolume = parseFloat(e.target.value);
+                        setVolume(newVolume);
+                        setIsMuted(newVolume === 0);
+                        
+                        // Update audio volume
+                        if (audioProvider === 'spotify' && isPlaying) {
+                          try {
+                            await api.post('/api/spotify/volume', {
+                              volumePercent: Math.round(newVolume * 100),
+                            });
+                          } catch (error) {
+                            console.error('Error setting Spotify volume:', error);
+                          }
+                        } else if (audioProvider === 'apple-music' && isPlaying) {
+                          if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                            try {
+                              const musicKit = (window as any).MusicKit.getInstance();
+                              musicKit.volume = newVolume;
+                            } catch (error) {
+                              console.error('Error setting Apple Music volume:', error);
+                            }
+                          }
+                        } else if (audioProvider === 'meetcute') {
+                          window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
+                            detail: { volume: newVolume }
+                          }));
+                        }
+                      }}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                    />
+                    <span className="text-sm font-semibold text-gray-700 w-12 text-right">
+                      {Math.round((isMuted ? 0 : volume) * 100)}%
+                    </span>
+                  </div>
                 </div>
                 </motion.div>
               )}
@@ -740,96 +832,17 @@ export default function FocusRooms() {
                   </button>
                 )}
               </div>
-
-
-              {/* Volume Control */}
-              <div className="flex-1 max-w-md">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <Volume2 className="w-4 h-4 inline mr-1" />
-                  Volume
-                </label>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={async () => {
-                      const newMuted = !isMuted;
-                      setIsMuted(newMuted);
-                      
-                      // Update audio volume
-                      if (audioProvider === 'spotify' && isPlaying) {
-                        try {
-                          await api.post('/api/spotify/volume', {
-                            volumePercent: newMuted ? 0 : Math.round(volume * 100),
-                          });
-                        } catch (error) {
-                          console.error('Error muting Spotify:', error);
-                        }
-                      } else if (audioProvider === 'apple-music' && isPlaying) {
-                        if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                          try {
-                            const musicKit = (window as any).MusicKit.getInstance();
-                            musicKit.volume = newMuted ? 0 : volume;
-                          } catch (error) {
-                            console.error('Error setting Apple Music volume:', error);
-                          }
-                        }
-                      } else if (audioProvider === 'meetcute') {
-                        // Meet-Cute audio volume is controlled by AmbientSound component
-                        window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                          detail: { volume: newMuted ? 0 : volume }
-                        }));
-                      }
-                    }}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    {isMuted ? <VolumeX className="w-5 h-5 text-gray-600" /> : <Volume2 className="w-5 h-5 text-gray-600" />}
-                  </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={isMuted ? 0 : volume}
-                    onChange={async (e) => {
-                      const newVolume = parseFloat(e.target.value);
-                      setVolume(newVolume);
-                      setIsMuted(newVolume === 0);
-                      
-                      // Update audio volume
-                      if (audioProvider === 'spotify' && isPlaying) {
-                        try {
-                          await api.post('/api/spotify/volume', {
-                            volumePercent: Math.round(newVolume * 100),
-                          });
-                        } catch (error) {
-                          console.error('Error setting Spotify volume:', error);
-                        }
-                      } else if (audioProvider === 'apple-music' && isPlaying) {
-                        if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                          try {
-                            const musicKit = (window as any).MusicKit.getInstance();
-                            musicKit.volume = newVolume;
-                          } catch (error) {
-                            console.error('Error setting Apple Music volume:', error);
-                          }
-                        }
-                      } else if (audioProvider === 'meetcute') {
-                        // Meet-Cute audio volume is controlled by AmbientSound component
-                        window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                          detail: { volume: newVolume }
-                        }));
-                      }
-                    }}
-                    className="flex-1"
-                  />
-                  <span className="text-sm font-semibold text-gray-700 w-12 text-right">
-                    {Math.round((isMuted ? 0 : volume) * 100)}%
-                  </span>
-                </div>
-              </div>
             </div>
           </motion.div>
         )}
       </main>
+      
+      {/* Global Ambient Sound - For Meet-Cute audio */}
+      <AmbientSound
+        soundType="none"
+        enabled={true}
+        stopOnNavigation={false}
+      />
     </div>
   );
 }
