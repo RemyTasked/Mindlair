@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward } from 'lucide-react';
 import Logo from '../components/Logo';
 import api from '../lib/axios';
 
@@ -80,7 +80,6 @@ export default function FocusRooms() {
   const [timer, setTimer] = useState<TimerOption>(20);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [hasSpotify, setHasSpotify] = useState(false);
-  const [audioSource, setAudioSource] = useState<'spotify' | 'meetcute'>('meetcute');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [totalCredits, setTotalCredits] = useState(0);
@@ -100,6 +99,15 @@ export default function FocusRooms() {
       }
     };
     loadData();
+
+    // Check if returning from Spotify OAuth
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('spotify_connected') === 'true') {
+      // Reload Spotify status
+      loadData();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
   // Timer countdown
@@ -122,6 +130,39 @@ export default function FocusRooms() {
   const handleTimerEnd = async () => {
     setIsPlaying(false);
     
+    // Fade out Spotify volume gradually, then pause
+    if (hasSpotify) {
+      try {
+        // Fade out over 3 seconds
+        const fadeSteps = 10;
+        const fadeInterval = 3000 / fadeSteps;
+        let currentVolume = volume * 100;
+        
+        for (let i = 0; i < fadeSteps; i++) {
+          await new Promise(resolve => setTimeout(resolve, fadeInterval));
+          currentVolume = currentVolume * 0.9; // Reduce by 10% each step
+          try {
+            await api.post('/api/spotify/volume', {
+              volumePercent: Math.max(0, Math.round(currentVolume)),
+            });
+          } catch (error) {
+            // Ignore volume errors during fade
+          }
+        }
+        
+        // Pause after fade
+        await api.post('/api/spotify/pause');
+      } catch (error) {
+        console.error('Error fading out Spotify:', error);
+        // Try to pause anyway
+        try {
+          await api.post('/api/spotify/pause');
+        } catch (pauseError) {
+          console.error('Error pausing Spotify:', pauseError);
+        }
+      }
+    }
+    
     // Complete session
     if (currentSessionId && sessionStartTime) {
       const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
@@ -141,16 +182,16 @@ export default function FocusRooms() {
     setTimeRemaining(null);
     setCurrentSessionId(null);
     setSessionStartTime(null);
-    
-    // Fade out audio
-    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-      detail: { source: 'focus-rooms', fadeOut: true }
-    }));
   };
 
   const handleRoomSelect = async (room: FocusRoom) => {
+    // If Spotify not connected, don't allow room selection
+    if (!hasSpotify) {
+      return; // User should click "Connect Spotify" button on the card
+    }
+
     if (activeRoom === room.id) {
-      // Toggle off - complete current session
+      // Toggle off - pause Spotify and complete current session
       if (currentSessionId && sessionStartTime) {
         const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
         try {
@@ -164,15 +205,19 @@ export default function FocusRooms() {
           console.error('Error completing session:', error);
         }
       }
+
+      // Pause Spotify playback
+      try {
+        await api.post('/api/spotify/pause');
+      } catch (error) {
+        console.error('Error pausing Spotify:', error);
+      }
       
       setIsPlaying(false);
       setActiveRoom(null);
       setTimeRemaining(null);
       setCurrentSessionId(null);
       setSessionStartTime(null);
-      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-        detail: { source: 'focus-rooms' }
-      }));
     } else {
       // Start new session
       try {
@@ -180,7 +225,7 @@ export default function FocusRooms() {
           roomId: room.id,
           roomName: room.name,
           timerOption: timer.toString(),
-          audioSource: audioSource,
+          audioSource: 'spotify', // Always Spotify for Focus Rooms
         });
         
         setCurrentSessionId(sessionResponse.data.sessionId);
@@ -200,34 +245,21 @@ export default function FocusRooms() {
         setTimeRemaining(timer * 60);
       }
 
-      // Start audio based on source
-      if (audioSource === 'spotify' && hasSpotify) {
-        // Start Spotify playback
-        api.post('/api/spotify/play', {
+      // Start Spotify playback for this room
+      try {
+        await api.post('/api/spotify/play', {
           roomId: room.id,
-        }).catch(error => {
-          console.error('Error starting Spotify:', error);
-          // Fallback to Meet-Cute audio
-          startMeetCuteAudio(room);
         });
-      } else {
-        // Use Meet-Cute audio
-        startMeetCuteAudio(room);
+      } catch (error: any) {
+        console.error('Error starting Spotify:', error);
+        // Show error but don't fallback - user needs Spotify
+        alert('Failed to start Spotify playback. Please check your connection.');
+        setIsPlaying(false);
+        setActiveRoom(null);
       }
     }
   };
 
-  const startMeetCuteAudio = (room: FocusRoom) => {
-    if (room.meetCuteSoundType) {
-      window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-        detail: { 
-          source: 'focus-rooms', 
-          roomId: room.id,
-          soundType: room.meetCuteSoundType 
-        }
-      }));
-    }
-  };
 
   const handleConnectSpotify = async () => {
     try {
@@ -304,39 +336,27 @@ export default function FocusRooms() {
           </motion.p>
         </div>
 
-        {/* Audio Source Selector */}
+        {/* Spotify Connection Prompt - Only show if not connected */}
         {!hasSpotify && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-6 bg-white rounded-xl shadow-lg p-6 border-2 border-teal-200"
+            className="mb-8 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl shadow-lg p-6 sm:p-8 border-2 border-green-200"
           >
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Choose Your Audio Source</h3>
-                <p className="text-gray-600 text-sm">
-                  Connect Spotify to use your own playlists, or use Meet-Cute's built-in soundscapes.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleConnectSpotify}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
-                >
-                  <Music className="w-5 h-5" />
-                  Connect Spotify
-                </button>
-                <button
-                  onClick={() => {
-                    setAudioSource('meetcute');
-                  }}
-                  className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center gap-2"
-                >
-                  <Headphones className="w-5 h-5" />
-                  Use Meet-Cute Audio
-                </button>
-              </div>
+            <div className="text-center">
+              <Music className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Connect Your Spotify</h3>
+              <p className="text-gray-700 mb-6 max-w-md mx-auto">
+                Connect your Spotify account to unlock Focus Rooms with your curated playlists.
+              </p>
+              <button
+                onClick={handleConnectSpotify}
+                className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
+              >
+                <Music className="w-5 h-5" />
+                Connect Spotify
+              </button>
             </div>
           </motion.div>
         )}
@@ -349,19 +369,25 @@ export default function FocusRooms() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index }}
-              onClick={() => handleRoomSelect(room)}
+              onClick={() => hasSpotify && handleRoomSelect(room)}
               className={`
-                relative bg-gradient-to-br ${room.bgGradient} rounded-xl sm:rounded-2xl shadow-lg p-6 cursor-pointer
-                transition-all hover:shadow-xl hover:scale-105
-                ${activeRoom === room.id ? 'ring-4 ring-teal-400 ring-offset-2' : ''}
+                relative bg-gradient-to-br ${room.bgGradient} rounded-xl sm:rounded-2xl shadow-lg p-6
+                transition-all hover:shadow-xl
+                ${hasSpotify ? 'cursor-pointer hover:scale-105' : 'cursor-default opacity-75'}
+                ${activeRoom === room.id && hasSpotify ? 'ring-4 ring-teal-400 ring-offset-2' : ''}
               `}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className={`text-${room.gradient.split(' ')[0].split('-')[1]}-600`}>
                   {room.icon}
                 </div>
-                {activeRoom === room.id && isPlaying && (
+                {activeRoom === room.id && isPlaying && hasSpotify && (
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                )}
+                {!hasSpotify && (
+                  <div className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                    Connect Spotify
+                  </div>
                 )}
               </div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
@@ -370,7 +396,22 @@ export default function FocusRooms() {
               <p className="text-gray-700 text-sm sm:text-base mb-4">
                 {room.description}
               </p>
-              {activeRoom === room.id && (
+              {!hasSpotify ? (
+                <div className="mt-4 pt-4 border-t border-gray-300">
+                  <p className="text-xs text-gray-500 text-center mb-2">
+                    Connect your Spotify to use this room
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleConnectSpotify();
+                    }}
+                    className="w-full px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Connect Spotify
+                  </button>
+                </div>
+              ) : activeRoom === room.id && (
                 <div className="mt-4 pt-4 border-t border-gray-300">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Playing</span>
@@ -379,6 +420,9 @@ export default function FocusRooms() {
                         {formatTime(timeRemaining)}
                       </span>
                     )}
+                    {timeRemaining === null && (
+                      <span className="font-semibold text-gray-900">∞</span>
+                    )}
                   </div>
                 </div>
               )}
@@ -386,30 +430,56 @@ export default function FocusRooms() {
           ))}
         </div>
 
-        {/* Controls Panel */}
-        {activeRoom && selectedRoom && (
+        {/* Controls Panel - Only show when Spotify is connected and room is active */}
+        {activeRoom && selectedRoom && hasSpotify && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 border-2 border-teal-200"
           >
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-              {/* Play/Pause */}
-              <button
-                onClick={() => {
-                  setIsPlaying(!isPlaying);
-                  if (!isPlaying) {
-                    startMeetCuteAudio(selectedRoom);
-                  } else {
-                    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                      detail: { source: 'focus-rooms' }
-                    }));
-                  }
-                }}
-                className="w-16 h-16 rounded-full bg-gradient-to-r from-teal-600 to-indigo-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-indigo-700 transition-all shadow-lg"
-              >
-                {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
-              </button>
+              {/* Play/Pause and Skip Controls */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={async () => {
+                    if (isPlaying) {
+                      // Pause Spotify
+                      try {
+                        await api.post('/api/spotify/pause');
+                      } catch (error) {
+                        console.error('Error pausing Spotify:', error);
+                      }
+                      setIsPlaying(false);
+                    } else {
+                      // Resume Spotify
+                      try {
+                        await api.post('/api/spotify/play', {
+                          roomId: selectedRoom.id,
+                        });
+                        setIsPlaying(true);
+                      } catch (error) {
+                        console.error('Error resuming Spotify:', error);
+                      }
+                    }
+                  }}
+                  className="w-16 h-16 rounded-full bg-gradient-to-r from-teal-600 to-indigo-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-indigo-700 transition-all shadow-lg"
+                >
+                  {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      await api.post('/api/spotify/next');
+                    } catch (error) {
+                      console.error('Error skipping track:', error);
+                    }
+                  }}
+                  className="w-12 h-12 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all"
+                  title="Skip to next track"
+                >
+                  <SkipForward className="w-6 h-6" />
+                </button>
+              </div>
 
               {/* Timer Selector */}
               <div className="flex-1 max-w-md">
@@ -421,13 +491,49 @@ export default function FocusRooms() {
                   {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
                     <button
                       key={option}
-                      onClick={() => {
+                      onClick={async () => {
+                        const oldTimer = timer;
                         setTimer(option);
+                        
                         if (isPlaying) {
                           if (option === '∞') {
                             setTimeRemaining(null);
                           } else {
                             setTimeRemaining(option * 60);
+                          }
+                          
+                          // If switching from finite to infinite or vice versa, restart session
+                          if ((oldTimer !== '∞' && option === '∞') || (oldTimer === '∞' && option !== '∞')) {
+                            // Restart session with new timer
+                            if (selectedRoom && currentSessionId) {
+                              // Complete old session
+                              if (sessionStartTime) {
+                                const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
+                                try {
+                                  await api.post('/api/focus-rooms/sessions/complete', {
+                                    sessionId: currentSessionId,
+                                    duration,
+                                    completed: false,
+                                  });
+                                } catch (error) {
+                                  console.error('Error completing session:', error);
+                                }
+                              }
+                              
+                              // Start new session
+                              try {
+                                const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
+                                  roomId: selectedRoom.id,
+                                  roomName: selectedRoom.name,
+                                  timerOption: option.toString(),
+                                  audioSource: 'spotify',
+                                });
+                                setCurrentSessionId(sessionResponse.data.sessionId);
+                                setSessionStartTime(Date.now());
+                              } catch (error) {
+                                console.error('Error restarting session:', error);
+                              }
+                            }
                           }
                         }
                       }}
@@ -453,7 +559,21 @@ export default function FocusRooms() {
                 </label>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setIsMuted(!isMuted)}
+                    onClick={async () => {
+                      const newMuted = !isMuted;
+                      setIsMuted(newMuted);
+                      
+                      // Update Spotify volume
+                      if (hasSpotify && isPlaying) {
+                        try {
+                          await api.post('/api/spotify/volume', {
+                            volumePercent: newMuted ? 0 : Math.round(volume * 100),
+                          });
+                        } catch (error) {
+                          console.error('Error muting Spotify:', error);
+                        }
+                      }
+                    }}
                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     {isMuted ? <VolumeX className="w-5 h-5 text-gray-600" /> : <Volume2 className="w-5 h-5 text-gray-600" />}
@@ -464,9 +584,21 @@ export default function FocusRooms() {
                     max="1"
                     step="0.1"
                     value={isMuted ? 0 : volume}
-                    onChange={(e) => {
-                      setVolume(parseFloat(e.target.value));
-                      setIsMuted(parseFloat(e.target.value) === 0);
+                    onChange={async (e) => {
+                      const newVolume = parseFloat(e.target.value);
+                      setVolume(newVolume);
+                      setIsMuted(newVolume === 0);
+                      
+                      // Update Spotify volume
+                      if (hasSpotify && isPlaying) {
+                        try {
+                          await api.post('/api/spotify/volume', {
+                            volumePercent: Math.round(newVolume * 100),
+                          });
+                        } catch (error) {
+                          console.error('Error setting Spotify volume:', error);
+                        }
+                      }
                     }}
                     className="flex-1"
                   />
