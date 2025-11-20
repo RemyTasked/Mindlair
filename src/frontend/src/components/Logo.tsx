@@ -16,6 +16,13 @@ export default function Logo({ className = '', size = 'md' }: LogoProps) {
   const sizeClass = sizeClasses[size];
   const gradientId = useId();
   
+  const gradientStyle = {
+    background: 'linear-gradient(to right, #4f46e5, #14b8a6)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+  };
+
   return (
     <div className={`inline-flex items-center ${className}`}>
       <span 
@@ -24,31 +31,30 @@ export default function Logo({ className = '', size = 'md' }: LogoProps) {
           fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           fontWeight: 700,
           letterSpacing: '-0.02em',
-          background: 'linear-gradient(to right, #4f46e5, #14b8a6)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
         }}
       >
-        <span>Mee</span>
+        {/* All letters explicitly rendered - M, e, e, t, C, u, t, e */}
+        <span style={gradientStyle}>M</span>
+        <span style={gradientStyle}>e</span>
+        <span style={gradientStyle}>e</span>
         <span className="relative inline-block">
-          <span>t</span>
+          <span style={gradientStyle}>t</span>
           {/* Artistic flowing connection from 't' to 'C' - decorative line connecting the two words */}
           <svg 
             className="absolute left-full top-1/2 -translate-y-1/2 pointer-events-none"
-            width="14" 
-            height="10" 
-            viewBox="0 0 14 10" 
+            width="10" 
+            height="6" 
+            viewBox="0 0 10 6" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              transform: 'translateY(-50%) translateX(3px)',
+              transform: 'translateY(-50%) translateX(2px)',
             }}
           >
             <path 
-              d="M 0 5 Q 3 2, 5 3 Q 7 4, 9 3 Q 11 2, 14 5" 
+              d="M 0 3 Q 3 1, 5 2 T 10 3" 
               stroke={`url(#${gradientId})`}
-              strokeWidth="1.8" 
+              strokeWidth="1.5" 
               strokeLinecap="round"
               fill="none"
             />
@@ -60,10 +66,12 @@ export default function Logo({ className = '', size = 'md' }: LogoProps) {
             </defs>
           </svg>
         </span>
-        <span className="relative inline-block" style={{ marginLeft: '0.4em' }}>
-          <span>C</span>
+        <span className="relative inline-block" style={{ marginLeft: '0.3em' }}>
+          <span style={gradientStyle}>C</span>
         </span>
-        <span>ute</span>
+        <span style={gradientStyle}>u</span>
+        <span style={gradientStyle}>t</span>
+        <span style={gradientStyle}>e</span>
       </span>
     </div>
   );
