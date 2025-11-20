@@ -29,24 +29,25 @@ export default function Logo({ className = '', size = 'md' }: LogoProps) {
         <span className="inline-block">Mee</span>
         <span className="inline-block relative">
           <span className="inline-block">t</span>
-          {/* Artistic flowing connection from 't' to 'C' */}
+          {/* Artistic flowing connection from 't' to 'C' - subtle curved line between letters */}
           <svg 
-            className="absolute left-full top-1/2 -translate-y-1/2"
-            width="14" 
-            height="10" 
-            viewBox="0 0 14 10" 
+            className="absolute left-full top-1/2 -translate-y-1/2 pointer-events-none"
+            width="8" 
+            height="5" 
+            viewBox="0 0 8 5" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              transform: 'translateY(-50%) translateX(-1px)',
+              transform: 'translateY(-50%) translateX(2px)',
             }}
           >
             <path 
-              d="M 0 5 Q 4 2, 7 3 T 14 5" 
+              d="M 0 2.5 Q 2 1, 4 1.5 T 8 2.5" 
               stroke={`url(#${gradientId})`}
-              strokeWidth="1.8" 
+              strokeWidth="1.2" 
               strokeLinecap="round"
               fill="none"
+              opacity="0.8"
             />
             <defs>
               <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -56,7 +57,7 @@ export default function Logo({ className = '', size = 'md' }: LogoProps) {
             </defs>
           </svg>
         </span>
-        <span className="inline-block relative ml-3">
+        <span className="inline-block relative" style={{ marginLeft: '0.2em' }}>
           <span className="inline-block">C</span>
         </span>
         <span className="inline-block">ute</span>
