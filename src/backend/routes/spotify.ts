@@ -58,32 +58,29 @@ async function getAccessToken(userId: string): Promise<string> {
   return spotifyAccount.accessToken;
 }
 
-// Play a Focus Room playlist
+// Play a Focus Room playlist - automatically finds appropriate lo-fi playlist
 router.post(
   '/play',
   authenticate,
   asyncHandler(async (req, res) => {
-    const { playlistId, roomId } = req.body;
+    const { roomId } = req.body;
 
-    if (!playlistId && !roomId) {
-      throw new AppError('playlistId or roomId is required', 400);
+    if (!roomId) {
+      throw new AppError('roomId is required', 400);
     }
 
     const accessToken = await getAccessToken(req.userId!);
 
-    // Get playlist ID
-    const finalPlaylistId = playlistId || spotifyService.getPlaylistIdForRoom(roomId);
-    if (!finalPlaylistId) {
-      throw new AppError('Playlist not found for room', 404);
-    }
+    // Automatically find appropriate lo-fi playlist for this room
+    const playlistId = await spotifyService.findPlaylistForRoom(accessToken, roomId);
 
     // Get active device or use default
     const devices = await spotifyService.getDevices(accessToken);
     const activeDevice = devices.find((d) => d.is_active) || devices[0];
 
-    await spotifyService.playPlaylist(accessToken, finalPlaylistId, activeDevice?.id);
+    await spotifyService.playPlaylist(accessToken, playlistId, activeDevice?.id);
 
-    res.json({ success: true, deviceId: activeDevice?.id, playlistId: finalPlaylistId });
+    res.json({ success: true, deviceId: activeDevice?.id, playlistId });
   })
 );
 

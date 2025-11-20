@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward, ChevronDown, ChevronUp } from 'lucide-react';
 import Logo from '../components/Logo';
 import api from '../lib/axios';
 
@@ -83,6 +83,7 @@ export default function FocusRooms() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [totalCredits, setTotalCredits] = useState(0);
+  const [timerExpanded, setTimerExpanded] = useState(true);
 
   // Check if Spotify is connected and load credits
   useEffect(() => {
@@ -364,6 +365,120 @@ export default function FocusRooms() {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        {/* Timer Section - At Top, Collapsible */}
+        {activeRoom && selectedRoom && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-teal-200 mb-6 sm:mb-8"
+          >
+            <button
+              onClick={() => setTimerExpanded(!timerExpanded)}
+              className="w-full flex items-center justify-between mb-2"
+            >
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-teal-600" />
+                <span className="font-semibold text-gray-900">Timer</span>
+                {timeRemaining !== null && (
+                  <span className="text-2xl font-bold text-teal-600">
+                    {formatTime(timeRemaining)}
+                  </span>
+                )}
+                {timeRemaining === null && (
+                  <span className="text-2xl font-bold text-teal-600">∞</span>
+                )}
+              </div>
+              {timerExpanded ? (
+                <ChevronUp className="w-5 h-5 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-600" />
+              )}
+            </button>
+            
+            <AnimatePresence>
+              {timerExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="pt-4 border-t border-gray-200"
+                >
+                <div className="flex gap-2 flex-wrap">
+                  {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
+                    <button
+                      key={option}
+                      onClick={async () => {
+                        const oldTimer = timer;
+                        setTimer(option);
+                        
+                        if (isPlaying) {
+                          if (option === '∞') {
+                            setTimeRemaining(null);
+                          } else {
+                            setTimeRemaining(option * 60);
+                          }
+                          
+                          // If switching from finite to infinite or vice versa, restart session
+                          if ((oldTimer !== '∞' && option === '∞') || (oldTimer === '∞' && option !== '∞')) {
+                            // Restart session with new timer
+                            if (selectedRoom && currentSessionId) {
+                              // Complete old session
+                              if (sessionStartTime) {
+                                const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
+                                try {
+                                  await api.post('/api/focus-rooms/sessions/complete', {
+                                    sessionId: currentSessionId,
+                                    duration,
+                                    completed: false,
+                                  });
+                                } catch (error) {
+                                  console.error('Error completing session:', error);
+                                }
+                              }
+                              
+                              // Start new session
+                              try {
+                                const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
+                                  roomId: selectedRoom.id,
+                                  roomName: selectedRoom.name,
+                                  timerOption: option.toString(),
+                                  audioSource: hasSpotify ? 'spotify' : 'meetcute',
+                                });
+                                setCurrentSessionId(sessionResponse.data.sessionId);
+                                setSessionStartTime(Date.now());
+                              } catch (error) {
+                                console.error('Error restarting session:', error);
+                              }
+                            }
+                          }
+                        } else {
+                          // Update timer for when playback starts
+                          if (option === '∞') {
+                            setTimeRemaining(null);
+                          } else {
+                            setTimeRemaining(option * 60);
+                          }
+                        }
+                      }}
+                      className={`
+                        px-4 py-2 rounded-lg font-semibold transition-all text-sm
+                        ${timer === option
+                          ? 'bg-teal-600 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }
+                      `}
+                    >
+                      {option === '∞' ? '∞' : `${option} min`}
+                    </button>
+                  ))}
+                </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
         {/* Header Section */}
         <div className="text-center mb-8 sm:mb-12">
           <motion.h1
@@ -539,75 +654,6 @@ export default function FocusRooms() {
                 )}
               </div>
 
-              {/* Timer Selector */}
-              <div className="flex-1 max-w-md">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <Clock className="w-4 h-4 inline mr-1" />
-                  Timer
-                </label>
-                <div className="flex gap-2">
-                  {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
-                    <button
-                      key={option}
-                      onClick={async () => {
-                        const oldTimer = timer;
-                        setTimer(option);
-                        
-                        if (isPlaying) {
-                          if (option === '∞') {
-                            setTimeRemaining(null);
-                          } else {
-                            setTimeRemaining(option * 60);
-                          }
-                          
-                          // If switching from finite to infinite or vice versa, restart session
-                          if ((oldTimer !== '∞' && option === '∞') || (oldTimer === '∞' && option !== '∞')) {
-                            // Restart session with new timer
-                            if (selectedRoom && currentSessionId) {
-                              // Complete old session
-                              if (sessionStartTime) {
-                                const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
-                                try {
-                                  await api.post('/api/focus-rooms/sessions/complete', {
-                                    sessionId: currentSessionId,
-                                    duration,
-                                    completed: false,
-                                  });
-                                } catch (error) {
-                                  console.error('Error completing session:', error);
-                                }
-                              }
-                              
-                              // Start new session
-                              try {
-                                const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
-                                  roomId: selectedRoom.id,
-                                  roomName: selectedRoom.name,
-                                  timerOption: option.toString(),
-                                  audioSource: 'spotify',
-                                });
-                                setCurrentSessionId(sessionResponse.data.sessionId);
-                                setSessionStartTime(Date.now());
-                              } catch (error) {
-                                console.error('Error restarting session:', error);
-                              }
-                            }
-                          }
-                        }
-                      }}
-                      className={`
-                        flex-1 px-4 py-2 rounded-lg font-semibold transition-all
-                        ${timer === option
-                          ? 'bg-teal-600 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }
-                      `}
-                    >
-                      {option === '∞' ? '∞' : `${option}m`}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Volume Control */}
               <div className="flex-1 max-w-md">

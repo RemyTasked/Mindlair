@@ -22,6 +22,7 @@ export class SpotifyService {
       'user-read-currently-playing',
       'streaming',
       'playlist-read-private',
+      'playlist-read-collaborative',
     ].join(' ');
 
     const state = userId ? Buffer.from(JSON.stringify({ userId })).toString('base64') : undefined;
@@ -220,6 +221,75 @@ export class SpotifyService {
         error: error.response?.data || error.message,
       });
       return [];
+    }
+  }
+
+  async findPlaylistForRoom(accessToken: string, roomId: string): Promise<string> {
+    // First check if we have a hardcoded playlist
+    const hardcoded = FOCUS_ROOM_PLAYLISTS[roomId];
+    if (hardcoded) {
+      return hardcoded;
+    }
+
+    // Search for appropriate lo-fi playlists based on room mood
+    const searchQueries: Record<string, string> = {
+      'deep-focus': 'lo-fi deep focus study',
+      'soft-composure': 'lo-fi calm peaceful',
+      'warm-connection': 'lo-fi chill vibes',
+      'pitch-pulse': 'lo-fi beats energy',
+      'recovery-lounge': 'lo-fi ambient relaxation',
+    };
+
+    const query = searchQueries[roomId] || 'lo-fi focus';
+    
+    try {
+      const response = await axios.get('https://api.spotify.com/v1/search', {
+        params: {
+          q: query,
+          type: 'playlist',
+          limit: 10,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const playlists = response.data.playlists?.items || [];
+      
+      // Prefer playlists with "lo-fi" or "lofi" in the name
+      const lofiPlaylist = playlists.find((p: any) => 
+        p.name.toLowerCase().includes('lo-fi') || 
+        p.name.toLowerCase().includes('lofi') ||
+        p.name.toLowerCase().includes('lo fi')
+      );
+
+      if (lofiPlaylist) {
+        logger.info(`✅ Found lo-fi playlist for ${roomId}`, { 
+          playlistId: lofiPlaylist.id, 
+          name: lofiPlaylist.name 
+        });
+        return lofiPlaylist.id;
+      }
+
+      // Fallback to first result
+      if (playlists.length > 0) {
+        logger.info(`✅ Using first search result for ${roomId}`, { 
+          playlistId: playlists[0].id, 
+          name: playlists[0].name 
+        });
+        return playlists[0].id;
+      }
+
+      // Ultimate fallback to hardcoded default
+      logger.warn(`⚠️ No playlist found for ${roomId}, using default`);
+      return FOCUS_ROOM_PLAYLISTS['deep-focus'] || '37i9dQZF1DWZeKCadgRdKQ';
+    } catch (error: any) {
+      logger.error('❌ Failed to search for Spotify playlist', {
+        error: error.response?.data || error.message,
+        roomId,
+      });
+      // Fallback to hardcoded
+      return FOCUS_ROOM_PLAYLISTS[roomId] || FOCUS_ROOM_PLAYLISTS['deep-focus'] || '37i9dQZF1DWZeKCadgRdKQ';
     }
   }
 
