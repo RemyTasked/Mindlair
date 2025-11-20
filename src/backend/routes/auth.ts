@@ -1119,5 +1119,60 @@ router.get(
   })
 );
 
+// Apple Music Routes
+// Note: Apple Music uses MusicKit JS on the frontend for authentication
+// The frontend will send the user token to this endpoint
+router.post(
+  '/apple-music/connect',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const { userToken, appleMusicId, displayName } = req.body;
+
+    if (!userToken || !appleMusicId) {
+      throw new AppError('userToken and appleMusicId are required', 400);
+    }
+
+    const userId = req.userId!;
+
+    // Store or update Apple Music account
+    await prisma.appleMusicAccount.upsert({
+      where: { userId },
+      update: {
+        appleMusicId,
+        displayName: displayName || undefined,
+        userToken,
+        expiresAt: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000), // 6 months (typical MusicKit token expiry)
+      },
+      create: {
+        userId,
+        appleMusicId,
+        displayName: displayName || undefined,
+        userToken,
+        expiresAt: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    logger.info('✅ Apple Music account connected', { userId, appleMusicId });
+
+    res.json({ success: true, message: 'Apple Music connected successfully' });
+  })
+);
+
+// Get Apple Music connection status
+router.get(
+  '/apple-music/status',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const appleMusicAccount = await prisma.appleMusicAccount.findUnique({
+      where: { userId: req.userId! },
+    });
+
+    res.json({
+      connected: !!appleMusicAccount,
+      displayName: appleMusicAccount?.displayName || null,
+    });
+  })
+);
+
 export default router;
 

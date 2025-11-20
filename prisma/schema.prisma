@@ -50,6 +50,9 @@ model User {
   // Spotify Integration
   spotifyAccount SpotifyAccount?
 
+  // Apple Music Integration
+  appleMusicAccount AppleMusicAccount?
+
   // Focus Room Sessions & Credits
   focusRoomSessions FocusRoomSession[]
 
@@ -70,6 +73,21 @@ model SpotifyAccount {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("spotify_accounts")
+}
+
+model AppleMusicAccount {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  appleMusicId String
+  displayName  String?
+  userToken    String   // MusicKit user token
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("apple_music_accounts")
 }
 
 model FocusRoomSession {

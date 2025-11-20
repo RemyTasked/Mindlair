@@ -80,33 +80,44 @@ export default function FocusRooms() {
   const [timer, setTimer] = useState<TimerOption>(20);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [hasSpotify, setHasSpotify] = useState(false);
+  const [hasAppleMusic, setHasAppleMusic] = useState(false);
+  const [audioProvider, setAudioProvider] = useState<'spotify' | 'apple-music' | 'meetcute'>('meetcute');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [totalCredits, setTotalCredits] = useState(0);
   const [timerExpanded, setTimerExpanded] = useState(true);
 
-  // Check if Spotify is connected and load credits
+  // Check if Spotify/Apple Music is connected and load credits
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [spotifyResponse, statsResponse] = await Promise.all([
+        const [spotifyResponse, appleMusicResponse, statsResponse] = await Promise.all([
           api.get('/api/spotify/status').catch(() => ({ data: { connected: false } })),
+          api.get('/api/apple-music/status').catch(() => ({ data: { connected: false } })),
           api.get('/api/focus-rooms/stats').catch(() => ({ data: { totalCredits: 0 } })),
         ]);
         setHasSpotify(spotifyResponse.data.connected || false);
+        setHasAppleMusic(appleMusicResponse.data.connected || false);
         setTotalCredits(statsResponse.data.totalCredits || 0);
+        
+        // Set default audio provider
+        if (spotifyResponse.data.connected) {
+          setAudioProvider('spotify');
+        } else if (appleMusicResponse.data.connected) {
+          setAudioProvider('apple-music');
+        } else {
+          setAudioProvider('meetcute');
+        }
       } catch (error) {
         console.error('Error loading data:', error);
       }
     };
     loadData();
 
-    // Check if returning from Spotify OAuth
+    // Check if returning from OAuth
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('spotify_connected') === 'true') {
-      // Reload Spotify status
+    if (urlParams.get('spotify_connected') === 'true' || urlParams.get('apple_music_connected') === 'true') {
       loadData();
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -207,12 +218,21 @@ export default function FocusRooms() {
         }
       }
 
-      // Stop audio (Spotify or Meet-Cute)
-      if (hasSpotify) {
+      // Stop audio (Spotify, Apple Music, or Meet-Cute)
+      if (audioProvider === 'spotify') {
         try {
           await api.post('/api/spotify/pause');
         } catch (error) {
           console.error('Error pausing Spotify:', error);
+        }
+      } else if (audioProvider === 'apple-music') {
+        if (typeof window !== 'undefined' && (window as any).MusicKit) {
+          try {
+            const musicKit = (window as any).MusicKit.getInstance();
+            await musicKit.stop();
+          } catch (error) {
+            console.error('Error stopping Apple Music:', error);
+          }
         }
       } else {
         // Stop Meet-Cute audio
@@ -254,7 +274,7 @@ export default function FocusRooms() {
       }
 
       // Start audio based on source
-      if (hasSpotify) {
+      if (audioProvider === 'spotify') {
         // Start Spotify playback for this room
         try {
           await api.post('/api/spotify/play', {
@@ -264,6 +284,26 @@ export default function FocusRooms() {
           console.error('Error starting Spotify:', error);
           // Fallback to Meet-Cute audio
           startMeetCuteAudio(room);
+          setAudioProvider('meetcute');
+        }
+      } else if (audioProvider === 'apple-music') {
+        // Start Apple Music playback for this room
+        try {
+          const response = await api.post('/api/apple-music/play', {
+            roomId: room.id,
+          });
+          
+          // Use MusicKit JS to play the playlist
+          if (typeof window !== 'undefined' && (window as any).MusicKit) {
+            const musicKit = (window as any).MusicKit.getInstance();
+            await musicKit.setQueue({ playlist: response.data.playlistId });
+            await musicKit.play();
+          }
+        } catch (error: any) {
+          console.error('Error starting Apple Music:', error);
+          // Fallback to Meet-Cute audio
+          startMeetCuteAudio(room);
+          setAudioProvider('meetcute');
         }
       } else {
         // Use Meet-Cute audio
@@ -291,6 +331,33 @@ export default function FocusRooms() {
       window.location.href = response.data.authUrl;
     } catch (error) {
       console.error('Error connecting Spotify:', error);
+    }
+  };
+
+  const handleConnectAppleMusic = async () => {
+    // Apple Music uses MusicKit JS on the frontend
+    // Check if MusicKit is available
+    if (typeof window !== 'undefined' && (window as any).MusicKit) {
+      try {
+        const musicKit = (window as any).MusicKit.getInstance();
+        const userToken = await musicKit.authorize();
+        const userInfo = await musicKit.api.music('/v1/me');
+        
+        // Send token to backend
+        await api.post('/api/auth/apple-music/connect', {
+          userToken,
+          appleMusicId: userInfo.data[0].id,
+          displayName: userInfo.data[0].attributes?.name || undefined,
+        });
+        
+        setHasAppleMusic(true);
+        setAudioProvider('apple-music');
+      } catch (error) {
+        console.error('Error connecting Apple Music:', error);
+        alert('Failed to connect Apple Music. Please make sure you have an Apple Music subscription.');
+      }
+    } else {
+      alert('Apple Music requires MusicKit JS. Please ensure you have an Apple Music subscription and are using a supported browser.');
     }
   };
 
@@ -443,7 +510,7 @@ export default function FocusRooms() {
                                   roomId: selectedRoom.id,
                                   roomName: selectedRoom.name,
                                   timerOption: option.toString(),
-                                  audioSource: hasSpotify ? 'spotify' : 'meetcute',
+                                  audioSource: audioProvider,
                                 });
                                 setCurrentSessionId(sessionResponse.data.sessionId);
                                 setSessionStartTime(Date.now());
@@ -508,8 +575,8 @@ export default function FocusRooms() {
           </motion.p>
         </div>
 
-        {/* Spotify Connection Prompt - Optional enhancement */}
-        {!hasSpotify && (
+        {/* Music Service Connection Prompt - Optional enhancement */}
+        {!hasSpotify && !hasAppleMusic && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -518,17 +585,26 @@ export default function FocusRooms() {
           >
             <div className="text-center">
               <Music className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Enhance with Spotify</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Enhance with Music</h3>
               <p className="text-gray-700 mb-6 max-w-md mx-auto">
-                Connect your Spotify to use your own curated playlists. Rooms work great with our built-in soundscapes too!
+                Connect Spotify or Apple Music for curated playlists. Rooms work great with our built-in soundscapes too!
               </p>
-              <button
-                onClick={handleConnectSpotify}
-                className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
-              >
-                <Music className="w-5 h-5" />
-                Connect Spotify (Optional)
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={handleConnectSpotify}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <Music className="w-5 h-5" />
+                  Connect Spotify
+                </button>
+                <button
+                  onClick={handleConnectAppleMusic}
+                  className="px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <Music className="w-5 h-5" />
+                  Connect Apple Music
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -637,13 +713,24 @@ export default function FocusRooms() {
                 >
                   {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
                 </button>
-                {hasSpotify && (
+                {(audioProvider === 'spotify' || audioProvider === 'apple-music') && (
                   <button
                     onClick={async () => {
-                      try {
-                        await api.post('/api/spotify/next');
-                      } catch (error) {
-                        console.error('Error skipping track:', error);
+                      if (audioProvider === 'spotify') {
+                        try {
+                          await api.post('/api/spotify/next');
+                        } catch (error) {
+                          console.error('Error skipping track:', error);
+                        }
+                      } else if (audioProvider === 'apple-music') {
+                        if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                          try {
+                            const musicKit = (window as any).MusicKit.getInstance();
+                            await musicKit.skipToNextItem();
+                          } catch (error) {
+                            console.error('Error skipping Apple Music track:', error);
+                          }
+                        }
                       }
                     }}
                     className="w-12 h-12 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all"
@@ -668,7 +755,7 @@ export default function FocusRooms() {
                       setIsMuted(newMuted);
                       
                       // Update audio volume
-                      if (hasSpotify && isPlaying) {
+                      if (audioProvider === 'spotify' && isPlaying) {
                         try {
                           await api.post('/api/spotify/volume', {
                             volumePercent: newMuted ? 0 : Math.round(volume * 100),
@@ -676,9 +763,17 @@ export default function FocusRooms() {
                         } catch (error) {
                           console.error('Error muting Spotify:', error);
                         }
-                      } else if (!hasSpotify) {
+                      } else if (audioProvider === 'apple-music' && isPlaying) {
+                        if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                          try {
+                            const musicKit = (window as any).MusicKit.getInstance();
+                            musicKit.volume = newMuted ? 0 : volume;
+                          } catch (error) {
+                            console.error('Error setting Apple Music volume:', error);
+                          }
+                        }
+                      } else if (audioProvider === 'meetcute') {
                         // Meet-Cute audio volume is controlled by AmbientSound component
-                        // The volume state here is for UI consistency
                         window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
                           detail: { volume: newMuted ? 0 : volume }
                         }));
@@ -700,7 +795,7 @@ export default function FocusRooms() {
                       setIsMuted(newVolume === 0);
                       
                       // Update audio volume
-                      if (hasSpotify && isPlaying) {
+                      if (audioProvider === 'spotify' && isPlaying) {
                         try {
                           await api.post('/api/spotify/volume', {
                             volumePercent: Math.round(newVolume * 100),
@@ -708,7 +803,16 @@ export default function FocusRooms() {
                         } catch (error) {
                           console.error('Error setting Spotify volume:', error);
                         }
-                      } else if (!hasSpotify) {
+                      } else if (audioProvider === 'apple-music' && isPlaying) {
+                        if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                          try {
+                            const musicKit = (window as any).MusicKit.getInstance();
+                            musicKit.volume = newVolume;
+                          } catch (error) {
+                            console.error('Error setting Apple Music volume:', error);
+                          }
+                        }
+                      } else if (audioProvider === 'meetcute') {
                         // Meet-Cute audio volume is controlled by AmbientSound component
                         window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
                           detail: { volume: newVolume }
