@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward, ChevronDown, ChevronUp } from 'lucide-react';
 import Logo from '../components/Logo';
 import AmbientSound from '../components/AmbientSound';
+import SceneLibrary from '../components/SceneLibrary';
 import api from '../lib/axios';
 
 interface FocusRoom {
@@ -86,7 +87,7 @@ export default function FocusRooms() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [totalCredits, setTotalCredits] = useState(0);
-  const [timerExpanded, setTimerExpanded] = useState(true);
+  const [showSceneLibrary, setShowSceneLibrary] = useState(false);
 
   // Check if Spotify/Apple Music is connected and load credits
   useEffect(() => {
@@ -433,211 +434,6 @@ export default function FocusRooms() {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        {/* Timer Section - At Top, Collapsible with Volume Control */}
-        {activeRoom && selectedRoom && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-teal-200 mb-6 sm:mb-8"
-          >
-            <button
-              onClick={() => setTimerExpanded(!timerExpanded)}
-              className="w-full flex items-center justify-between mb-2"
-            >
-              <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-teal-600" />
-                <span className="font-semibold text-gray-900">Timer</span>
-                {timeRemaining !== null && (
-                  <span className="text-2xl font-bold text-teal-600">
-                    {formatTime(timeRemaining)}
-                  </span>
-                )}
-                {timeRemaining === null && (
-                  <span className="text-2xl font-bold text-teal-600">∞</span>
-                )}
-              </div>
-              {timerExpanded ? (
-                <ChevronUp className="w-5 h-5 text-gray-600" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-600" />
-              )}
-            </button>
-            
-            <AnimatePresence>
-              {timerExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="pt-4 border-t border-gray-200 space-y-4"
-                >
-                {/* Timer Options */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Set Timer
-                  </label>
-                  <div className="flex gap-2 flex-wrap">
-                    {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
-                    <button
-                      key={option}
-                      onClick={async () => {
-                        const oldTimer = timer;
-                        setTimer(option);
-                        
-                        if (isPlaying) {
-                          if (option === '∞') {
-                            setTimeRemaining(null);
-                          } else {
-                            setTimeRemaining(option * 60);
-                          }
-                          
-                          // If switching from finite to infinite or vice versa, restart session
-                          if ((oldTimer !== '∞' && option === '∞') || (oldTimer === '∞' && option !== '∞')) {
-                            // Restart session with new timer
-                            if (selectedRoom && currentSessionId) {
-                              // Complete old session
-                              if (sessionStartTime) {
-                                const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
-                                try {
-                                  await api.post('/api/focus-rooms/sessions/complete', {
-                                    sessionId: currentSessionId,
-                                    duration,
-                                    completed: false,
-                                  });
-                                } catch (error) {
-                                  console.error('Error completing session:', error);
-                                }
-                              }
-                              
-                              // Start new session
-                              try {
-                                const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
-                                  roomId: selectedRoom.id,
-                                  roomName: selectedRoom.name,
-                                  timerOption: option.toString(),
-                                  audioSource: audioProvider,
-                                });
-                                setCurrentSessionId(sessionResponse.data.sessionId);
-                                setSessionStartTime(Date.now());
-                              } catch (error) {
-                                console.error('Error restarting session:', error);
-                              }
-                            }
-                          }
-                        } else {
-                          // Update timer for when playback starts
-                          if (option === '∞') {
-                            setTimeRemaining(null);
-                          } else {
-                            setTimeRemaining(option * 60);
-                          }
-                        }
-                      }}
-                      className={`
-                        px-4 py-2 rounded-lg font-semibold transition-all text-sm
-                        ${timer === option
-                          ? 'bg-teal-600 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }
-                      `}
-                    >
-                      {option === '∞' ? '∞' : `${option} min`}
-                    </button>
-                  ))}
-                  </div>
-                </div>
-                
-                {/* Volume Control */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    <Volume2 className="w-4 h-4 inline mr-1" />
-                    Volume
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={async () => {
-                        const newMuted = !isMuted;
-                        setIsMuted(newMuted);
-                        setVolume(newMuted ? 0 : volume || 0.7);
-                        
-                        // Update audio volume
-                        if (audioProvider === 'spotify' && isPlaying) {
-                          try {
-                            await api.post('/api/spotify/volume', {
-                              volumePercent: newMuted ? 0 : Math.round(volume * 100),
-                            });
-                          } catch (error) {
-                            console.error('Error muting Spotify:', error);
-                          }
-                        } else if (audioProvider === 'apple-music' && isPlaying) {
-                          if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                            try {
-                              const musicKit = (window as any).MusicKit.getInstance();
-                              musicKit.volume = newMuted ? 0 : volume;
-                            } catch (error) {
-                              console.error('Error setting Apple Music volume:', error);
-                            }
-                          }
-                        } else if (audioProvider === 'meetcute') {
-                          window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                            detail: { volume: newMuted ? 0 : volume }
-                          }));
-                        }
-                      }}
-                      className="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all"
-                      title={isMuted ? 'Unmute' : 'Mute'}
-                    >
-                      {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                    </button>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={isMuted ? 0 : volume}
-                      onChange={async (e) => {
-                        const newVolume = parseFloat(e.target.value);
-                        setVolume(newVolume);
-                        setIsMuted(newVolume === 0);
-                        
-                        // Update audio volume
-                        if (audioProvider === 'spotify' && isPlaying) {
-                          try {
-                            await api.post('/api/spotify/volume', {
-                              volumePercent: Math.round(newVolume * 100),
-                            });
-                          } catch (error) {
-                            console.error('Error setting Spotify volume:', error);
-                          }
-                        } else if (audioProvider === 'apple-music' && isPlaying) {
-                          if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                            try {
-                              const musicKit = (window as any).MusicKit.getInstance();
-                              musicKit.volume = newVolume;
-                            } catch (error) {
-                              console.error('Error setting Apple Music volume:', error);
-                            }
-                          }
-                        } else if (audioProvider === 'meetcute') {
-                          window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                            detail: { volume: newVolume }
-                          }));
-                        }
-                      }}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
-                    />
-                    <span className="text-sm font-semibold text-gray-700 w-12 text-right">
-                      {Math.round((isMuted ? 0 : volume) * 100)}%
-                    </span>
-                  </div>
-                </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-
         {/* Header Section */}
         <div className="text-center mb-8 sm:mb-12">
           <motion.h1
@@ -723,14 +519,19 @@ export default function FocusRooms() {
                 {activeRoom === room.id && isPlaying && (
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 )}
-                {!hasSpotify && (
+                {audioProvider === 'meetcute' && (
                   <div className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
                     Meet-Cute Audio
                   </div>
                 )}
-                {hasSpotify && (
+                {audioProvider === 'spotify' && (
                   <div className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                     Spotify
+                  </div>
+                )}
+                {audioProvider === 'apple-music' && (
+                  <div className="px-2 py-1 bg-pink-100 text-pink-800 text-xs font-semibold rounded-full">
+                    Apple Music
                   </div>
                 )}
               </div>
@@ -740,24 +541,242 @@ export default function FocusRooms() {
               <p className="text-gray-700 text-sm sm:text-base mb-4">
                 {room.description}
               </p>
+              
+              {/* Timer and Volume Controls - Show when this room is active */}
               {activeRoom === room.id && (
-                <div className="mt-4 pt-4 border-t border-gray-300">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Playing</span>
-                    {timeRemaining !== null && (
-                      <span className="font-semibold text-gray-900">
-                        {formatTime(timeRemaining)}
-                      </span>
-                    )}
-                    {timeRemaining === null && (
-                      <span className="font-semibold text-gray-900">∞</span>
-                    )}
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-4 pt-4 border-t border-gray-300 space-y-4"
+                >
+                  {/* Timer Display and Controls */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-teal-600" />
+                        <span className="text-sm font-semibold text-gray-700">Timer</span>
+                      </div>
+                      {timeRemaining !== null && (
+                        <span className="text-lg font-bold text-teal-600">
+                          {formatTime(timeRemaining)}
+                        </span>
+                      )}
+                      {timeRemaining === null && (
+                        <span className="text-lg font-bold text-teal-600">∞</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
+                        <button
+                          key={option}
+                          onClick={async (e) => {
+                            e.stopPropagation(); // Prevent room selection
+                            const oldTimer = timer;
+                            setTimer(option);
+                            
+                            if (isPlaying) {
+                              if (option === '∞') {
+                                setTimeRemaining(null);
+                              } else {
+                                setTimeRemaining(option * 60);
+                              }
+                              
+                              // If switching from finite to infinite or vice versa, restart session
+                              if ((oldTimer !== '∞' && option === '∞') || (oldTimer === '∞' && option !== '∞')) {
+                                if (selectedRoom && currentSessionId) {
+                                  if (sessionStartTime) {
+                                    const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
+                                    try {
+                                      await api.post('/api/focus-rooms/sessions/complete', {
+                                        sessionId: currentSessionId,
+                                        duration,
+                                        completed: false,
+                                      });
+                                    } catch (error) {
+                                      console.error('Error completing session:', error);
+                                    }
+                                  }
+                                  
+                                  try {
+                                    const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
+                                      roomId: selectedRoom.id,
+                                      roomName: selectedRoom.name,
+                                      timerOption: option.toString(),
+                                      audioSource: audioProvider,
+                                    });
+                                    setCurrentSessionId(sessionResponse.data.sessionId);
+                                    setSessionStartTime(Date.now());
+                                  } catch (error) {
+                                    console.error('Error restarting session:', error);
+                                  }
+                                }
+                              }
+                            } else {
+                              if (option === '∞') {
+                                setTimeRemaining(null);
+                              } else {
+                                setTimeRemaining(option * 60);
+                              }
+                            }
+                          }}
+                          className={`
+                            px-3 py-1.5 rounded-lg font-semibold transition-all text-xs
+                            ${timer === option
+                              ? 'bg-teal-600 text-white shadow-md'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }
+                          `}
+                        >
+                          {option === '∞' ? '∞' : `${option}m`}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                  
+                  {/* Volume Control */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Volume2 className="w-4 h-4 text-teal-600" />
+                      <span className="text-sm font-semibold text-gray-700">Volume</span>
+                      <span className="text-sm font-semibold text-teal-600 ml-auto">
+                        {Math.round((isMuted ? 0 : volume) * 100)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const newMuted = !isMuted;
+                          setIsMuted(newMuted);
+                          setVolume(newMuted ? 0 : volume || 0.7);
+                          
+                          if (audioProvider === 'spotify' && isPlaying) {
+                            try {
+                              await api.post('/api/spotify/volume', {
+                                volumePercent: newMuted ? 0 : Math.round(volume * 100),
+                              });
+                            } catch (error) {
+                              console.error('Error muting Spotify:', error);
+                            }
+                          } else if (audioProvider === 'apple-music' && isPlaying) {
+                            if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                              try {
+                                const musicKit = (window as any).MusicKit.getInstance();
+                                musicKit.volume = newMuted ? 0 : volume;
+                              } catch (error) {
+                                console.error('Error setting Apple Music volume:', error);
+                              }
+                            }
+                          } else if (audioProvider === 'meetcute') {
+                            window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
+                              detail: { volume: newMuted ? 0 : volume }
+                            }));
+                          }
+                        }}
+                        className="w-8 h-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all flex-shrink-0"
+                        title={isMuted ? 'Unmute' : 'Mute'}
+                      >
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={isMuted ? 0 : volume}
+                        onChange={async (e) => {
+                          e.stopPropagation();
+                          const newVolume = parseFloat(e.target.value);
+                          setVolume(newVolume);
+                          setIsMuted(newVolume === 0);
+                          
+                          if (audioProvider === 'spotify' && isPlaying) {
+                            try {
+                              await api.post('/api/spotify/volume', {
+                                volumePercent: Math.round(newVolume * 100),
+                              });
+                            } catch (error) {
+                              console.error('Error setting Spotify volume:', error);
+                            }
+                          } else if (audioProvider === 'apple-music' && isPlaying) {
+                            if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                              try {
+                                const musicKit = (window as any).MusicKit.getInstance();
+                                musicKit.volume = newVolume;
+                              } catch (error) {
+                                console.error('Error setting Apple Music volume:', error);
+                              }
+                            }
+                          } else if (audioProvider === 'meetcute') {
+                            window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
+                              detail: { volume: newVolume }
+                            }));
+                          }
+                        }}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
               )}
             </motion.div>
           ))}
         </div>
+        
+        {/* Scene Library Section - For ambient sounds */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">Ambient Sound Library</h2>
+            <button
+              onClick={() => setShowSceneLibrary(!showSceneLibrary)}
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all flex items-center gap-2"
+            >
+              {showSceneLibrary ? 'Hide' : 'Show'} Library
+              {showSceneLibrary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+          
+          <AnimatePresence>
+            {showSceneLibrary && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-teal-200">
+                  <SceneLibrary
+                    timeOfDay={new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}
+                    onSoundTypeChange={() => {
+                      // Stop any Focus Room audio when using Scene Library
+                      if (activeRoom) {
+                        if (audioProvider === 'spotify') {
+                          api.post('/api/spotify/pause').catch(() => {});
+                        } else if (audioProvider === 'apple-music') {
+                          if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                            (window as any).MusicKit.getInstance().stop().catch(() => {});
+                          }
+                        } else {
+                          window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                            detail: { source: 'focus-rooms' }
+                          }));
+                        }
+                        setActiveRoom(null);
+                        setIsPlaying(false);
+                      }
+                    }}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Controls Panel - Show when room is active */}
         {activeRoom && selectedRoom && (

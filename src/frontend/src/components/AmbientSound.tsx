@@ -543,12 +543,15 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
   const startFallbackAudio = useCallback(async () => {
     const currentSoundType = eventSoundType || soundType;
+    console.log('🎵 startFallbackAudio called with:', { currentSoundType, eventSoundType, soundType, enabled });
     if (!enabled || currentSoundType === 'none') {
+      console.warn('⚠️ Not starting fallback audio:', { enabled, currentSoundType });
       stopAudio();
       return;
     }
 
     const audioUrl = createDataUrl(currentSoundType);
+    console.log('🎵 Created audio URL for:', currentSoundType);
     if (!audioUrl) {
       throw new Error('No audio URL available for fallback playback');
     }
@@ -653,9 +656,8 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       sourceRef.current = sourceNode;
       gainRef.current = gainNode;
 
-      const currentSoundType = eventSoundType || soundType;
       console.log(`🎵 WebAudio ambient sound started [${sourceLabel}]`, {
-        soundType: currentSoundType,
+        soundType: eventSoundType || soundType,
       });
 
       setIsPlaying(true);
@@ -729,6 +731,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       // Update event soundType if provided
       if (eventSoundTypeValue) {
         setEventSoundType(eventSoundTypeValue);
+        console.log('✅ Updated eventSoundType to:', eventSoundTypeValue);
       }
       
       // Stop any currently playing audio first
@@ -737,10 +740,17 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       // Small delay to ensure stop completes before starting new sound
       setTimeout(() => {
         const soundToPlay = eventSoundTypeValue || soundType;
+        console.log('🎵 Starting audio with soundType:', soundToPlay);
         if (enabled && soundToPlay && soundToPlay !== 'none') {
+          // Force update the soundType before starting
+          if (eventSoundTypeValue && eventSoundTypeValue !== soundType) {
+            setEventSoundType(eventSoundTypeValue);
+          }
           startAudio('event-dispatch');
+        } else {
+          console.warn('⚠️ Not starting audio:', { enabled, soundToPlay });
         }
-      }, 100);
+      }, 200); // Increased delay to ensure state updates
     };
 
     const stopHandler = () => {
