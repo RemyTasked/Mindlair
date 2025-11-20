@@ -152,7 +152,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-6 py-20 text-center relative z-10">
+      <section className="container mx-auto px-6 py-12 sm:py-16 md:py-20 text-center relative z-10">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -188,15 +188,16 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="mb-12 max-w-2xl mx-auto"
           >
-            <div className="bg-gradient-to-br from-indigo-200/80 to-teal-200/80 rounded-2xl p-8 shadow-2xl backdrop-blur-sm border border-white/50">
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <Logo size="xl" />
-                <div className="text-left">
-                  <div className="text-2xl font-bold text-indigo-900">Your Focus Scene</div>
-                  <div className="text-indigo-700">5 minutes • Before every meeting</div>
+            <div className="bg-gradient-to-br from-indigo-200/80 to-teal-200/80 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm border border-white/50">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <Logo size="lg" className="sm:hidden" />
+                <Logo size="xl" className="hidden sm:block" />
+                <div className="text-center sm:text-left">
+                  <div className="text-xl sm:text-2xl font-bold text-indigo-900">Your Focus Scene</div>
+                  <div className="text-sm sm:text-base text-indigo-700">5 minutes • Before every meeting</div>
                 </div>
               </div>
-              <div className="space-y-3 text-left bg-white rounded-xl p-6">
+              <div className="space-y-3 sm:space-y-4 text-left bg-white rounded-xl p-4 sm:p-6">
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">🎯</div>
                   <div>
@@ -228,7 +229,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12"
           >
             <button
               onClick={handleGoogleAuth}
