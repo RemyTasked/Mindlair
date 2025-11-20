@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { Calendar, Settings as SettingsIcon, TrendingUp } from 'lucide-react';
-import SceneLibrary from '../components/SceneLibrary';
+// SceneLibrary removed - now in Focus Rooms tab
 import { DirectorsInsights } from '../components/DirectorsInsights';
 import { PostMeetingReflection, ReflectionData } from '../components/PostMeetingReflection';
 import AmbientSound from '../components/AmbientSound';
@@ -78,7 +78,7 @@ export default function Dashboard() {
   const [reflectionInsights, setReflectionInsights] = useState<any>(null);
   const [showReflectionModal, setShowReflectionModal] = useState(false);
   const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
-  const [ambientSoundType, setAmbientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none'>('calm-ocean');
+  const [ambientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none'>('calm-ocean');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
   const [activeMeetings, setActiveMeetings] = useState<Meeting[]>([]);
@@ -104,13 +104,7 @@ export default function Dashboard() {
     return null;
   };
 
-  // Determine time of day for Scene Library
-  const getTimeOfDay = (): 'morning' | 'afternoon' | 'evening' => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'morning';
-    if (hour < 18) return 'afternoon';
-    return 'evening';
-  };
+  // Scene Library moved to Focus Rooms tab
 
   useEffect(() => {
     loadUserData();
@@ -577,13 +571,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Scene Library - Always available for quick calm moments */}
-        <div className="mb-6 sm:mb-8">
-          <SceneLibrary 
-            timeOfDay={getTimeOfDay()} 
-            onSoundTypeChange={setAmbientSoundType}
-          />
-        </div>
+        {/* Focus Rooms - Now available as separate tab in navigation */}
 
         {/* Presley Flow Card - Compact on Mobile */}
         {presleyFlow?.available && (

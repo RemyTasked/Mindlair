@@ -8,6 +8,7 @@ import { UpdateNotificationManager } from './components/UpdateNotification';
 
 // Lazy load heavy routes
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const FocusRooms = lazy(() => import('./pages/FocusRooms'));
 const Settings = lazy(() => import('./pages/Settings'));
 const FocusScene = lazy(() => import('./pages/FocusScene'));
 const FocusSceneDemo = lazy(() => import('./pages/FocusSceneDemo'));
@@ -43,6 +44,7 @@ function App() {
           <Route path="/winding-down/:userId" element={<WindingDown />} />
           <Route path="/weekend-flow/:userId" element={<WeekendFlow />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/focus-rooms" element={<FocusRooms />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/terms" element={<Terms />} />

@@ -170,15 +170,24 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-teal-600 to-pink-600 bg-clip-text text-transparent leading-tight"
           >
-            5 Minutes to Alignment
+            The Human-Performance Layer for Meetings
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-xl sm:text-2xl text-gray-700 mb-8 leading-relaxed max-w-3xl mx-auto"
+            className="text-xl sm:text-2xl text-gray-700 mb-4 leading-relaxed max-w-3xl mx-auto"
           >
-            Your next scene deserves the best version of you.
+            Meet-Cute isn't just a reminder that a meeting is coming —<br />
+            it prepares you, the person, to show up confidently, calmly, and connected.
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto"
+          >
+            Transform meetings from stressful obligations into opportunities for presence and influence.
           </motion.p>
           
           {/* Visual Preview */}
