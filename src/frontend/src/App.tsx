@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AuthCallback from './pages/AuthCallback';
-import { LOGO_PATHS } from './config/constants';
+import Logo from './components/Logo';
 import { CueToastManager } from './components/CueToast';
 import { UpdateNotificationManager } from './components/UpdateNotification';
 
@@ -22,11 +22,9 @@ const Privacy = lazy(() => import('./pages/Privacy'));
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-teal-50">
     <div className="text-center">
-      <img
-        src={LOGO_PATHS.main}
-        alt="Meet Cute Logo"
-        className="w-20 h-20 mx-auto mb-4 animate-pulse"
-      />
+      <div className="mx-auto mb-4">
+        <Logo size="lg" />
+      </div>
       <h2 className="text-2xl font-semibold text-gray-800">Loading...</h2>
     </div>
   </div>

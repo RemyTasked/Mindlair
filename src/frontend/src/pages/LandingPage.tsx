@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from '../components/Logo';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { Calendar, Sparkles, Mail, Moon, Sun, Star, Music, Heart, Brain } from 'lucide-react';
@@ -50,11 +50,9 @@ export default function LandingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-teal-50 to-pink-100">
         <div className="text-center">
-          <img
-            src={LOGO_PATHS.main}
-            alt="Meet Cute Logo"
-            className="w-20 h-20 mx-auto mb-4 animate-pulse"
-          />
+          <div className="mx-auto mb-4">
+            <Logo size="lg" />
+          </div>
           <h2 className="text-2xl font-semibold text-gray-800">Loading...</h2>
         </div>
       </div>
@@ -144,18 +142,12 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
           className="flex justify-center items-center"
         >
-          <div className="flex items-center gap-2">
-            <motion.img
-              src={LOGO_PATHS.main}
-              alt="Meet Cute Logo"
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
-            />
-            <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-teal-600 to-pink-600 bg-clip-text text-transparent">
-              Meet Cute
-            </div>
-          </div>
+          <motion.div
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            <Logo size="lg" />
+          </motion.div>
         </motion.div>
       </header>
 
@@ -198,11 +190,7 @@ export default function LandingPage() {
           >
             <div className="bg-gradient-to-br from-indigo-200/80 to-teal-200/80 rounded-2xl p-8 shadow-2xl backdrop-blur-sm border border-white/50">
               <div className="flex items-center justify-center gap-4 mb-4">
-                <img 
-                  src={LOGO_PATHS.main} 
-                  alt="Meet Cute Logo" 
-                  className="w-24 h-24 sm:w-28 sm:h-28 object-contain"
-                />
+                <Logo size="xl" />
                 <div className="text-left">
                   <div className="text-2xl font-bold text-indigo-900">Your Focus Scene</div>
                   <div className="text-indigo-700">5 minutes • Before every meeting</div>

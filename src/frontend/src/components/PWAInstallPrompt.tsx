@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from './Logo';
 
 /**
  * PWA Install Prompt Component
@@ -89,11 +89,7 @@ export default function PWAInstallPrompt() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
-              <img 
-                src={LOGO_PATHS.main} 
-                alt="Meet Cute" 
-                className="w-12 h-12 object-contain"
-              />
+              <Logo size="md" />
               <div>
                 <h3 className="text-lg font-bold">Install Meet Cute</h3>
                 <p className="text-sm text-indigo-100">

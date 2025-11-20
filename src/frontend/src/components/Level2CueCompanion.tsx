@@ -9,7 +9,6 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Activity, Loader } from 'lucide-react';
 import { getAudioAnalyzer, type CueTrigger, type MeetingSummary } from '../services/audioAnalyzer';
-import { LOGO_PATHS } from '../config/constants';
 
 interface Level2CueCompanionProps {
   enabled: boolean;
@@ -415,11 +414,19 @@ export default function Level2CueCompanion({
             onClick={dismissCue}
           >
             <div className="bg-gradient-to-r from-teal-600 to-indigo-600 text-white px-6 py-4 rounded-full shadow-2xl border-2 border-teal-300 cursor-pointer hover:scale-105 transition-transform flex items-center gap-3">
-              <img
-                src={LOGO_PATHS.main}
-                alt="Meet Cute"
-                className="w-6 h-6 object-contain flex-shrink-0"
-              />
+              <div className="text-white text-lg font-bold tracking-wide flex-shrink-0">
+                <span style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontWeight: 700, letterSpacing: '-0.02em' }}>
+                  <span>Mee</span>
+                  <span className="relative inline-block">
+                    <span>t</span>
+                    <svg className="absolute left-full top-1/2 -translate-y-1/2" width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'translateY(-50%) translateX(-2px)' }}>
+                      <path d="M 0 4 Q 6 0, 12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </span>
+                  <span className="ml-2">C</span>
+                  <span>ute</span>
+                </span>
+              </div>
               <p className="text-lg font-bold tracking-wide text-center whitespace-nowrap">
                 {currentCue.message}
               </p>

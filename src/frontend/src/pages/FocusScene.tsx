@@ -6,7 +6,7 @@ import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
 import Level2CueCompanion from '../components/Level2CueCompanion';
 import PrepModeFlow from '../components/PrepModeFlow';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from '../components/Logo';
 
 type PrepMode = 'clarity' | 'confidence' | 'connection' | 'composure' | 'momentum';
 
@@ -299,11 +299,7 @@ export default function FocusScene() {
                   repeatDelay: 3
                 }}
               >
-                <img
-                  src={LOGO_PATHS.main}
-                  alt="Meet Cute Logo"
-                  className="w-20 h-20 mx-auto"
-                />
+                <Logo size="lg" />
               </motion.div>
               <motion.h1 
                 className="text-5xl font-bold mb-6 text-balance"

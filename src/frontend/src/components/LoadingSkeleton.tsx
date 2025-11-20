@@ -1,4 +1,4 @@
-import { LOGO_PATHS } from '../config/constants';
+import Logo from './Logo';
 
 export const StatCardSkeleton = () => (
   <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 animate-pulse">
@@ -47,11 +47,9 @@ export const DashboardSkeleton = () => (
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img
-            src={LOGO_PATHS.main}
-            alt="Meet Cute Logo"
-            className="w-10 h-10 object-contain animate-pulse"
-          />
+          <div className="opacity-50 animate-pulse">
+            <Logo size="sm" />
+          </div>
           <div className="h-8 bg-gray-200 rounded w-32 animate-pulse"></div>
         </div>
         <div className="flex items-center gap-4">

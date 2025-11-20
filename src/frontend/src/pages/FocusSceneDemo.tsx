@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdaptiveBreathingFlow from '../components/AdaptiveBreathingFlow';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from '../components/Logo';
 
 export default function FocusSceneDemo() {
   const [currentPhase, setCurrentPhase] = useState<'intro' | 'breathing' | 'reflection' | 'complete'>('intro');
@@ -91,11 +91,9 @@ export default function FocusSceneDemo() {
               transition={{ delay: 0.2 }}
               className="text-center max-w-2xl"
             >
-              <img
-                src={LOGO_PATHS.main}
-                alt="Meet Cute Logo"
-                className="w-20 h-20 mx-auto mb-8"
-              />
+              <div className="mx-auto mb-8">
+                <Logo size="lg" />
+              </div>
               <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-teal-200 to-pink-200">
                 {meeting.title}
               </h1>

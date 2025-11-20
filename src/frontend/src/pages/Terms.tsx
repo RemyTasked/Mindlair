@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from '../components/Logo';
 
 export default function Terms() {
   const navigate = useNavigate();
@@ -18,14 +18,7 @@ export default function Terms() {
             Back to Home
           </button>
           <div className="flex items-center gap-3">
-            <img 
-              src={LOGO_PATHS.main} 
-              alt="Meet Cute Logo" 
-              className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
-            />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-teal-600 bg-clip-text text-transparent">
-              Meet Cute
-            </h1>
+            <Logo size="md" />
           </div>
         </div>
       </header>

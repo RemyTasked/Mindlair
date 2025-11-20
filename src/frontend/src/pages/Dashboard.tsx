@@ -9,7 +9,7 @@ import { PostMeetingReflection, ReflectionData } from '../components/PostMeeting
 import AmbientSound from '../components/AmbientSound';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from '../components/Logo';
 import { getUserTimezone } from '../utils/timezone';
 import Onboarding from '../components/Onboarding';
 import OnboardingWelcome from '../components/OnboardingWelcome';
@@ -514,14 +514,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center">
             {/* Logo Section */}
             <div className="flex items-center gap-3">
-              <img 
-                src={LOGO_PATHS.main}
-                alt="Meet Cute Logo" 
-                className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
-              />
-              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-teal-600 bg-clip-text text-transparent">
-                Meet Cute
-              </h1>
+              <Logo size="md" />
             </div>
 
             {/* User Section */}

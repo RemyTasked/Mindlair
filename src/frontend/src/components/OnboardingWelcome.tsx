@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from './Logo';
 
 interface OnboardingWelcomeProps {
   onContinue: () => void;
@@ -16,11 +16,7 @@ export default function OnboardingWelcome({ onContinue }: OnboardingWelcomeProps
             transition={{ duration: 0.6 }}
             className="flex justify-center"
           >
-            <img
-              src={LOGO_PATHS.main}
-              alt="Meet Cute"
-              className="w-24 h-24 drop-shadow-lg"
-            />
+            <Logo size="xl" />
           </motion.div>
 
           <motion.div

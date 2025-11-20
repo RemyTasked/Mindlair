@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Eye, Database, Key, UserCheck, ArrowLeft } from 'lucide-react';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from '../components/Logo';
 
 export default function Privacy() {
   const navigate = useNavigate();
@@ -20,14 +20,7 @@ export default function Privacy() {
               <h1 className="text-xl font-bold text-gray-800">Privacy & Security</h1>
             </div>
             <div className="flex items-center gap-2">
-              <img 
-                src={LOGO_PATHS.main} 
-                alt="Meet Cute Logo" 
-                className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
-              />
-              <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-teal-600 bg-clip-text text-transparent hidden sm:inline">
-                Meet Cute
-              </span>
+              <Logo size="md" />
             </div>
           </div>
         </div>

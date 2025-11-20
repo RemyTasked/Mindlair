@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import api from '../lib/axios';
 import { playNotificationSound } from '../utils/notificationSound';
-import { LOGO_PATHS } from '../config/constants';
+import Logo from './Logo';
 
 interface CueAction {
   label: string;
@@ -95,12 +95,7 @@ export function CueToast({ cue, onDismiss }: CueToastProps) {
           {/* Meet Cute Branding + Close Button */}
           <div className="flex items-center justify-between gap-3 pb-2 border-b border-indigo-100">
             <div className="flex items-center gap-2">
-              <img
-                src={LOGO_PATHS.main}
-                alt="Meet Cute"
-                className="w-6 h-6 object-contain"
-              />
-              <span className="text-xs font-semibold text-indigo-900">Meet Cute</span>
+              <Logo size="sm" />
             </div>
             <button
               onClick={handleDismiss}
