@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Logo from '../components/Logo';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
-import { Calendar, Sparkles, Mail, Moon, Sun, Star, Music, Heart, Brain } from 'lucide-react';
+import { Calendar, Sparkles, Music, Brain, Headphones, Zap } from 'lucide-react';
 import CalDAVModal from '../components/CalDAVModal';
 
 export default function LandingPage() {
@@ -176,18 +176,9 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-xl sm:text-2xl text-gray-700 mb-4 leading-relaxed max-w-3xl mx-auto"
+            className="text-xl sm:text-2xl text-gray-700 mb-8 leading-relaxed max-w-3xl mx-auto"
           >
-            Meet-Cute isn't just a reminder that a meeting is coming —<br />
-            it prepares you, the person, to show up confidently, calmly, and connected.
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto"
-          >
-            Transform meetings from stressful obligations into opportunities for presence and influence.
+            Show up confidently, calmly, and connected. 5-minute prep before every meeting.
           </motion.p>
           
           {/* Visual Preview */}
@@ -206,29 +197,21 @@ export default function LandingPage() {
                   <div className="text-sm sm:text-base text-indigo-700">5 minutes • Before every meeting</div>
                 </div>
               </div>
-              <div className="space-y-3 sm:space-y-4 text-left bg-white rounded-xl p-4 sm:p-6">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">🎯</div>
-                  <div>
-                    <div className="font-semibold text-gray-800">5-Minute Pre-Meeting Prep</div>
-                    <div className="text-gray-600 text-sm">Guided preparation ritual 5 minutes before every meeting - breathe, center, prepare</div>
-                  </div>
+              <div className="grid sm:grid-cols-3 gap-4 text-center">
+                <div className="bg-white rounded-xl p-4">
+                  <div className="text-3xl mb-2">🎯</div>
+                  <div className="font-semibold text-gray-800 text-sm mb-1">5-Min Prep</div>
+                  <div className="text-gray-600 text-xs">Breathe, center, prepare</div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">💡</div>
-                  <div>
-                    <div className="font-semibold text-gray-800">Smart In-Meeting Cues</div>
-                    <div className="text-gray-600 text-sm">
-                      <strong className="text-indigo-700">Real-time composure cues</strong> delivered during your meeting to help you stay calm, focused, and present
-                    </div>
-                  </div>
+                <div className="bg-white rounded-xl p-4">
+                  <div className="text-3xl mb-2">💡</div>
+                  <div className="font-semibold text-gray-800 text-sm mb-1">Real-Time Cues</div>
+                  <div className="text-gray-600 text-xs">Stay calm & focused</div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">🎵</div>
-                  <div>
-                    <div className="font-semibold text-gray-800">Calming Ambient Sounds</div>
-                    <div className="text-gray-600 text-sm">Ocean waves, rain, white noise - pick what centers you</div>
-                  </div>
+                <div className="bg-white rounded-xl p-4">
+                  <div className="text-3xl mb-2">🎵</div>
+                  <div className="font-semibold text-gray-800 text-sm mb-1">Focus Rooms</div>
+                  <div className="text-gray-600 text-xs">Cinematic audio spaces</div>
                 </div>
               </div>
             </div>
@@ -342,226 +325,100 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* The Presley Flow Section */}
-      <section className="container mx-auto px-6 py-20 relative z-10">
-        <h2 className="text-4xl font-bold text-center mb-4">The Presley Flow</h2>
-        <p className="text-center text-gray-600 mb-16 text-lg">
-          A complete daily rhythm mirroring cinematic storytelling
+      {/* Features Section - Updated with Focus Rooms */}
+      <section className="container mx-auto px-6 py-16 relative z-10">
+        <h2 className="text-4xl font-bold text-center mb-4">Key Features</h2>
+        <p className="text-center text-gray-600 mb-12 text-lg">
+          Everything you need to show up your best
         </p>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl border-2 border-yellow-200 shadow-lg"
-          >
-            <div className="text-4xl mb-3">☀️</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Morning Prep</h3>
-            <p className="text-sm text-gray-600 italic mb-2">"Opening Scene"</p>
-            <p className="text-sm text-gray-700">
-              Scene opens: sunlight filters in. Today unfolds at your direction.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border-2 border-blue-200 shadow-lg"
-          >
-            <div className="text-4xl mb-3">⏰</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Daytime Flow</h3>
-            <p className="text-sm text-gray-600 italic mb-2">"Scene-by-Scene"</p>
-            <p className="text-sm text-gray-700">
-              You're on in 5: Breathe and lead the moment. Pre-meeting cues with focus mode.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-gradient-to-br from-teal-50 to-indigo-50 p-6 rounded-2xl border-2 border-teal-200 shadow-lg"
-          >
-            <div className="text-4xl mb-3">🌙</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Evening Flow</h3>
-            <p className="text-sm text-gray-600 italic mb-2">"Presley Flow Session"</p>
-            <p className="text-sm text-gray-700">
-              Camera wraps — rest easy, the next act awaits. Daily wrap-up + tomorrow preview.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl border-2 border-indigo-200 shadow-lg"
-          >
-            <div className="text-4xl mb-3">🌜</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Winding Down</h3>
-            <p className="text-sm text-gray-600 italic mb-2">"Evening Wind-Down"</p>
-            <p className="text-sm text-gray-700">
-              No calls, no scripts—just space. Breathing and relaxation before sleep.
-            </p>
-          </motion.div>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="max-w-4xl mx-auto p-8 bg-gradient-to-br from-teal-100 to-pink-100 rounded-2xl border-2 border-teal-300 shadow-xl"
-        >
-          <div className="text-center">
-            <div className="text-4xl mb-3">🎬</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">Weekend — 'The Intermission'</h3>
-            <p className="text-gray-700 text-lg italic mb-2">
-              "The stage rests. You've earned the pause."
-            </p>
-            <p className="text-gray-600">
-              Choose your reset tone: Calm, Creative, or Reflective. Intentional rest for no-meeting days.
-            </p>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Features Section */}
-      <section className="container mx-auto px-6 py-20 relative z-10">
-        <h2 className="text-4xl font-bold text-center mb-4">Beyond the Basics</h2>
-        <p className="text-center text-gray-600 mb-16 text-lg">
-          AI that learns and adapts to support you all day
-        </p>
-        
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           <FeatureCard
-            icon={<Brain className="w-8 h-8 text-teal-600" />}
-            title="Adaptive Breathing"
-            description="4 custom flows: Calm, Stressed, Focused, Unclear"
+            icon={<Headphones className="w-8 h-8 text-teal-600" />}
+            title="Focus Rooms"
+            description="5 cinematic audio spaces for deep focus, composure, connection, confidence, and recovery. Spotify integration available."
             isNew={true}
           />
           <FeatureCard
-            icon={<Music className="w-8 h-8 text-teal-600" />}
-            title="Ambient Sounds"
-            description="Ocean, rain, forest, bells, or silence"
+            icon={<Zap className="w-8 h-8 text-indigo-600" />}
+            title="Real-Time Coaching"
+            description="Level 2 audio analysis provides live composure cues during meetings. AI learns your patterns."
+            isNew={true}
+          />
+          <FeatureCard
+            icon={<Brain className="w-8 h-8 text-teal-600" />}
+            title="5-Min Prep"
+            description="Guided breathing flows tailored to your meeting type. Choose: Clarity, Confidence, Connection, Composure, or Momentum."
+          />
+          <FeatureCard
+            icon={<Music className="w-8 h-8 text-indigo-600" />}
+            title="Smart Sound Learning"
+            description="AI learns your sound preferences and recommends ambient tracks based on your prep mode."
             isNew={true}
           />
           <FeatureCard
             icon={<Sparkles className="w-8 h-8 text-indigo-600" />}
-            title="AI Pattern Learning"
-            description="Learns your stress triggers and adapts"
-            isNew={true}
-          />
-          <FeatureCard
-            icon={<Heart className="w-8 h-8 text-red-500" />}
-            title="Daily Wellness"
-            description="Reminders to breathe, walk, or pause"
-          />
-          <FeatureCard
-            icon={<Mail className="w-8 h-8 text-indigo-600" />}
-            title="Email + Push"
-            description="Get cues however you prefer"
+            title="Presley Flow"
+            description="Daily rhythm: Morning prep, meeting flows, evening wrap-up, and weekend intermission."
           />
           <FeatureCard
             icon={<Calendar className="w-8 h-8 text-indigo-600" />}
             title="Auto-Sync"
-            description="Google Calendar & Outlook"
-          />
-          <FeatureCard
-            icon={<Star className="w-8 h-8 text-indigo-600" />}
-            title="Meeting Ratings"
-            description="Rate meetings, AI improves"
-          />
-          <FeatureCard
-            icon={<Sun className="w-8 h-8 text-yellow-600" />}
-            title="Scene Library"
-            description="Access focus sessions anytime"
-          />
-          <FeatureCard
-            icon={<Moon className="w-8 h-8 text-teal-600" />}
-            title="PWA Ready"
-            description="Install on your phone like an app"
+            description="Google Calendar, Outlook, Webex, and CalDAV. Works with your existing calendar."
           />
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="container mx-auto px-6 py-20 bg-gradient-to-br from-indigo-100 via-teal-100 to-pink-100 rounded-3xl shadow-2xl max-w-6xl relative z-10 border border-white/50">
-        <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
+
+      {/* How It Works - Simplified */}
+      <section className="container mx-auto px-6 py-16 bg-gradient-to-br from-indigo-100 via-teal-100 to-pink-100 rounded-3xl shadow-2xl max-w-5xl relative z-10 border border-white/50">
+        <h2 className="text-4xl font-bold text-center mb-12">How It Works</h2>
         
-        <div className="space-y-8">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Step
-            number="📧"
-            title="Get the Cue"
-            description="5 minutes before your meeting, receive an email or SMS with your personalized AI prep message."
+            number="1"
+            title="Connect Calendar"
+            description="Sync Google, Outlook, or Webex. We read your schedule (never modify it)."
           />
           <Step
-            number="🎬"
-            title="Open Focus Scene"
-            description="Click the link. Select your mind state. Get a custom breathing flow (2-3 min) with ambient sounds."
+            number="2"
+            title="5-Min Prep"
+            description="Get a personalized prep link 5 minutes before each meeting. Choose your focus mode."
           />
           <Step
-            number="💡"
-            title="Stay Composed During"
-            description="Receive smart in-meeting cues on your phone or desktop to help you stay calm, focused, and present throughout the conversation."
+            number="3"
+            title="Real-Time Cues"
+            description="Receive smart in-meeting coaching to stay calm, focused, and present."
           />
           <Step
-            number="✨"
-            title="Walk Out Confident"
-            description="Finish strong with post-meeting insights. The AI learns from your ratings and gets smarter over time."
+            number="4"
+            title="AI Learns"
+            description="Rate your meetings. AI adapts and gets smarter with every session."
           />
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mt-16 p-8 bg-gradient-to-r from-white to-teal-50 rounded-2xl border-2 border-teal-300 shadow-xl"
-        >
-          <p className="text-center text-lg text-gray-800">
-            <strong className="text-transparent bg-gradient-to-r from-teal-600 to-pink-600 bg-clip-text">The more you use it, the better it gets.</strong> AI learns which meeting types stress you and adapts your cues accordingly.
-          </p>
-        </motion.div>
       </section>
 
-      {/* Security Banner */}
+      {/* Security Banner - Compact */}
       <section className="container mx-auto px-6 py-12 relative z-10">
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Enterprise-Grade Security</h3>
-            <p className="text-gray-600">Your calendar data is safe with us</p>
-          </div>
-          <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-3xl mb-2">🔒</div>
-              <div className="font-semibold text-gray-900 text-sm">TLS 1.3 Encryption</div>
-              <div className="text-xs text-gray-600">Bank-level security</div>
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200 max-w-4xl mx-auto">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🔒</span>
+              <span className="text-gray-700">TLS 1.3 Encrypted</span>
             </div>
-            <div className="text-center">
-              <div className="text-3xl mb-2">👁️</div>
-              <div className="font-semibold text-gray-900 text-sm">Read-Only Access</div>
-              <div className="text-xs text-gray-600">We can't modify events</div>
+            <span className="text-gray-400">•</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">👁️</span>
+              <span className="text-gray-700">Read-Only Access</span>
             </div>
-            <div className="text-center">
-              <div className="text-3xl mb-2">🔑</div>
-              <div className="font-semibold text-gray-900 text-sm">OAuth 2.0</div>
-              <div className="text-xs text-gray-600">Never see your password</div>
+            <span className="text-gray-400">•</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🛡️</span>
+              <span className="text-gray-700">GDPR Compliant</span>
             </div>
-            <div className="text-center">
-              <div className="text-3xl mb-2">🛡️</div>
-              <div className="font-semibold text-gray-900 text-sm">GDPR Compliant</div>
-              <div className="text-xs text-gray-600">Your data, your control</div>
-            </div>
-          </div>
-          <div className="text-center mt-6">
-            <a href="/privacy" className="text-indigo-600 hover:text-indigo-700 font-medium text-sm">
-              Read our full Privacy & Security policy →
+            <span className="text-gray-400">•</span>
+            <a href="/privacy" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              Privacy Policy →
             </a>
           </div>
         </div>
@@ -624,23 +481,19 @@ function FeatureCard({ icon, title, description, isNew }: { icon: React.ReactNod
 function Step({ number, title, description }: { number: string; title: string; description: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="flex gap-6 items-start group"
+      className="bg-white rounded-xl p-6 shadow-lg"
     >
-      <motion.div
-        whileHover={{ scale: 1.2, rotate: [0, -10, 10, 0] }}
-        transition={{ duration: 0.3 }}
-        className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-teal-100 shadow-lg flex items-center justify-center text-4xl border-2 border-white"
-      >
-        {number}
-      </motion.div>
-      <div className="flex-1">
-        <h4 className="text-2xl font-semibold mb-3 text-gray-900">{title}</h4>
-        <p className="text-gray-700 text-lg leading-relaxed">{description}</p>
+      <div className="flex items-center gap-4 mb-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-teal-100 flex items-center justify-center font-bold text-indigo-700">
+          {number}
+        </div>
+        <h4 className="text-xl font-semibold text-gray-900">{title}</h4>
       </div>
+      <p className="text-gray-600 leading-relaxed">{description}</p>
     </motion.div>
   );
 }
