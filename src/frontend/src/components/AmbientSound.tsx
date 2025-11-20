@@ -618,12 +618,31 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       setNeedsInteraction(true);
     };
 
+    const volumeHandler = (e: Event) => {
+      const customEvent = e as CustomEvent<{ volume: number }>;
+      const newVolume = customEvent.detail?.volume ?? 0.85;
+      console.log('🔊 ambient-sound-volume event received', { volume: newVolume });
+      
+      // Update volume on existing refs immediately
+      if (gainRef.current) {
+        gainRef.current.gain.value = newVolume;
+      }
+      if (fallbackAudioRef.current) {
+        fallbackAudioRef.current.volume = newVolume;
+      }
+      
+      // Update mute state based on volume
+      setIsMuted(newVolume === 0);
+    };
+
     window.addEventListener('ambient-sound-play', playHandler);
     window.addEventListener('ambient-sound-stop', stopHandler);
+    window.addEventListener('ambient-sound-volume', volumeHandler);
 
     return () => {
       window.removeEventListener('ambient-sound-play', playHandler);
       window.removeEventListener('ambient-sound-stop', stopHandler);
+      window.removeEventListener('ambient-sound-volume', volumeHandler);
     };
   }, [enabled, startAudio, stopAudio]);
 
