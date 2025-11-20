@@ -224,6 +224,10 @@ export class SpotifyService {
     }
   }
 
+  /**
+   * Search for lo-fi playlists matching room mood using keyword-based search
+   * Falls back to multiple keyword strategies if initial search fails
+   */
   async findPlaylistForRoom(accessToken: string, roomId: string): Promise<string> {
     // First check if we have a hardcoded playlist
     const hardcoded = FOCUS_ROOM_PLAYLISTS[roomId];
@@ -231,21 +235,165 @@ export class SpotifyService {
       return hardcoded;
     }
 
-    // Search for appropriate lo-fi playlists based on room mood
-    const searchQueries: Record<string, string> = {
-      'deep-focus': 'lo-fi deep focus study',
-      'soft-composure': 'lo-fi calm peaceful',
-      'warm-connection': 'lo-fi chill vibes',
-      'pitch-pulse': 'lo-fi beats energy',
-      'recovery-lounge': 'lo-fi ambient relaxation',
+    // Comprehensive keyword mapping for each room - multiple variations for reliability
+    const roomKeywords: Record<string, string[]> = {
+      'deep-focus': [
+        'lo-fi deep focus study',
+        'lo-fi focus concentration',
+        'deep focus lofi',
+        'study focus lo-fi',
+        'concentration music lo-fi',
+        'lo-fi work focus',
+        'focus beats lo-fi',
+      ],
+      'soft-composure': [
+        'lo-fi calm peaceful',
+        'lo-fi meditation calm',
+        'peaceful lo-fi ambient',
+        'calm lo-fi chill',
+        'soft lo-fi relaxation',
+        'lo-fi composure peaceful',
+        'meditation lo-fi calm',
+      ],
+      'warm-connection': [
+        'lo-fi chill vibes',
+        'lo-fi warm cozy',
+        'chill lo-fi beats',
+        'warm lo-fi jazz',
+        'cozy lo-fi vibes',
+        'lo-fi connection chill',
+        'lo-fi friendly warm',
+      ],
+      'pitch-pulse': [
+        'lo-fi beats energy',
+        'lo-fi upbeat motivation',
+        'energetic lo-fi',
+        'lo-fi confidence boost',
+        'motivational lo-fi beats',
+        'lo-fi pulse energy',
+        'upbeat lo-fi confidence',
+      ],
+      'recovery-lounge': [
+        'lo-fi ambient relaxation',
+        'lo-fi recovery decompress',
+        'ambient lo-fi rest',
+        'relaxation lo-fi sleep',
+        'lo-fi unwind chill',
+        'lo-fi lounge ambient',
+        'decompress lo-fi ambient',
+      ],
     };
 
-    const query = searchQueries[roomId] || 'lo-fi focus';
+    const keywords = roomKeywords[roomId] || ['lo-fi focus', 'lo-fi ambient', 'lo-fi chill'];
     
+    // Try each keyword in order until we find a good playlist
+    for (const keyword of keywords) {
+      try {
+        const response = await axios.get('https://api.spotify.com/v1/search', {
+          params: {
+            q: keyword,
+            type: 'playlist',
+            limit: 20, // Get more results for better matching
+          },
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const playlists = response.data.playlists?.items || [];
+        
+        if (playlists.length > 0) {
+          // Score playlists based on relevance to room
+          const scoredPlaylists = playlists.map((p: any) => {
+            const name = p.name.toLowerCase();
+            let score = 0;
+            
+            // Higher score for playlists with "lo-fi" or "lofi" variants
+            if (name.includes('lo-fi') || name.includes('lofi') || name.includes('lo fi')) {
+              score += 10;
+            }
+            
+            // Score based on room-specific keywords
+            const roomSpecificTerms: Record<string, string[]> = {
+              'deep-focus': ['focus', 'study', 'concentration', 'deep', 'work', 'productivity'],
+              'soft-composure': ['calm', 'peaceful', 'meditation', 'soft', 'composure', 'zen', 'tranquil'],
+              'warm-connection': ['chill', 'warm', 'cozy', 'vibes', 'connection', 'friendly', 'intimate'],
+              'pitch-pulse': ['beats', 'energy', 'upbeat', 'motivation', 'pulse', 'confidence', 'power'],
+              'recovery-lounge': ['ambient', 'relaxation', 'recovery', 'rest', 'unwind', 'decompress', 'lounge'],
+            };
+            
+            const terms = roomSpecificTerms[roomId] || [];
+            terms.forEach(term => {
+              if (name.includes(term)) score += 5;
+            });
+            
+            // Prefer playlists with more followers (popularity indicator)
+            const followers = p.followers?.total || 0;
+            if (followers > 0) {
+              score += Math.min(Math.log10(followers + 1), 5);
+            }
+            
+            return { ...p, score };
+          });
+
+          // Sort by score and get the best match
+          scoredPlaylists.sort((a: any, b: any) => b.score - a.score);
+          const bestMatch = scoredPlaylists[0];
+
+          if (bestMatch && bestMatch.score > 5) { // Only use if score is meaningful
+            logger.info('✅ Found playlist using keyword search', {
+              roomId,
+              keyword,
+              playlistName: bestMatch.name,
+              playlistId: bestMatch.id,
+              score: bestMatch.score,
+            });
+            return bestMatch.id;
+          }
+
+          // If scoring didn't help much, try to find any lo-fi playlist
+          const anyLofi = playlists.find((p: any) => {
+            const name = p.name.toLowerCase();
+            return name.includes('lo-fi') || name.includes('lofi') || name.includes('lo fi');
+          });
+
+          if (anyLofi) {
+            logger.info('✅ Found lo-fi playlist (fallback)', {
+              roomId,
+              keyword,
+              playlistName: anyLofi.name,
+              playlistId: anyLofi.id,
+            });
+            return anyLofi.id;
+          }
+
+          // Last resort: use first result
+          logger.info('✅ Using first search result', {
+            roomId,
+            keyword,
+            playlistName: playlists[0].name,
+            playlistId: playlists[0].id,
+          });
+          return playlists[0].id;
+        }
+      } catch (searchError: any) {
+        logger.warn('⚠️ Search failed for keyword', {
+          roomId,
+          keyword,
+          error: searchError.response?.data || searchError.message,
+        });
+        // Continue to next keyword
+        continue;
+      }
+    }
+
+    // If all keyword searches failed, try a generic search
+    logger.warn('⚠️ All keyword searches failed, trying generic search', { roomId });
     try {
+      const genericQuery = `lo-fi ${roomId.replace('-', ' ')}`;
       const response = await axios.get('https://api.spotify.com/v1/search', {
         params: {
-          q: query,
+          q: genericQuery,
           type: 'playlist',
           limit: 10,
         },
@@ -255,42 +403,24 @@ export class SpotifyService {
       });
 
       const playlists = response.data.playlists?.items || [];
-      
-      // Prefer playlists with "lo-fi" or "lofi" in the name
-      const lofiPlaylist = playlists.find((p: any) => 
-        p.name.toLowerCase().includes('lo-fi') || 
-        p.name.toLowerCase().includes('lofi') ||
-        p.name.toLowerCase().includes('lo fi')
-      );
-
-      if (lofiPlaylist) {
-        logger.info(`✅ Found lo-fi playlist for ${roomId}`, { 
-          playlistId: lofiPlaylist.id, 
-          name: lofiPlaylist.name 
-        });
-        return lofiPlaylist.id;
-      }
-
-      // Fallback to first result
       if (playlists.length > 0) {
-        logger.info(`✅ Using first search result for ${roomId}`, { 
-          playlistId: playlists[0].id, 
-          name: playlists[0].name 
+        logger.info('✅ Found playlist using generic search', {
+          roomId,
+          playlistName: playlists[0].name,
+          playlistId: playlists[0].id,
         });
         return playlists[0].id;
       }
-
-      // Ultimate fallback to hardcoded default
-      logger.warn(`⚠️ No playlist found for ${roomId}, using default`);
-      return FOCUS_ROOM_PLAYLISTS['deep-focus'] || '37i9dQZF1DWZeKCadgRdKQ';
-    } catch (error: any) {
-      logger.error('❌ Failed to search for Spotify playlist', {
-        error: error.response?.data || error.message,
+    } catch (genericError: any) {
+      logger.warn('⚠️ Generic search also failed', {
         roomId,
+        error: genericError.response?.data || genericError.message,
       });
-      // Fallback to hardcoded
-      return FOCUS_ROOM_PLAYLISTS[roomId] || FOCUS_ROOM_PLAYLISTS['deep-focus'] || '37i9dQZF1DWZeKCadgRdKQ';
     }
+
+    // Ultimate fallback to hardcoded default
+    logger.warn('⚠️ All searches failed, using hardcoded default', { roomId });
+    return FOCUS_ROOM_PLAYLISTS[roomId] || FOCUS_ROOM_PLAYLISTS['deep-focus'] || '37i9dQZF1DWZeKCadgRdKQ';
   }
 
   getPlaylistIdForRoom(roomId: string): string | undefined {
