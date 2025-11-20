@@ -236,51 +236,57 @@ export class SpotifyService {
     }
 
     // Comprehensive keyword mapping for each room - multiple variations for reliability
+    // All keywords prioritize instrumental, soundscape, and lo-fi music (no lyrics)
     const roomKeywords: Record<string, string[]> = {
       'deep-focus': [
-        'lo-fi deep focus study',
-        'lo-fi focus concentration',
-        'deep focus lofi',
-        'study focus lo-fi',
-        'concentration music lo-fi',
-        'lo-fi work focus',
-        'focus beats lo-fi',
+        'lo-fi deep focus study instrumental',
+        'lo-fi focus concentration no vocals',
+        'deep focus lofi beats',
+        'study focus lo-fi instrumental',
+        'concentration music lo-fi soundscape',
+        'lo-fi work focus background',
+        'focus beats lo-fi ambient',
+        'instrumental lo-fi study music',
       ],
       'soft-composure': [
-        'lo-fi calm peaceful',
-        'lo-fi meditation calm',
-        'peaceful lo-fi ambient',
-        'calm lo-fi chill',
-        'soft lo-fi relaxation',
-        'lo-fi composure peaceful',
-        'meditation lo-fi calm',
+        'lo-fi calm peaceful instrumental',
+        'lo-fi meditation calm no vocals',
+        'peaceful lo-fi ambient soundscape',
+        'calm lo-fi chill beats',
+        'soft lo-fi relaxation instrumental',
+        'lo-fi composure peaceful ambient',
+        'meditation lo-fi calm soundscape',
+        'instrumental lo-fi zen music',
       ],
       'warm-connection': [
-        'lo-fi chill vibes',
-        'lo-fi warm cozy',
-        'chill lo-fi beats',
-        'warm lo-fi jazz',
-        'cozy lo-fi vibes',
-        'lo-fi connection chill',
-        'lo-fi friendly warm',
+        'lo-fi chill vibes instrumental',
+        'lo-fi warm cozy beats',
+        'chill lo-fi beats no vocals',
+        'warm lo-fi jazz instrumental',
+        'cozy lo-fi vibes soundscape',
+        'lo-fi connection chill ambient',
+        'lo-fi friendly warm instrumental',
+        'instrumental lo-fi chill music',
       ],
       'pitch-pulse': [
-        'lo-fi beats energy',
-        'lo-fi upbeat motivation',
-        'energetic lo-fi',
-        'lo-fi confidence boost',
-        'motivational lo-fi beats',
-        'lo-fi pulse energy',
-        'upbeat lo-fi confidence',
+        'lo-fi beats energy instrumental',
+        'lo-fi upbeat motivation no vocals',
+        'energetic lo-fi beats',
+        'lo-fi confidence boost instrumental',
+        'motivational lo-fi beats soundscape',
+        'lo-fi pulse energy ambient',
+        'upbeat lo-fi confidence instrumental',
+        'instrumental lo-fi energy music',
       ],
       'recovery-lounge': [
-        'lo-fi ambient relaxation',
-        'lo-fi recovery decompress',
-        'ambient lo-fi rest',
-        'relaxation lo-fi sleep',
-        'lo-fi unwind chill',
-        'lo-fi lounge ambient',
-        'decompress lo-fi ambient',
+        'lo-fi ambient relaxation instrumental',
+        'lo-fi recovery decompress no vocals',
+        'ambient lo-fi rest soundscape',
+        'relaxation lo-fi sleep music',
+        'lo-fi unwind chill instrumental',
+        'lo-fi lounge ambient beats',
+        'decompress lo-fi ambient soundscape',
+        'instrumental lo-fi relaxation music',
       ],
     };
 
@@ -303,38 +309,72 @@ export class SpotifyService {
         const playlists = response.data.playlists?.items || [];
         
         if (playlists.length > 0) {
+          // Keywords that indicate lyrics/vocals (should be avoided)
+          const lyricsKeywords = [
+            'vocal', 'vocals', 'singing', 'singer', 'song', 'songs',
+            'lyrics', 'lyric', 'feat', 'ft.', 'featuring', 'with',
+            'rap', 'hip hop', 'hip-hop', 'r&b', 'rnb', 'pop',
+            'acoustic', 'cover', 'covers', 'remix', 'remixes',
+            'karaoke', 'sing along', 'sing-along'
+          ];
+          
+          // Keywords that indicate instrumental/no lyrics (preferred)
+          const instrumentalKeywords = [
+            'instrumental', 'no vocals', 'no vocal', 'beat', 'beats',
+            'ambient', 'soundscape', 'soundscapes', 'nature sounds',
+            'white noise', 'brown noise', 'pink noise', 'rain',
+            'ocean', 'forest', 'meditation', 'zen', 'calm',
+            'focus', 'study', 'concentration', 'background',
+            'background music', 'bgm', 'atmospheric', 'atmosphere'
+          ];
+
           // Score playlists based on relevance to room
-          const scoredPlaylists = playlists.map((p: any) => {
-            const name = p.name.toLowerCase();
-            let score = 0;
-            
-            // Higher score for playlists with "lo-fi" or "lofi" variants
-            if (name.includes('lo-fi') || name.includes('lofi') || name.includes('lo fi')) {
-              score += 10;
-            }
-            
-            // Score based on room-specific keywords
-            const roomSpecificTerms: Record<string, string[]> = {
-              'deep-focus': ['focus', 'study', 'concentration', 'deep', 'work', 'productivity'],
-              'soft-composure': ['calm', 'peaceful', 'meditation', 'soft', 'composure', 'zen', 'tranquil'],
-              'warm-connection': ['chill', 'warm', 'cozy', 'vibes', 'connection', 'friendly', 'intimate'],
-              'pitch-pulse': ['beats', 'energy', 'upbeat', 'motivation', 'pulse', 'confidence', 'power'],
-              'recovery-lounge': ['ambient', 'relaxation', 'recovery', 'rest', 'unwind', 'decompress', 'lounge'],
-            };
-            
-            const terms = roomSpecificTerms[roomId] || [];
-            terms.forEach(term => {
-              if (name.includes(term)) score += 5;
-            });
-            
-            // Prefer playlists with more followers (popularity indicator)
-            const followers = p.followers?.total || 0;
-            if (followers > 0) {
-              score += Math.min(Math.log10(followers + 1), 5);
-            }
-            
-            return { ...p, score };
-          });
+          const scoredPlaylists = playlists
+            .map((p: any) => {
+              const name = p.name.toLowerCase();
+              let score = 0;
+              
+              // HEAVY PENALTY for playlists with lyrics/vocals
+              const hasLyrics = lyricsKeywords.some(keyword => name.includes(keyword));
+              if (hasLyrics) {
+                score -= 50; // Strong penalty - will likely be filtered out
+              }
+              
+              // BONUS for instrumental/no-vocal indicators
+              const isInstrumental = instrumentalKeywords.some(keyword => name.includes(keyword));
+              if (isInstrumental) {
+                score += 15; // Strong preference for instrumental
+              }
+              
+              // Higher score for playlists with "lo-fi" or "lofi" variants
+              if (name.includes('lo-fi') || name.includes('lofi') || name.includes('lo fi')) {
+                score += 10;
+              }
+              
+              // Score based on room-specific keywords
+              const roomSpecificTerms: Record<string, string[]> = {
+                'deep-focus': ['focus', 'study', 'concentration', 'deep', 'work', 'productivity'],
+                'soft-composure': ['calm', 'peaceful', 'meditation', 'soft', 'composure', 'zen', 'tranquil'],
+                'warm-connection': ['chill', 'warm', 'cozy', 'vibes', 'connection', 'friendly', 'intimate'],
+                'pitch-pulse': ['beats', 'energy', 'upbeat', 'motivation', 'pulse', 'confidence', 'power'],
+                'recovery-lounge': ['ambient', 'relaxation', 'recovery', 'rest', 'unwind', 'decompress', 'lounge'],
+              };
+              
+              const terms = roomSpecificTerms[roomId] || [];
+              terms.forEach(term => {
+                if (name.includes(term)) score += 5;
+              });
+              
+              // Prefer playlists with more followers (popularity indicator)
+              const followers = p.followers?.total || 0;
+              if (followers > 0) {
+                score += Math.min(Math.log10(followers + 1), 5);
+              }
+              
+              return { ...p, score, hasLyrics, isInstrumental };
+            })
+            // Filter out playlists with lyrics (negative score from penalty)
+            .filter((p: any) => p.score > -10); // Only keep playlists that aren't heavily penalized
 
           // Sort by score and get the best match
           scoredPlaylists.sort((a: any, b: any) => b.score - a.score);
@@ -347,24 +387,44 @@ export class SpotifyService {
               playlistName: bestMatch.name,
               playlistId: bestMatch.id,
               score: bestMatch.score,
+              isInstrumental: bestMatch.isInstrumental,
+              hasLyrics: bestMatch.hasLyrics,
             });
             return bestMatch.id;
           }
 
-          // If scoring didn't help much, try to find any lo-fi playlist
-          const anyLofi = playlists.find((p: any) => {
+          // If scoring didn't help much, try to find any instrumental lo-fi playlist
+          const anyInstrumentalLofi = playlists.find((p: any) => {
             const name = p.name.toLowerCase();
-            return name.includes('lo-fi') || name.includes('lofi') || name.includes('lo fi');
+            const hasLofi = name.includes('lo-fi') || name.includes('lofi') || name.includes('lo fi');
+            const noLyrics = !lyricsKeywords.some(keyword => name.includes(keyword));
+            return hasLofi && noLyrics;
           });
 
-          if (anyLofi) {
-            logger.info('✅ Found lo-fi playlist (fallback)', {
+          if (anyInstrumentalLofi) {
+            logger.info('✅ Found instrumental lo-fi playlist (fallback)', {
               roomId,
               keyword,
-              playlistName: anyLofi.name,
-              playlistId: anyLofi.id,
+              playlistName: anyInstrumentalLofi.name,
+              playlistId: anyInstrumentalLofi.id,
             });
-            return anyLofi.id;
+            return anyInstrumentalLofi.id;
+          }
+          
+          // Try to find any playlist without lyrics
+          const anyNoLyrics = playlists.find((p: any) => {
+            const name = p.name.toLowerCase();
+            return !lyricsKeywords.some(keyword => name.includes(keyword));
+          });
+
+          if (anyNoLyrics) {
+            logger.info('✅ Found playlist without lyrics (fallback)', {
+              roomId,
+              keyword,
+              playlistName: anyNoLyrics.name,
+              playlistId: anyNoLyrics.id,
+            });
+            return anyNoLyrics.id;
           }
 
           // Last resort: use first result
