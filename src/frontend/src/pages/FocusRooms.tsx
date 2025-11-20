@@ -307,25 +307,59 @@ export default function FocusRooms() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Back to Dashboard"
-              >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+            {/* Logo and Navigation Section */}
+            <div className="flex items-center gap-6">
               <Logo size="md" />
+              <nav className="hidden sm:flex items-center gap-1">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    window.location.pathname === '/dashboard'
+                      ? 'bg-teal-50 text-teal-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => navigate('/focus-rooms')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                    window.location.pathname === '/focus-rooms'
+                      ? 'bg-teal-50 text-teal-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Headphones className="w-4 h-4" />
+                  Focus Rooms
+                </button>
+              </nav>
             </div>
+          </div>
+          
+          {/* Mobile Navigation */}
+          <nav className="sm:hidden flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                window.location.pathname === '/dashboard'
+                  ? 'bg-teal-50 text-teal-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
               Dashboard
             </button>
-          </div>
+            <button
+              onClick={() => navigate('/focus-rooms')}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                window.location.pathname === '/focus-rooms'
+                  ? 'bg-teal-50 text-teal-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Headphones className="w-4 h-4" />
+              Focus Rooms
+            </button>
+          </nav>
         </div>
       </header>
 
