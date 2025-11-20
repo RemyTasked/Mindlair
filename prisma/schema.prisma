@@ -47,7 +47,47 @@ model User {
   cueTelemetry CueTelemetry[]
   meetingMoods MeetingMood[]
 
+  // Spotify Integration
+  spotifyAccount SpotifyAccount?
+
+  // Focus Room Sessions & Credits
+  focusRoomSessions FocusRoomSession[]
+
   @@map("users")
+}
+
+model SpotifyAccount {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  spotifyId    String
+  displayName  String?
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("spotify_accounts")
+}
+
+model FocusRoomSession {
+  id          String   @id @default(uuid())
+  userId      String
+  roomId      String   // 'deep-focus', 'soft-composure', etc.
+  roomName    String
+  duration    Int      // Duration in seconds
+  timerOption String   // '5', '10', '20', '∞'
+  completed   Boolean  @default(false)
+  creditsEarned Int    @default(0)
+  audioSource String   // 'spotify' or 'meetcute'
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("focus_room_sessions")
 }
 
 model CalendarAccount {

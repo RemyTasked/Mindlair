@@ -536,8 +536,15 @@ router.get(
     // Get sound learning insights
     const soundInsights = await getSoundInsights(userId);
 
+    // Check Spotify connection
+    const spotifyAccount = await prisma.spotifyAccount.findUnique({
+      where: { userId },
+      select: { displayName: true },
+    });
+
     res.json({
       metadata: {
+        spotifyConnected: !!spotifyAccount,
         totalFocusSessions,
         preferredPrepModes,
         meetingPatterns: {
@@ -560,6 +567,10 @@ router.get(
           cuesActedOn,
           cuesDismissed,
           hasStressPattern,
+        },
+        spotify: {
+          connected: !!spotifyAccount,
+          displayName: spotifyAccount?.displayName || null,
         },
       },
     });

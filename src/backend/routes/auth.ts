@@ -4,6 +4,7 @@ import { googleCalendarService } from '../services/calendar/googleCalendar';
 import { outlookCalendarService } from '../services/calendar/outlookCalendar';
 import { webexCalendarService } from '../services/calendar/webexCalendar';
 import { caldavCalendarService } from '../services/calendar/caldavCalendar';
+import { spotifyService } from '../services/spotify/spotifyService';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { authenticate, optionalAuthenticate } from '../middleware/auth';
 import { logger } from '../utils/logger';
@@ -991,6 +992,130 @@ router.post(
       provider: providerName,
       message: `Signed in with ${providerName}`,
     });
+  })
+);
+
+// Spotify OAuth Routes
+// Get Spotify OAuth URL
+router.get('/spotify/url', authenticate, (req, res) => {
+  const userId = req.userId;
+  const authUrl = spotifyService.getAuthUrl(userId);
+  logger.info('📝 Generated Spotify OAuth URL', { userId });
+  return res.json({ authUrl });
+});
+
+// Spotify OAuth callback
+router.get(
+  '/spotify/callback',
+  asyncHandler(async (req, res) => {
+    const { code, error, state } = req.query;
+
+    logger.info('🔐 Spotify OAuth callback received', {
+      hasCode: !!code,
+      error: error,
+      hasState: !!state,
+    });
+
+    // Decode state to get userId
+    let userId: string | null = null;
+    if (state && typeof state === 'string') {
+      try {
+        const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+        userId = decoded.userId;
+        logger.info('📝 Decoded state parameter', { userId });
+      } catch (e) {
+        logger.warn('⚠️ Failed to decode state parameter', { state });
+      }
+    }
+
+    if (error) {
+      logger.error('❌ Spotify OAuth error', { error });
+      const redirectUrl = `${process.env.FRONTEND_URL}/focus-rooms?error=${error}`;
+      return res.redirect(redirectUrl);
+    }
+
+    if (!code || typeof code !== 'string') {
+      logger.error('❌ No authorization code provided');
+      const redirectUrl = `${process.env.FRONTEND_URL}/focus-rooms?error=no_code`;
+      return res.redirect(redirectUrl);
+    }
+
+    if (!userId) {
+      logger.error('❌ No userId in state parameter');
+      const redirectUrl = `${process.env.FRONTEND_URL}/focus-rooms?error=no_user`;
+      return res.redirect(redirectUrl);
+    }
+
+    // Exchange code for tokens
+    let tokens;
+    try {
+      tokens = await spotifyService.getTokensFromCode(code);
+      logger.info('✅ Spotify tokens received', {
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token,
+      });
+    } catch (error: any) {
+      logger.error('❌ Failed to exchange code for tokens', {
+        error: error.message,
+      });
+      const redirectUrl = `${process.env.FRONTEND_URL}/focus-rooms?error=token_exchange_failed`;
+      return res.redirect(redirectUrl);
+    }
+
+    // Get user info
+    let userInfo;
+    try {
+      userInfo = await spotifyService.getUserInfo(tokens.access_token);
+      logger.info('✅ Spotify user info received', {
+        spotifyId: userInfo.id,
+        displayName: userInfo.display_name,
+      });
+    } catch (error: any) {
+      logger.error('❌ Failed to get user info', { error: error.message });
+      const redirectUrl = `${process.env.FRONTEND_URL}/focus-rooms?error=user_info_failed`;
+      return res.redirect(redirectUrl);
+    }
+
+    // Calculate expiration
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + tokens.expires_in);
+
+    // Store or update Spotify account
+    const existingAccount = await prisma.spotifyAccount.findUnique({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (!existingAccount) {
+      await prisma.spotifyAccount.create({
+        data: {
+          userId: userId,
+          spotifyId: userInfo.id,
+          displayName: userInfo.display_name,
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+          expiresAt: expiresAt,
+        },
+      });
+    } else {
+      await prisma.spotifyAccount.update({
+        where: { userId: userId },
+        data: {
+          spotifyId: userInfo.id,
+          displayName: userInfo.display_name,
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+          expiresAt: expiresAt,
+        },
+      });
+    }
+
+    logger.info('📝 Stored Spotify account', { userId });
+
+    // Redirect back to Focus Rooms
+    const redirectUrl = `${process.env.FRONTEND_URL}/focus-rooms?spotify_connected=true`;
+    return res.redirect(redirectUrl);
   })
 );
 

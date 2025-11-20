@@ -81,18 +81,25 @@ export default function FocusRooms() {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [hasSpotify, setHasSpotify] = useState(false);
   const [audioSource, setAudioSource] = useState<'spotify' | 'meetcute'>('meetcute');
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [totalCredits, setTotalCredits] = useState(0);
 
-  // Check if Spotify is connected
+  // Check if Spotify is connected and load credits
   useEffect(() => {
-    const checkSpotify = async () => {
+    const loadData = async () => {
       try {
-        const response = await api.get('/api/user/metadata');
-        setHasSpotify(response.data.spotifyConnected || false);
+        const [spotifyResponse, statsResponse] = await Promise.all([
+          api.get('/api/spotify/status').catch(() => ({ data: { connected: false } })),
+          api.get('/api/focus-rooms/stats').catch(() => ({ data: { totalCredits: 0 } })),
+        ]);
+        setHasSpotify(spotifyResponse.data.connected || false);
+        setTotalCredits(statsResponse.data.totalCredits || 0);
       } catch (error) {
-        console.error('Error checking Spotify:', error);
+        console.error('Error loading data:', error);
       }
     };
-    checkSpotify();
+    loadData();
   }, []);
 
   // Timer countdown
@@ -112,26 +119,76 @@ export default function FocusRooms() {
     return () => clearInterval(interval);
   }, [timeRemaining, isPlaying]);
 
-  const handleTimerEnd = () => {
+  const handleTimerEnd = async () => {
     setIsPlaying(false);
+    
+    // Complete session
+    if (currentSessionId && sessionStartTime) {
+      const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
+      try {
+        const response = await api.post('/api/focus-rooms/sessions/complete', {
+          sessionId: currentSessionId,
+          duration,
+          completed: true,
+        });
+        setTotalCredits(response.data.totalCredits);
+      } catch (error) {
+        console.error('Error completing session:', error);
+      }
+    }
+    
     setActiveRoom(null);
     setTimeRemaining(null);
+    setCurrentSessionId(null);
+    setSessionStartTime(null);
+    
     // Fade out audio
     window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
       detail: { source: 'focus-rooms', fadeOut: true }
     }));
   };
 
-  const handleRoomSelect = (room: FocusRoom) => {
+  const handleRoomSelect = async (room: FocusRoom) => {
     if (activeRoom === room.id) {
-      // Toggle off
+      // Toggle off - complete current session
+      if (currentSessionId && sessionStartTime) {
+        const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
+        try {
+          const response = await api.post('/api/focus-rooms/sessions/complete', {
+            sessionId: currentSessionId,
+            duration,
+            completed: false, // User manually stopped
+          });
+          setTotalCredits(response.data.totalCredits);
+        } catch (error) {
+          console.error('Error completing session:', error);
+        }
+      }
+      
       setIsPlaying(false);
       setActiveRoom(null);
       setTimeRemaining(null);
+      setCurrentSessionId(null);
+      setSessionStartTime(null);
       window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
         detail: { source: 'focus-rooms' }
       }));
     } else {
+      // Start new session
+      try {
+        const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
+          roomId: room.id,
+          roomName: room.name,
+          timerOption: timer.toString(),
+          audioSource: audioSource,
+        });
+        
+        setCurrentSessionId(sessionResponse.data.sessionId);
+        setSessionStartTime(Date.now());
+      } catch (error) {
+        console.error('Error starting session:', error);
+      }
+      
       // Select new room
       setActiveRoom(room.id);
       setIsPlaying(true);
@@ -147,7 +204,7 @@ export default function FocusRooms() {
       if (audioSource === 'spotify' && hasSpotify) {
         // Start Spotify playback
         api.post('/api/spotify/play', {
-          playlistId: room.spotifyPlaylistId,
+          roomId: room.id,
         }).catch(error => {
           console.error('Error starting Spotify:', error);
           // Fallback to Meet-Cute audio
@@ -227,6 +284,16 @@ export default function FocusRooms() {
           >
             Focus Rooms
           </motion.h1>
+          {totalCredits > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="inline-block px-4 py-2 bg-teal-100 text-teal-800 rounded-full text-sm font-semibold"
+            >
+              🎯 {totalCredits} Credits Earned
+            </motion.div>
+          )}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

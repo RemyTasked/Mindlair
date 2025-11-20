@@ -29,6 +29,8 @@ import slackRoutes from './routes/slack';
 import reflectionRoutes from './routes/reflections';
 import windingDownRoutes from './routes/windingDown';
 import cuesRoutes from './routes/cues';
+import spotifyRoutes from './routes/spotify';
+import focusRoomsRoutes from './routes/focusRooms';
 import testRoutes from './routes/test';
 
 dotenv.config();
@@ -112,6 +114,8 @@ app.use('/api/slack', slackRoutes);
 app.use('/api/reflections', reflectionRoutes);
 app.use('/api/winding-down', windingDownRoutes);
 app.use('/api/cues', cuesRoutes);
+app.use('/api/spotify', spotifyRoutes);
+app.use('/api/focus-rooms', focusRoomsRoutes);
 app.use('/api/test', testRoutes);
 
 // Serve static files from frontend build in production
