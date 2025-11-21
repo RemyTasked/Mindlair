@@ -683,9 +683,9 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={() => navigate('/dashboard')}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -693,35 +693,36 @@ export default function Settings() {
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-xl font-bold text-gray-800">Settings</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-800">Settings</h1>
             </div>
             
             {/* Save Button in Header */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
-              >
-                <Save className="w-5 h-5" />
-                {saving ? 'Saving...' : 'Save Settings'}
-              </button>
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
               {typeof message === 'string' && message && (
                 <span
-                  className={`text-sm font-medium ${
+                  className={`text-xs sm:text-sm font-medium flex-1 sm:flex-none ${
                     message.toLowerCase().includes('success') ? 'text-green-600' : 'text-red-600'
                   }`}
                 >
                   {message}
                 </span>
               )}
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg text-sm sm:text-base whitespace-nowrap"
+              >
+                <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">{saving ? 'Saving...' : 'Save Settings'}</span>
+                <span className="sm:hidden">{saving ? 'Saving...' : 'Save'}</span>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 max-w-3xl">
-        <div className="space-y-4 sm:space-y-6">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 max-w-5xl">
+        <div className="space-y-4 sm:space-y-5 lg:space-y-6">
           {/* Preferences */}
           <Section title="Preferences" id="basic" isExpanded={expandedSections.has('basic')} onToggle={toggleSection}>
             <div className="space-y-6">
@@ -734,7 +735,7 @@ export default function Settings() {
                   onChange={(e) =>
                     setPreferences({ ...preferences, tone: e.target.value as any })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="executive">Executive - Professional & Strategic</option>
                   <option value="cinematic">Cinematic - Dramatic & Visual</option>
@@ -758,7 +759,7 @@ export default function Settings() {
                       alertMinutesBefore: parseInt(e.target.value),
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
                 <p className="mt-2 text-sm text-gray-500">
                   Focus Scene becomes available this many minutes before your meeting (default: 10 minutes)
@@ -898,7 +899,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setPreferences({ ...preferences, focusSoundType: e.target.value as any })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="calm-ocean">Calm Ocean Waves</option>
                     <option value="rain">Gentle Rain</option>
@@ -957,7 +958,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setPreferences({ ...preferences, morningFlowTime: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                   <p className="mt-2 text-sm text-gray-500">
                     Morning flow becomes available at this time (default: 6:00 AM)
@@ -985,7 +986,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setPreferences({ ...preferences, eveningFlowTime: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                   <p className="mt-2 text-sm text-gray-500">
                     Evening flow becomes available at this time (default: 6:00 PM)
@@ -1013,7 +1014,7 @@ export default function Settings() {
                     onChange={(e) =>
                       setPreferences({ ...preferences, windingDownTime: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                   <p className="mt-2 text-sm text-gray-500">
                     Winding down session becomes available at this time (default: 9:00 PM)
@@ -1204,7 +1205,7 @@ export default function Settings() {
                           wellnessReminderFrequency: parseInt(e.target.value),
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="1">Every hour</option>
                       <option value="2">Every 2 hours</option>
@@ -1339,7 +1340,7 @@ export default function Settings() {
                   <div className="space-y-3">
                     <a
                       href={getSlackAuthUrl()}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#4A154B] hover:bg-[#611f69] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                      className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-[#4A154B] hover:bg-[#611f69] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg w-full sm:w-auto"
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
@@ -1460,66 +1461,71 @@ export default function Settings() {
                 </p>
 
                 {/* Desktop/Tablet View - Table */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700 border-b-2">
-                          Alert Type
-                        </th>
-                        {CHANNELS.map((channel) => (
-                          <th
-                            key={channel.id}
-                            className="text-center py-3 px-4 font-semibold text-gray-700 border-b-2"
-                          >
-                            {channel.label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ALERT_TYPES.map((alert) => (
-                        <tr
-                          key={alert.id}
-                          className={`hover:bg-gray-50 ${alert.highlight ? 'bg-amber-50' : ''}`}
-                        >
-                          <td className="py-3 px-4 border-b">
-                            <div className="font-medium text-gray-900">{alert.label}</div>
-                            <div className="text-xs text-gray-500">{alert.description}</div>
-                          </td>
-                          {CHANNELS.map((channel) => {
-                            const rawFieldKey = alert.fields[channel.id];
-                            if (!rawFieldKey) {
-                              return (
-                                <td key={channel.id} className="py-3 px-4 border-b text-center text-gray-300">
-                                  —
-                                </td>
-                              );
-                            }
-                            const fieldKey = rawFieldKey as BooleanDeliveryKey;
-                            const deliveryMap = delivery as unknown as DeliveryBooleanMap;
-                            const channelEnabled = deliveryMap[channel.enabledKey];
-                            const fieldValue = deliveryMap[fieldKey];
-                            return (
-                              <td key={channel.id} className="py-3 px-4 border-b text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={fieldValue}
-                                  disabled={!channelEnabled}
-                                  onChange={(e) => updateDeliveryField(fieldKey, e.target.checked)}
-                                  className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                                />
+                <div className="hidden lg:block overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8">
+                  <div className="inline-block min-w-full align-middle px-4 sm:px-6 lg:px-8">
+                    <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+                      <table className="min-w-full divide-y divide-gray-300">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                              Alert Type
+                            </th>
+                            {CHANNELS.map((channel) => (
+                              <th
+                                key={channel.id}
+                                scope="col"
+                                className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
+                              >
+                                {channel.label}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {ALERT_TYPES.map((alert) => (
+                            <tr
+                              key={alert.id}
+                              className={`hover:bg-gray-50 ${alert.highlight ? 'bg-amber-50' : ''}`}
+                            >
+                              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                                <div className="font-medium text-gray-900">{alert.label}</div>
+                                <div className="text-xs text-gray-500 mt-0.5">{alert.description}</div>
                               </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                              {CHANNELS.map((channel) => {
+                                const rawFieldKey = alert.fields[channel.id];
+                                if (!rawFieldKey) {
+                                  return (
+                                    <td key={channel.id} className="whitespace-nowrap px-3 py-4 text-center text-gray-300">
+                                      —
+                                    </td>
+                                  );
+                                }
+                                const fieldKey = rawFieldKey as BooleanDeliveryKey;
+                                const deliveryMap = delivery as unknown as DeliveryBooleanMap;
+                                const channelEnabled = deliveryMap[channel.enabledKey];
+                                const fieldValue = deliveryMap[fieldKey];
+                                return (
+                                  <td key={channel.id} className="whitespace-nowrap px-3 py-4 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={fieldValue}
+                                      disabled={!channelEnabled}
+                                      onChange={(e) => updateDeliveryField(fieldKey, e.target.checked)}
+                                      className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                    />
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Mobile View - Stacked Cards */}
-                <div className="md:hidden space-y-4">
+                {/* Mobile/Tablet View - Stacked Cards */}
+                <div className="lg:hidden space-y-3 sm:space-y-4">
                   {ALERT_TYPES.map((alert) => (
                     <div
                       key={alert.id}
@@ -1619,7 +1625,7 @@ export default function Settings() {
                             </button>
                           </div>
 
-                          <div className="grid gap-4 md:grid-cols-3">
+                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             <div className="space-y-2">
                               <label className="text-xs font-semibold text-gray-600 uppercase">
                                 Calendar label
@@ -1628,7 +1634,7 @@ export default function Settings() {
                                 type="text"
                                 value={displayLabel}
                                 onChange={(e) => handleCalendarFieldChange(account.id, 'label', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 placeholder="Work, Personal, Client, etc."
                               />
                             </div>
@@ -1678,16 +1684,16 @@ export default function Settings() {
                     <p className="text-sm text-gray-500 mt-1">Connect a calendar to start syncing meetings</p>
                   </div>
                 )}
-                <div className="mt-4 flex flex-wrap gap-3">
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={connectGoogleCalendar}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium shadow-sm"
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium shadow-sm hover:shadow-md"
                   >
                     Add Google Calendar
                   </button>
                   <button
                     onClick={connectMicrosoftCalendar}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all font-medium shadow-sm"
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all font-medium shadow-sm hover:shadow-md"
                   >
                     Add Outlook Calendar
                   </button>
@@ -1772,7 +1778,7 @@ export default function Settings() {
                     <select
                       value={cueSettings.tone}
                       onChange={(e) => setCueSettings({ ...cueSettings, tone: e.target.value as 'calm' | 'direct' })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="calm">Calm & Supportive</option>
                       <option value="direct">Direct & Brief</option>
@@ -1790,7 +1796,7 @@ export default function Settings() {
                     <select
                       value={cueSettings.cueFrequency}
                       onChange={(e) => setCueSettings({ ...cueSettings, cueFrequency: e.target.value as 'minimal' | 'balanced' | 'frequent' })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="minimal">Minimal (Pre-meeting + 5-min-left only)</option>
                       <option value="balanced">Balanced (Recommended)</option>
@@ -1823,7 +1829,7 @@ export default function Settings() {
                     <p className="text-xs text-gray-500 mb-3">
                       Time window when you typically experience an energy dip (e.g., 2-4 PM). Cues will be adjusted accordingly.
                     </p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Start</label>
                         <input
@@ -1944,20 +1950,20 @@ function Section({
   onToggle: (id: string) => void;
 }) {
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
+    <div className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-lg overflow-hidden">
       <button
         onClick={() => onToggle(id)}
-        className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between p-4 sm:p-5 lg:p-6 hover:bg-gray-50 transition-colors text-left"
       >
-        <h2 className="text-lg sm:text-2xl font-bold">{title}</h2>
+        <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold pr-4">{title}</h2>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+          <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500 flex-shrink-0" />
         ) : (
-          <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+          <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500 flex-shrink-0" />
         )}
       </button>
       {isExpanded && (
-        <div className="p-4 sm:p-8 pt-0 sm:pt-0 border-t border-gray-100">
+        <div className="p-4 sm:p-5 lg:p-6 xl:p-8 pt-0 border-t border-gray-100">
           {children}
         </div>
       )}
@@ -1977,19 +1983,20 @@ function Toggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <div className="font-medium text-gray-900">{label}</div>
-        <div className="text-sm text-gray-500">{description}</div>
+    <div className="flex items-start sm:items-center justify-between gap-3 sm:gap-4 py-2 sm:py-3">
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-gray-900 text-sm sm:text-base">{label}</div>
+        <div className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">{description}</div>
       </div>
       <button
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
           checked ? 'bg-indigo-600' : 'bg-gray-200'
         }`}
+        aria-label={`Toggle ${label}`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
             checked ? 'translate-x-6' : 'translate-x-1'
           }`}
         />
