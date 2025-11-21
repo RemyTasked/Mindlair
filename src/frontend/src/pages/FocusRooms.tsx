@@ -126,13 +126,20 @@ export default function FocusRooms() {
 
   // Timer countdown
   useEffect(() => {
-    if (timeRemaining === null || timeRemaining <= 0 || !isPlaying) return;
+    if (timeRemaining === null || !isPlaying) return;
+    
+    // Don't start countdown if timeRemaining is already 0 or negative
+    if (timeRemaining <= 0) {
+      handleTimerEnd();
+      return;
+    }
 
     const interval = setInterval(() => {
       setTimeRemaining((prev) => {
-        if (prev === null || prev <= 0) {
-          handleTimerEnd();
-          return null;
+        if (prev === null) return null;
+        if (prev <= 1) {
+          // Will trigger handleTimerEnd on next render
+          return 0;
         }
         return prev - 1;
       });
@@ -140,6 +147,13 @@ export default function FocusRooms() {
 
     return () => clearInterval(interval);
   }, [timeRemaining, isPlaying]);
+  
+  // Separate effect to handle timer end
+  useEffect(() => {
+    if (timeRemaining === 0 && isPlaying) {
+      handleTimerEnd();
+    }
+  }, [timeRemaining]);
 
   const handleTimerEnd = async () => {
     setIsPlaying(false);
@@ -323,13 +337,25 @@ export default function FocusRooms() {
 
   const startMeetCuteAudio = (room: FocusRoom) => {
     if (room.meetCuteSoundType) {
-      window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-        detail: { 
-          source: 'focus-rooms', 
-          roomId: room.id,
-          soundType: room.meetCuteSoundType 
-        }
+      console.log('🎵 Starting Meet-Cute audio for room:', { roomId: room.id, soundType: room.meetCuteSoundType });
+      // Stop any existing audio first
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'focus-rooms' }
       }));
+      
+      // Wait a moment for stop to complete, then start new audio
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+          detail: { 
+            source: 'focus-rooms', 
+            roomId: room.id,
+            soundType: room.meetCuteSoundType 
+          }
+        }));
+        console.log('✅ Dispatched ambient-sound-play event:', { soundType: room.meetCuteSoundType });
+      }, 300);
+    } else {
+      console.warn('⚠️ No meetCuteSoundType for room:', room.id);
     }
   };
 
@@ -580,6 +606,78 @@ export default function FocusRooms() {
             </div>
           </motion.div>
         )}
+
+        {/* Ambient Sound Library Section - Moved to top for better visibility */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8"
+        >
+          <div className="bg-white rounded-xl shadow-lg border-2 border-teal-200 overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-teal-500 to-cyan-500 px-6 py-4 cursor-pointer"
+              onClick={() => setShowSceneLibrary(!showSceneLibrary)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Headphones className="w-6 h-6 text-white" />
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Ambient Sound Library</h2>
+                    <p className="text-sm text-teal-100">Natural soundscapes for focus and relaxation</p>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSceneLibrary(!showSceneLibrary);
+                  }}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all"
+                >
+                  {showSceneLibrary ? <ChevronUp className="w-5 h-5 text-white" /> : <ChevronDown className="w-5 h-5 text-white" />}
+                </button>
+              </div>
+            </div>
+            
+            <AnimatePresence>
+              {showSceneLibrary && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-6 bg-gray-50">
+                    <SceneLibrary
+                      timeOfDay={new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}
+                      onSoundTypeChange={() => {
+                        // Stop any Focus Room audio when using Scene Library
+                        if (activeRoom) {
+                          if (audioProvider === 'spotify') {
+                            api.post('/api/spotify/pause').catch(() => {});
+                          } else if (audioProvider === 'apple-music') {
+                            if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                              (window as any).MusicKit.getInstance().stop().catch(() => {});
+                            }
+                          } else {
+                            window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                              detail: { source: 'focus-rooms' }
+                            }));
+                          }
+                          setActiveRoom(null);
+                          setIsPlaying(false);
+                        }
+                        // SceneLibrary component will dispatch the ambient-sound-play event itself
+                        // This callback is just for stopping Focus Room audio
+                      }}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
 
         {/* Focus Rooms Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
@@ -841,8 +939,8 @@ export default function FocusRooms() {
                   <div className="pt-4 border-t border-teal-200">
                     <SceneLibrary
                       timeOfDay={new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}
-                    onSoundTypeChange={() => {
-                      // Stop any Focus Room audio when using Scene Library
+                      onSoundTypeChange={() => {
+                        // Stop any Focus Room audio when using Scene Library
                         if (activeRoom) {
                           if (audioProvider === 'spotify') {
                             api.post('/api/spotify/pause').catch(() => {});
@@ -858,6 +956,8 @@ export default function FocusRooms() {
                           setActiveRoom(null);
                           setIsPlaying(false);
                         }
+                        // SceneLibrary component will dispatch the ambient-sound-play event itself
+                        // This callback is just for stopping Focus Room audio
                       }}
                     />
                   </div>

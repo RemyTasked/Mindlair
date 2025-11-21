@@ -743,7 +743,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       // Small delay to ensure stop completes and state updates before starting new sound
       setTimeout(() => {
         const soundToPlay = eventSoundTypeValue || soundType;
-        console.log('🎵 Starting audio with soundType:', soundToPlay, { eventSoundTypeValue, soundType, enabled });
+        console.log('🎵 Starting audio with soundType:', soundToPlay, { eventSoundTypeValue, soundType, enabled, source: customEvent.detail?.source });
         if (enabled && soundToPlay && soundToPlay !== 'none') {
           // Update eventSoundType first, then wait for state to update
           if (eventSoundTypeValue) {
@@ -753,14 +753,14 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
             setTimeout(() => {
               console.log('🎵 Starting audio after state update, eventSoundType:', eventSoundTypeValue);
               startAudio('event-dispatch');
-            }, 150);
+            }, 200);
           } else {
             startAudio('event-dispatch');
           }
         } else {
-          console.warn('⚠️ Not starting audio:', { enabled, soundToPlay });
+          console.warn('⚠️ Not starting audio:', { enabled, soundToPlay, eventSoundTypeValue, soundType });
         }
-      }, 250); // Delay to ensure stop completes
+      }, 300); // Increased delay to ensure stop completes
     };
 
     const stopHandler = () => {
