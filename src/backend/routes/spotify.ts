@@ -111,8 +111,17 @@ router.post(
       }
 
       if (!targetDevice) {
-        logger.warn('⚠️ No Spotify device found. User may need to open Spotify app.');
-        throw new AppError('No Spotify device found. Please open Spotify on one of your devices (web player, desktop app, or mobile app) and try again.', 400);
+        logger.warn('⚠️ No Spotify device found. User may need to open Spotify app.', { 
+          deviceCount: devices.length,
+          devices: devices.map(d => ({ id: d.id, name: d.name, type: d.type, is_active: d.is_active }))
+        });
+        throw new AppError('No Spotify device found. Please open Spotify on one of your devices (web player at open.spotify.com, desktop app, or mobile app) and try again. Make sure Spotify is actively running on at least one device.', 400);
+      }
+      
+      // Validate playlist ID format
+      if (!playlistId || playlistId.length < 10) {
+        logger.error('❌ Invalid playlist ID', { playlistId, roomId });
+        throw new AppError('Invalid playlist ID. Please try again or contact support.', 400);
       }
 
       // If device is not active, transfer playback to it first

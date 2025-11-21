@@ -163,13 +163,22 @@ export class SpotifyService {
 
       // Provide more specific error messages
       if (errorStatus === 404) {
-        throw new Error('No active device found. Please open Spotify on one of your devices and try again.');
+        throw new Error('No active device found. Please open Spotify on one of your devices (web player, desktop app, or mobile app) and try again.');
       } else if (errorStatus === 403) {
         throw new Error('Playback is not available. Please check your Spotify Premium subscription.');
       } else if (errorStatus === 401) {
         throw new Error('Spotify authentication failed. Please reconnect your account.');
+      } else if (errorStatus === 400) {
+        // 400 can mean several things - provide more context
+        if (errorMessage?.toLowerCase().includes('device')) {
+          throw new Error('Device not found or not available. Please open Spotify on one of your devices and try again.');
+        } else if (errorMessage?.toLowerCase().includes('playlist')) {
+          throw new Error('Playlist not found or not accessible. Please try a different room.');
+        } else {
+          throw new Error(`Playback failed: ${errorMessage || 'Please make sure Spotify is open on one of your devices and try again.'}`);
+        }
       } else {
-        throw new Error(`Failed to play playlist: ${errorMessage || 'Unknown error'}`);
+        throw new Error(`Failed to play playlist: ${errorMessage || 'Unknown error. Please try again.'}`);
       }
     }
   }

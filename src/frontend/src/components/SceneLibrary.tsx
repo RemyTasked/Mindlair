@@ -236,37 +236,58 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {allScenes.map((scene) => (
-          <button
+          <div
             key={scene.id}
-            onClick={() => {
-              // Stop previous sound before starting new one
-              if (activeScene && activeScene !== scene.id) {
-                setActiveScene(null);
-                setTimeout(() => setActiveScene(scene.id), 100);
-              } else {
-                setActiveScene(scene.id);
-              }
-            }}
-            className={`group relative bg-gradient-to-br ${scene.bgGradient} rounded-xl p-4 sm:p-5 border-2 border-transparent hover:border-teal-300 transition-all hover:shadow-xl hover:scale-105 text-left`}
+            className={`group relative bg-gradient-to-br ${scene.bgGradient} rounded-xl p-4 sm:p-5 border-2 border-transparent hover:border-teal-300 transition-all hover:shadow-xl hover:scale-105`}
           >
-            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className={`p-1.5 rounded-full bg-gradient-to-r ${scene.gradient} text-white shadow-lg`}>
-                <Play className="w-3 h-3" />
-              </div>
-            </div>
+            {/* Play Button - Always visible */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // Immediately play the sound
+                if (activeScene === scene.id) {
+                  // If already active, toggle off
+                  setActiveScene(null);
+                } else {
+                  setActiveScene(scene.id);
+                }
+              }}
+              className={`absolute top-3 right-3 p-2 rounded-full bg-gradient-to-r ${scene.gradient} text-white shadow-lg hover:scale-110 transition-all z-10`}
+              title={activeScene === scene.id ? 'Stop sound' : 'Play sound'}
+            >
+              {activeScene === scene.id ? (
+                <X className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </button>
 
-            <div className="text-4xl sm:text-5xl mb-3">{scene.emoji}</div>
-            
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
-              {scene.title}
-            </h3>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-              {scene.subtitle}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-              {scene.description}
-            </p>
-          </button>
+            {/* Card Content - Clickable to open modal */}
+            <button
+              onClick={() => {
+                // Open modal for more details
+                if (activeScene && activeScene !== scene.id) {
+                  setActiveScene(null);
+                  setTimeout(() => setActiveScene(scene.id), 100);
+                } else {
+                  setActiveScene(scene.id);
+                }
+              }}
+              className="w-full text-left"
+            >
+              <div className="text-4xl sm:text-5xl mb-3">{scene.emoji}</div>
+              
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
+                {scene.title}
+              </h3>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                {scene.subtitle}
+              </p>
+              <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                {scene.description}
+              </p>
+            </button>
+          </div>
         ))}
       </div>
     </div>
