@@ -38,10 +38,11 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
     setTimeout(() => {
       onSoundTypeChange(soundType);
       localStorage.setItem('meetcute_autoplay_sound', 'true');
+      console.log('🎵 SceneLibrary dispatching ambient-sound-play event:', { sceneId: activeScene, soundType });
       window.dispatchEvent(new CustomEvent('ambient-sound-play', {
         detail: { source: 'scene-library', sceneId: activeScene, soundType }
       }));
-    }, 200);
+    }, 300);
   }, [activeScene, onSoundTypeChange]);
 
   // Time-of-day aware content

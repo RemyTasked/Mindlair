@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward, ChevronDown, ChevronUp, Settings as SettingsIcon } from 'lucide-react';
 import Logo from '../components/Logo';
 import AmbientSound from '../components/AmbientSound';
 import SceneLibrary from '../components/SceneLibrary';
@@ -102,14 +102,9 @@ export default function FocusRooms() {
         setHasAppleMusic(appleMusicResponse.data.connected || false);
         setTotalCredits(statsResponse.data.totalCredits || 0);
         
-        // Set default audio provider
-        if (spotifyResponse.data.connected) {
-          setAudioProvider('spotify');
-        } else if (appleMusicResponse.data.connected) {
-          setAudioProvider('apple-music');
-        } else {
-          setAudioProvider('meetcute');
-        }
+        // Set default audio provider - default to Meet-Cute even if Spotify/Apple Music connected
+        // User can toggle to Spotify/Apple Music if they want
+        setAudioProvider('meetcute');
       } catch (error) {
         console.error('Error loading data:', error);
       }
@@ -338,13 +333,24 @@ export default function FocusRooms() {
   const startMeetCuteAudio = (room: FocusRoom) => {
     if (room.meetCuteSoundType) {
       console.log('🎵 Starting Meet-Cute audio for room:', { roomId: room.id, soundType: room.meetCuteSoundType });
-      // Stop any existing audio first
+      // Stop any existing audio first (Spotify, Apple Music, or other Meet-Cute)
+      if (audioProvider === 'spotify') {
+        api.post('/api/spotify/pause').catch(() => {});
+      } else if (audioProvider === 'apple-music') {
+        if (typeof window !== 'undefined' && (window as any).MusicKit) {
+          (window as any).MusicKit.getInstance().stop().catch(() => {});
+        }
+      }
+      
+      // Always stop ambient sound first
       window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
         detail: { source: 'focus-rooms' }
       }));
       
       // Wait a moment for stop to complete, then start new audio
       setTimeout(() => {
+        console.log('🎵 Dispatching ambient-sound-play event with soundType:', room.meetCuteSoundType);
+        localStorage.setItem('meetcute_autoplay_sound', 'true');
         window.dispatchEvent(new CustomEvent('ambient-sound-play', {
           detail: { 
             source: 'focus-rooms', 
@@ -353,7 +359,7 @@ export default function FocusRooms() {
           }
         }));
         console.log('✅ Dispatched ambient-sound-play event:', { soundType: room.meetCuteSoundType });
-      }, 300);
+      }, 600); // Increased delay to ensure all stops complete
     } else {
       console.warn('⚠️ No meetCuteSoundType for room:', room.id);
     }
@@ -438,6 +444,28 @@ export default function FocusRooms() {
                   Focus Rooms
                 </button>
               </nav>
+            </div>
+            
+            {/* Settings and Sign Out */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/settings')}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Settings"
+              >
+                <SettingsIcon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('meetcute_token');
+                  localStorage.removeItem('meetcute_profile_cache');
+                  localStorage.removeItem('meetcute_session_active');
+                  navigate('/');
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
           
@@ -584,9 +612,14 @@ export default function FocusRooms() {
             <div className="text-center">
               <Music className="w-12 h-12 text-green-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">Enhance with Music</h3>
-              <p className="text-gray-700 mb-6 max-w-md mx-auto">
+              <p className="text-gray-700 mb-4 max-w-md mx-auto">
                 Connect Spotify or Apple Music for curated playlists. Rooms work great with our built-in soundscapes too!
               </p>
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800">
+                  <span className="font-semibold">⚠️ Spotify Premium Required:</span> Spotify playback requires a Premium subscription. Meet-Cute audio works for everyone!
+                </p>
+              </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={handleConnectSpotify}
@@ -724,6 +757,117 @@ export default function FocusRooms() {
                 {room.description}
               </p>
               
+              {/* Audio Provider Toggle - Show when room is active and Spotify/Apple Music connected */}
+              {activeRoom === room.id && (hasSpotify || hasAppleMusic) && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-4 pt-4 border-t border-gray-300"
+                >
+                  <div className="mb-4">
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Audio Source</label>
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (audioProvider !== 'meetcute') {
+                            // Stop current audio
+                            if (audioProvider === 'spotify') {
+                              api.post('/api/spotify/pause').catch(() => {});
+                            } else if (audioProvider === 'apple-music') {
+                              if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                                (window as any).MusicKit.getInstance().stop().catch(() => {});
+                              }
+                            }
+                            setAudioProvider('meetcute');
+                            // Start Meet-Cute audio
+                            if (isPlaying) {
+                              startMeetCuteAudio(room);
+                            }
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                          audioProvider === 'meetcute'
+                            ? 'bg-teal-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Meet-Cute Audio
+                      </button>
+                      {hasSpotify && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (audioProvider !== 'spotify') {
+                              // Stop Meet-Cute audio
+                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                                detail: { source: 'focus-rooms' }
+                              }));
+                              setAudioProvider('spotify');
+                              // Start Spotify if playing
+                              if (isPlaying) {
+                                api.post('/api/spotify/play', { roomId: room.id }).catch((error) => {
+                                  console.error('Error starting Spotify:', error);
+                                  alert('Spotify playback failed. Make sure you have Premium and Spotify is open on one of your devices.');
+                                  // Fallback to Meet-Cute
+                                  setAudioProvider('meetcute');
+                                  startMeetCuteAudio(room);
+                                });
+                              }
+                            }
+                          }}
+                          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                            audioProvider === 'spotify'
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          Spotify <span className="text-xs">(Premium)</span>
+                        </button>
+                      )}
+                      {hasAppleMusic && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (audioProvider !== 'apple-music') {
+                              // Stop Meet-Cute audio
+                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                                detail: { source: 'focus-rooms' }
+                              }));
+                              setAudioProvider('apple-music');
+                              // Start Apple Music if playing
+                              if (isPlaying) {
+                                api.post('/api/apple-music/play', { roomId: room.id })
+                                  .then(async (response) => {
+                                    if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                                      const musicKit = (window as any).MusicKit.getInstance();
+                                      await musicKit.setQueue({ playlist: response.data.playlistId });
+                                      await musicKit.play();
+                                    }
+                                  })
+                                  .catch((error) => {
+                                    console.error('Error starting Apple Music:', error);
+                                    // Fallback to Meet-Cute
+                                    setAudioProvider('meetcute');
+                                    startMeetCuteAudio(room);
+                                  });
+                              }
+                            }
+                          }}
+                          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                            audioProvider === 'apple-music'
+                              ? 'bg-pink-600 text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          Apple Music
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Timer and Volume Controls - Show when this room is active */}
               {activeRoom === room.id && (
                 <motion.div

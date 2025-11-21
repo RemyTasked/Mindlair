@@ -728,39 +728,58 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       console.log('🎵 ambient-sound-play event received', { 
         eventSoundType: eventSoundTypeValue, 
         currentSoundType: soundType,
+        currentEventSoundType: eventSoundType,
         detail: customEvent.detail 
       });
-      
-      // Update event soundType if provided
-      if (eventSoundTypeValue) {
-        setEventSoundType(eventSoundTypeValue);
-        console.log('✅ Updated eventSoundType to:', eventSoundTypeValue);
-      }
       
       // Stop any currently playing audio first
       stopAudio();
       
-      // Small delay to ensure stop completes and state updates before starting new sound
+      // Small delay to ensure stop completes before starting new sound
       setTimeout(() => {
         const soundToPlay = eventSoundTypeValue || soundType;
-        console.log('🎵 Starting audio with soundType:', soundToPlay, { eventSoundTypeValue, soundType, enabled, source: customEvent.detail?.source });
-        if (enabled && soundToPlay && soundToPlay !== 'none') {
-          // Update eventSoundType first, then wait for state to update
+        console.log('🎵 Starting audio with soundType:', soundToPlay, { 
+          eventSoundTypeValue, 
+          soundType, 
+          enabled, 
+          source: customEvent.detail?.source,
+          roomId: customEvent.detail?.roomId
+        });
+        
+        if (!enabled) {
+          console.warn('⚠️ AmbientSound is disabled, not starting audio');
+          return;
+        }
+        
+        if (!soundToPlay || soundToPlay === 'none') {
+          console.warn('⚠️ No valid soundType provided:', { eventSoundTypeValue, soundType });
+          return;
+        }
+        
+        // Update event soundType state if provided (for future reference)
+        if (eventSoundTypeValue) {
+          setEventSoundType(eventSoundTypeValue);
+          console.log('✅ Updated eventSoundType state to:', eventSoundTypeValue);
+        }
+        
+        // Use the event soundType directly, don't wait for state update
+        // We'll pass it directly to startAudio via a closure
+        const soundTypeToUse = eventSoundTypeValue || soundType;
+        
+        // Wait a bit more for state to settle, then start audio
+        // The startAudio function will use eventSoundType from state, which we just set
+        setTimeout(() => {
+          console.log('🎵 Starting audio after delay, using soundType:', soundTypeToUse);
+          // Force the eventSoundType to be set before calling startAudio
           if (eventSoundTypeValue) {
             setEventSoundType(eventSoundTypeValue);
-            // Wait for React state to update before starting audio
-            // Use a longer delay to ensure state is properly set
-            setTimeout(() => {
-              console.log('🎵 Starting audio after state update, eventSoundType:', eventSoundTypeValue);
-              startAudio('event-dispatch');
-            }, 200);
-          } else {
-            startAudio('event-dispatch');
           }
-        } else {
-          console.warn('⚠️ Not starting audio:', { enabled, soundToPlay, eventSoundTypeValue, soundType });
-        }
-      }, 300); // Increased delay to ensure stop completes
+          // Use a ref or direct call - let's ensure state is updated
+          setTimeout(() => {
+            startAudio('event-dispatch');
+          }, 100);
+        }, 300);
+      }, 500); // Increased delay to ensure stop completes
     };
 
     const stopHandler = () => {
