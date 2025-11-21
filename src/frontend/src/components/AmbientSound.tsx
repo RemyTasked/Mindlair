@@ -541,10 +541,10 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     return context;
   }, [supportsWebAudio]);
 
-  const startFallbackAudio = useCallback(async () => {
-    const currentSoundType = eventSoundType || soundType;
-    console.log('🎵 startFallbackAudio called with:', { currentSoundType, eventSoundType, soundType, enabled });
-    if (!enabled || currentSoundType === 'none') {
+  const startFallbackAudio = useCallback(async (overrideSoundType?: SoundType) => {
+    const currentSoundType = overrideSoundType || eventSoundType || soundType;
+    console.log('🎵 startFallbackAudio called with:', { currentSoundType, overrideSoundType, eventSoundType, soundType, enabled });
+    if (!enabled || !currentSoundType || currentSoundType === 'none') {
       console.warn('⚠️ Not starting fallback audio:', { enabled, currentSoundType });
       stopAudio();
       return;
@@ -609,9 +609,14 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   }, [cleanupFallback, cleanupSource, enabled, getVolume, isMuted, soundType, stopAudio, isIOS]);
 
   const startWebAudio = useCallback(
-    async (sourceLabel: string) => {
-      const currentSoundType = eventSoundType || soundType;
-      console.log('🎵 startWebAudio called with:', { sourceLabel, currentSoundType, eventSoundType, soundType });
+    async (sourceLabel: string, overrideSoundType?: SoundType) => {
+      const currentSoundType = overrideSoundType || eventSoundType || soundType;
+      console.log('🎵 startWebAudio called with:', { sourceLabel, currentSoundType, overrideSoundType, eventSoundType, soundType });
+      
+      if (!currentSoundType || currentSoundType === 'none') {
+        console.warn('⚠️ No valid soundType for startWebAudio');
+        throw new Error('No valid soundType provided');
+      }
       
       const context = ensureAudioContext();
       if (!context) {
@@ -660,7 +665,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       gainRef.current = gainNode;
 
       console.log(`🎵 WebAudio ambient sound started [${sourceLabel}]`, {
-        soundType: eventSoundType || soundType,
+        soundType: currentSoundType,
       });
 
       setIsPlaying(true);
@@ -671,19 +676,21 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   );
 
   const startAudio = useCallback(
-    async (sourceLabel: string) => {
-      const currentSoundType = eventSoundType || soundType;
-      if (!enabled || currentSoundType === 'none') {
+    async (sourceLabel: string, overrideSoundType?: SoundType) => {
+      const currentSoundType = overrideSoundType || eventSoundType || soundType;
+      console.log('🎵 startAudio called with:', { sourceLabel, currentSoundType, overrideSoundType, eventSoundType, soundType, enabled });
+      if (!enabled || !currentSoundType || currentSoundType === 'none') {
+        console.warn('⚠️ Cannot start audio:', { enabled, currentSoundType });
         stopAudio();
         return;
       }
 
       try {
-        await startWebAudio(sourceLabel);
+        await startWebAudio(sourceLabel, currentSoundType);
       } catch (webAudioError) {
         console.warn('⚠️ WebAudio failed, falling back to HTMLAudio', webAudioError);
         try {
-          await startFallbackAudio();
+          await startFallbackAudio(currentSoundType);
         } catch (fallbackError) {
           console.error('❌ Unable to start ambient sound', fallbackError);
           setNeedsInteraction(true);
@@ -762,23 +769,20 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
           console.log('✅ Updated eventSoundType state to:', eventSoundTypeValue);
         }
         
-        // Use the event soundType directly, don't wait for state update
-        // We'll pass it directly to startAudio via a closure
+        // Use the event soundType directly - pass it to startAudio immediately
         const soundTypeToUse = eventSoundTypeValue || soundType;
         
-        // Wait a bit more for state to settle, then start audio
-        // The startAudio function will use eventSoundType from state, which we just set
+        // Update state for future reference, but pass the value directly to startAudio
+        if (eventSoundTypeValue) {
+          setEventSoundType(eventSoundTypeValue);
+        }
+        
+        // Start audio immediately with the soundType from the event
+        // Don't wait for state updates - pass the value directly
         setTimeout(() => {
-          console.log('🎵 Starting audio after delay, using soundType:', soundTypeToUse);
-          // Force the eventSoundType to be set before calling startAudio
-          if (eventSoundTypeValue) {
-            setEventSoundType(eventSoundTypeValue);
-          }
-          // Use a ref or direct call - let's ensure state is updated
-          setTimeout(() => {
-            startAudio('event-dispatch');
-          }, 100);
-        }, 300);
+          console.log('🎵 Starting audio with soundType:', soundTypeToUse);
+          startAudio('event-dispatch', soundTypeToUse);
+        }, 200);
       }, 500); // Increased delay to ensure stop completes
     };
 
