@@ -496,14 +496,63 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }
   }, []);
 
-  const stopAudio = useCallback(() => {
-    // Stop all audio sources immediately
-    cleanupSource();
-    cleanupFallback();
-    setIsPlaying(false);
-    // Clear any pending autoplay flags
-    localStorage.removeItem('meetcute_autoplay_sound');
-  }, [cleanupFallback, cleanupSource]);
+  const stopAudio = useCallback((fadeOut: boolean = false): Promise<void> => {
+    return new Promise((resolve) => {
+      if (fadeOut && isPlaying) {
+        // Graceful fade out over 500ms
+        const fadeDuration = 0.5; // seconds
+        const context = audioContextRef.current;
+        
+        if (context && gainRef.current) {
+          const gainNode = gainRef.current;
+          const startVolume = gainNode.gain.value;
+          const startTime = context.currentTime;
+          
+          // Fade out
+          gainNode.gain.setValueAtTime(startVolume, startTime);
+          gainNode.gain.linearRampToValueAtTime(0, startTime + fadeDuration);
+          
+          // Also fade out fallback audio if playing
+          if (fallbackAudioRef.current) {
+            const audio = fallbackAudioRef.current;
+            const currentVolume = audio.volume;
+            const fadeStep = currentVolume / (fadeDuration * 60); // 60 steps per second
+            const fadeInterval = setInterval(() => {
+              if (audio.volume > 0) {
+                audio.volume = Math.max(0, audio.volume - fadeStep);
+              } else {
+                clearInterval(fadeInterval);
+              }
+            }, 1000 / 60); // 60fps
+            
+            setTimeout(() => {
+              clearInterval(fadeInterval);
+              cleanupFallback();
+            }, fadeDuration * 1000);
+          }
+          
+          // Wait for fade to complete, then stop
+          setTimeout(() => {
+            cleanupSource();
+            cleanupFallback();
+            setIsPlaying(false);
+            localStorage.removeItem('meetcute_autoplay_sound');
+            resolve();
+          }, fadeDuration * 1000);
+          
+          return;
+        }
+      }
+      
+      // Immediate stop (no fade)
+      cleanupSource();
+      cleanupFallback();
+      setIsPlaying(false);
+      // Clear any pending autoplay flags
+      localStorage.removeItem('meetcute_autoplay_sound');
+      resolve();
+    });
+  }, [cleanupFallback, cleanupSource, isPlaying]);
 
   const ensureAudioContext = useCallback((): AudioContext | null => {
     if (!supportsWebAudio) {
@@ -563,8 +612,12 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
     const audio = new Audio(audioUrl);
     audio.loop = true;
-    audio.volume = getVolume(isMuted);
+    const targetVolume = getVolume(isMuted);
+    audio.volume = 0; // Start at 0 for fade in
     audio.preload = 'auto';
+    
+    // Store target volume for fade in
+    (audio as any)._targetVolume = targetVolume;
     audio.setAttribute('playsinline', 'true');
     audio.setAttribute('webkit-playsinline', 'true');
     
@@ -598,6 +651,20 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
     try {
       await audio.play();
+      
+      // Fade in over 500ms
+      const fadeDuration = 0.5; // seconds
+      const fadeStep = targetVolume / (fadeDuration * 60); // 60 steps per second
+      let currentVol = 0;
+      const fadeInterval = setInterval(() => {
+        currentVol = Math.min(targetVolume, currentVol + fadeStep);
+        audio.volume = currentVol;
+        if (currentVol >= targetVolume) {
+          clearInterval(fadeInterval);
+          audio.volume = targetVolume; // Ensure exact target
+        }
+      }, 1000 / 60); // 60fps
+      
       setIsPlaying(true);
       setNeedsInteraction(false);
       localStorage.removeItem('meetcute_autoplay_sound');
@@ -633,7 +700,15 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
       const buffer = getAudioBuffer(context, currentSoundType);
       const gainNode = gainRef.current || context.createGain();
-      gainNode.gain.value = getVolume(isMuted);
+      
+      // Fade in the new sound over 500ms
+      const fadeDuration = 0.5; // seconds
+      const targetVolume = getVolume(isMuted);
+      const startTime = context.currentTime;
+      
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(targetVolume, startTime + fadeDuration);
+      
       const sourceNode = context.createBufferSource();
       sourceNode.buffer = buffer;
       sourceNode.loop = true;
@@ -739,12 +814,11 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         detail: customEvent.detail 
       });
       
-      // Stop any currently playing audio first
-      stopAudio();
-      
-      // Small delay to ensure stop completes before starting new sound
-      setTimeout(() => {
-        const soundToPlay = eventSoundTypeValue || soundType;
+      // Gracefully fade out any currently playing audio first
+      stopAudio(true).then(() => {
+        // Small delay to ensure fade out completes before starting new sound
+        setTimeout(() => {
+          const soundToPlay = eventSoundTypeValue || soundType;
         console.log('🎵 Starting audio with soundType:', soundToPlay, { 
           eventSoundTypeValue, 
           soundType, 
@@ -783,7 +857,8 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
           console.log('🎵 Starting audio with soundType:', soundTypeToUse);
           startAudio('event-dispatch', soundTypeToUse);
         }, 200);
-      }, 500); // Increased delay to ensure stop completes
+        }, 100); // Small delay after fade completes
+      }); // Close the .then() callback
     };
 
     const stopHandler = () => {

@@ -273,6 +273,9 @@ export default function FocusRooms() {
         console.error('Error starting session:', error);
       }
       
+      // Close Scene Library if open
+      setShowSceneLibrary(false);
+      
       // Select new room
       setActiveRoom(room.id);
       setIsPlaying(true);
