@@ -79,7 +79,6 @@ export default function Dashboard() {
   const [reflectionInsights, setReflectionInsights] = useState<any>(null);
   const [showReflectionModal, setShowReflectionModal] = useState(false);
   const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
-  const [ambientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none'>('none');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
   const [activeMeetings, setActiveMeetings] = useState<Meeting[]>([]);
@@ -903,10 +902,10 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Global Ambient Sound - Always available */}
+      {/* Global Ambient Sound - Disabled on dashboard to prevent interference */}
       <AmbientSound
-        soundType={ambientSoundType}
-        enabled={true}
+        soundType="none"
+        enabled={false}
       />
 
       {/* PWA Install Prompt */}

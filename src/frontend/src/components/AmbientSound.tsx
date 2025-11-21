@@ -601,13 +601,41 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       
       // Immediate stop (no fade) - FORCE stop everything
       console.log('🛑 Immediate stop - cleaning up all audio sources');
+      
+      // Force stop WebAudio immediately
+      if (sourceRef.current) {
+        try {
+          sourceRef.current.stop(0); // Immediate stop
+        } catch (e) {
+          // Source might already be stopped
+        }
+      }
+      if (gainRef.current && audioContextRef.current) {
+        try {
+          gainRef.current.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+        } catch (e) {
+          // Gain might not be connected
+        }
+      }
+      
+      // Force stop HTML5 Audio immediately
+      if (fallbackAudioRef.current) {
+        try {
+          fallbackAudioRef.current.pause();
+          fallbackAudioRef.current.currentTime = 0;
+          fallbackAudioRef.current.volume = 0;
+        } catch (e) {
+          // Audio might already be stopped
+        }
+      }
+      
       cleanupSource();
       cleanupFallback();
       setIsPlaying(false);
       setEventSoundType(null); // Clear event sound type
       // Clear any pending autoplay flags
       localStorage.removeItem('meetcute_autoplay_sound');
-      console.log('✅ Audio immediately stopped');
+      console.log('✅ Audio immediately stopped and cleared');
       resolve();
     });
   }, [cleanupFallback, cleanupSource, isPlaying]);
