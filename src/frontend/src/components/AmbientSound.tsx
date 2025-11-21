@@ -36,12 +36,25 @@ function generateSamples(type: SoundType): Float32Array {
 
   switch (type) {
     case 'calm-ocean': {
-      let prev = 0;
+      // Calm ocean: Wave-like motion with deep bass and gentle swells
+      let prevNoise = 0;
       for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        
+        // Deep ocean rumble (very low frequency)
+        const deepRumble = Math.sin(2 * Math.PI * 40 * t) * 0.15;
+        
+        // Wave motion (medium frequency)
+        const wave = Math.sin(2 * Math.PI * 0.2 * t) * 0.25;
+        
+        // Filtered noise for water texture
         const noise = Math.random() * 2 - 1;
-        prev += 0.02 * (noise - prev);
-        const wave = Math.sin((2 * Math.PI * i) / (SAMPLE_RATE * 5));
-        data[i] = prev * 0.5 + wave * 0.3;
+        prevNoise += 0.015 * (noise - prevNoise);
+        
+        // Gentle swells
+        const swell = Math.sin(2 * Math.PI * 0.05 * t) * 0.1;
+        
+        data[i] = deepRumble + wave * 0.4 + prevNoise * 0.2 + swell;
       }
       break;
     }
@@ -73,39 +86,73 @@ function generateSamples(type: SoundType): Float32Array {
       break;
     }
     case 'forest': {
-      // Forest: Birds chirping, leaves rustling, gentle wind
+      // Forest: Birds chirping, leaves rustling, gentle wind - more distinct
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
-        const rustle = Math.sin(2 * Math.PI * 0.3 * t) * (Math.random() * 0.3);
-        const bird1 = Math.sin(2 * Math.PI * (1200 + Math.sin(t * 2) * 200) * t) * 
-                     Math.exp(-3 * (t % 1)) * 0.15;
-        const bird2 = Math.sin(2 * Math.PI * (800 + Math.sin(t * 1.5) * 150) * t) * 
-                     Math.exp(-4 * (t % 1.3)) * 0.1;
-        const wind = (Math.random() * 2 - 1) * 0.15;
-        data[i] = rustle + bird1 + bird2 + wind;
+        
+        // Gentle wind (filtered noise)
+        let windNoise = 0;
+        for (let j = 0; j < 3; j++) {
+          const noise = Math.random() * 2 - 1;
+          windNoise += 0.03 * (noise - windNoise);
+        }
+        const wind = windNoise * 0.2;
+        
+        // Leaves rustling (low frequency modulation)
+        const rustle = Math.sin(2 * Math.PI * 0.2 * t) * Math.sin(2 * Math.PI * 0.5 * t) * 0.15;
+        
+        // Bird calls (sparse, occasional)
+        const bird1 = (t % 8 < 0.3) ? Math.sin(2 * Math.PI * (1200 + Math.sin(t * 2) * 200) * t) * 
+                     Math.exp(-5 * (t % 8)) * 0.2 : 0;
+        const bird2 = ((t + 2) % 10 < 0.25) ? Math.sin(2 * Math.PI * (800 + Math.sin(t * 1.5) * 150) * t) * 
+                     Math.exp(-6 * ((t + 2) % 10)) * 0.15 : 0;
+        const bird3 = ((t + 5) % 12 < 0.2) ? Math.sin(2 * Math.PI * (1500 + Math.sin(t * 1.8) * 180) * t) * 
+                     Math.exp(-7 * ((t + 5) % 12)) * 0.12 : 0;
+        
+        // Deep forest rumble
+        const rumble = Math.sin(2 * Math.PI * 60 * t) * 0.05;
+        
+        data[i] = wind + rustle + bird1 + bird2 + bird3 + rumble;
       }
       break;
     }
     case 'meditation-bell': {
-      // Meditation bell: Soft, resonant bell with harmonics
+      // Meditation bell: Continuous, resonant bell tones with gentle harmonics
+      // Multiple overlapping bell tones for continuous ambient sound
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
-        const envelope = Math.exp(-1.5 * t);
-        const fundamental = Math.sin(2 * Math.PI * 440 * t);
-        const harmonic2 = Math.sin(2 * Math.PI * 880 * t) * 0.5;
-        const harmonic3 = Math.sin(2 * Math.PI * 1320 * t) * 0.25;
-        data[i] = (fundamental + harmonic2 + harmonic3) * envelope * 0.5;
+        
+        // Multiple bell tones at different frequencies, each with its own phase
+        const bell1 = Math.sin(2 * Math.PI * 220 * t) * 0.15; // A3
+        const bell2 = Math.sin(2 * Math.PI * 329.63 * t) * 0.12; // E4
+        const bell3 = Math.sin(2 * Math.PI * 440 * t) * 0.1; // A4
+        
+        // Gentle harmonics for richness
+        const harmonic1 = Math.sin(2 * Math.PI * 440 * 2 * t) * 0.05;
+        const harmonic2 = Math.sin(2 * Math.PI * 440 * 3 * t) * 0.03;
+        
+        // Slow amplitude modulation for organic feel
+        const modulation = 1 + Math.sin(2 * Math.PI * 0.1 * t) * 0.1;
+        
+        // Very gentle low-frequency rumble for depth
+        const rumble = Math.sin(2 * Math.PI * 55 * t) * 0.02;
+        
+        data[i] = (bell1 + bell2 + bell3 + harmonic1 + harmonic2 + rumble) * modulation * 0.4;
       }
       break;
     }
     case 'white-noise': {
-      // White noise: Smooth, consistent static for focus
-      let prev = 0;
+      // White noise: Smooth, consistent static for focus (pink noise - more natural)
+      let prev1 = 0;
+      let prev2 = 0;
+      let prev3 = 0;
       for (let i = 0; i < length; i++) {
         const noise = Math.random() * 2 - 1;
-        // Low-pass filter for smoother white noise
-        prev += 0.05 * (noise - prev);
-        data[i] = prev * 0.35;
+        // Triple low-pass filter for pink noise (more natural than white noise)
+        prev1 += 0.08 * (noise - prev1);
+        prev2 += 0.06 * (prev1 - prev2);
+        prev3 += 0.04 * (prev2 - prev3);
+        data[i] = prev3 * 0.4;
       }
       break;
     }
@@ -126,8 +173,8 @@ function generateSamples(type: SoundType): Float32Array {
         // Soft kick and snare
         const beat = (t % 2 < 0.1) ? Math.exp(-20 * (t % 2)) * 0.3 : 0;
         const snare = ((t % 2 > 0.9 && t % 2 < 1.1)) ? (Math.random() * 0.15) : 0;
-        // Vinyl crackle
-        const crackle = (Math.random() * 2 - 1) * 0.02;
+        // Very subtle vinyl texture (reduced to prevent clicking)
+        const crackle = (Math.random() * 2 - 1) * 0.008;
         data[i] = chord + beat + snare + crackle;
       }
       break;
@@ -143,8 +190,8 @@ function generateSamples(type: SoundType): Float32Array {
         const kick = (t % 1.5 < 0.08) ? Math.exp(-25 * (t % 1.5)) * 0.25 : 0;
         // Warm bass
         const bass = Math.sin(2 * Math.PI * 110 * t) * 0.15;
-        // Light vinyl texture
-        const vinyl = (Math.random() * 2 - 1) * 0.015;
+        // Very subtle vinyl texture (reduced to prevent clicking)
+        const vinyl = (Math.random() * 2 - 1) * 0.006;
         data[i] = melody + kick + bass + vinyl;
       }
       break;
@@ -166,8 +213,8 @@ function generateSamples(type: SoundType): Float32Array {
         // Light percussion
         const hihat = ((t * 4) % 1 < 0.05) ? (Math.random() * 0.08) : 0;
         const kick = (t % 2 < 0.08) ? Math.exp(-22 * (t % 2)) * 0.2 : 0;
-        // Warm vinyl
-        const crackle = (Math.random() * 2 - 1) * 0.018;
+        // Very subtle vinyl texture (reduced to prevent clicking)
+        const crackle = (Math.random() * 2 - 1) * 0.007;
         data[i] = chord + hihat + kick + crackle;
       }
       break;
@@ -190,8 +237,8 @@ function generateSamples(type: SoundType): Float32Array {
         const kick = (t % 2.5 < 0.1) ? Math.exp(-18 * (t % 2.5)) * 0.18 : 0;
         // Deep bass
         const bass = Math.sin(2 * Math.PI * 82.41 * t) * 0.12;
-        // Gentle vinyl
-        const vinyl = (Math.random() * 2 - 1) * 0.02;
+        // Very subtle vinyl texture (reduced to prevent clicking)
+        const vinyl = (Math.random() * 2 - 1) * 0.008;
         data[i] = chord + kick + bass + vinyl;
       }
       break;
@@ -206,8 +253,8 @@ function generateSamples(type: SoundType): Float32Array {
         const pad3 = Math.sin(2 * Math.PI * 330 * t) * 0.06;
         // Subtle pulse (no drums)
         const pulse = Math.sin(2 * Math.PI * 0.5 * t) * 0.03;
-        // Soft vinyl atmosphere
-        const atmosphere = (Math.random() * 2 - 1) * 0.025;
+        // Very subtle vinyl atmosphere (reduced to prevent clicking)
+        const atmosphere = (Math.random() * 2 - 1) * 0.01;
         data[i] = pad1 + pad2 + pad3 + (pulse * atmosphere) + atmosphere;
       }
       break;
@@ -222,8 +269,8 @@ function generateSamples(type: SoundType): Float32Array {
         const pad = Math.sin(2 * Math.PI * 523.25 * t) * 0.05;
         // Very minimal kick (every 2 seconds)
         const kick = (t % 2 < 0.06) ? Math.exp(-30 * (t % 2)) * 0.2 : 0;
-        // Soft vinyl texture
-        const vinyl = (Math.random() * 2 - 1) * 0.01;
+        // Very subtle vinyl texture (reduced to prevent clicking)
+        const vinyl = (Math.random() * 2 - 1) * 0.005;
         // Subtle melody (pentatonic, very slow)
         const melodyFreq = [261.63, 293.66, 329.63, 392.00, 440.00][Math.floor((t / 4) % 5)];
         const melody = Math.sin(2 * Math.PI * melodyFreq * t) * 0.08 * Math.exp(-0.5 * (t % 4));
@@ -245,8 +292,8 @@ function generateSamples(type: SoundType): Float32Array {
           sum + Math.sin(2 * Math.PI * freq * t) * 0.07, 0);
         // Very gentle pulse (no drums, just breathing rhythm)
         const pulse = Math.sin(2 * Math.PI * 0.25 * t) * 0.02;
-        // Warm vinyl atmosphere
-        const atmosphere = (Math.random() * 2 - 1) * 0.015;
+        // Very subtle vinyl atmosphere (reduced to prevent clicking)
+        const atmosphere = (Math.random() * 2 - 1) * 0.006;
         // Soft high-frequency shimmer
         const shimmer = Math.sin(2 * Math.PI * 880 * t) * 0.03 * Math.exp(-0.3 * (t % 2));
         data[i] = chord + pulse + atmosphere + shimmer;
@@ -272,8 +319,8 @@ function generateSamples(type: SoundType): Float32Array {
         const snare = ((t % 2 > 0.95 && t % 2 < 1.05)) ? (Math.random() * 0.12) : 0;
         // Warm bass line
         const bass = Math.sin(2 * Math.PI * 98 * t) * 0.13;
-        // Vinyl warmth
-        const vinyl = (Math.random() * 2 - 1) * 0.018;
+        // Very subtle vinyl warmth (reduced to prevent clicking)
+        const vinyl = (Math.random() * 2 - 1) * 0.007;
         data[i] = chord + kick + snare + bass + vinyl;
       }
       break;
@@ -300,8 +347,8 @@ function generateSamples(type: SoundType): Float32Array {
         // Bright melody
         const melodyFreq = [330, 370, 415, 440, 494][Math.floor((t / 1.5) % 5)];
         const melody = Math.sin(2 * Math.PI * melodyFreq * t) * 0.1 * Math.exp(-1.5 * (t % 1.5));
-        // Light vinyl
-        const vinyl = (Math.random() * 2 - 1) * 0.015;
+        // Very subtle vinyl texture (reduced to prevent clicking)
+        const vinyl = (Math.random() * 2 - 1) * 0.006;
         data[i] = chord + kick + hihat + bass + melody + vinyl;
       }
       break;
@@ -861,10 +908,12 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       }); // Close the .then() callback
     };
 
-    const stopHandler = () => {
-      console.log('🛑 ambient-sound-stop event received');
-      // Immediately stop all audio
-      stopAudio();
+    const stopHandler = (e: Event) => {
+      const customEvent = e as CustomEvent<{ source?: string; fadeOut?: boolean }>;
+      const shouldFadeOut = customEvent.detail?.fadeOut === true;
+      console.log('🛑 ambient-sound-stop event received', { shouldFadeOut, source: customEvent.detail?.source });
+      // Stop audio with fade if requested
+      stopAudio(shouldFadeOut);
       setNeedsInteraction(true);
     };
 

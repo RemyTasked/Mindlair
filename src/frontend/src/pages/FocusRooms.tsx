@@ -1220,7 +1220,11 @@ export default function FocusRooms() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 * index }}
                             onClick={() => {
-                              // Stop any current audio
+                              // Stop any current audio (including ambient sounds from other tabs)
+                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                                detail: { source: 'lofi-soundscape', fadeOut: true }
+                              }));
+                              
                               if (activeRoom) {
                                 if (audioProvider === 'spotify') {
                                   api.post('/api/spotify/pause').catch(() => {});
@@ -1228,10 +1232,6 @@ export default function FocusRooms() {
                                   if (typeof window !== 'undefined' && (window as any).MusicKit) {
                                     (window as any).MusicKit.getInstance().stop().catch(() => {});
                                   }
-                                } else {
-                                  window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                    detail: { source: 'focus-rooms' }
-                                  }));
                                 }
                               }
                               
@@ -1239,20 +1239,19 @@ export default function FocusRooms() {
                                 // Toggle off
                                 setActiveRoom(null);
                                 setIsPlaying(false);
-                                window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                  detail: { source: 'lofi-soundscape' }
-                                }));
                               } else {
-                                // Toggle on
-                                setActiveRoom(sound.id);
-                                setIsPlaying(true);
-                                setAudioProvider('meetcute');
-                                window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-                                  detail: { 
-                                    source: 'lofi-soundscape', 
-                                    soundType: sound.id as any
-                                  }
-                                }));
+                                // Toggle on - wait a bit for previous sound to fade out
+                                setTimeout(() => {
+                                  setActiveRoom(sound.id);
+                                  setIsPlaying(true);
+                                  setAudioProvider('meetcute');
+                                  window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+                                    detail: { 
+                                      source: 'lofi-soundscape', 
+                                      soundType: sound.id as any
+                                    }
+                                  }));
+                                }, 600); // Wait for fade out to complete
                               }
                             }}
                             className={`
