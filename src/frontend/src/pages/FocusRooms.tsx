@@ -350,25 +350,16 @@ export default function FocusRooms() {
       
       // Wait for fade out to complete, then start Meet-Cute audio
       setTimeout(() => {
+        console.log('🎵 Dispatching ambient-sound-play event with soundType:', room.meetCuteSoundType);
+        localStorage.setItem('meetcute_autoplay_sound', 'true');
         window.dispatchEvent(new CustomEvent('ambient-sound-play', {
           detail: { 
             source: 'focus-rooms-meetcute', 
             soundType: room.meetCuteSoundType
           }
         }));
-      }, 600); // Wait for fade out to complete
-      setTimeout(() => {
-        console.log('🎵 Dispatching ambient-sound-play event with soundType:', room.meetCuteSoundType);
-        localStorage.setItem('meetcute_autoplay_sound', 'true');
-        window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-          detail: { 
-            source: 'focus-rooms', 
-            roomId: room.id,
-            soundType: room.meetCuteSoundType 
-          }
-        }));
         console.log('✅ Dispatched ambient-sound-play event:', { soundType: room.meetCuteSoundType });
-      }, 600); // Increased delay to ensure all stops complete
+      }, 600); // Wait for fade out to complete
     } else {
       console.warn('⚠️ No meetCuteSoundType for room:', room.id);
     }
