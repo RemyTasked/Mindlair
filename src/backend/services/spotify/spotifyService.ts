@@ -269,14 +269,10 @@ export class SpotifyService {
 
   /**
    * Search for lo-fi playlists matching room mood using keyword-based search
-   * Falls back to multiple keyword strategies if initial search fails
+   * Always uses keyword search first, falls back to hardcoded playlists only if search fails
    */
   async findPlaylistForRoom(accessToken: string, roomId: string): Promise<string> {
-    // First check if we have a hardcoded playlist
-    const hardcoded = FOCUS_ROOM_PLAYLISTS[roomId];
-    if (hardcoded) {
-      return hardcoded;
-    }
+    logger.info('🔍 Starting keyword search for room', { roomId });
 
     // Comprehensive keyword mapping for each room - multiple variations for reliability
     // All keywords prioritize instrumental, soundscape, and lo-fi music (no lyrics)
@@ -335,8 +331,11 @@ export class SpotifyService {
 
     const keywords = roomKeywords[roomId] || ['lo-fi focus', 'lo-fi ambient', 'lo-fi chill'];
     
+    logger.info('🔍 Trying keyword search with multiple keywords', { roomId, keywordCount: keywords.length, keywords });
+    
     // Try each keyword in order until we find a good playlist
     for (const keyword of keywords) {
+      logger.info('🔍 Searching with keyword', { roomId, keyword });
       try {
         const response = await axios.get('https://api.spotify.com/v1/search', {
           params: {
@@ -480,18 +479,20 @@ export class SpotifyService {
           return playlists[0].id;
         }
       } catch (searchError: any) {
-        logger.warn('⚠️ Search failed for keyword', {
+        const errorMessage = searchError.response?.data?.error?.message || searchError.message;
+        logger.warn('⚠️ Search failed for keyword, trying next', {
           roomId,
           keyword,
-          error: searchError.response?.data || searchError.message,
+          error: errorMessage,
+          status: searchError.response?.status,
         });
-        // Continue to next keyword
+        // Continue to next keyword - don't give up!
         continue;
       }
     }
 
-    // If all keyword searches failed, try a generic search
-    logger.warn('⚠️ All keyword searches failed, trying generic search', { roomId });
+    // If all keyword searches failed, try a generic search as fallback
+    logger.warn('⚠️ All specific keyword searches failed, trying generic search as fallback', { roomId });
     try {
       const genericQuery = `lo-fi ${roomId.replace('-', ' ')}`;
       const response = await axios.get('https://api.spotify.com/v1/search', {
@@ -521,9 +522,11 @@ export class SpotifyService {
       });
     }
 
-    // Ultimate fallback to hardcoded default
-    logger.warn('⚠️ All searches failed, using hardcoded default', { roomId });
-    return FOCUS_ROOM_PLAYLISTS[roomId] || FOCUS_ROOM_PLAYLISTS['deep-focus'] || '37i9dQZF1DWZeKCadgRdKQ';
+    // Ultimate fallback to hardcoded default (only if all keyword searches fail)
+    logger.warn('⚠️ All keyword searches failed, using hardcoded default as last resort', { roomId });
+    const hardcoded = FOCUS_ROOM_PLAYLISTS[roomId] || FOCUS_ROOM_PLAYLISTS['deep-focus'] || '37i9dQZF1DWZeKCadgRdKQ';
+    logger.info('✅ Using hardcoded playlist as fallback', { roomId, playlistId: hardcoded });
+    return hardcoded;
   }
 
   getPlaylistIdForRoom(roomId: string): string | undefined {
