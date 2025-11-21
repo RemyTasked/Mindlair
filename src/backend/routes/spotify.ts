@@ -34,25 +34,43 @@ async function getAccessToken(userId: string): Promise<string> {
     throw new AppError('Spotify account not connected', 401);
   }
 
-  // Check if token needs refresh
-  if (spotifyAccount.expiresAt && spotifyAccount.expiresAt < new Date()) {
+  // Check if token needs refresh (refresh 5 minutes before expiration)
+  const refreshThreshold = new Date();
+  refreshThreshold.setMinutes(refreshThreshold.getMinutes() + 5);
+  
+  if (spotifyAccount.expiresAt && spotifyAccount.expiresAt < refreshThreshold) {
     if (!spotifyAccount.refreshToken) {
-      throw new AppError('Spotify token expired and no refresh token available', 401);
+      logger.error('❌ Spotify token expired and no refresh token available', { userId });
+      // Delete the account so user can reconnect
+      await prisma.spotifyAccount.delete({ where: { userId } }).catch(() => {});
+      throw new AppError('Spotify token expired. Please reconnect your account.', 401);
     }
 
-    const refreshed = await spotifyService.refreshAccessToken(spotifyAccount.refreshToken);
-    const expiresAt = new Date();
-    expiresAt.setSeconds(expiresAt.getSeconds() + refreshed.expires_in);
+    try {
+      const refreshed = await spotifyService.refreshAccessToken(spotifyAccount.refreshToken);
+      const expiresAt = new Date();
+      expiresAt.setSeconds(expiresAt.getSeconds() + refreshed.expires_in);
 
-    await prisma.spotifyAccount.update({
-      where: { userId },
-      data: {
-        accessToken: refreshed.access_token,
-        expiresAt,
-      },
-    });
+      await prisma.spotifyAccount.update({
+        where: { userId },
+        data: {
+          accessToken: refreshed.access_token,
+          expiresAt,
+        },
+      });
 
-    return refreshed.access_token;
+      logger.info('✅ Spotify token refreshed', { userId });
+      return refreshed.access_token;
+    } catch (error: any) {
+      logger.error('❌ Failed to refresh Spotify token', { 
+        userId, 
+        error: error.message,
+        errorResponse: error.response?.data 
+      });
+      // If refresh fails, delete the account so user can reconnect
+      await prisma.spotifyAccount.delete({ where: { userId } }).catch(() => {});
+      throw new AppError('Spotify token refresh failed. Please reconnect your account.', 401);
+    }
   }
 
   return spotifyAccount.accessToken;
@@ -69,18 +87,43 @@ router.post(
       throw new AppError('roomId is required', 400);
     }
 
-    const accessToken = await getAccessToken(req.userId!);
+    try {
+      const accessToken = await getAccessToken(req.userId!);
 
-    // Automatically find appropriate lo-fi playlist for this room
-    const playlistId = await spotifyService.findPlaylistForRoom(accessToken, roomId);
+      // Automatically find appropriate lo-fi playlist for this room
+      const playlistId = await spotifyService.findPlaylistForRoom(accessToken, roomId);
+      logger.info('✅ Found playlist for room', { roomId, playlistId });
 
-    // Get active device or use default
-    const devices = await spotifyService.getDevices(accessToken);
-    const activeDevice = devices.find((d) => d.is_active) || devices[0];
+      // Get active device or use default
+      const devices = await spotifyService.getDevices(accessToken);
+      logger.info('📱 Available Spotify devices', { count: devices.length, devices: devices.map(d => ({ id: d.id, name: d.name, is_active: d.is_active })) });
+      
+      const activeDevice = devices.find((d) => d.is_active) || devices[0];
 
-    await spotifyService.playPlaylist(accessToken, playlistId, activeDevice?.id);
+      if (!activeDevice) {
+        logger.warn('⚠️ No active Spotify device found. User may need to open Spotify app.');
+        throw new AppError('No active Spotify device found. Please open Spotify on one of your devices and try again.', 400);
+      }
 
-    res.json({ success: true, deviceId: activeDevice?.id, playlistId });
+      await spotifyService.playPlaylist(accessToken, playlistId, activeDevice.id);
+      logger.info('✅ Started Spotify playback', { playlistId, deviceId: activeDevice.id, deviceName: activeDevice.name });
+
+      res.json({ success: true, deviceId: activeDevice.id, playlistId, deviceName: activeDevice.name });
+    } catch (error: any) {
+      logger.error('❌ Failed to play Spotify playlist', {
+        error: error.message,
+        roomId,
+        userId: req.userId,
+      });
+      
+      // If it's an auth error, delete the account so user can reconnect
+      if (error.statusCode === 401 || error.message?.includes('token') || error.message?.includes('expired')) {
+        await prisma.spotifyAccount.delete({ where: { userId: req.userId! } }).catch(() => {});
+        throw new AppError('Spotify authentication failed. Please reconnect your account.', 401);
+      }
+      
+      throw error;
+    }
   })
 );
 
@@ -152,6 +195,30 @@ router.post(
       });
       throw new AppError('Failed to skip track', 500);
     }
+  })
+);
+
+// Disconnect Spotify account
+router.post(
+  '/disconnect',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const spotifyAccount = await prisma.spotifyAccount.findUnique({
+      where: { userId },
+    });
+
+    if (!spotifyAccount) {
+      throw new AppError('Spotify account not connected', 404);
+    }
+
+    await prisma.spotifyAccount.delete({
+      where: { userId },
+    });
+
+    logger.info('✅ Spotify account disconnected', { userId });
+    res.json({ success: true, message: 'Spotify account disconnected' });
   })
 );
 

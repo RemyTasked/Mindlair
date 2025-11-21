@@ -1113,8 +1113,9 @@ router.get(
 
     logger.info('📝 Stored Spotify account', { userId });
 
-    // Redirect back to Focus Rooms
+    // Redirect back to Focus Rooms with success indicator
     const redirectUrl = `${process.env.FRONTEND_URL}/focus-rooms?spotify_connected=true`;
+    logger.info('🎉 Spotify OAuth flow completed, redirecting', { redirectUrl });
     return res.redirect(redirectUrl);
   })
 );

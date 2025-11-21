@@ -330,9 +330,11 @@ export default function FocusRooms() {
   const handleConnectSpotify = async () => {
     try {
       const response = await api.get('/api/auth/spotify/url');
+      // Open in same window to avoid popup blockers and ensure proper redirect
       window.location.href = response.data.authUrl;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error connecting Spotify:', error);
+      alert(`Failed to connect Spotify: ${error.response?.data?.message || error.message || 'Unknown error'}`);
     }
   };
 
@@ -462,6 +464,81 @@ export default function FocusRooms() {
             Audio is the "stage lighting" for performance. Calm + clarity become a ritual, not a struggle.
           </motion.p>
         </div>
+
+        {/* Music Service Connection Status */}
+        {(hasSpotify || hasAppleMusic) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8 bg-gradient-to-r from-teal-50 to-green-50 rounded-xl shadow-lg p-6 sm:p-8 border-2 border-teal-200"
+          >
+            <div className="text-center">
+              <Music className="w-12 h-12 text-teal-600 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Music Services Connected</h3>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                {hasSpotify && (
+                  <div className="flex items-center gap-3 px-4 py-2 bg-green-100 rounded-lg">
+                    <span className="text-green-800 font-semibold">Spotify Connected</span>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await api.post('/api/spotify/disconnect');
+                          setHasSpotify(false);
+                          if (audioProvider === 'spotify') {
+                            setAudioProvider('meetcute');
+                            if (isPlaying) {
+                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                                detail: { source: 'focus-rooms' }
+                              }));
+                              setIsPlaying(false);
+                            }
+                          }
+                          alert('Spotify disconnected successfully');
+                        } catch (error: any) {
+                          console.error('Error disconnecting Spotify:', error);
+                          alert('Failed to disconnect Spotify. Please try again.');
+                        }
+                      }}
+                      className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                )}
+                {hasAppleMusic && (
+                  <div className="flex items-center gap-3 px-4 py-2 bg-pink-100 rounded-lg">
+                    <span className="text-pink-800 font-semibold">Apple Music Connected</span>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await api.post('/api/apple-music/disconnect');
+                          setHasAppleMusic(false);
+                          if (audioProvider === 'apple-music') {
+                            setAudioProvider('meetcute');
+                            if (isPlaying) {
+                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                                detail: { source: 'focus-rooms' }
+                              }));
+                              setIsPlaying(false);
+                            }
+                          }
+                          alert('Apple Music disconnected successfully');
+                        } catch (error: any) {
+                          console.error('Error disconnecting Apple Music:', error);
+                          alert('Failed to disconnect Apple Music. Please try again.');
+                        }
+                      }}
+                      className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Music Service Connection Prompt - Optional enhancement */}
         {!hasSpotify && !hasAppleMusic && (

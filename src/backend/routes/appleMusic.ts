@@ -80,18 +80,27 @@ router.post(
   })
 );
 
-// Disconnect Apple Music
-router.delete(
+// Disconnect Apple Music account
+router.post(
   '/disconnect',
   authenticate,
   asyncHandler(async (req, res) => {
-    await prisma.appleMusicAccount.deleteMany({
-      where: { userId: req.userId },
+    const userId = req.userId!;
+    
+    const appleMusicAccount = await prisma.appleMusicAccount.findUnique({
+      where: { userId },
     });
 
-    logger.info('📝 Disconnected Apple Music account', { userId: req.userId });
+    if (!appleMusicAccount) {
+      throw new AppError('Apple Music account not connected', 404);
+    }
 
-    res.json({ success: true });
+    await prisma.appleMusicAccount.delete({
+      where: { userId },
+    });
+
+    logger.info('✅ Apple Music account disconnected', { userId });
+    res.json({ success: true, message: 'Apple Music account disconnected' });
   })
 );
 
