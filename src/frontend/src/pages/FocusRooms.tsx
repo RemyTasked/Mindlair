@@ -273,60 +273,63 @@ export default function FocusRooms() {
         console.error('Error starting session:', error);
       }
       
-      // Select new room
-      setActiveRoom(room.id);
-      setIsPlaying(true);
-      
-      // Set timer
-      if (timer === '∞') {
-        setTimeRemaining(null);
-      } else {
-        setTimeRemaining(timer * 60);
-      }
+      // Wait for all audio to stop before starting new room
+      setTimeout(async () => {
+        // Select new room
+        setActiveRoom(room.id);
+        setIsPlaying(true);
+        
+        // Set timer
+        if (timer === '∞') {
+          setTimeRemaining(null);
+        } else {
+          setTimeRemaining(timer * 60);
+        }
 
-      // Start audio based on source
-      if (audioProvider === 'spotify') {
-        // Start Spotify playback for this room
-        try {
-          const response = await api.post('/api/spotify/play', {
-            roomId: room.id,
-          });
-          console.log('✅ Spotify playback started:', response.data);
-          setIsPlaying(true);
-        } catch (error: any) {
-          console.error('❌ Error starting Spotify:', error);
-          const errorMessage = error.response?.data?.message || error.message || 'Failed to start Spotify playback';
-          
-          // Show user-friendly error message
-          alert(`Spotify playback failed: ${errorMessage}\n\nFalling back to Meet-Cute audio.`);
-          
-          // Fallback to Meet-Cute audio
-          startMeetCuteAudio(room);
-          setAudioProvider('meetcute');
-        }
-      } else if (audioProvider === 'apple-music') {
-        // Start Apple Music playback for this room
-        try {
-          const response = await api.post('/api/apple-music/play', {
-            roomId: room.id,
-          });
-          
-          // Use MusicKit JS to play the playlist
-          if (typeof window !== 'undefined' && (window as any).MusicKit) {
-            const musicKit = (window as any).MusicKit.getInstance();
-            await musicKit.setQueue({ playlist: response.data.playlistId });
-            await musicKit.play();
+        // Start audio based on source
+        if (audioProvider === 'spotify') {
+          // Start Spotify playback for this room
+          try {
+            const response = await api.post('/api/spotify/play', {
+              roomId: room.id,
+            });
+            console.log('✅ Spotify playback started:', response.data);
+            setIsPlaying(true);
+          } catch (error: any) {
+            console.error('❌ Error starting Spotify:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to start Spotify playback';
+            
+            // Show user-friendly error message
+            alert(`Spotify playback failed: ${errorMessage}\n\nFalling back to Meet-Cute audio.`);
+            
+            // Fallback to Meet-Cute audio
+            startMeetCuteAudio(room);
+            setAudioProvider('meetcute');
           }
-        } catch (error: any) {
-          console.error('Error starting Apple Music:', error);
-          // Fallback to Meet-Cute audio
+        } else if (audioProvider === 'apple-music') {
+          // Start Apple Music playback for this room
+          try {
+            const response = await api.post('/api/apple-music/play', {
+              roomId: room.id,
+            });
+            
+            // Use MusicKit JS to play the playlist
+            if (typeof window !== 'undefined' && (window as any).MusicKit) {
+              const musicKit = (window as any).MusicKit.getInstance();
+              await musicKit.setQueue({ playlist: response.data.playlistId });
+              await musicKit.play();
+            }
+          } catch (error: any) {
+            console.error('Error starting Apple Music:', error);
+            // Fallback to Meet-Cute audio
+            startMeetCuteAudio(room);
+            setAudioProvider('meetcute');
+          }
+        } else {
+          // Use Meet-Cute audio
           startMeetCuteAudio(room);
-          setAudioProvider('meetcute');
         }
-      } else {
-        // Use Meet-Cute audio
-        startMeetCuteAudio(room);
-      }
+      }, 800); // Wait for all audio to fully stop
     }
   };
 
@@ -1223,11 +1226,12 @@ export default function FocusRooms() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 * index }}
                             onClick={() => {
-                              // Stop any current audio (including ambient sounds from other tabs)
+                              // ALWAYS stop ALL audio first (from any source or tab)
                               window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                detail: { source: 'lofi-soundscape', fadeOut: true }
+                                detail: { source: 'lofi-soundscape-select', fadeOut: true }
                               }));
                               
+                              // Stop Spotify/Apple Music if active
                               if (activeRoom) {
                                 if (audioProvider === 'spotify') {
                                   api.post('/api/spotify/pause').catch(() => {});
@@ -1243,7 +1247,7 @@ export default function FocusRooms() {
                                 setActiveRoom(null);
                                 setIsPlaying(false);
                               } else {
-                                // Toggle on - wait a bit for previous sound to fade out
+                                // Toggle on - wait for ALL audio to fully stop
                                 setTimeout(() => {
                                   setActiveRoom(sound.id);
                                   setIsPlaying(true);
@@ -1254,7 +1258,7 @@ export default function FocusRooms() {
                                       soundType: sound.id as any
                                     }
                                   }));
-                                }, 600); // Wait for fade out to complete
+                                }, 800); // Wait for all audio to fully stop
                               }
                             }}
                             className={`

@@ -180,19 +180,21 @@ function generateSamples(type: SoundType): Float32Array {
       break;
     }
     case 'lofi-focus': {
-      // Lofi Focus: Minimal beats, subtle melody, perfect for concentration
+      // Lofi Focus: Minimal beats, subtle melody, perfect for concentration - DISTINCT
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
-        // Simple pentatonic melody
-        const melodyNote = [220, 247, 277, 330, 370][Math.floor((t / 2) % 5)];
-        const melody = Math.sin(2 * Math.PI * melodyNote * t) * 0.12 * Math.exp(-2 * (t % 2));
-        // Minimal kick
-        const kick = (t % 1.5 < 0.08) ? Math.exp(-25 * (t % 1.5)) * 0.25 : 0;
-        // Warm bass
-        const bass = Math.sin(2 * Math.PI * 110 * t) * 0.15;
+        // Distinct pentatonic melody (C major pentatonic - different from deep-focus)
+        const melodyNote = [261.63, 293.66, 329.63, 392.00, 440.00][Math.floor((t / 2.5) % 5)];
+        const melody = Math.sin(2 * Math.PI * melodyNote * t) * 0.14 * Math.exp(-1.8 * (t % 2.5));
+        // Minimal kick (unique timing - every 1.5 seconds)
+        const kick = (t % 1.5 < 0.08) ? Math.exp(-25 * (t % 1.5)) * 0.28 : 0;
+        // Warm bass (A2 - different frequency from deep-focus)
+        const bass = Math.sin(2 * Math.PI * 110 * t) * 0.18;
         // Very subtle vinyl texture (reduced to prevent clicking)
         const vinyl = (Math.random() * 2 - 1) * 0.006;
-        data[i] = melody + kick + bass + vinyl;
+        // Add subtle chord pad for distinction
+        const pad = Math.sin(2 * Math.PI * 330 * t) * 0.05;
+        data[i] = melody + kick + bass + vinyl + pad;
       }
       break;
     }
@@ -260,21 +262,23 @@ function generateSamples(type: SoundType): Float32Array {
       break;
     }
     case 'lofi-deep-focus': {
-      // Deep Focus Room: Intense concentration, minimal distractions
+      // Deep Focus Room: Intense concentration, minimal distractions - VERY DISTINCT
       for (let i = 0; i < length; i++) {
         const t = i / SAMPLE_RATE;
-        // Deep, sustained bass note (C2)
-        const bass = Math.sin(2 * Math.PI * 65.41 * t) * 0.12;
-        // Subtle high-frequency pad (C5)
-        const pad = Math.sin(2 * Math.PI * 523.25 * t) * 0.05;
-        // Very minimal kick (every 2 seconds)
-        const kick = (t % 2 < 0.06) ? Math.exp(-30 * (t % 2)) * 0.2 : 0;
+        // Deep, sustained bass note (C2) - more prominent
+        const bass = Math.sin(2 * Math.PI * 65.41 * t) * 0.18;
+        // Distinct high-frequency pad (E5) - different from other lo-fi
+        const pad = Math.sin(2 * Math.PI * 659.25 * t) * 0.08;
+        // Very minimal kick (every 2.5 seconds) - unique timing
+        const kick = (t % 2.5 < 0.06) ? Math.exp(-30 * (t % 2.5)) * 0.25 : 0;
         // Very subtle vinyl texture (reduced to prevent clicking)
         const vinyl = (Math.random() * 2 - 1) * 0.005;
-        // Subtle melody (pentatonic, very slow)
-        const melodyFreq = [261.63, 293.66, 329.63, 392.00, 440.00][Math.floor((t / 4) % 5)];
-        const melody = Math.sin(2 * Math.PI * melodyFreq * t) * 0.08 * Math.exp(-0.5 * (t % 4));
-        data[i] = bass + pad + kick + vinyl + melody;
+        // Distinct melody (different scale - D minor pentatonic)
+        const melodyFreq = [293.66, 329.63, 392.00, 440.00, 493.88][Math.floor((t / 5) % 5)];
+        const melody = Math.sin(2 * Math.PI * melodyFreq * t) * 0.1 * Math.exp(-0.4 * (t % 5));
+        // Add subtle high-frequency shimmer for distinction
+        const shimmer = Math.sin(2 * Math.PI * 880 * t) * 0.03 * Math.exp(-0.3 * (t % 3));
+        data[i] = bass + pad + kick + vinyl + melody + shimmer;
       }
       break;
     }
@@ -545,6 +549,8 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
   const stopAudio = useCallback((fadeOut: boolean = false): Promise<void> => {
     return new Promise((resolve) => {
+      console.log('🛑 stopAudio called', { fadeOut, isPlaying, hasSource: !!sourceRef.current, hasFallback: !!fallbackAudioRef.current });
+      
       if (fadeOut && isPlaying) {
         // Graceful fade out over 500ms
         const fadeDuration = 0.5; // seconds
@@ -583,7 +589,9 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
             cleanupSource();
             cleanupFallback();
             setIsPlaying(false);
+            setEventSoundType(null); // Clear event sound type
             localStorage.removeItem('meetcute_autoplay_sound');
+            console.log('✅ Audio fully stopped after fade');
             resolve();
           }, fadeDuration * 1000);
           
@@ -591,12 +599,15 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         }
       }
       
-      // Immediate stop (no fade)
+      // Immediate stop (no fade) - FORCE stop everything
+      console.log('🛑 Immediate stop - cleaning up all audio sources');
       cleanupSource();
       cleanupFallback();
       setIsPlaying(false);
+      setEventSoundType(null); // Clear event sound type
       // Clear any pending autoplay flags
       localStorage.removeItem('meetcute_autoplay_sound');
+      console.log('✅ Audio immediately stopped');
       resolve();
     });
   }, [cleanupFallback, cleanupSource, isPlaying]);
