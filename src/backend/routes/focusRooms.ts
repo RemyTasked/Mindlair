@@ -9,9 +9,10 @@ const router = express.Router();
 
 // Calculate credits based on session duration and completion
 function calculateCredits(durationSeconds: number, completed: boolean, timerOption: string): number {
-  if (!completed) return 0;
+  // Only award credits if session is completed AND lasted at least 5 minutes
+  if (!completed || durationSeconds < 300) return 0;
 
-  // Base credits: 1 credit per minute, minimum 5 credits
+  // Base credits: 1 credit per minute, minimum 5 credits (for 5+ minute sessions)
   const baseCredits = Math.max(5, Math.floor(durationSeconds / 60));
 
   // Bonus for longer sessions
@@ -96,10 +97,14 @@ router.post(
       throw new AppError('Unauthorized', 403);
     }
 
-    // Calculate credits
+    // Only mark as completed if user listened for at least 5 minutes (300 seconds)
+    // This ensures AI only counts meaningful sessions for insights
+    const actuallyCompleted = validated.completed && validated.duration >= 300; // 5 minutes minimum
+    
+    // Calculate credits (only if actually completed)
     const creditsEarned = calculateCredits(
       validated.duration,
-      validated.completed,
+      actuallyCompleted,
       session.timerOption
     );
 
@@ -107,9 +112,9 @@ router.post(
       where: { id: validated.sessionId },
       data: {
         duration: validated.duration,
-        completed: validated.completed,
+        completed: actuallyCompleted, // Only true if duration >= 5 minutes
         creditsEarned,
-        completedAt: validated.completed ? new Date() : null,
+        completedAt: actuallyCompleted ? new Date() : null,
       },
     });
 
@@ -117,7 +122,9 @@ router.post(
       userId: req.userId,
       sessionId: validated.sessionId,
       duration: validated.duration,
+      actuallyCompleted,
       creditsEarned,
+      note: actuallyCompleted !== validated.completed ? 'Session marked incomplete - duration < 5 minutes' : undefined,
     });
 
     res.json({
