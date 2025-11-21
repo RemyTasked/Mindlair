@@ -1871,7 +1871,7 @@ export default function Settings() {
                 <button
                   onClick={async () => {
                     try {
-                      if (!confirm('Refresh Meet Cute to the latest version? Your account and settings will remain intact.')) {
+                      if (!confirm('Meet Cute wants to refresh to the latest version. Your account and settings will remain intact.')) {
                         console.log('❌ User canceled app refresh');
                         return;
                       }

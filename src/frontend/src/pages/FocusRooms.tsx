@@ -959,14 +959,79 @@ export default function FocusRooms() {
                     </div>
                   </div>
                   
-                  {/* Volume Control */}
+                  {/* Play/Pause and Volume Control */}
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Volume2 className="w-4 h-4 text-teal-600" />
-                      <span className="text-sm font-semibold text-gray-700">Volume</span>
-                      <span className="text-sm font-semibold text-teal-600 ml-auto">
-                        {Math.round((isMuted ? 0 : volume) * 100)}%
-                      </span>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Volume2 className="w-4 h-4 text-teal-600" />
+                        <span className="text-sm font-semibold text-gray-700">Volume</span>
+                        <span className="text-sm font-semibold text-teal-600">
+                          {Math.round((isMuted ? 0 : volume) * 100)}%
+                        </span>
+                      </div>
+                      {/* Play/Pause Button */}
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (isPlaying) {
+                            // Pause audio
+                            if (audioProvider === 'spotify') {
+                              try {
+                                await api.post('/api/spotify/pause');
+                              } catch (error) {
+                                console.error('Error pausing Spotify:', error);
+                              }
+                            } else if (audioProvider === 'apple-music') {
+                              if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                                try {
+                                  const musicKit = (window as any).MusicKit.getInstance();
+                                  await musicKit.pause();
+                                } catch (error) {
+                                  console.error('Error pausing Apple Music:', error);
+                                }
+                              }
+                            } else {
+                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                                detail: { source: 'focus-rooms' }
+                              }));
+                            }
+                            setIsPlaying(false);
+                          } else {
+                            // Resume/Start audio
+                            if (audioProvider === 'spotify') {
+                              try {
+                                await api.post('/api/spotify/play', {
+                                  roomId: room.id,
+                                });
+                              } catch (error) {
+                                console.error('Error resuming Spotify:', error);
+                                // Fallback to Meet-Cute
+                                setAudioProvider('meetcute');
+                                startMeetCuteAudio(room);
+                              }
+                            } else if (audioProvider === 'apple-music') {
+                              if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                                try {
+                                  const musicKit = (window as any).MusicKit.getInstance();
+                                  await musicKit.play();
+                                } catch (error) {
+                                  console.error('Error resuming Apple Music:', error);
+                                  // Fallback to Meet-Cute
+                                  setAudioProvider('meetcute');
+                                  startMeetCuteAudio(room);
+                                }
+                              }
+                            } else {
+                              startMeetCuteAudio(room);
+                            }
+                            setIsPlaying(true);
+                          }
+                        }}
+                        className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-indigo-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-indigo-700 transition-all shadow-md flex-shrink-0"
+                        title={isPlaying ? 'Pause' : 'Play'}
+                      >
+                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                      </button>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -1049,80 +1114,38 @@ export default function FocusRooms() {
           ))}
         </div>
 
-        {/* Controls Panel - Show when room is active */}
-        {activeRoom && selectedRoom && (
+        {/* Skip Track Button - Show when room is active and using Spotify/Apple Music */}
+        {activeRoom && selectedRoom && (audioProvider === 'spotify' || audioProvider === 'apple-music') && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 border-2 border-teal-200"
+            className="flex justify-center"
           >
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-              {/* Play/Pause and Skip Controls */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={async () => {
-                    if (isPlaying) {
-                      // Pause audio
-                      if (hasSpotify) {
-                        try {
-                          await api.post('/api/spotify/pause');
-                        } catch (error) {
-                          console.error('Error pausing Spotify:', error);
-                        }
-                      } else {
-                        window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                          detail: { source: 'focus-rooms' }
-                        }));
-                      }
-                      setIsPlaying(false);
-                    } else {
-                      // Resume audio
-                      if (hasSpotify) {
-                        try {
-                          await api.post('/api/spotify/play', {
-                            roomId: selectedRoom.id,
-                          });
-                        } catch (error) {
-                          console.error('Error resuming Spotify:', error);
-                        }
-                      } else {
-                        startMeetCuteAudio(selectedRoom);
-                      }
-                      setIsPlaying(true);
+            <button
+              onClick={async () => {
+                if (audioProvider === 'spotify') {
+                  try {
+                    await api.post('/api/spotify/next');
+                  } catch (error) {
+                    console.error('Error skipping track:', error);
+                  }
+                } else if (audioProvider === 'apple-music') {
+                  if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                    try {
+                      const musicKit = (window as any).MusicKit.getInstance();
+                      await musicKit.skipToNextItem();
+                    } catch (error) {
+                      console.error('Error skipping Apple Music track:', error);
                     }
-                  }}
-                  className="w-16 h-16 rounded-full bg-gradient-to-r from-teal-600 to-indigo-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-indigo-700 transition-all shadow-lg"
-                >
-                  {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
-                </button>
-                {(audioProvider === 'spotify' || audioProvider === 'apple-music') && (
-                  <button
-                    onClick={async () => {
-                      if (audioProvider === 'spotify') {
-                        try {
-                          await api.post('/api/spotify/next');
-                        } catch (error) {
-                          console.error('Error skipping track:', error);
-                        }
-                      } else if (audioProvider === 'apple-music') {
-                        if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                          try {
-                            const musicKit = (window as any).MusicKit.getInstance();
-                            await musicKit.skipToNextItem();
-                          } catch (error) {
-                            console.error('Error skipping Apple Music track:', error);
-                          }
-                        }
-                      }
-                    }}
-                    className="w-12 h-12 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all"
-                    title="Skip to next track"
-                  >
-                    <SkipForward className="w-6 h-6" />
-                  </button>
-                )}
-              </div>
-            </div>
+                  }
+                }
+              }}
+              className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all flex items-center gap-2"
+              title="Skip to next track"
+            >
+              <SkipForward className="w-5 h-5" />
+              <span className="text-sm font-medium">Skip Track</span>
+            </button>
           </motion.div>
         )}
       </main>
