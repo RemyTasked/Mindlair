@@ -138,24 +138,52 @@ router.post(
       }
 
       // Now play the playlist
-      await spotifyService.playPlaylist(accessToken, playlistId, targetDevice.id);
-      logger.info('✅ Started Spotify playback', { playlistId, deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
-
-      res.json({ success: true, deviceId: targetDevice.id, playlistId, deviceName: targetDevice.name, deviceType: targetDevice.type });
+      try {
+        await spotifyService.playPlaylist(accessToken, playlistId, targetDevice.id);
+        logger.info('✅ Started Spotify playback', { playlistId, deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
+        res.json({ success: true, deviceId: targetDevice.id, playlistId, deviceName: targetDevice.name, deviceType: targetDevice.type });
+      } catch (playError: any) {
+        logger.error('❌ Failed to play playlist on device', {
+          error: playError.message,
+          errorResponse: playError.response?.data,
+          statusCode: playError.response?.status,
+          deviceId: targetDevice.id,
+          playlistId,
+        });
+        
+        // Provide specific error messages based on status code
+        if (playError.response?.status === 403) {
+          throw new AppError('Spotify Premium is required for playback. Please upgrade your account or use Meet-Cute audio instead.', 403);
+        } else if (playError.response?.status === 404) {
+          throw new AppError('Playlist not found. Please try again or use Meet-Cute audio instead.', 404);
+        } else if (playError.response?.status === 401) {
+          await prisma.spotifyAccount.delete({ where: { userId: req.userId! } }).catch(() => {});
+          throw new AppError('Spotify authentication failed. Please reconnect your account.', 401);
+        } else {
+          throw new AppError(`Spotify playback failed: ${playError.response?.data?.error?.message || playError.message || 'Unknown error'}. Please try again or use Meet-Cute audio instead.`, playError.response?.status || 500);
+        }
+      }
     } catch (error: any) {
       logger.error('❌ Failed to play Spotify playlist', {
         error: error.message,
+        errorResponse: error.response?.data,
+        statusCode: error.statusCode || error.response?.status,
         roomId,
         userId: req.userId,
       });
       
       // If it's an auth error, delete the account so user can reconnect
-      if (error.statusCode === 401 || error.message?.includes('token') || error.message?.includes('expired')) {
+      if (error.statusCode === 401 || error.response?.status === 401 || error.message?.includes('token') || error.message?.includes('expired')) {
         await prisma.spotifyAccount.delete({ where: { userId: req.userId! } }).catch(() => {});
         throw new AppError('Spotify authentication failed. Please reconnect your account.', 401);
       }
       
-      throw error;
+      // Re-throw AppError as-is, otherwise wrap in AppError
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      throw new AppError(error.message || 'Failed to start Spotify playback. Please try again or use Meet-Cute audio instead.', error.statusCode || error.response?.status || 500);
     }
   })
 );

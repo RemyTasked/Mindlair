@@ -333,7 +333,13 @@ export default function FocusRooms() {
   const startMeetCuteAudio = (room: FocusRoom) => {
     if (room.meetCuteSoundType) {
       console.log('🎵 Starting Meet-Cute audio for room:', { roomId: room.id, soundType: room.meetCuteSoundType });
-      // Stop any existing audio first (Spotify, Apple Music, or other Meet-Cute)
+      
+      // Stop ALL audio sources first (including from other tabs)
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'focus-rooms-meetcute-start', fadeOut: true }
+      }));
+      
+      // Stop Spotify/Apple Music if active
       if (audioProvider === 'spotify') {
         api.post('/api/spotify/pause').catch(() => {});
       } else if (audioProvider === 'apple-music') {
@@ -342,12 +348,15 @@ export default function FocusRooms() {
         }
       }
       
-      // Always stop ambient sound first
-      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-        detail: { source: 'focus-rooms' }
-      }));
-      
-      // Wait a moment for stop to complete, then start new audio
+      // Wait for fade out to complete, then start Meet-Cute audio
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+          detail: { 
+            source: 'focus-rooms-meetcute', 
+            soundType: room.meetCuteSoundType
+          }
+        }));
+      }, 600); // Wait for fade out to complete
       setTimeout(() => {
         console.log('🎵 Dispatching ambient-sound-play event with soundType:', room.meetCuteSoundType);
         localStorage.setItem('meetcute_autoplay_sound', 'true');
@@ -652,8 +661,11 @@ export default function FocusRooms() {
             <div className="flex border-b border-gray-200">
               <button
                 onClick={() => {
-                  setActiveTab('focus-rooms');
-                  // Stop any active audio when switching tabs
+                  // Stop ALL audio from any tab when switching
+                  window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                    detail: { source: 'focus-rooms-tab-switch', fadeOut: true }
+                  }));
+                  
                   if (activeRoom) {
                     if (audioProvider === 'spotify') {
                       api.post('/api/spotify/pause').catch(() => {});
@@ -661,14 +673,12 @@ export default function FocusRooms() {
                       if (typeof window !== 'undefined' && (window as any).MusicKit) {
                         (window as any).MusicKit.getInstance().stop().catch(() => {});
                       }
-                    } else {
-                      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                        detail: { source: 'focus-rooms' }
-                      }));
                     }
                     setActiveRoom(null);
                     setIsPlaying(false);
                   }
+                  
+                  setActiveTab('focus-rooms');
                 }}
                 className={`flex-1 px-6 py-4 text-center font-semibold transition-all ${
                   activeTab === 'focus-rooms'
@@ -683,8 +693,11 @@ export default function FocusRooms() {
               </button>
               <button
                 onClick={() => {
-                  setActiveTab('ambient-library');
-                  // Stop any active audio when switching tabs
+                  // Stop ALL audio from any tab when switching
+                  window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                    detail: { source: 'ambient-library-tab-switch', fadeOut: true }
+                  }));
+                  
                   if (activeRoom) {
                     if (audioProvider === 'spotify') {
                       api.post('/api/spotify/pause').catch(() => {});
@@ -692,14 +705,12 @@ export default function FocusRooms() {
                       if (typeof window !== 'undefined' && (window as any).MusicKit) {
                         (window as any).MusicKit.getInstance().stop().catch(() => {});
                       }
-                    } else {
-                      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                        detail: { source: 'focus-rooms' }
-                      }));
                     }
                     setActiveRoom(null);
                     setIsPlaying(false);
                   }
+                  
+                  setActiveTab('ambient-library');
                 }}
                 className={`flex-1 px-6 py-4 text-center font-semibold transition-all ${
                   activeTab === 'ambient-library'
@@ -714,8 +725,11 @@ export default function FocusRooms() {
               </button>
               <button
                 onClick={() => {
-                  setActiveTab('lofi-soundscape');
-                  // Stop any active audio when switching tabs
+                  // Stop ALL audio from any tab when switching
+                  window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                    detail: { source: 'lofi-soundscape-tab-switch', fadeOut: true }
+                  }));
+                  
                   if (activeRoom) {
                     if (audioProvider === 'spotify') {
                       api.post('/api/spotify/pause').catch(() => {});
@@ -723,14 +737,12 @@ export default function FocusRooms() {
                       if (typeof window !== 'undefined' && (window as any).MusicKit) {
                         (window as any).MusicKit.getInstance().stop().catch(() => {});
                       }
-                    } else {
-                      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                        detail: { source: 'focus-rooms' }
-                      }));
                     }
                     setActiveRoom(null);
                     setIsPlaying(false);
                   }
+                  
+                  setActiveTab('lofi-soundscape');
                 }}
                 className={`flex-1 px-6 py-4 text-center font-semibold transition-all ${
                   activeTab === 'lofi-soundscape'
