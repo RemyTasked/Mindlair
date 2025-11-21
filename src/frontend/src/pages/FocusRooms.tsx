@@ -904,68 +904,6 @@ export default function FocusRooms() {
             </motion.div>
           ))}
         </div>
-        
-        {/* Scene Library Section - For ambient sounds */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-8"
-        >
-          <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl shadow-lg p-6 border-2 border-teal-200">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">Ambient Sound Library</h2>
-                <p className="text-sm text-gray-600">Natural soundscapes for focus and relaxation</p>
-              </div>
-              <button
-                onClick={() => setShowSceneLibrary(!showSceneLibrary)}
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all flex items-center gap-2"
-              >
-                {showSceneLibrary ? 'Hide' : 'Show'} Library
-                {showSceneLibrary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-            </div>
-            
-            <AnimatePresence>
-              {showSceneLibrary && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="pt-4 border-t border-teal-200">
-                    <SceneLibrary
-                      timeOfDay={new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}
-                      onSoundTypeChange={() => {
-                        // Stop any Focus Room audio when using Scene Library
-                        if (activeRoom) {
-                          if (audioProvider === 'spotify') {
-                            api.post('/api/spotify/pause').catch(() => {});
-                          } else if (audioProvider === 'apple-music') {
-                            if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                              (window as any).MusicKit.getInstance().stop().catch(() => {});
-                            }
-                          } else {
-                            window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                              detail: { source: 'focus-rooms' }
-                            }));
-                          }
-                          setActiveRoom(null);
-                          setIsPlaying(false);
-                        }
-                        // SceneLibrary component will dispatch the ambient-sound-play event itself
-                        // This callback is just for stopping Focus Room audio
-                      }}
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
 
         {/* Controls Panel - Show when room is active */}
         {activeRoom && selectedRoom && (
