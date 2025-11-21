@@ -940,9 +940,20 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }
   }, [enabled, stopAudio]);
 
+  // Handle soundType prop changes (for direct prop usage, not event-based)
+  // Note: Event-based sounds take priority, so only use prop if no event soundType is set
   useEffect(() => {
     if (!enabled || soundType === 'none') {
-      stopAudio();
+      // Only stop if we're not using event-based sound
+      if (!eventSoundType) {
+        stopAudio();
+      }
+      return;
+    }
+
+    // If we have an eventSoundType, don't override it with prop changes
+    // Events take priority over props
+    if (eventSoundType) {
       return;
     }
 
@@ -950,8 +961,6 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     stopAudio();
     
     // Longer delay to ensure cleanup fully completes before starting new sound
-    // Note: soundType cannot be 'none' here because we returned early if it was
-    // TypeScript knows this, so no need to check soundType !== 'none'
     const timer = setTimeout(() => {
       if (!needsInteraction && enabled) {
         // Double-check we're still supposed to play
@@ -960,7 +969,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [enabled, soundType, eventSoundType, needsInteraction, startAudio, stopAudio, setEventSoundType]);
+  }, [enabled, soundType, eventSoundType, needsInteraction, startAudio, stopAudio]);
 
   useEffect(() => {
     const volume = getVolume(isMuted);

@@ -36,8 +36,9 @@ export default function PresleyFlow() {
 
   useEffect(() => {
     localStorage.setItem('meetcute_autoplay_sound', 'true');
+    console.log('🎵 PresleyFlow dispatching ambient-sound-play:', { soundType: 'calm-ocean' });
     window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-      detail: { source: 'presley-flow-page' }
+      detail: { source: 'presley-flow-page', soundType: 'calm-ocean' }
     }));
 
     return () => {
@@ -137,7 +138,7 @@ export default function PresleyFlow() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-teal-950 to-slate-950 text-white overflow-hidden">
       {/* Ambient Sound - calm ocean for Presley Flow morning ritual */}
       <AmbientSound 
-        soundType="calm-ocean" 
+        soundType="none"
         enabled={true}
         stopOnNavigation={false}
       />

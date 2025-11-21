@@ -123,6 +123,7 @@ export default function FocusScene() {
     loadMeetingData();
   }, [userId, meetingId]);
 
+  // Dispatch sound events when phase changes or sound settings change
   useEffect(() => {
     if (!meeting) return;
 
@@ -134,10 +135,24 @@ export default function FocusScene() {
       return;
     }
 
-    localStorage.setItem('meetcute_autoplay_sound', 'true');
-    window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-      detail: { source: 'focus-scene', meetingId: meetingId, soundType: meeting.soundPreferences?.soundType }
-    }));
+    // Only play sound during prep-flow, reflection, or complete phases
+    if (currentPhase === 'prep-flow' || currentPhase === 'reflection' || currentPhase === 'complete') {
+      const soundToPlay = useAISound ? recommendedSound : (meeting.soundPreferences?.soundType || 'rain');
+      
+      if (soundToPlay && soundToPlay !== 'none') {
+        localStorage.setItem('meetcute_autoplay_sound', 'true');
+        console.log('🎵 FocusScene dispatching ambient-sound-play:', { soundToPlay, useAISound, recommendedSound, phase: currentPhase });
+        window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+          detail: { source: 'focus-scene', meetingId: meetingId, soundType: soundToPlay }
+        }));
+      }
+    } else {
+      // Stop sound during intro or mode-select phases
+      localStorage.removeItem('meetcute_autoplay_sound');
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'focus-scene', meetingId: meetingId }
+      }));
+    }
 
     return () => {
       localStorage.removeItem('meetcute_autoplay_sound');
@@ -145,7 +160,7 @@ export default function FocusScene() {
         detail: { source: 'focus-scene', meetingId: meetingId }
       }));
     };
-  }, [meeting, meetingId]);
+  }, [meeting, meetingId, currentPhase, useAISound, recommendedSound]);
 
   const loadMeetingData = async () => {
     try {
@@ -221,13 +236,11 @@ export default function FocusScene() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-teal-900 to-blue-900 text-white overflow-hidden">
       {/* Ambient Sound Player - AI-recommended or default sound based on user preference (muted during Level 2 calibration) */}
-      {(currentPhase === 'prep-flow' || currentPhase === 'reflection' || currentPhase === 'complete') && (
-        <AmbientSound
-          soundType={useAISound ? recommendedSound : (meeting?.soundPreferences?.soundType || 'rain')}
-          enabled={(meeting?.soundPreferences?.enabled ?? true) && !isCalibrating}
-          stopOnNavigation={false}
-        />
-      )}
+      <AmbientSound
+        soundType="none"
+        enabled={(meeting?.soundPreferences?.enabled ?? true) && !isCalibrating}
+        stopOnNavigation={false}
+      />
 
       {/* Level 2 Cue Companion - Real-time composure coach (opt-in during meeting) */}
       {(currentPhase === 'reflection' || currentPhase === 'complete') && (
