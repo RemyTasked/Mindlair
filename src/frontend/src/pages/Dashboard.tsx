@@ -1,5 +1,5 @@
 import { useEffect, useState, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { Calendar, Settings as SettingsIcon, TrendingUp, Headphones } from 'lucide-react';
@@ -68,6 +68,7 @@ interface WindingDown {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -129,6 +130,16 @@ export default function Dashboard() {
       clearInterval(cueInterval);
     };
   }, []);
+
+  // Refresh data when navigating back to dashboard (e.g., after completing a flow)
+  useEffect(() => {
+    // Only refresh if we have user data loaded and we're on the dashboard route
+    if (location.pathname === '/dashboard' && user?.id && !loading) {
+      console.log('🔄 Dashboard focused - refreshing meetings and flows...');
+      refreshMeetings();
+      refreshFlows();
+    }
+  }, [location.pathname, user?.id, loading]);
 
   const loadUserData = async () => {
     try {
@@ -431,6 +442,37 @@ export default function Dashboard() {
     } catch (error: any) {
       console.warn('⚠️ Background meeting refresh failed:', error.message);
       // Don't show error to user - this is a background operation
+    }
+  };
+
+  // Refresh Presley Flow and Winding Down status
+  const refreshFlows = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const [presleyResponse, windingDownResponse] = await Promise.all([
+        api.get(`/api/presley-flow/check/${user.id}`).catch(err => {
+          console.warn('⚠️ Presley Flow check failed (non-critical):', err.message);
+          return { data: { available: false } };
+        }),
+        api.get(`/api/winding-down/available/${user.id}`).catch(err => {
+          console.warn('⚠️ Winding Down check failed (non-critical):', err.message);
+          return { data: { available: false } };
+        }),
+      ]);
+
+      const presleyData = presleyResponse.data;
+      const windingDownData = windingDownResponse.data;
+
+      setPresleyFlow(presleyData);
+      setWindingDown(windingDownData);
+      
+      console.log('✅ Flows refreshed', {
+        presleyFlowAvailable: presleyData.available,
+        windingDownAvailable: windingDownData.available,
+      });
+    } catch (error: any) {
+      console.warn('⚠️ Flow refresh failed:', error.message);
     }
   };
 
