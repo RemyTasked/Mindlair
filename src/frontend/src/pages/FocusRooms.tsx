@@ -279,11 +279,18 @@ export default function FocusRooms() {
       if (audioProvider === 'spotify') {
         // Start Spotify playback for this room
         try {
-          await api.post('/api/spotify/play', {
+          const response = await api.post('/api/spotify/play', {
             roomId: room.id,
           });
+          console.log('✅ Spotify playback started:', response.data);
+          setIsPlaying(true);
         } catch (error: any) {
-          console.error('Error starting Spotify:', error);
+          console.error('❌ Error starting Spotify:', error);
+          const errorMessage = error.response?.data?.message || error.message || 'Failed to start Spotify playback';
+          
+          // Show user-friendly error message
+          alert(`Spotify playback failed: ${errorMessage}\n\nFalling back to Meet-Cute audio.`);
+          
           // Fallback to Meet-Cute audio
           startMeetCuteAudio(room);
           setAudioProvider('meetcute');

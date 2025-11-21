@@ -94,21 +94,45 @@ router.post(
       const playlistId = await spotifyService.findPlaylistForRoom(accessToken, roomId);
       logger.info('✅ Found playlist for room', { roomId, playlistId });
 
-      // Get active device or use default
+      // Get available devices
       const devices = await spotifyService.getDevices(accessToken);
-      logger.info('📱 Available Spotify devices', { count: devices.length, devices: devices.map(d => ({ id: d.id, name: d.name, is_active: d.is_active })) });
+      logger.info('📱 Available Spotify devices', { count: devices.length, devices: devices.map(d => ({ id: d.id, name: d.name, type: d.type, is_active: d.is_active })) });
       
-      const activeDevice = devices.find((d) => d.is_active) || devices[0];
-
-      if (!activeDevice) {
-        logger.warn('⚠️ No active Spotify device found. User may need to open Spotify app.');
-        throw new AppError('No active Spotify device found. Please open Spotify on one of your devices and try again.', 400);
+      // Find active device or prefer web player, then desktop, then mobile
+      let targetDevice = devices.find((d) => d.is_active);
+      
+      if (!targetDevice) {
+        // Prefer web player if available
+        targetDevice = devices.find((d) => d.type === 'Computer' || d.type === 'WebPlayer');
+        if (!targetDevice) {
+          // Fall back to any available device
+          targetDevice = devices[0];
+        }
       }
 
-      await spotifyService.playPlaylist(accessToken, playlistId, activeDevice.id);
-      logger.info('✅ Started Spotify playback', { playlistId, deviceId: activeDevice.id, deviceName: activeDevice.name });
+      if (!targetDevice) {
+        logger.warn('⚠️ No Spotify device found. User may need to open Spotify app.');
+        throw new AppError('No Spotify device found. Please open Spotify on one of your devices (web player, desktop app, or mobile app) and try again.', 400);
+      }
 
-      res.json({ success: true, deviceId: activeDevice.id, playlistId, deviceName: activeDevice.name });
+      // If device is not active, transfer playback to it first
+      if (!targetDevice.is_active) {
+        logger.info('🔄 Transferring playback to device', { deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
+        try {
+          await spotifyService.transferPlayback(accessToken, targetDevice.id, false); // Transfer but don't play yet
+          // Wait a moment for transfer to complete
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (transferError: any) {
+          logger.warn('⚠️ Failed to transfer playback, trying to play anyway', { error: transferError.message });
+          // Continue anyway - sometimes playback works without explicit transfer
+        }
+      }
+
+      // Now play the playlist
+      await spotifyService.playPlaylist(accessToken, playlistId, targetDevice.id);
+      logger.info('✅ Started Spotify playback', { playlistId, deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
+
+      res.json({ success: true, deviceId: targetDevice.id, playlistId, deviceName: targetDevice.name, deviceType: targetDevice.type });
     } catch (error: any) {
       logger.error('❌ Failed to play Spotify playlist', {
         error: error.message,

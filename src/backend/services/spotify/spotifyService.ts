@@ -134,7 +134,7 @@ export class SpotifyService {
         ? `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`
         : 'https://api.spotify.com/v1/me/player/play';
 
-      await axios.put(
+      const response = await axios.put(
         playUrl,
         {
           context_uri: `spotify:playlist:${playlistId}`,
@@ -147,13 +147,30 @@ export class SpotifyService {
         }
       );
 
-      logger.info('✅ Started Spotify playlist playback', { playlistId });
+      logger.info('✅ Started Spotify playlist playback', { playlistId, deviceId, status: response.status });
     } catch (error: any) {
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.error?.message || error.message;
+      const errorStatus = error.response?.status;
+      
       logger.error('❌ Failed to play Spotify playlist', {
-        error: error.response?.data || error.message,
+        error: errorMessage,
+        errorData,
+        status: errorStatus,
         playlistId,
+        deviceId,
       });
-      throw new Error('Failed to play playlist');
+
+      // Provide more specific error messages
+      if (errorStatus === 404) {
+        throw new Error('No active device found. Please open Spotify on one of your devices and try again.');
+      } else if (errorStatus === 403) {
+        throw new Error('Playback is not available. Please check your Spotify Premium subscription.');
+      } else if (errorStatus === 401) {
+        throw new Error('Spotify authentication failed. Please reconnect your account.');
+      } else {
+        throw new Error(`Failed to play playlist: ${errorMessage || 'Unknown error'}`);
+      }
     }
   }
 
@@ -221,6 +238,32 @@ export class SpotifyService {
         error: error.response?.data || error.message,
       });
       return [];
+    }
+  }
+
+  async transferPlayback(accessToken: string, deviceId: string, play?: boolean): Promise<void> {
+    try {
+      await axios.put(
+        'https://api.spotify.com/v1/me/player',
+        {
+          device_ids: [deviceId],
+          play: play !== false, // Default to true if not specified
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      logger.info('✅ Transferred Spotify playback to device', { deviceId, play });
+    } catch (error: any) {
+      logger.error('❌ Failed to transfer Spotify playback', {
+        error: error.response?.data || error.message,
+        deviceId,
+      });
+      throw new Error('Failed to transfer playback to device');
     }
   }
 
