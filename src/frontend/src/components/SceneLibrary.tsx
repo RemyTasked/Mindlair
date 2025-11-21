@@ -3,12 +3,11 @@ import { Headphones, Heart, BookOpen, Sparkles, Play, X } from 'lucide-react';
 
 interface SceneLibraryProps {
   timeOfDay: 'morning' | 'afternoon' | 'evening';
-  onSoundTypeChange: (soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none') => void;
+  onSoundTypeChange: (soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none') => void;
 }
 
 export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibraryProps) {
   const [activeScene, setActiveScene] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'scenes' | 'lofi'>('scenes');
 
   // Change sound type based on active scene
   useEffect(() => {
@@ -24,7 +23,7 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       return;
     }
 
-    let soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none' = 'none';
+    let soundType: 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none' = 'none';
 
     if (activeScene === 'listen') {
       soundType = 'calm-ocean';
@@ -32,16 +31,6 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       soundType = 'white-noise';
     } else if (activeScene === 'reflect') {
       soundType = 'rain';
-    } else if (activeScene === 'lofi-chill') {
-      soundType = 'lofi-chill';
-    } else if (activeScene === 'lofi-focus') {
-      soundType = 'lofi-focus';
-    } else if (activeScene === 'lofi-morning') {
-      soundType = 'lofi-morning';
-    } else if (activeScene === 'lofi-evening') {
-      soundType = 'lofi-evening';
-    } else if (activeScene === 'lofi-calm') {
-      soundType = 'lofi-calm';
     }
 
     // Longer delay to ensure previous sound fully stops before starting new one
@@ -98,76 +87,47 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
           </div>
           
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="text-center mb-6">
-              <p className="text-sm text-gray-600 mb-4">
-                Click the sound button in the bottom right to hear calming ocean waves
-              </p>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
-                <span className="text-2xl">🌊</span>
-                <span className="text-sm font-medium text-blue-900">Ocean sounds will play →</span>
-              </div>
-            </div>
-            
-            <div className="space-y-3 text-sm text-gray-600">
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🌊</span>
-                <span>Let tension melt away with each breath</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">💭</span>
-                <span>Notice thoughts without judgment</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">✨</span>
-                <span>Return feeling refreshed and centered</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="text-center text-xs text-gray-500">
-            Take as long as you need • No rush
+            <BreathingExercise />
           </div>
         </div>
       ),
     },
     {
       id: 'focus',
-      icon: <Heart className="w-6 h-6" />,
-      emoji: '🧘',
+      icon: <BookOpen className="w-6 h-6" />,
+      emoji: '🎯',
       title: 'Focus',
-      subtitle: '2-minute calm scene',
-      description: 'White noise + breathing to enhance concentration',
-      gradient: 'from-teal-500 to-pink-500',
-      bgGradient: 'from-teal-50 to-pink-50',
+      subtitle: 'Deep work mode',
+      description: 'White noise to block distractions',
+      gradient: 'from-indigo-500 to-purple-500',
+      bgGradient: 'from-indigo-50 to-purple-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
-            <div className="text-6xl mb-4">🧘</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Breathing Reset</h3>
+            <div className="text-6xl mb-4">🎯</div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Deep Focus</h3>
             <p className="text-gray-600 mb-6">
-              A simple practice to return to calm
+              White noise creates a consistent sound barrier, helping you enter flow state.
             </p>
           </div>
-
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
-            <BreathingExercise />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 text-center text-sm">
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="text-2xl mb-2">🌬️</div>
-              <div className="font-medium text-gray-900">Breathe</div>
-              <div className="text-xs text-gray-500">4 seconds in</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="text-2xl mb-2">⏸️</div>
-              <div className="font-medium text-gray-900">Hold</div>
-              <div className="text-xs text-gray-500">4 seconds</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="text-2xl mb-2">💨</div>
-              <div className="font-medium text-gray-900">Release</div>
-              <div className="text-xs text-gray-500">6 seconds out</div>
+          
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900">Focus Tips</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-start gap-2">
+                  <span>✓</span>
+                  <span>Set a clear intention for this focus session</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span>✓</span>
+                  <span>Eliminate visual distractions (close extra tabs)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span>✓</span>
+                  <span>Use the Pomodoro technique: 25 min focus, 5 min break</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -175,28 +135,26 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
     },
     {
       id: 'reflect',
-      icon: <BookOpen className="w-6 h-6" />,
-      emoji: '🪞',
+      icon: <Heart className="w-6 h-6" />,
+      emoji: '💭',
       title: 'Reflect',
-      subtitle: 'Quick journaling',
-      description: 'Gentle rain sounds + AI prompt for contemplation',
-      gradient: 'from-amber-500 to-orange-500',
-      bgGradient: 'from-amber-50 to-orange-50',
+      subtitle: 'Gentle journaling',
+      description: 'Rain sounds for introspection',
+      gradient: 'from-teal-500 to-green-500',
+      bgGradient: 'from-teal-50 to-green-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
-            <div className="text-6xl mb-4">🪞</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Reflection Moment</h3>
+            <div className="text-6xl mb-4">🌧️</div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Rain Reflection</h3>
             <p className="text-gray-600 mb-6">
-              Take a moment to check in with yourself
+              The gentle sound of rain creates space for honest reflection.
             </p>
           </div>
-
+          
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Today's Prompt:
-              </label>
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900">Journaling Prompt</h4>
               <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
                 <p className="text-lg text-gray-900 font-medium italic">
                   "{currentPrompt}"
@@ -225,198 +183,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
     },
   ];
 
-  // Lofi Soundscapes
-  const lofiScenes = [
-    {
-      id: 'lofi-chill',
-      icon: <Sparkles className="w-6 h-6" />,
-      emoji: '🎵',
-      title: 'Lofi Chill',
-      subtitle: 'Mellow beats',
-      description: 'Warm chords, soft drums, vinyl crackle',
-      gradient: 'from-indigo-500 to-teal-500',
-      bgGradient: 'from-indigo-50 to-teal-50',
-      content: (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🎵</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Lofi Chill</h3>
-            <p className="text-gray-600 mb-6">
-              Mellow chord progressions with soft beats and warm vinyl texture
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="space-y-3 text-sm text-gray-600">
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🎹</span>
-                <span>Warm jazz chords for relaxation</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🥁</span>
-                <span>Gentle beats to keep you grounded</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">📀</span>
-                <span>Vinyl crackle for authentic lofi feel</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'lofi-focus',
-      icon: <Sparkles className="w-6 h-6" />,
-      emoji: '🎧',
-      title: 'Lofi Focus',
-      subtitle: 'Minimal beats',
-      description: 'Perfect for deep work and concentration',
-      gradient: 'from-blue-500 to-indigo-500',
-      bgGradient: 'from-blue-50 to-indigo-50',
-      content: (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🎧</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Lofi Focus</h3>
-            <p className="text-gray-600 mb-6">
-              Minimal beats and subtle melodies designed for concentration
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="space-y-3 text-sm text-gray-600">
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🎼</span>
-                <span>Simple pentatonic melodies</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🎯</span>
-                <span>Minimal percussion for focus</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🌊</span>
-                <span>Warm bass to anchor your attention</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'lofi-morning',
-      icon: <Sparkles className="w-6 h-6" />,
-      emoji: '☀️',
-      title: 'Lofi Morning',
-      subtitle: 'Bright & uplifting',
-      description: 'Gentle energy to start your day',
-      gradient: 'from-yellow-500 to-orange-500',
-      bgGradient: 'from-yellow-50 to-orange-50',
-      content: (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="text-6xl mb-4">☀️</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Lofi Morning</h3>
-            <p className="text-gray-600 mb-6">
-              Bright major chords and light percussion for a positive start
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="space-y-3 text-sm text-gray-600">
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🌅</span>
-                <span>Uplifting major chord progressions</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">✨</span>
-                <span>Light hi-hats for gentle energy</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">☕</span>
-                <span>Perfect companion for morning routines</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'lofi-evening',
-      icon: <Sparkles className="w-6 h-6" />,
-      emoji: '🌙',
-      title: 'Lofi Evening',
-      subtitle: 'Mellow & introspective',
-      description: 'Wind down with soft minor chords',
-      gradient: 'from-teal-500 to-pink-500',
-      bgGradient: 'from-teal-50 to-pink-50',
-      content: (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🌙</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Lofi Evening</h3>
-            <p className="text-gray-600 mb-6">
-              Mellow minor chords and deep bass for winding down
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="space-y-3 text-sm text-gray-600">
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🌆</span>
-                <span>Soft minor chord progressions</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🎵</span>
-                <span>Slower tempo for relaxation</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🛋️</span>
-                <span>Perfect for end-of-day reflection</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'lofi-calm',
-      icon: <Sparkles className="w-6 h-6" />,
-      emoji: '🕊️',
-      title: 'Lofi Calm',
-      subtitle: 'Ultra-minimal',
-      description: 'Ambient pads for deep relaxation',
-      gradient: 'from-teal-500 to-cyan-500',
-      bgGradient: 'from-teal-50 to-cyan-50',
-      content: (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🕊️</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Lofi Calm</h3>
-            <p className="text-gray-600 mb-6">
-              Ultra-minimal ambient soundscape for deep peace
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="space-y-3 text-sm text-gray-600">
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🌌</span>
-                <span>Sustained pad-like chords</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">🧘</span>
-                <span>No percussion - pure atmosphere</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-lg">💫</span>
-                <span>Ideal for meditation and deep rest</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-  ];
-
-  // Combine all scenes for lookup
-  const allScenes = [...originalScenes, ...lofiScenes];
-  const currentScenes = activeTab === 'scenes' ? originalScenes : lofiScenes;
+  // Only original ambient scenes (no lofi - those are in Focus Rooms)
+  const allScenes = originalScenes;
 
   if (activeScene) {
     const scene = allScenes.find(s => s.id === activeScene);
@@ -466,38 +234,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-teal-200">
-        <button
-          onClick={() => {
-            setActiveTab('scenes');
-            setActiveScene(null); // Close any open scene when switching tabs
-          }}
-          className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
-            activeTab === 'scenes'
-              ? 'border-teal-600 text-teal-700'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Scenes
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('lofi');
-            setActiveScene(null); // Close any open scene when switching tabs
-          }}
-          className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
-            activeTab === 'lofi'
-              ? 'border-teal-600 text-teal-700'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Lofi Soundscapes
-        </button>
-      </div>
-
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {currentScenes.map((scene) => (
+        {allScenes.map((scene) => (
           <button
             key={scene.id}
             onClick={() => {
@@ -609,4 +347,3 @@ function BreathingExercise() {
     </div>
   );
 }
-

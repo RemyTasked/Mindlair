@@ -78,7 +78,7 @@ export default function Dashboard() {
   const [reflectionInsights, setReflectionInsights] = useState<any>(null);
   const [showReflectionModal, setShowReflectionModal] = useState(false);
   const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
-  const [ambientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'lofi-chill' | 'lofi-focus' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'none'>('calm-ocean');
+  const [ambientSoundType] = useState<'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise' | 'none'>('none');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
   const [activeMeetings, setActiveMeetings] = useState<Meeting[]>([]);

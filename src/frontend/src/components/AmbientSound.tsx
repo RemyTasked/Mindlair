@@ -610,6 +610,9 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
   const startWebAudio = useCallback(
     async (sourceLabel: string) => {
+      const currentSoundType = eventSoundType || soundType;
+      console.log('🎵 startWebAudio called with:', { sourceLabel, currentSoundType, eventSoundType, soundType });
+      
       const context = ensureAudioContext();
       if (!context) {
         throw new Error('Web Audio API not available');
@@ -623,7 +626,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         await unlockAudioContext(context);
       }
 
-      const buffer = getAudioBuffer(context, soundType);
+      const buffer = getAudioBuffer(context, currentSoundType);
       const gainNode = gainRef.current || context.createGain();
       gainNode.gain.value = getVolume(isMuted);
       const sourceNode = context.createBufferSource();
@@ -737,20 +740,27 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       // Stop any currently playing audio first
       stopAudio();
       
-      // Small delay to ensure stop completes before starting new sound
+      // Small delay to ensure stop completes and state updates before starting new sound
       setTimeout(() => {
         const soundToPlay = eventSoundTypeValue || soundType;
-        console.log('🎵 Starting audio with soundType:', soundToPlay);
+        console.log('🎵 Starting audio with soundType:', soundToPlay, { eventSoundTypeValue, soundType, enabled });
         if (enabled && soundToPlay && soundToPlay !== 'none') {
-          // Force update the soundType before starting
-          if (eventSoundTypeValue && eventSoundTypeValue !== soundType) {
+          // Update eventSoundType first, then wait for state to update
+          if (eventSoundTypeValue) {
             setEventSoundType(eventSoundTypeValue);
+            // Wait for React state to update before starting audio
+            // Use a longer delay to ensure state is properly set
+            setTimeout(() => {
+              console.log('🎵 Starting audio after state update, eventSoundType:', eventSoundTypeValue);
+              startAudio('event-dispatch');
+            }, 150);
+          } else {
+            startAudio('event-dispatch');
           }
-          startAudio('event-dispatch');
         } else {
           console.warn('⚠️ Not starting audio:', { enabled, soundToPlay });
         }
-      }, 200); // Increased delay to ensure state updates
+      }, 250); // Delay to ensure stop completes
     };
 
     const stopHandler = () => {
@@ -786,7 +796,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       window.removeEventListener('ambient-sound-stop', stopHandler);
       window.removeEventListener('ambient-sound-volume', volumeHandler);
     };
-  }, [enabled, startAudio, stopAudio, soundType]);
+  }, [enabled, startAudio, stopAudio, soundType, eventSoundType]);
 
   useEffect(() => {
     if (!enabled) {
@@ -852,7 +862,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [enabled, soundType, needsInteraction, startAudio, stopAudio]);
+  }, [enabled, soundType, eventSoundType, needsInteraction, startAudio, stopAudio, setEventSoundType]);
 
   useEffect(() => {
     const volume = getVolume(isMuted);
