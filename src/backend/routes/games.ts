@@ -3,13 +3,6 @@ import { authenticate } from '../middleware/auth';
 import { logger } from '../utils/logger';
 import * as gameService from '../services/games/gameService';
 
-class AppError extends Error {
-  constructor(message: string, public statusCode: number = 500) {
-    super(message);
-    this.name = 'AppError';
-  }
-}
-
 const router = Router();
 
 /**
