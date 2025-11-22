@@ -141,40 +141,60 @@ router.post('/mind-match/submit', authenticate, async (req: Request, res: Respon
 });
 
 /**
+ * GET /api/games/seed-status
+ * Check if games database is seeded
+ */
+router.get('/seed-status', authenticate, async (_req: Request, res: Response) => {
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    const questionCount = await prisma.gameQuestion.count();
+    const pairCount = await prisma.gamePair.count();
+    await prisma.$disconnect();
+    
+    return res.json({ 
+      seeded: questionCount > 0 && pairCount > 0,
+      questionCount,
+      pairCount
+    });
+  } catch (error: any) {
+    logger.error('Error checking seed status:', error);
+    return res.status(500).json({ error: error.message || 'Failed to check seed status' });
+  }
+});
+
+/**
  * POST /api/games/seed
- * Manually seed games database (admin/dev only)
+ * Manually seed games database
  */
 router.post('/seed', authenticate, async (_req: Request, res: Response) => {
   try {
-    // Check if games are already seeded
+    // Import and run the seed function directly
+    const seedGamesModule = require('../../scripts/seedGames');
+    const seedGames = seedGamesModule.seedGames || seedGamesModule.main || seedGamesModule;
+    
+    // Run the seed function
+    await seedGames();
+    
+    // Check results
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
-    const count = await prisma.gameQuestion.count();
-    
-    if (count > 0) {
-      await prisma.$disconnect();
-      return res.json({ 
-        success: true, 
-        message: `Games already seeded (${count} questions exist)`,
-        count 
-      });
-    }
-
-    // Run seed script
-    const { execSync } = require('child_process');
-    execSync('npm run seed:games', { stdio: 'inherit' });
-    
-    const newCount = await prisma.gameQuestion.count();
+    const questionCount = await prisma.gameQuestion.count();
+    const pairCount = await prisma.gamePair.count();
     await prisma.$disconnect();
     
     return res.json({ 
       success: true, 
-      message: `Games seeded successfully (${newCount} questions)`,
-      count: newCount 
+      message: `Games seeded successfully (${questionCount} questions, ${pairCount} pairs)`,
+      questionCount,
+      pairCount
     });
   } catch (error: any) {
     logger.error('Error seeding games:', error);
-    return res.status(500).json({ error: error.message || 'Failed to seed games' });
+    return res.status(500).json({ 
+      error: error.message || 'Failed to seed games',
+      details: error.stack
+    });
   }
 });
 

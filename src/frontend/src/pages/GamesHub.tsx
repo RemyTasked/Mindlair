@@ -30,6 +30,20 @@ export default function GamesHub() {
 
   const loadDailyGame = async () => {
     try {
+      // First check if games are seeded
+      const seedStatus = await api.get('/api/games/seed-status');
+      if (!seedStatus.data.seeded) {
+        console.log('🌱 Games not seeded, attempting to seed...');
+        try {
+          await api.post('/api/games/seed');
+          console.log('✅ Games seeded successfully');
+        } catch (seedError: any) {
+          console.error('❌ Error seeding games:', seedError);
+          setLoading(false);
+          return;
+        }
+      }
+
       const response = await api.get('/api/games/daily');
       setGameType(response.data.gameType);
       setProgress(response.data.progress);
@@ -38,7 +52,7 @@ export default function GamesHub() {
       console.error('❌ Error loading daily game:', error);
       
       // If games aren't seeded, try to seed them
-      if (error.response?.status === 500 || error.message?.includes('game')) {
+      if (error.response?.status === 500 || error.message?.includes('seed') || error.message?.includes('No game')) {
         try {
           console.log('🌱 Attempting to seed games database...');
           await api.post('/api/games/seed');

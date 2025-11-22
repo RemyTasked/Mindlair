@@ -98,6 +98,15 @@ export async function getSceneSenseQuestions(
       ],
     });
 
+    // If no questions found, check if database needs seeding
+    if (questions.length === 0) {
+      const totalQuestions = await prisma.gameQuestion.count();
+      if (totalQuestions === 0) {
+        logger.warn('No game questions found in database. Database may need seeding.');
+        throw new Error('No game questions available. Please seed the database.');
+      }
+    }
+
     // Shuffle and return requested count
     const shuffled = questions.sort(() => Math.random() - 0.5);
     return shuffled.slice(0, count).map(q => ({
@@ -148,6 +157,15 @@ export async function getMindMatchPairs(
         { createdAt: 'desc' },
       ],
     });
+
+    // If no pairs found, check if database needs seeding
+    if (pairs.length === 0) {
+      const totalPairs = await prisma.gamePair.count();
+      if (totalPairs === 0) {
+        logger.warn('No game pairs found in database. Database may need seeding.');
+        throw new Error('No game pairs available. Please seed the database.');
+      }
+    }
 
     // Shuffle and return 3 pairs
     const shuffled = pairs.sort(() => Math.random() - 0.5);

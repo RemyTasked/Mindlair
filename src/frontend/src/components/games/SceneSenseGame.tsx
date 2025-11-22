@@ -34,25 +34,22 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
 
   const loadQuestions = async () => {
     try {
+      // Check seed status first
+      try {
+        const seedStatus = await api.get('/api/games/seed-status');
+        if (!seedStatus.data.seeded) {
+          console.log('🌱 Seeding games database...');
+          await api.post('/api/games/seed');
+        }
+      } catch (seedError) {
+        console.error('Error checking/seeding games:', seedError);
+      }
+
       const response = await api.get('/api/games/scene-sense/questions?count=5');
       const questions = response.data.questions || [];
       
       if (questions.length === 0) {
-        console.error('No questions available. Attempting to seed database...');
-        // Try to seed the database
-        try {
-          await api.post('/api/games/seed');
-          // Reload questions after seeding
-          const retryResponse = await api.get('/api/games/scene-sense/questions?count=5');
-          const retryQuestions = retryResponse.data.questions || [];
-          if (retryQuestions.length > 0) {
-            setQuestions(retryQuestions);
-            setLoading(false);
-            return;
-          }
-        } catch (seedError) {
-          console.error('Error seeding games:', seedError);
-        }
+        console.error('No questions available after seeding. Please contact support.');
         setLoading(false);
         return;
       }
@@ -60,6 +57,24 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
       setQuestions(questions);
     } catch (error: any) {
       console.error('Error loading questions:', error);
+      
+      // Try to seed if error suggests missing data
+      if (error.response?.data?.error?.includes('seed') || error.message?.includes('No game')) {
+        try {
+          console.log('🌱 Attempting to seed database...');
+          await api.post('/api/games/seed');
+          // Retry loading questions
+          const retryResponse = await api.get('/api/games/scene-sense/questions?count=5');
+          const retryQuestions = retryResponse.data.questions || [];
+          if (retryQuestions.length > 0) {
+            setQuestions(retryQuestions);
+            return;
+          }
+        } catch (seedError) {
+          console.error('Error seeding games:', seedError);
+        }
+      }
+      
       setLoading(false);
     } finally {
       setLoading(false);
