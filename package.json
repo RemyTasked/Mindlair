@@ -16,6 +16,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
+    "seed:games": "ts-node src/backend/scripts/seedGames.ts",
     "test": "jest",
     "lint": "eslint src/**/*.ts"
   },
