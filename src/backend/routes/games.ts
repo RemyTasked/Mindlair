@@ -165,8 +165,8 @@ router.get('/seed-status', authenticate, async (req: Request, res: Response) => 
     }
     
     try {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
+      // Use shared Prisma instance
+      const { prisma } = require('../utils/prisma');
       
       // Check if tables exist first
       const tablesExist = await prisma.$queryRaw`
@@ -178,7 +178,6 @@ router.get('/seed-status', authenticate, async (req: Request, res: Response) => 
       `;
       
       if (!tablesExist || (Array.isArray(tablesExist) && !tablesExist[0]?.exists)) {
-        await prisma.$disconnect();
         return res.json({ 
           seeded: false,
           questionCount: 0,
@@ -189,7 +188,6 @@ router.get('/seed-status', authenticate, async (req: Request, res: Response) => 
       
       const questionCount = await prisma.gameQuestion.count().catch(() => 0);
       const pairCount = await prisma.gamePair.count().catch(() => 0);
-      await prisma.$disconnect();
       
       return res.json({ 
         seeded: questionCount > 0 && pairCount > 0,
