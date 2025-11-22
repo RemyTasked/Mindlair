@@ -182,6 +182,25 @@ model UserPreferences {
   enableWindingDown Boolean @default(true) // Enable standalone winding down session
   windingDownTime   String  @default("21:00") // Time for winding down session (HH:mm format, default: 9 PM)
 
+  // Simplified Notification Preferences (NEW - replaces complex DeliverySettings matrix)
+  // Primary channel: "email" or "push" (default: "push")
+  notificationPrimaryChannel String @default("push")
+  
+  // Secondary channels (optional): comma-separated list like "slack,sms" or null
+  notificationSecondaryChannels String? // e.g., "slack", "sms", "slack,sms", or null
+  
+  // 3 Core Notification Categories (replaces 9 granular types)
+  notificationsMeetingMoments Boolean @default(true) // Pre/during/post meeting cues
+  notificationsDailyRhythm    Boolean @default(true) // Morning/evening/winding down
+  notificationsWellness        Boolean @default(true) // Wellness reminders + insights
+  
+  // Quiet hours (global override for all notifications)
+  quietHoursStart String? // e.g., "21:00" (9 PM)
+  quietHoursEnd   String? // e.g., "07:00" (7 AM)
+  
+  // Notification preset: "minimal", "balanced", "full", or "custom"
+  notificationPreset String @default("balanced")
+
   // Adaptive learning data
   averageEarlyJoinMinutes Float? // How early user typically joins
   preferredAlertTime      Int? // Learned optimal alert time

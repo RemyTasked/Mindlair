@@ -11,6 +11,13 @@ import { pushNotificationService } from './delivery/pushNotificationService';
 import { logger } from '../utils/logger';
 import { analyzeMindStatePatterns } from './ai/mindStateAnalyzer';
 import { updateMeetingPresence } from './meetingPresence';
+import { 
+  getSimplifiedNotificationPrefs, 
+  toLegacyDeliverySettings, 
+  isQuietHours,
+  isNotificationEnabled,
+  shouldSendNotification
+} from './notificationHelper';
 
 /**
  * Get the current hour in the user's timezone
@@ -390,7 +397,32 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
 
     // Only send cue if it's time
     if (shouldSendCue) {
-      const delivery = user.deliverySettings;
+      // Get simplified notification preferences (new system)
+      const simplifiedPrefs = await getSimplifiedNotificationPrefs(user.id);
+      
+      // Check quiet hours
+      if (simplifiedPrefs && isQuietHours(simplifiedPrefs)) {
+        logger.info('🔇 Skipping notification - quiet hours', {
+          userId: user.id,
+          quietHours: `${simplifiedPrefs.quietHoursStart} - ${simplifiedPrefs.quietHoursEnd}`,
+        });
+        return;
+      }
+
+      // Convert to legacy format for backward compatibility
+      const delivery = simplifiedPrefs
+        ? toLegacyDeliverySettings(simplifiedPrefs, user.deliverySettings)
+        : user.deliverySettings;
+
+      // Check if Meeting Moments category is enabled
+      const meetingMomentsEnabled = simplifiedPrefs
+        ? isNotificationEnabled(simplifiedPrefs, 'meetingMoments', delivery?.emailEnabled ? 'email' : 'push')
+        : (delivery?.emailEnabled || delivery?.pushEnabled);
+
+      if (!meetingMomentsEnabled) {
+        logger.info('🔕 Meeting Moments notifications disabled', { userId: user.id });
+        return;
+      }
 
       logger.info('📧 Sending pre-meeting cue', {
         userId: user.id,
@@ -400,9 +432,11 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         emailEnabled: delivery?.emailEnabled,
         slackEnabled: delivery?.slackEnabled,
         smsEnabled: delivery?.smsEnabled,
+        pushEnabled: delivery?.pushEnabled,
+        simplifiedPrefs: simplifiedPrefs ? 'yes' : 'no',
       });
 
-      if (delivery?.emailEnabled) {
+      if (delivery?.emailEnabled && delivery?.emailPreMeetingCues) {
         await emailService.sendPreMeetingCue(
           user.email,
           event.summary,
@@ -413,14 +447,9 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
           userId: user.id,
           email: user.email,
         });
-      } else {
-        logger.warn('⚠️ Email delivery not enabled', {
-          userId: user.id,
-          deliverySettings: delivery,
-        });
       }
 
-      if (delivery?.slackEnabled && (delivery?.slackAccessToken || delivery?.slackWebhookUrl)) {
+      if (delivery?.slackEnabled && delivery?.slackPreMeetingCues && (delivery?.slackAccessToken || delivery?.slackWebhookUrl)) {
         await slackService.sendPreMeetingCue(
           delivery.slackWebhookUrl || null,
           event.summary,
@@ -431,7 +460,7 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
         );
       }
 
-      if (delivery?.smsEnabled && delivery?.phoneNumber) {
+      if (delivery?.smsEnabled && delivery?.smsPreMeetingCues && delivery?.phoneNumber) {
         await smsService.sendPreMeetingCue(
           delivery.phoneNumber,
           event.summary,
@@ -587,25 +616,37 @@ async function sendDailyWrapUps() {
           ratedMeetings: ratedMeetings.length > 0 ? ratedMeetings : undefined,
         });
 
+        // Check if Daily Rhythm notifications are enabled
+        const { shouldSend, delivery } = await shouldSendNotification(
+          user.id,
+          'dailyRhythm',
+          user.deliverySettings
+        );
+
+        if (!shouldSend) {
+          logger.info('🔕 Daily Rhythm notifications disabled', { userId: user.id });
+          continue;
+        }
+
         // Send wrap-up
-        if (user.deliverySettings?.emailEnabled) {
+        if (delivery?.emailEnabled && delivery?.emailDailyWrapUp) {
           await emailService.sendDailyWrapUp(user.email, wrapUpMessage, stats);
         }
 
         if (
-          user.deliverySettings?.slackEnabled &&
-          (user.deliverySettings?.slackAccessToken || user.deliverySettings?.slackWebhookUrl)
+          delivery?.slackEnabled && delivery?.slackDailyWrapUp &&
+          (delivery?.slackAccessToken || delivery?.slackWebhookUrl)
         ) {
           await slackService.sendDailyWrapUp(
-            user.deliverySettings.slackWebhookUrl || null,
+            delivery.slackWebhookUrl || null,
             wrapUpMessage,
             stats,
-            user.deliverySettings.slackAccessToken || null,
-            user.deliverySettings.slackChannelId || null
+            delivery.slackAccessToken || null,
+            delivery.slackChannelId || null
           );
         }
 
-        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushDailyWrapUp) {
+        if (delivery?.pushEnabled && delivery?.pushDailyWrapUp) {
           await pushNotificationService.sendDailyWrapUp(
             user.id,
             wrapUpMessage,
@@ -673,11 +714,21 @@ async function sendPostMeetingInsights() {
 
     for (const meeting of meetings) {
       try {
-        // Only send if email delivery is enabled
-        if (!meeting.user.deliverySettings?.emailEnabled) {
+        // Check if Meeting Moments notifications are enabled
+        const { shouldSend, delivery } = await shouldSendNotification(
+          meeting.userId,
+          'meetingMoments',
+          meeting.user.deliverySettings
+        );
+
+        if (!shouldSend) {
           await prisma.meeting.update({
             where: { id: meeting.id },
             data: { postMeetingEmailSent: true },
+          });
+          logger.info('🔕 Meeting Moments notifications disabled', { 
+            userId: meeting.userId,
+            meetingId: meeting.id 
           });
           continue;
         }
@@ -686,19 +737,36 @@ async function sendPostMeetingInsights() {
         const ratingUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/rate/${meeting.userId}/${meeting.id}`;
 
         // Send post-meeting insight email
-        const sent = await emailService.sendPostMeetingInsight(
-          meeting.user.email,
-          meeting.title,
-          meeting.startTime,
-          ratingUrl
-        );
+        let sent = false;
+        if (delivery?.emailEnabled && delivery?.emailPostMeetingCues) {
+          sent = await emailService.sendPostMeetingInsight(
+            meeting.user.email,
+            meeting.title,
+            meeting.startTime,
+            ratingUrl
+          );
+        }
 
         // Send push notification if enabled
-        if (meeting.user.deliverySettings?.pushEnabled) {
+        if (delivery?.pushEnabled && delivery?.pushPostMeetingCues) {
           await pushNotificationService.sendPostMeetingInsight(
             meeting.userId,
             meeting.title,
             ratingUrl
+          );
+        }
+
+        // Send Slack notification if enabled
+        if (delivery?.slackEnabled && delivery?.slackPostMeetingCues &&
+          (delivery?.slackAccessToken || delivery?.slackWebhookUrl)
+        ) {
+          await slackService.sendPostMeetingCue(
+            delivery.slackWebhookUrl || null,
+            `✨ How did your meeting go? ${meeting.title}`,
+            `Take a moment to reflect: ${ratingUrl}`,
+            undefined,
+            delivery.slackAccessToken || null,
+            delivery.slackChannelId || null
           );
         }
 
@@ -783,8 +851,17 @@ async function sendPresleyFlowSessions() {
         
         if (!isMorningTime && !isEveningTime) continue;
 
-        // Only send if email is enabled
-        if (!user.deliverySettings?.emailEnabled) continue;
+        // Check if Daily Rhythm notifications are enabled
+        const { shouldSend, delivery } = await shouldSendNotification(
+          user.id,
+          'dailyRhythm',
+          user.deliverySettings
+        );
+
+        if (!shouldSend) {
+          logger.info('🔕 Daily Rhythm notifications disabled', { userId: user.id });
+          continue;
+        }
 
         // Determine which day to check for meetings
         let targetDate = new Date(now);
@@ -829,29 +906,32 @@ async function sendPresleyFlowSessions() {
 
         // Send via email with correct flowType
         const flowType = isMorningTime ? 'morning' : 'evening';
-        const emailSent = await emailService.sendPresleyFlowNotification(
-          user.email,
-          presleyFlowUrl,
-          meetings.length,
-          targetDate.toLocaleDateString('en-US', {
-            weekday: 'long',
-            month: 'short',
-            day: 'numeric',
-          }),
-          flowType
-        );
+        let emailSent = false;
+        if (delivery?.emailEnabled && delivery?.emailPresleyFlow) {
+          emailSent = await emailService.sendPresleyFlowNotification(
+            user.email,
+            presleyFlowUrl,
+            meetings.length,
+            targetDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            }),
+            flowType
+          );
+        }
 
         // Send via SMS if enabled
-        if (user.deliverySettings?.smsEnabled && user.deliverySettings.phoneNumber) {
+        if (delivery?.smsEnabled && delivery?.smsPresleyFlow && delivery?.phoneNumber) {
           await smsService.sendPresleyFlowNotification(
-            user.deliverySettings.phoneNumber,
+            delivery.phoneNumber,
             presleyFlowUrl,
             meetings.length
           );
         }
 
         // Send via push notification if enabled
-        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushPresleyFlow) {
+        if (delivery?.pushEnabled && delivery?.pushPresleyFlow) {
           await pushNotificationService.sendPresleyFlowNotification(
             user.id,
             presleyFlowUrl,
@@ -861,6 +941,25 @@ async function sendPresleyFlowSessions() {
               month: 'short',
               day: 'numeric',
             })
+          );
+        }
+
+        // Send via Slack if enabled
+        if (delivery?.slackEnabled && delivery?.slackPresleyFlow &&
+          (delivery?.slackAccessToken || delivery?.slackWebhookUrl)
+        ) {
+          await slackService.sendPresleyFlowNotification(
+            delivery.slackWebhookUrl || null,
+            presleyFlowUrl,
+            meetings.length,
+            targetDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            }),
+            flowType,
+            delivery.slackAccessToken || null,
+            delivery.slackChannelId || null
           );
         }
 
@@ -1143,7 +1242,7 @@ async function sendWellnessReminders() {
         let sent = false;
         
         // Send via email if enabled
-        if (user.deliverySettings?.emailEnabled) {
+        if (delivery?.emailEnabled && delivery?.emailWellnessReminders) {
           sent = await emailService.sendWellnessReminder(user.email, type, message);
           logger.info('📧 Wellness reminder sent via email', {
             userId: user.id,
@@ -1152,13 +1251,27 @@ async function sendWellnessReminders() {
         }
 
         // Send push notification if enabled
-        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushWellnessReminders) {
+        if (delivery?.pushEnabled && delivery?.pushWellnessReminders) {
           await pushNotificationService.sendWellnessReminder(user.id, type, message);
           sent = true; // Mark as sent if push succeeds
           logger.info('📱 Wellness reminder sent via push', {
             userId: user.id,
             type,
           });
+        }
+
+        // Send via Slack if enabled
+        if (delivery?.slackEnabled && delivery?.slackWellnessReminders &&
+          (delivery?.slackAccessToken || delivery?.slackWebhookUrl)
+        ) {
+          await slackService.sendWellnessReminder(
+            delivery.slackWebhookUrl || null,
+            type,
+            message,
+            delivery.slackAccessToken || null,
+            delivery.slackChannelId || null
+          );
+          sent = true;
         }
         
         // TODO: SMS wellness reminders not yet implemented
@@ -1246,7 +1359,7 @@ async function sendWindingDownNotifications() {
         let sent = false;
         
         // Send via email if enabled
-        if (user.deliverySettings?.emailEnabled) {
+        if (delivery?.emailEnabled && delivery?.emailWindingDown) {
           try {
             await emailService.sendWindingDownNotification(
               user.email,
@@ -1262,7 +1375,7 @@ async function sendWindingDownNotifications() {
         }
         
         // Send via push notification if enabled
-        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushWindingDown) {
+        if (delivery?.pushEnabled && delivery?.pushWindingDown) {
           try {
             await pushNotificationService.sendWindingDownNotification(
               user.id,
@@ -1271,6 +1384,26 @@ async function sendWindingDownNotifications() {
             sent = true;
           } catch (error: any) {
             logger.error('Failed to send winding down push notification', {
+              userId: user.id,
+              error: error.message,
+            });
+          }
+        }
+
+        // Send via Slack if enabled
+        if (delivery?.slackEnabled && delivery?.slackWindingDown &&
+          (delivery?.slackAccessToken || delivery?.slackWebhookUrl)
+        ) {
+          try {
+            await slackService.sendWindingDownNotification(
+              delivery.slackWebhookUrl || null,
+              windingDownUrl,
+              delivery.slackAccessToken || null,
+              delivery.slackChannelId || null
+            );
+            sent = true;
+          } catch (error: any) {
+            logger.error('Failed to send winding down Slack notification', {
               userId: user.id,
               error: error.message,
             });
