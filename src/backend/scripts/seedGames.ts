@@ -16,8 +16,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Longer exhales help activate the body\'s relaxation response and turn down fight-or-flight.',
   },
-      id: 'SS-001',
-
+  {
     question: 'What is a simple way to avoid feeling overwhelmed by a long to-do list?',
     options: ['Rewrite the entire list every hour', 'Start three tasks at once', 'Choose one next tiny step and do only that', 'Wait until you feel motivated'],
     correctIndex: 2,
@@ -25,8 +24,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Focusing on a single clear next action reduces cognitive overload and builds momentum.',
   },
-      id: 'SS-002',
-
+  {
     question: 'Which self-talk line is generally most supportive before a big moment?',
     options: ['I must not mess this up.', 'If I\'m nervous, I\'m failing.', 'I can handle this, even if I feel nervous.', 'They\'re all better than me.'],
     correctIndex: 2,
@@ -34,8 +32,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Accepting nerves while trusting your ability is more effective than perfectionism or self-attack.',
   },
-      id: 'SS-003',
-
+  {
     question: 'What\'s a good first step when you notice your heart racing?',
     options: ['Pretend nothing is happening', 'Judge yourself for being weak', 'Notice the sensation and slow your breathing', 'Immediately cancel your plans'],
     correctIndex: 2,
@@ -43,8 +40,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Noticing physical sensations and adjusting breathing helps regulate your nervous system.',
   },
-      id: 'SS-004',
-
+  {
     question: 'Which habit supports clearer thinking at the start of the day?',
     options: ['Diving into notifications immediately', 'Comparing yourself on social media', 'Spending a minute choosing your top priority', 'Skipping breakfast and coffee'],
     correctIndex: 2,
@@ -52,8 +48,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Naming one top priority gives your brain a clear focal point and reduces scatter.',
   },
-      id: 'SS-005',
-
+  {
     question: 'When you\'re talking to someone, what usually builds connection the most?',
     options: ['Planning your next reply while they talk', 'Interrupting to fix their problem instantly', 'Making eye contact and listening fully', 'Checking your phone often'],
     correctIndex: 2,
@@ -61,8 +56,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Presence and full listening are foundational for feeling seen and connected.',
   },
-      id: 'SS-006',
-
+  {
     question: 'What is a realistic expectation about feeling anxious?',
     options: ['You should never feel it', 'It means you\'re not good enough', 'It\'s uncomfortable but very common', 'It always means something is wrong'],
     correctIndex: 2,
@@ -70,8 +64,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Anxiety is a normal human response; learning to work with it is more helpful than trying to erase it.',
   },
-      id: 'SS-007',
-
+  {
     question: 'Which of these usually supports confidence in your body language?',
     options: ['Staring at the floor', 'Curling your shoulders inward', 'Standing or sitting tall with open posture', 'Crossing your arms tightly'],
     correctIndex: 2,
@@ -79,8 +72,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Upright, open posture supports both how you feel and how others read your presence.',
   },
-      id: 'SS-008',
-
+  {
     question: 'What is a quick way to reduce decision fatigue in a busy day?',
     options: ['Treat every choice as life-or-death', 'Refuse to decide anything', 'Pre-decide a few defaults like lunch or clothes', 'Ask five people for opinions on everything'],
     correctIndex: 2,
@@ -88,8 +80,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Default choices reduce mental load so you can save energy for important decisions.',
   },
-      id: 'SS-009',
-
+  {
     question: 'After a tough day, what reflection pattern is most balanced?',
     options: ['Listing only what went wrong', 'Ignoring the day completely', 'Three things that went well and one thing to improve', 'Asking everyone if you were awkward'],
     correctIndex: 2,
@@ -97,8 +88,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Balanced reflection builds confidence and growth without fueling rumination.',
   },
-      id: 'SS-010',
-
+  {
     question: 'Which breathing pattern is generally most calming?',
     options: ['Inhale 2, exhale 2', 'Inhale 4, exhale 4', 'Inhale 4, exhale 6', 'Inhale 6, exhale 1'],
     correctIndex: 2,
@@ -106,8 +96,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Slightly longer exhales often activate the parasympathetic rest-and-digest response.',
   },
-      id: 'SS-011',
-
+  {
     question: 'What mental move can reduce the intensity of a strong emotion?',
     options: ['Pretending it isn\'t there', 'Blaming yourself for feeling it', 'Naming it, like this is anxiety', 'Overexplaining it to everyone'],
     correctIndex: 2,
@@ -115,8 +104,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Labeling an emotion activates brain regions that help regulate it.',
   },
-      id: 'SS-012',
-
+  {
     question: 'Which thought best supports healthy boundaries?',
     options: ['If I say no, people will hate me.', 'My needs matter too.', 'I must always be available.', 'Only other people\'s feelings count.'],
     correctIndex: 1,
@@ -124,8 +112,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Recognizing that your needs matter is a core foundation of setting boundaries.',
   },
-      id: 'SS-013',
-
+  {
     question: 'What\'s a helpful way to prepare for a difficult conversation?',
     options: ['Decide you must win', 'Rehearse every word you\'ll say', 'Clarify what you feel and what you need', 'Wait until you\'re extremely angry'],
     correctIndex: 2,
@@ -133,8 +120,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Knowing your feelings and needs makes it easier to speak clearly and respectfully.',
   },
-      id: 'SS-014',
-
+  {
     question: 'You\'re overwhelmed by tasks. Which strategy helps most?',
     options: ['Try to do everything at once', 'Sort tasks into today, later, and maybe', 'Work until you collapse', 'Ignore everything'],
     correctIndex: 1,
@@ -142,8 +128,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Prioritizing and deferring reduces overload and builds a sense of control.',
   },
-      id: 'SS-015',
-
+  {
     question: 'Which self-talk line is most supportive after a small mistake?',
     options: ['I always mess everything up.', 'I\'m such an idiot.', 'That didn\'t go how I wanted; I can adjust next time.', 'I should never try anything again.'],
     correctIndex: 2,
@@ -151,8 +136,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Growth-oriented self-talk helps you learn without attacking your worth.',
   },
-      id: 'SS-016',
-
+  {
     question: 'What\'s one way to feel less on display in social situations?',
     options: ['Focus on how you look from the outside', 'Try to impress everyone', 'Shift attention to being curious about others', 'Avoid eye contact and hope no one notices you'],
     correctIndex: 2,
@@ -160,8 +144,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Curiosity about others moves focus away from self-judgment and builds connection.',
   },
-      id: 'SS-017',
-
+  {
     question: 'Which habit most supports long-term mental resilience?',
     options: ['Sleeping less to get more done', 'Ignoring stress until you crash', 'Scheduling regular rest and breaks', 'Relying only on willpower'],
     correctIndex: 2,
@@ -169,8 +152,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Rest is a key part of resilience; the brain and body need recovery to perform well.',
   },
-      id: 'SS-018',
-
+  {
     question: 'You\'re spiraling on what if thoughts. What helps most?',
     options: ['Chasing every scenario in detail', 'Asking what\'s in my control right now', 'Asking others to reassure you repeatedly', 'Pretending you\'re not worried'],
     correctIndex: 1,
@@ -178,8 +160,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Focusing on controllable actions grounds your attention and reduces helplessness.',
   },
-      id: 'SS-019',
-
+  {
     question: 'Which daily habit best supports clarity of mind?',
     options: ['Constant multitasking', 'Zero breaks all day', 'Short intentional pauses between activities', 'Checking notifications every minute'],
     correctIndex: 2,
@@ -187,8 +168,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Pausing gives your brain space to reset and prevents mental smear between tasks.',
   },
-      id: 'SS-020',
-
+  {
     question: 'What\'s a healthier expectation about relationships?',
     options: ['No one should ever disagree with you', 'Conflict means the relationship is doomed', 'Some tension is normal; how you handle it matters', 'You must keep everyone happy'],
     correctIndex: 2,
@@ -196,8 +176,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Mindful conflict and repair are part of healthy relationships.',
   },
-      id: 'SS-021',
-
+  {
     question: 'Which action can quickly shift your mood during a heavy day?',
     options: ['Sitting still and catastrophizing', 'Getting a small dose of movement and light', 'Doom-scrolling', 'Replaying an argument repeatedly'],
     correctIndex: 1,
@@ -205,8 +184,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Light and movement influence brain chemistry and can lift mood.',
   },
-      id: 'SS-022',
-
+  {
     question: 'What\'s an effective way to prepare for performance situations?',
     options: ['Visualize everything going perfectly only', 'Visualize yourself coping well even if it\'s imperfect', 'Avoid thinking about it until the last minute', 'Assume failure to protect yourself'],
     correctIndex: 1,
@@ -214,8 +192,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Visualizing coping skills builds confidence that you can handle challenges, not just best-case scenarios.',
   },
-      id: 'SS-023',
-
+  {
     question: 'When is it most useful to say no?',
     options: ['When you want to punish someone', 'When a request violates your limits or priorities', 'When you feel slightly bored', 'When you don\'t understand your own needs'],
     correctIndex: 1,
@@ -223,8 +200,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Boundaries protect your time, energy, and values, not random moods.',
   },
-      id: 'SS-024',
-
+  {
     question: 'Which practice is most likely to reduce long-term anxiety?',
     options: ['Avoiding anything that feels scary', 'Gradually facing manageable challenges with support', 'Overthinking every possible outcome', 'Forcing yourself to just get over it instantly'],
     correctIndex: 1,
@@ -232,8 +208,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Gradual exposure builds evidence that you can tolerate discomfort and still function.',
   },
-      id: 'SS-025',
-
+  {
     question: 'You notice you often feel resentful. What might be missing?',
     options: ['Enough self-criticism', 'Constant agreement with everyone', 'Clear boundaries and honest communication', 'More people-pleasing'],
     correctIndex: 2,
@@ -241,8 +216,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Resentment often signals unspoken needs and weak boundaries.',
   },
-      id: 'SS-026',
-
+  {
     question: 'What\'s a strong signal of emotional safety with someone?',
     options: ['You feel you must edit everything you say', 'You\'re scared to share mistakes', 'You can show vulnerability without constant fear of attack', 'You never disagree'],
     correctIndex: 2,
@@ -250,8 +224,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Safety shows up when you can be imperfect and still feel accepted.',
   },
-      id: 'SS-027',
-
+  {
     question: 'Which combination best supports deep work?',
     options: ['Constantly checking messages and social tabs', 'One defined block of time with notifications off', 'No plan and reacting to everything', 'Switching tasks every two minutes'],
     correctIndex: 1,
@@ -259,8 +232,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Protected time and reduced distractions help the brain sustain focus.',
   },
-      id: 'SS-028',
-
+  {
     question: 'Which self-belief is most supportive of long-term growth?',
     options: ['If I\'m not naturally good, it\'s pointless.', 'Effort and feedback can improve most skills.', 'Trying is embarrassing.', 'Only other people improve.'],
     correctIndex: 1,
@@ -268,8 +240,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'A growth mindset frames effort as the path to mastery instead of proof of inadequacy.',
   },
-      id: 'SS-029',
-
+  {
     question: 'You\'ve had a very emotionally intense day. What\'s a healthy evening response?',
     options: ['Numb out with endless stimulation', 'Replay every conversation in detail', 'Do a short grounding practice and choose one nurturing activity', 'Decide you\'re broken'],
     correctIndex: 2,
@@ -277,8 +248,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Grounding plus one caring action supports recovery without denial or obsession.',
   },
-      id: 'SS-030',
-
+  {
     question: 'Which best describes emotional regulation?',
     options: ['Never feeling strong emotions', 'Controlling other people\'s behavior', 'Noticing emotions and responding skillfully', 'Ignoring your feelings until they explode'],
     correctIndex: 2,
@@ -286,8 +256,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Regulation is about managing your response, not suppressing emotions or controlling others.',
   },
-      id: 'SS-031',
-
+  {
     question: 'Which quick question can help during a conflict?',
     options: ['How do I win this?', 'How do I make you feel guilty?', 'What am I actually needing right now?', 'How can I avoid saying anything?'],
     correctIndex: 2,
@@ -295,8 +264,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Knowing your underlying need makes it easier to communicate constructively.',
   },
-      id: 'SS-032',
-
+  {
     question: 'What is a common thinking trap when anxious?',
     options: ['Seeing multiple viewpoints', 'Assuming the best', 'Catastrophizing about worst-case scenarios', 'Pausing to verify facts'],
     correctIndex: 2,
@@ -304,8 +272,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Catastrophizing jumps to worst-case outcomes without evidence and feeds anxiety.',
   },
-      id: 'SS-033',
-
+  {
     question: 'Which is a helpful minimum plan on very low-energy days?',
     options: ['Do everything perfectly or nothing at all', 'Choose one tiny win and one act of care', 'Force maximum productivity no matter what', 'Hide from life completely'],
     correctIndex: 1,
@@ -313,8 +280,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Tiny goals and self-care maintain momentum without unrealistic pressure.',
   },
-      id: 'SS-034',
-
+  {
     question: 'What does self-compassion not mean?',
     options: ['Letting yourself off the hook for everything forever', 'Treating yourself with basic kindness', 'Recognizing common human struggles', 'Encouraging yourself like a friend'],
     correctIndex: 0,
@@ -322,8 +288,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Self-compassion is not avoiding responsibility; it\'s facing reality without self-cruelty.',
   },
-      id: 'SS-035',
-
+  {
     question: 'Which short phrase can interrupt a spiral of self-criticism?',
     options: ['This proves I\'m worthless.', 'Hold on, what else is true?', 'Let\'s list all my flaws.', 'I must replay this forever.'],
     correctIndex: 1,
@@ -331,8 +296,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Asking what else is true widens your perspective beyond the harsh narrative.',
   },
-      id: 'SS-036',
-
+  {
     question: 'What\'s a good rule of thumb when sending emotional messages?',
     options: ['Send when furious, no edits', 'Share them with everyone you know', 'Draft, pause, and send after emotions settle', 'Never express feelings at all'],
     correctIndex: 2,
@@ -340,8 +304,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Time creates distance that helps you communicate more clearly and less reactively.',
   },
-      id: 'SS-037',
-
+  {
     question: 'You often say yes when you mean no. What\'s a helpful first step?',
     options: ['Blame others for asking', 'Notice your body\'s reaction when someone asks', 'Agree even faster', 'Stop speaking to people'],
     correctIndex: 1,
@@ -349,8 +312,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Your body often reacts before your words; noticing tension can signal a boundary is needed.',
   },
-      id: 'SS-038',
-
+  {
     question: 'Which practice can deepen your sense of meaning in life?',
     options: ['Constant comparison', 'Naming what matters to you and acting in line with it', 'Ignoring your values', 'Doing what others expect 100% of the time'],
     correctIndex: 1,
@@ -358,8 +320,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Values-based actions create a sense of coherence and meaning.',
   },
-      id: 'SS-039',
-
+  {
     question: 'Which is a good indicator that you may need a reset, not more effort?',
     options: ['You still care and feel energized', 'You feel chronically exhausted and numb', 'You\'re excited to experiment', 'You feel rested and curious'],
     correctIndex: 1,
@@ -367,8 +328,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Exhaustion and numbness suggest burnout; rest and reset come before sustainable effort.',
   },
-      id: 'SS-040',
-
+  {
     question: 'Which short mental move can reduce social anxiety in a group?',
     options: ['Everyone is judging me', 'I have to impress all of them', 'Someone else here probably feels nervous too', 'I should leave immediately'],
     correctIndex: 2,
@@ -376,8 +336,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Recognizing shared humanity softens the sense of isolation and scrutiny.',
   },
-      id: 'SS-041',
-
+  {
     question: 'Which trio is a strong basic self-care check?',
     options: ['Sleep, food, movement', 'Status, followers, likes', 'Gossip, complaints, judgment', 'Work, work, work'],
     correctIndex: 0,
@@ -385,8 +344,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Sleep, nutrition, and physical movement strongly influence mental state.',
   },
-      id: 'SS-042',
-
+  {
     question: 'You\'re stuck overthinking a decision with similar options. What helps?',
     options: ['Gather infinite more data', 'Ask 20 people what to do', 'Set a time limit, decide, and commit to learning from it', 'Do nothing and hope it disappears'],
     correctIndex: 2,
@@ -394,8 +352,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'For good-enough choices, timely decisions plus learning beat perfectionistic delay.',
   },
-      id: 'SS-043',
-
+  {
     question: 'Which question can help you reprioritize a crowded day?',
     options: ['What will impress people most?', 'What would be most embarrassing to skip?', 'What, if done today, would matter most a week from now?', 'What lets me avoid my feelings?'],
     correctIndex: 2,
@@ -403,8 +360,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Future-oriented thinking highlights tasks with lasting impact.',
   },
-      id: 'SS-044',
-
+  {
     question: 'What\'s a healthy way to respond when someone else is emotional?',
     options: ['Tell them they\'re overreacting', 'Compete with your own story', 'Listen, reflect what you heard, then respond', 'Change the subject quickly'],
     correctIndex: 2,
@@ -412,8 +368,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Reflection helps them feel understood and lowers defensiveness.',
   },
-      id: 'SS-045',
-
+  {
     question: 'Which technique can help transform I am anxious into something less fused?',
     options: ['I am anxiety forever.', 'I feel some anxiety right now.', 'Anxiety means I\'m broken.', 'Anxiety will always win.'],
     correctIndex: 1,
@@ -421,8 +376,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Describing emotions as experiences, not identities, reduces fusion and increases flexibility.',
   },
-      id: 'SS-046',
-
+  {
     question: 'When is it often better to rest rather than push?',
     options: ['When you\'re slightly bored', 'When you\'re deeply exhausted and nothing feels meaningful', 'When you\'re mildly challenged', 'When you\'re close to finishing something important'],
     correctIndex: 1,
@@ -430,8 +384,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Deep exhaustion is a sign you need recovery for long-term functioning.',
   },
-      id: 'SS-047',
-
+  {
     question: 'What is one benefit of writing worries down on paper?',
     options: ['It makes them bigger', 'It guarantees they come true', 'It gets them out of your head and into a container', 'It proves you\'re dramatic'],
     correctIndex: 2,
@@ -439,8 +392,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Externalizing worries gives you distance and allows prioritization.',
   },
-      id: 'SS-048',
-
+  {
     question: 'If you want to build more confidence socially, which is a better goal?',
     options: ['Never feel nervous again', 'Always be the most interesting person', 'Take one small social risk regularly', 'Only talk when you\'re perfect'],
     correctIndex: 2,
@@ -448,8 +400,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Small, repeated risks create evidence that you can handle social discomfort.',
   },
-      id: 'SS-049',
-
+  {
     question: 'What\'s a simple grounding exercise you can use almost anywhere?',
     options: ['Holding your breath until you feel dizzy', 'Listing every mistake you\'ve made', 'Naming 5 things you can see, 4 you can feel, 3 you can hear, 2 you can smell, 1 you can taste', 'Shouting your worries'],
     correctIndex: 2,
@@ -457,8 +408,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'The 5-4-3-2-1 technique anchors you in your senses and the present moment.',
   },
-      id: 'SS-050',
-
+  {
     question: 'When you wake up already tense, what\'s a gentle first move?',
     options: ['Grab your phone and check everything', 'Tell yourself the day is ruined', 'Take 3 slow breaths before doing anything else', 'Force yourself to act cheerful'],
     correctIndex: 2,
@@ -466,8 +416,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Starting with a few slow breaths gives your nervous system a softer entry into the day.',
   },
-      id: 'SS-051',
-
+  {
     question: 'What\'s a mentally healthy way to think about bad days?',
     options: ['Proof that you\'re failing at life', 'Something you must hide from everyone', 'Normal parts of being human that eventually pass', 'Something you should be ashamed of'],
     correctIndex: 2,
@@ -475,8 +424,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Bad days are part of being human; seeing them as temporary prevents extra suffering.',
   },
-      id: 'SS-052',
-
+  {
     question: 'Which habit can quietly drain your confidence over time?',
     options: ['Taking small risks regularly', 'Asking questions when confused', 'Constantly comparing yourself to others', 'Celebrating your own progress'],
     correctIndex: 2,
@@ -484,8 +432,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Chronic comparison focuses your attention on what you lack instead of what you\'re building.',
   },
-      id: 'SS-053',
-
+  {
     question: 'What\'s a simple way to turn vague stress into something more manageable?',
     options: ['Pretend you feel nothing', 'Describe what you\'re stressed about in one sentence', 'Assume everything will collapse', 'Wait for someone else to fix it'],
     correctIndex: 1,
@@ -493,8 +440,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Putting stress into one clear sentence makes it easier to work with.',
   },
-      id: 'SS-054',
-
+  {
     question: 'Which of these is a sign you might be emotionally overloaded?',
     options: ['You feel slightly tired', 'You\'re laughing at memes', 'Small inconveniences trigger big reactions', 'You enjoy quiet time alone'],
     correctIndex: 2,
@@ -502,8 +448,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'When tiny events trigger big reactions, it often signals your emotional bandwidth is low.',
   },
-      id: 'SS-055',
-
+  {
     question: 'What mindset supports healthy connection with others?',
     options: ['I must be impressive at all times', 'I can be curious and genuine instead of perfect', 'I should hide any vulnerability', 'I need everyone to like me'],
     correctIndex: 1,
@@ -511,8 +456,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Curiosity and authenticity foster real connection more than constant self-performance.',
   },
-      id: 'SS-056',
-
+  {
     question: 'What\'s a helpful first step if you feel emotionally numb?',
     options: ['Judge yourself for feeling that way', 'Force intense positivity', 'Gently check basic needs and give yourself one small caring action', 'Demand immediate motivation'],
     correctIndex: 2,
@@ -520,8 +464,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Responding to numbness with basic care can slowly wake your system back up.',
   },
-      id: 'SS-057',
-
+  {
     question: 'Which short phrase best reflects self-acceptance during growth?',
     options: ['If I\'m not fixed yet, I\'ve failed', 'I can only start once I\'m ready', 'I\'m a work in progress and that\'s okay', 'I must change everything overnight'],
     correctIndex: 2,
@@ -529,8 +472,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Accepting yourself as in-progress reduces shame and supports sustainable change.',
   },
-      id: 'SS-058',
-
+  {
     question: 'What can you do when your thoughts won\'t stop looping?',
     options: ['Keep arguing with them in your head', 'Write them down and choose a tiny action or a time to revisit', 'Assume the loop means disaster', 'Try to erase them by force'],
     correctIndex: 1,
@@ -538,8 +480,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Externalizing thoughts and deciding on action or timing breaks the endless loop.',
   },
-      id: 'SS-059',
-
+  {
     question: 'Which approach is most likely to help with long-term habits?',
     options: ['All-or-nothing bursts of effort', 'Shaming yourself until you change', 'Small consistent steps tied to your values', 'Waiting until you feel completely ready'],
     correctIndex: 2,
@@ -547,8 +488,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Small, values-based steps are more sustainable than extreme bursts or shame.',
   },
-      id: 'SS-060',
-
+  {
     question: 'What\'s a helpful question during moments of social insecurity?',
     options: ['Do they secretly hate me?', 'How can I make them feel small?', 'What would it feel like to be kind to myself right now?', 'Why am I always the worst?'],
     correctIndex: 2,
@@ -556,8 +496,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Self-kindness reduces the intensity of social insecurity and supports calmer choices.',
   },
-      id: 'SS-061',
-
+  {
     question: 'When you\'re emotionally triggered, what\'s an early warning sign?',
     options: ['You feel totally relaxed', 'Your body tightens or your heart speeds up', 'You feel curious and open', 'You suddenly want to dance'],
     correctIndex: 1,
@@ -565,8 +504,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Physical changes often show up before you consciously notice an emotional trigger.',
   },
-      id: 'SS-062',
-
+  {
     question: 'What is a good rule for rest on days you feel guilty for slowing down?',
     options: ['Rest only if you absolutely collapse', 'Rest is earned only by being perfect', 'Rest is fuel, not a reward', 'Rest means you\'re lazy'],
     correctIndex: 2,
@@ -574,8 +512,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Seeing rest as fuel reframes it as part of performance, not a moral failure.',
   },
-      id: 'SS-063',
-
+  {
     question: 'Which sentence best reflects a growth mindset after feedback?',
     options: ['This proves I\'m terrible.', 'I\'ll never get better.', 'This is painful, but it can help me improve.', 'I should never try again.'],
     correctIndex: 2,
@@ -583,8 +520,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Seeing feedback as information for growth, even when it hurts, builds resilience.',
   },
-      id: 'SS-064',
-
+  {
     question: 'Which small move can increase clarity in relationships?',
     options: ['Assume you know what others think', 'Ask a simple clarifying question instead of guessing', 'Avoid conversations that feel awkward', 'Overanalyze their last text for hours'],
     correctIndex: 1,
@@ -592,8 +528,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Clarifying questions reduce assumptions and quiet a lot of mental noise.',
   },
-      id: 'SS-065',
-
+  {
     question: 'What\'s a helpful way to respond to your own jealousy?',
     options: ['Attack the person you\'re jealous of', 'Pretend you feel nothing', 'Notice what the jealousy is pointing to that you care about', 'Decide you\'re a bad person'],
     correctIndex: 2,
@@ -601,8 +536,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Jealousy often reveals something you value or desire; noticing that is more useful than shame.',
   },
-      id: 'SS-066',
-
+  {
     question: 'When does scrolling often become harmful for mental health?',
     options: ['When it\'s short and intentional', 'When it helps you relax briefly', 'When it replaces sleep, connection, or actions you care about', 'When you watch one funny video'],
     correctIndex: 2,
@@ -610,8 +544,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Scrolling turns harmful when it regularly displaces rest, connection, or meaningful action.',
   },
-      id: 'SS-067',
-
+  {
     question: 'Which question best supports emotional regulation in a heated moment?',
     options: ['How can I prove I\'m right?', 'How can I hurt them back?', 'What would future me be proud I did here?', 'How do I make them feel small?'],
     correctIndex: 2,
@@ -619,8 +552,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Thinking from the perspective of future you often leads to calmer, wiser choices.',
   },
-      id: 'SS-068',
-
+  {
     question: 'What\'s a helpful way to view your own emotional triggers?',
     options: ['Evidence that you\'re broken', 'Random flaws you must hide', 'Signals from old experiences that still need care', 'Proof you can\'t be trusted'],
     correctIndex: 2,
@@ -628,8 +560,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Triggers often come from past pain; seeing them as signals needing care is more healing.',
   },
-      id: 'SS-069',
-
+  {
     question: 'When is it especially important to slow down your responses?',
     options: ['When you feel grounded and relaxed', 'When you feel strong emotions and want to react instantly', 'When nothing is happening', 'When you\'re enjoying yourself'],
     correctIndex: 1,
@@ -637,8 +568,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Strong emotion plus instant reaction often leads to regret; slowing down helps.',
   },
-      id: 'SS-070',
-
+  {
     question: 'Which mindset supports healthier self-worth?',
     options: ['My worth equals my productivity', 'My worth equals others\' approval', 'My worth is inherent; my actions are separate and can improve', 'My worth depends on never failing'],
     correctIndex: 2,
@@ -646,8 +576,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Separating worth from performance reduces shame and supports growth.',
   },
-      id: 'SS-071',
-
+  {
     question: 'What\'s a good first move when you feel disconnected from yourself?',
     options: ['Scroll more to distract', 'Check in with your body and breath for 30 seconds', 'Criticize yourself for feeling off', 'Promise you\'ll fix everything tomorrow'],
     correctIndex: 1,
@@ -655,8 +584,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Body and breath awareness are simple ways to reconnect with yourself in the moment.',
   },
-      id: 'SS-072',
-
+  {
     question: 'Which practice can make it easier to fall asleep mentally?',
     options: ['Replaying every awkward moment of the day', 'Planning every detail of tomorrow in your head', 'Doing a gentle wind-down ritual and putting worries on paper', 'Checking messages until you\'re exhausted'],
     correctIndex: 2,
@@ -664,8 +592,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Wind-down rituals and offloading worries help signal your brain that it\'s safe to rest.',
   },
-      id: 'SS-073',
-
+  {
     question: 'What can you ask yourself when you feel you must fix someone else\'s feelings?',
     options: ['How can I control them completely?', 'Why are they doing this to me?', 'What is actually my responsibility here and what is theirs?', 'How do I get them to act how I want?'],
     correctIndex: 2,
@@ -673,8 +600,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Distinguishing your responsibility from theirs protects your energy and boundaries.',
   },
-      id: 'SS-074',
-
+  {
     question: 'What is often the most effective next step after noticing you\'re overwhelmed?',
     options: ['Keep pushing at the same speed', 'Tell yourself to toughen up', 'Pause, downshift your nervous system, then pick one doable next move', 'Decide you\'re incapable'],
     correctIndex: 2,
@@ -682,8 +608,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Regulating your state first, then choosing one step, is more effective than brute forcing through overwhelm.',
   },
-      id: 'SS-075',
-
+  {
     question: 'You feel rushed and scattered. What\'s the most grounding first step?',
     options: ['Open every app at once', 'Pick one task and list its first step', 'Promise you\'ll catch up later', 'Complain in every group chat'],
     correctIndex: 1,
@@ -691,8 +616,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Choosing a single task and first step gives your brain a clear anchor.',
   },
-      id: 'SS-076',
-
+  {
     question: 'What\'s a simple cue that your social battery might be low?',
     options: ['You feel slightly bored', 'You feel heavy and drained after small interactions', 'You feel curious about people', 'You want to plan a gathering'],
     correctIndex: 1,
@@ -700,8 +624,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Feeling drained after small interactions often signals low social energy.',
   },
-      id: 'SS-077',
-
+  {
     question: 'Before a hard conversation, what\'s a helpful mental move?',
     options: ['Decide you must win', 'Imagine them as an enemy', 'Clarify your two main points and one need', 'Hope it fixes itself'],
     correctIndex: 2,
@@ -709,8 +632,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Knowing your points and needs keeps you focused and calmer in the moment.',
   },
-      id: 'SS-078',
-
+  {
     question: 'What\'s a realistic way to think about nerves before something important?',
     options: ['Proof you\'re not ready', 'A normal body response to something that matters', 'A sign you must cancel', 'Evidence you\'re weak'],
     correctIndex: 1,
@@ -718,8 +640,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Nerves often mean you care, not that you\'re incapable.',
   },
-      id: 'SS-079',
-
+  {
     question: 'You keep replaying a conversation. What helps reduce the spiral?',
     options: ['Rewrite every line in your head', 'Decide you ruined everything', 'Extract one lesson and gently redirect your attention', 'Ask five people if you were weird'],
     correctIndex: 2,
@@ -727,8 +648,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Finding one takeaway gives closure and makes it easier to move on.',
   },
-      id: 'SS-080',
-
+  {
     question: 'What\'s a sign you might be overcommitted?',
     options: ['You feel excited and rested', 'Your calendar has breathing room', 'You dread plans you once wanted', 'You have free evenings'],
     correctIndex: 2,
@@ -736,8 +656,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Dreading earlier yeses often signals your future time is oversold.',
   },
-      id: 'SS-081',
-
+  {
     question: 'What mindset supports healthier use of productivity tools?',
     options: ['They must fix my whole life instantly', 'They help, but I\'m still human', 'If they don\'t work, I\'m broken', 'I should try all of them at once'],
     correctIndex: 1,
@@ -745,8 +664,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Seeing tools as support, not magic, keeps expectations grounded.',
   },
-      id: 'SS-082',
-
+  {
     question: 'You notice you\'re snapping at people. What\'s a strong next move?',
     options: ['Blame them for everything', 'Ignore it and carry on', 'Pause, check your stress level, and take a short reset', 'Cut off all contact'],
     correctIndex: 2,
@@ -754,8 +672,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'A pause plus reset can lower reactivity and protect your relationships.',
   },
-      id: 'SS-083',
-
+  {
     question: 'What\'s a helpful question when deciding whether to say yes to a new request?',
     options: ['Will they like me more?', 'Could I do this today without resentment?', 'Will this impress everyone?', 'How do I avoid feeling guilty?'],
     correctIndex: 1,
@@ -763,8 +680,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Considering future resentment is a powerful boundary check.',
   },
-      id: 'SS-084',
-
+  {
     question: 'When self-doubt shows up, what response is most supportive?',
     options: ['Agree with it completely', 'Try to never feel it', 'Notice it and look for one piece of evidence you can handle this', 'Hide from anything difficult'],
     correctIndex: 2,
@@ -772,8 +688,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Balancing doubt with evidence of your capability builds confidence.',
   },
-      id: 'SS-085',
-
+  {
     question: 'You feel behind on everything. What\'s a practical first move?',
     options: ['Panic and work randomly', 'Quit all your goals', 'List all tasks, then pick the top one thing that reduces the most stress', 'Wait for a perfect day'],
     correctIndex: 2,
@@ -781,8 +696,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Prioritizing by stress-reduction gives the quickest sense of relief.',
   },
-      id: 'SS-086',
-
+  {
     question: 'Which expectation about friendships is usually healthier?',
     options: ['Friends must be available 24/7', 'If we disagree, it\'s over', 'We can care a lot and still miss each other sometimes', 'They must read my mind'],
     correctIndex: 2,
@@ -790,8 +704,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Allowing for imperfection makes relationships more resilient.',
   },
-      id: 'SS-087',
-
+  {
     question: 'What\'s a small way to bring more intention into your morning?',
     options: ['Start scrolling in bed', 'List everything that might go wrong', 'Choose a 3-word theme for how you want to show up', 'Check messages before you\'re fully awake'],
     correctIndex: 2,
@@ -799,8 +712,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'A simple theme focuses your energy and attention for the day.',
   },
-      id: 'SS-088',
-
+  {
     question: 'You\'re stuck in analysis paralysis. What helps you break the freeze?',
     options: ['Consider more options', 'Ask more people', 'Set a decision deadline and define what counts as good enough', 'Wait for a sign'],
     correctIndex: 2,
@@ -808,8 +720,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Defining good enough and a deadline reduces decision anxiety.',
   },
-      id: 'SS-089',
-
+  {
     question: 'Which thought supports rest on a day you didn\'t finish everything?',
     options: ['I don\'t deserve rest', 'Rest only after perfection', 'I moved things forward; recharging will help me continue', 'I have to punish myself'],
     correctIndex: 2,
@@ -817,8 +728,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Viewing rest as part of progress, not a reward, is healthier long-term.',
   },
-      id: 'SS-090',
-
+  {
     question: 'In stressful talks, what\'s a powerful listening behavior?',
     options: ['Interrupt to correct details', 'Draft your rebuttal while they speak', 'Reflect back what you heard before responding', 'Stare at your phone'],
     correctIndex: 2,
@@ -826,8 +736,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Reflection reduces misinterpretation and helps both sides feel heard.',
   },
-      id: 'SS-091',
-
+  {
     question: 'Your inner critic is loud. What\'s a first step to soften it?',
     options: ['Treat it like the absolute truth', 'Try to never think again', 'Ask whose voice it sounds like and if it\'s realistic', 'Hide from feedback'],
     correctIndex: 2,
@@ -835,8 +744,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Questioning where criticism comes from loosens its grip.',
   },
-      id: 'SS-092',
-
+  {
     question: 'What\'s a sign your body may need a quick reset, not more effort?',
     options: ['You feel curious and focused', 'You\'re energized by tasks', 'You\'re rereading the same line three times', 'You\'re having fun'],
     correctIndex: 2,
@@ -844,8 +752,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Cognitive glitches like rereading can signal tiredness or overload.',
   },
-      id: 'SS-093',
-
+  {
     question: 'What\'s a helpful way to respond when someone sets a boundary with you?',
     options: ['Take it as an attack', 'Try to argue them out of it', 'Thank them for being clear, even if you feel disappointed', 'Ignore it'],
     correctIndex: 2,
@@ -853,8 +760,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Honoring others\' boundaries supports healthier relationships.',
   },
-      id: 'SS-094',
-
+  {
     question: 'You\'re about to send an emotional message. What\'s a wise move?',
     options: ['Send it the second you type it', 'Make it as long as possible', 'Draft it, step away, and reread with a cooler head', 'Add sarcasm to make your point'],
     correctIndex: 2,
@@ -862,8 +768,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Space between drafting and sending can prevent unnecessary damage.',
   },
-      id: 'SS-095',
-
+  {
     question: 'Which practice supports steady confidence more than hype?',
     options: ['Telling yourself you\'re perfect', 'Ignoring all feedback', 'Doing small hard things regularly and noticing them', 'Depending only on praise'],
     correctIndex: 2,
@@ -871,8 +776,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Confidence grows from evidence that you handle difficulty, not from hype alone.',
   },
-      id: 'SS-096',
-
+  {
     question: 'What\'s a quick way to ground in a noisy environment?',
     options: ['Increase the volume in your headphones', 'Focus on three things you can see clearly', 'Match the noise by talking louder', 'Leave your body mentally'],
     correctIndex: 1,
@@ -880,8 +784,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Visual grounding helps stabilize your attention when sound is chaotic.',
   },
-      id: 'SS-097',
-
+  {
     question: 'You\'re worried about how you came across in a group. What helps most?',
     options: ['Assume the worst', 'Rewatch it in your head all night', 'Ask yourself if you\'d judge someone else as harshly', 'Decide you\'re socially broken'],
     correctIndex: 2,
@@ -889,8 +792,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Perspective-taking softens harsh self-judgment about social moments.',
   },
-      id: 'SS-098',
-
+  {
     question: 'Which mental move can make feedback easier to digest?',
     options: ['Hear only the negative pieces', 'See it as a verdict on your worth', 'Treat it as data about behavior, not about your value', 'Avoid it forever'],
     correctIndex: 2,
@@ -898,8 +800,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Separating behavior from worth keeps feedback usable and less painful.',
   },
-      id: 'SS-099',
-
+  {
     question: 'You feel a strong urge to avoid something important. What\'s a helpful idea?',
     options: ['Avoidance means safety', 'You\'re not allowed to feel fear', 'Fear can ride along while you still take a small step', 'You must wait until you feel no fear'],
     correctIndex: 2,
@@ -907,8 +808,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Allowing fear but acting in small ways builds courage over time.',
   },
-      id: 'SS-100',
-
+  {
     question: 'At night your thoughts get loud. What\'s a practical first step?',
     options: ['Stay in bed scrolling', 'Plan every detail tomorrow in your head', 'Write worries down and promise to revisit them when rested', 'Judge yourself for being awake'],
     correctIndex: 2,
@@ -916,8 +816,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Parking worries on paper tells your brain they\'re noted for later.',
   },
-      id: 'SS-101',
-
+  {
     question: 'What\'s a helpful way to think about progress on long-term goals?',
     options: ['If it\'s not fast, it\'s failure', 'If you slip once, it\'s over', 'Progress is often uneven and still counts', 'Only perfect streaks matter'],
     correctIndex: 2,
@@ -925,8 +824,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Allowing uneven progress keeps you engaged instead of giving up.',
   },
-      id: 'SS-102',
-
+  {
     question: 'You\'re feeling lonely. What\'s a small, realistic step?',
     options: ['Decide you\'re unlovable', 'Wait for others to read your mind', 'Send one low-pressure message or reaction to someone you trust', 'Delete all contacts'],
     correctIndex: 2,
@@ -934,8 +832,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Small bids for connection are easier to attempt and sustain.',
   },
-      id: 'SS-103',
-
+  {
     question: 'Which mindset helps you handle busy seasons?',
     options: ['I must be perfect everywhere', 'I can\'t ask for help', 'This is a season, and I can adjust my standards temporarily', 'If I slow down, everything collapses'],
     correctIndex: 2,
@@ -943,8 +840,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Viewing stress as temporary allows flexible standards without giving up.',
   },
-      id: 'SS-104',
-
+  {
     question: 'You feel intimidated in a room of impressive people. What helps?',
     options: ['List every way you fall short', 'Assume they\'re judging you', 'Remember you\'re here for a reason and stay curious about them', 'Stay silent to be safe'],
     correctIndex: 2,
@@ -952,8 +848,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Balancing self-worth with curiosity keeps you engaged instead of frozen.',
   },
-      id: 'SS-105',
-
+  {
     question: 'You have a free evening but feel restless. What\'s a helpful move?',
     options: ['Fill it with random scrolling', 'Work until midnight', 'Pick one nourishing activity and commit to 15 minutes', 'Tell yourself you\'re wasting life'],
     correctIndex: 2,
@@ -961,8 +856,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Choosing one intentional activity calms restlessness and adds meaning.',
   },
-      id: 'SS-106',
-
+  {
     question: 'What\'s a small way to make future-you\'s life easier?',
     options: ['Leave every task for later', 'Add more random commitments', 'Do one tiny prep step now', 'Assume future-you will handle everything'],
     correctIndex: 2,
@@ -970,8 +864,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Tiny prep actions reduce stress for your future self.',
   },
-      id: 'SS-107',
-
+  {
     question: 'You tend to overtalk when nervous. What helps before you walk in?',
     options: ['Plan to talk even more', 'Avoid breathing deeply', 'Set one intention: listen first, then respond', 'Promise to say nothing'],
     correctIndex: 2,
@@ -979,8 +872,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Choosing to listen first slows you down and reduces nervous chatter.',
   },
-      id: 'SS-108',
-
+  {
     question: 'What\'s a sign you may be treating thoughts as facts?',
     options: ['You question them sometimes', 'You can see multiple angles', 'You say I know this is true about me without evidence', 'You adjust when new info appears'],
     correctIndex: 2,
@@ -988,8 +880,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Believing harsh thoughts without evidence suggests fusion with them.',
   },
-      id: 'SS-109',
-
+  {
     question: 'You want to build a new habit but feel overwhelmed. Where to start?',
     options: ['Change everything at once', 'Wait for motivation', 'Shrink the habit to something you can do on your worst day', 'Set 10 huge goals'],
     correctIndex: 2,
@@ -997,8 +888,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Designing habits for low-energy days makes them more sustainable.',
   },
-      id: 'SS-110',
-
+  {
     question: 'What\'s a healthy way to interpret needing help?',
     options: ['Proof you\'re failing', 'A normal part of being human', 'Something to be hidden', 'A sign you can never handle anything'],
     correctIndex: 1,
@@ -1006,8 +896,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Needing help is a universal human experience, not a flaw.',
   },
-      id: 'SS-111',
-
+  {
     question: 'During a conflict, what mental move lowers the temperature?',
     options: ['Assume the worst intention', 'Raise your voice', 'Ask what problem are we both trying to solve?', 'Keep score of every past mistake'],
     correctIndex: 2,
@@ -1015,8 +904,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Focusing on the shared problem instead of blame opens space for solutions.',
   },
-      id: 'SS-112',
-
+  {
     question: 'You\'re stuck on a creative task. What helps more than forcing it?',
     options: ['Stare at the screen in frustration', 'Tell yourself you\'re not creative', 'Take a short walk or change environment', 'Quit the project'],
     correctIndex: 2,
@@ -1024,8 +912,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Changing context often refreshes your thinking and ideas.',
   },
-      id: 'SS-113',
-
+  {
     question: 'What belief supports healthier use of breaks?',
     options: ['Breaks are laziness', 'Breaks ruin momentum', 'Breaks are part of performance and help you come back sharper', 'Breaks must be earned by suffering'],
     correctIndex: 2,
@@ -1033,8 +920,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Seeing breaks as performance tools makes them easier to take without guilt.',
   },
-      id: 'SS-114',
-
+  {
     question: 'You notice you\'re people-pleasing. What\'s a gentle first step?',
     options: ['Say yes even faster', 'Agree then resent them later', 'Pause before answering and ask if this fits your capacity', 'Cut them off completely'],
     correctIndex: 2,
@@ -1042,8 +928,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'A short pause creates space for a more honest answer.',
   },
-      id: 'SS-115',
-
+  {
     question: 'You feel awkward after sharing something honest. What\'s a helpful thought?',
     options: ['I overshared and ruined everything', 'They\'re definitely judging me', 'Sharing honestly is part of real connection, even if it feels vulnerable', 'I should never be honest again'],
     correctIndex: 2,
@@ -1051,8 +936,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Normalizing vulnerability makes it easier to keep showing up authentically.',
   },
-      id: 'SS-116',
-
+  {
     question: 'What\'s a sign you may need more play or creativity in your week?',
     options: ['You sometimes feel calm', 'You occasionally laugh', 'Everything feels like a to-do, even fun things', 'You sleep well'],
     correctIndex: 2,
@@ -1060,8 +944,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'When everything is reduced to tasks, your system may be starved of play.',
   },
-      id: 'SS-117',
-
+  {
     question: 'You\'re about to enter a potentially tense scene. What posture helps?',
     options: ['Crossed arms, chin raised', 'Slouched and closed off', 'Upright, shoulders relaxed, feet grounded', 'Pacing constantly'],
     correctIndex: 2,
@@ -1069,8 +952,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Grounded, open posture supports calm and respectful presence.',
   },
-      id: 'SS-118',
-
+  {
     question: 'Someone cancels on you last minute. What response protects your peace most?',
     options: ['Decide no one cares about you', 'Insult them immediately', 'Feel your disappointment and adjust your plan with care for yourself', 'Pretend you don\'t care at all'],
     correctIndex: 2,
@@ -1078,8 +960,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Making space for feeling plus self-care keeps the story from becoming self-attack.',
   },
-      id: 'SS-119',
-
+  {
     question: 'You\'re juggling multiple roles (work, family, personal). What mindset helps?',
     options: ['I must do everything perfectly all the time', 'If I drop a ball, I\'m a failure', 'Some days one role will need more; balance happens over time, not daily', 'Only one role matters'],
     correctIndex: 2,
@@ -1087,8 +968,7 @@ const questions = [
     difficulty: 3,
     microTeach: 'Seeing balance as long-term reduces guilt about daily shifts.',
   },
-      id: 'SS-120',
-
+  {
     question: 'You\'re dreading a task for the third day. What\'s a strong indicator?',
     options: ['It\'s definitely fun', 'It\'s aligned with your values', 'It might need to be broken down, delegated, or questioned', 'You\'re lazy'],
     correctIndex: 2,
@@ -1096,8 +976,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Persistent dread often signals design or alignment issues, not laziness.',
   },
-      id: 'SS-121',
-
+  {
     question: 'What\'s a quick way to feel more like the main character in your day?',
     options: ['Wait for something dramatic to happen', 'Compare yourself to others\' highlights', 'Choose one scene today where you\'ll show up intentionally', 'Assume nothing you do matters'],
     correctIndex: 2,
@@ -1105,8 +984,7 @@ const questions = [
     difficulty: 1,
     microTeach: 'Defining one intentional scene makes you feel more active in your story.',
   },
-      id: 'SS-122',
-
+  {
     question: 'You feel guilty taking time off. What\'s a reframing thought?',
     options: ['Time off means I\'m weak', 'Others never rest', 'Rest is part of showing up well for the scenes that matter', 'I\'ll fall behind forever'],
     correctIndex: 2,
@@ -1114,8 +992,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Linking rest to performance makes it easier to allow.',
   },
-      id: 'SS-123',
-
+  {
     question: 'In a stressful moment, what question can cut through the noise?',
     options: ['Why is this my life?', 'What if everything goes wrong?', 'What needs my attention in the next 10 minutes?', 'How do I make everyone happy?'],
     correctIndex: 2,
@@ -1123,8 +1000,7 @@ const questions = [
     difficulty: 2,
     microTeach: 'Focusing on the immediate next window reduces overwhelm.',
   },
-      id: 'SS-124',
-
+  {
     question: 'Which expectation about feelings is most supportive?',
     options: ['They should always make sense', 'They should never be intense', 'They give information but don\'t always tell the full truth', 'They must be controlled at all times'],
     correctIndex: 2,
@@ -1135,1000 +1011,875 @@ const questions = [
 ];
 
 const pairs = [
-      id: 'MM-001',
-
+  {
     cardA: 'Grounding breath',
     cardB: 'Longer exhale',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Grounding plus extended exhale work together to pull your body out of fight-or-flight.',
   },
-      id: 'MM-002',
-
+  {
     cardA: 'Set one intention',
     cardB: 'Name one next step',
     domain: 'clarity',
     difficulty: 1,
     microTeach: 'An intention defines how you want to show up; a next step makes it actionable.',
   },
-      id: 'MM-003',
-
+  {
     cardA: 'Posture reset',
     cardB: 'Soft eye contact',
     domain: 'confidence',
     difficulty: 1,
     microTeach: 'Upright posture and relaxed eye contact combine to signal confidence without aggression.',
   },
-      id: 'MM-004',
-
+  {
     cardA: 'Listen fully',
     cardB: 'Reflect back',
     domain: 'connection',
     difficulty: 1,
     microTeach: 'Full presence plus reflection make others feel deeply heard.',
   },
-      id: 'MM-005',
-
+  {
     cardA: 'Name your need',
     cardB: 'Make a simple request',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Knowing what you need and stating it clearly is the heart of a healthy boundary.',
   },
-      id: 'MM-006',
-
+  {
     cardA: 'One win from today',
     cardB: 'One thing to improve',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Recognizing a win protects confidence; naming one improvement fuels growth.',
   },
-      id: 'MM-007',
-
+  {
     cardA: 'Longer exhale',
     cardB: 'Slower pace of speech',
     domain: 'confidence',
     difficulty: 2,
     microTeach: 'Calm breathing lets your words slow down, making you sound more grounded and sure.',
   },
-      id: 'MM-008',
-
+  {
     cardA: 'Phone face-down',
     cardB: 'Single-focused task',
     domain: 'clarity',
     difficulty: 1,
     microTeach: 'Removing visual triggers and choosing one task protects your attention.',
   },
-      id: 'MM-009',
-
+  {
     cardA: 'Feel feet on the floor',
     cardB: 'Relax jaw and shoulders',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Grounding your lower body and relaxing upper tension pulls attention into the present.',
   },
-      id: 'MM-010',
-
+  {
     cardA: 'What\'s in my control?',
     cardB: 'One small action now',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Shifting from worry to control then acting interrupts helplessness.',
   },
-      id: 'MM-011',
-
+  {
     cardA: 'Name the feeling',
     cardB: 'Name the story',
     domain: 'calm',
     difficulty: 2,
     microTeach: 'Separating raw feeling from the story you\'re telling loosens their grip.',
   },
-      id: 'MM-012',
-
+  {
     cardA: 'Notice tension',
     cardB: 'Breathe into that spot',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Directing breath and attention to tight areas helps muscles let go.',
   },
-      id: 'MM-013',
-
+  {
     cardA: 'Ask one open question',
     cardB: 'Wait through the silence',
     domain: 'connection',
     difficulty: 2,
     microTeach: 'Open questions and silence invite more honest, thoughtful responses.',
   },
-      id: 'MM-014',
-
+  {
     cardA: 'Pre-decide good enough',
     cardB: 'Stop at that point',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Knowing your good enough point in advance prevents endless tweaking.',
   },
-      id: 'MM-015',
-
+  {
     cardA: 'Short walk',
     cardB: 'No phone',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Movement plus mental quiet clears cognitive residue from previous tasks.',
   },
-      id: 'MM-016',
-
+  {
     cardA: 'Remember one past win',
     cardB: 'Bring that version of you into today',
     domain: 'confidence',
     difficulty: 2,
     microTeach: 'Connecting past competence to current challenges supports self-trust.',
   },
-      id: 'MM-017',
-
+  {
     cardA: 'What matters most here?',
     cardB: 'What can I let go of?',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Clarifying importance and release trims mental clutter around an event.',
   },
-      id: 'MM-018',
-
+  {
     cardA: 'Say I feel...',
     cardB: 'Follow with I need...',
     domain: 'connection',
     difficulty: 2,
     microTeach: 'Linking emotion to need turns vague discomfort into clear communication.',
   },
-      id: 'MM-019',
-
+  {
     cardA: 'Choose one tiny task',
     cardB: 'Do it for 5 minutes',
     domain: 'control',
     difficulty: 1,
     microTeach: 'Committing to a tiny window lowers resistance and often gets you started.',
   },
-      id: 'MM-020',
-
+  {
     cardA: 'Limit doom-scroll window',
     cardB: 'Buffer with something soothing',
     domain: 'calm',
     difficulty: 3,
     microTeach: 'Containing stressful input and soothing afterward protects your nervous system.',
   },
-      id: 'MM-021',
-
+  {
     cardA: 'Identify one supportive person',
     cardB: 'Share one honest sentence',
     domain: 'connection',
     difficulty: 2,
     microTeach: 'Reaching out breaks isolation and gives emotions a safe channel.',
   },
-      id: 'MM-022',
-
+  {
     cardA: 'Schedule worry time',
     cardB: 'Redirect outside that window',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Giving worry a time slot reduces all-day rumination.',
   },
-      id: 'MM-023',
-
+  {
     cardA: 'Notice self-criticism',
     cardB: 'Add and I\'m learning',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Pairing criticism with learning shifts the tone from attack to growth.',
   },
-      id: 'MM-024',
-
+  {
     cardA: 'Choose one value',
     cardB: 'Take one aligned action',
     domain: 'confidence',
     difficulty: 3,
     microTeach: 'Values without action stay abstract; action makes them feel real and empowering.',
   },
-      id: 'MM-025',
-
+  {
     cardA: 'Set a time boundary',
     cardB: 'End on time',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Respecting your time trains others to respect it too.',
   },
-      id: 'MM-026',
-
+  {
     cardA: 'Put it on paper',
     cardB: 'Sort into keep, park, release',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Externalizing and sorting turns chaotic thoughts into organized decisions.',
   },
-      id: 'MM-027',
-
+  {
     cardA: 'Notice comparison',
     cardB: 'Shift to what do I want to build?',
     domain: 'clarity',
     difficulty: 3,
     microTeach: 'Comparing drains energy; focusing on your path restores direction.',
   },
-      id: 'MM-028',
-
+  {
     cardA: 'Check sleep, food, water',
     cardB: 'Adjust one',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Many emotional spikes intensify when basic needs are off.',
   },
-      id: 'MM-029',
-
+  {
     cardA: 'Say not right now',
     cardB: 'Offer a concrete later time',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Delaying a response gives space while maintaining respect and clarity.',
   },
-      id: 'MM-030',
-
+  {
     cardA: 'Gratitude for one small thing',
     cardB: 'Savor it for 10 seconds',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Noticing and lingering on small positives tilts attention away from constant threat.',
   },
-      id: 'MM-031',
-
+  {
     cardA: 'Label the trigger',
     cardB: 'Rate intensity 1–10',
     domain: 'calm',
     difficulty: 2,
     microTeach: 'Naming triggers and intensity creates distance and trackability.',
   },
-      id: 'MM-032',
-
+  {
     cardA: 'Choose a good enough wording',
     cardB: 'Send without over-editing',
     domain: 'clarity',
     difficulty: 3,
     microTeach: 'Accepting good enough defeats perfectionistic paralysis around communication.',
   },
-      id: 'MM-033',
-
+  {
     cardA: 'One honest sentence to yourself',
     cardB: 'One kind sentence to yourself',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Reality plus kindness beats denial or harshness alone.',
   },
-      id: 'MM-034',
-
+  {
     cardA: 'What would I say to a friend?',
     cardB: 'Say that to myself',
     domain: 'confidence',
     difficulty: 1,
     microTeach: 'Using your friend voice tones down inner criticism.',
   },
-      id: 'MM-035',
-
+  {
     cardA: 'Set a 10-minute timer',
     cardB: 'Focus on one energy leak',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Short bursts aimed at one leak restore a sense of order.',
   },
-      id: 'MM-036',
-
+  {
     cardA: 'Notice urge to avoid',
     cardB: 'Take a 10% version of the action',
     domain: 'confidence',
     difficulty: 3,
     microTeach: 'Slightly approaching what you fear teaches your brain it\'s survivable.',
   },
-      id: 'MM-037',
-
+  {
     cardA: 'Name one thing you can\'t control',
     cardB: 'Name one thing you can',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Sorting helps you stop wasting energy where you have no influence.',
   },
-      id: 'MM-038',
-
+  {
     cardA: 'Identify your energy level',
     cardB: 'Match task difficulty to it',
     domain: 'clarity',
     difficulty: 3,
     microTeach: 'Matching tasks to energy avoids burnout and all-or-nothing cycles.',
   },
-      id: 'MM-039',
-
+  {
     cardA: 'What am I afraid this means about me?',
     cardB: 'Challenge that assumption',
     domain: 'calm',
     difficulty: 3,
     microTeach: 'You often suffer more from the meaning you add than from the event itself.',
   },
-      id: 'MM-040',
-
+  {
     cardA: 'Start day with one card',
     cardB: 'End day with one reflection',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Morning intention and evening reflection create a stable rhythm for growth.',
   },
-      id: 'MM-041',
-
+  {
     cardA: 'Name the relationship role',
     cardB: 'Ask what is realistic here',
     domain: 'connection',
     difficulty: 3,
     microTeach: 'Different roles support different expectations; realism prevents chronic disappointment.',
   },
-      id: 'MM-042',
-
+  {
     cardA: 'Plan a micro-pleasure',
     cardB: 'Schedule it intentionally',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Scheduled small joys counterbalance stress and give you something to look forward to.',
   },
-      id: 'MM-043',
-
+  {
     cardA: 'Create a no template sentence',
     cardB: 'Practice saying it aloud',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Having language ready makes boundaries easier to execute under pressure.',
   },
-      id: 'MM-044',
-
+  {
     cardA: 'Scan for always or never',
     cardB: 'Replace with sometimes or this time',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Softening extremes helps your thinking become more realistic and less harsh.',
   },
-      id: 'MM-045',
-
+  {
     cardA: 'Ask for clarification once',
     cardB: 'Confirm what you heard',
     domain: 'connection',
     difficulty: 1,
     microTeach: 'Checking understanding reduces misunderstandings and assumptions.',
   },
-      id: 'MM-046',
-
+  {
     cardA: 'Choose a scene for the day',
     cardB: 'Pick one action that matches it',
     domain: 'confidence',
     difficulty: 2,
     microTeach: 'Acting in line with a chosen vibe builds identity coherence.',
   },
-      id: 'MM-047',
-
+  {
     cardA: 'Limit caffeine after a set hour',
     cardB: 'Add one calming pre-bed ritual',
     domain: 'recovery',
     difficulty: 3,
     microTeach: 'Reducing stimulation and adding a soothing cue prepares your nervous system for rest.',
   },
-      id: 'MM-048',
-
+  {
     cardA: 'Notice urge to check your phone',
     cardB: 'Take one breath before acting',
     domain: 'control',
     difficulty: 2,
     microTeach: 'A tiny pause increases conscious choice instead of pure habit.',
   },
-      id: 'MM-049',
-
+  {
     cardA: 'Ask what is this emotion trying to protect',
     cardB: 'Thank it silently',
     domain: 'calm',
     difficulty: 3,
     microTeach: 'Seeing emotions as protectors softens resistance and invites cooperation.',
   },
-      id: 'MM-050',
-
+  {
     cardA: 'End day with one tiny win',
     cardB: 'End day with one tiny kindness',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Ending on competence and care rewires how your day lands in memory.',
   },
-      id: 'MM-051',
-
+  {
     cardA: 'Name one emotion',
     cardB: 'Locate it in your body',
     domain: 'calm',
     difficulty: 2,
     microTeach: 'Naming and locating an emotion makes it less abstract and more workable.',
   },
-      id: 'MM-052',
-
+  {
     cardA: 'One thing you can\'t control',
     cardB: 'One thing you can control',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Separating what you can and can\'t influence helps reclaim your energy.',
   },
-      id: 'MM-053',
-
+  {
     cardA: 'Drink water',
     cardB: 'Take 5 slow breaths',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Hydration and breath regulate both body and mind in a simple, accessible way.',
   },
-      id: 'MM-054',
-
+  {
     cardA: 'Notice the harsh thought',
     cardB: 'Rephrase it as if to a friend',
     domain: 'confidence',
     difficulty: 2,
     microTeach: 'Filtering self-talk through a friend voice makes it more supportive and realistic.',
   },
-      id: 'MM-055',
-
+  {
     cardA: 'Recognize the urge to fix',
     cardB: 'Ask what support they actually want',
     domain: 'connection',
     difficulty: 3,
     microTeach: 'Shifting from fixing to asking creates more attuned and respectful support.',
   },
-      id: 'MM-056',
-
+  {
     cardA: 'Decide your minimum energy task',
     cardB: 'Decide your ideal energy task',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Having a low and high option lets you adapt without quitting entirely.',
   },
-      id: 'MM-057',
-
+  {
     cardA: 'Notice a feeling of jealousy',
     cardB: 'Ask what value or desire it points to',
     domain: 'clarity',
     difficulty: 3,
     microTeach: 'Seeing jealousy as information turns it from shame into guidance.',
   },
-      id: 'MM-058',
-
+  {
     cardA: 'Take three mindful breaths',
     cardB: 'Relax your facial muscles',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Breath plus facial relaxation signals calm and softens stress expression.',
   },
-      id: 'MM-059',
-
+  {
     cardA: 'Ask what story am I telling?',
     cardB: 'Ask what else could be true?',
     domain: 'clarity',
     difficulty: 3,
     microTeach: 'Challenging the story opens space for more balanced interpretations.',
   },
-      id: 'MM-060',
-
+  {
     cardA: 'Notice a repeating worry',
     cardB: 'Schedule a 10-minute worry slot for it',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Giving worries a container keeps them from taking over the entire day.',
   },
-      id: 'MM-061',
-
+  {
     cardA: 'Name one thing you did for others',
     cardB: 'Name one thing you did for yourself',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Balancing care for others with care for yourself prevents depletion.',
   },
-      id: 'MM-062',
-
+  {
     cardA: 'Pick one person to be fully present with',
     cardB: 'Put distractions away for that moment',
     domain: 'connection',
     difficulty: 1,
     microTeach: 'Undivided attention deepens trust and connection.',
   },
-      id: 'MM-063',
-
+  {
     cardA: 'Choose one thing you\'re proud of',
     cardB: 'Say it out loud, even just to yourself',
     domain: 'confidence',
     difficulty: 1,
     microTeach: 'Naming pride strengthens your sense of capability and self-respect.',
   },
-      id: 'MM-064',
-
+  {
     cardA: 'Identify your emotional bandwidth',
     cardB: 'Match social plans to that bandwidth',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Choosing plans that fit your current capacity prevents overload.',
   },
-      id: 'MM-065',
-
+  {
     cardA: 'Catch one all-or-nothing thought',
     cardB: 'Replace it with a more nuanced version',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Replacing extremes with nuance makes thinking more grounded and less stressful.',
   },
-      id: 'MM-066',
-
+  {
     cardA: 'Notice tension in your hands',
     cardB: 'Gently unclench and stretch them',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Unclenching your grip reduces subtle physical signs of stress.',
   },
-      id: 'MM-067',
-
+  {
     cardA: 'Identify one tiny task you\'ve been avoiding',
     cardB: 'Set a 2-minute timer and start it',
     domain: 'control',
     difficulty: 2,
     microTeach: 'A tiny timed start lowers the mental barrier created by avoidance.',
   },
-      id: 'MM-068',
-
+  {
     cardA: 'Think of someone who makes you feel safe',
     cardB: 'Imagine their voice saying one reassuring line',
     domain: 'confidence',
     difficulty: 2,
     microTeach: 'Imagining a supportive voice can calm your inner critic.',
   },
-      id: 'MM-069',
-
+  {
     cardA: 'Ask is this about now',
     cardB: 'Ask or is this about something older',
     domain: 'calm',
     difficulty: 3,
     microTeach: 'Distinguishing past from present softens old reactions to new situations.',
   },
-      id: 'MM-070',
-
+  {
     cardA: 'Gently stretch your neck and shoulders',
     cardB: 'Roll your spine or stand up briefly',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Released upper-body tension and movement counteract sedentary stress.',
   },
-      id: 'MM-071',
-
+  {
     cardA: 'Notice a moment you want to impress',
     cardB: 'Shift to wanting to connect instead',
     domain: 'connection',
     difficulty: 3,
     microTeach: 'Connection-oriented focus tends to reduce anxiety and pressure.',
   },
-      id: 'MM-072',
-
+  {
     cardA: 'Pick one self-soothing activity',
     cardB: 'Pick one energizing activity',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Balancing soothing and energizing practices keeps your system flexible.',
   },
-      id: 'MM-073',
-
+  {
     cardA: 'Ask what would 1% kinder look like',
     cardB: 'Do that for yourself today',
     domain: 'confidence',
     difficulty: 1,
     microTeach: 'Tiny improvements in self-kindness accumulate over time.',
   },
-      id: 'MM-074',
-
+  {
     cardA: 'Notice you feel overstimulated',
     cardB: 'Remove one source of input',
     domain: 'calm',
     difficulty: 2,
     microTeach: 'Reducing sensory and information input lowers internal noise.',
   },
-      id: 'MM-075',
-
+  {
     cardA: 'Choose a tiny end-of-day ritual',
     cardB: 'Repeat it at the same time nightly',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Consistent rituals teach your body and mind that it\'s time to wind down.',
   },
-      id: 'MM-076',
-
+  {
     cardA: 'Notice the first tight spot in your body',
     cardB: 'Breathe gently into that area',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Attention plus breath helps that specific area release tension.',
   },
-      id: 'MM-077',
-
+  {
     cardA: 'Write a one-line summary of the problem',
     cardB: 'Underline the part that\'s actually yours to solve',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Separating the full drama from your slice of responsibility clarifies action.',
   },
-      id: 'MM-078',
-
+  {
     cardA: 'Set a 15-minute focus timer',
     cardB: 'Silence or mute non-essential alerts',
     domain: 'clarity',
     difficulty: 1,
     microTeach: 'Timeboxing and fewer alerts help your brain sink into one task.',
   },
-      id: 'MM-079',
-
+  {
     cardA: 'Name one thing you\'re worried others think of you',
     cardB: 'Ask if you have solid evidence',
     domain: 'connection',
     difficulty: 2,
     microTeach: 'Comparing thoughts to evidence loosens anxious assumptions.',
   },
-      id: 'MM-080',
-
+  {
     cardA: 'Pick a 2-minute tidy task',
     cardB: 'Do it before checking your phone',
     domain: 'control',
     difficulty: 1,
     microTeach: 'A quick win reduces chaos and gives a sense of control before distraction.',
   },
-      id: 'MM-081',
-
+  {
     cardA: 'Recall a recent hard thing you did',
     cardB: 'Write one sentence about what that says about you',
     domain: 'confidence',
     difficulty: 2,
     microTeach: 'Connecting actions to identity reinforces a capable self-image.',
   },
-      id: 'MM-082',
-
+  {
     cardA: 'Choose one relationship to nurture',
     cardB: 'Send a 30-second check-in message',
     domain: 'connection',
     difficulty: 1,
     microTeach: 'Small consistent contact keeps relational threads strong.',
   },
-      id: 'MM-083',
-
+  {
     cardA: 'Ask yourself what am I actually feeling?',
     cardB: 'Then ask what might I be needing?',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Identifying needs turns raw emotion into direction.',
   },
-      id: 'MM-084',
-
+  {
     cardA: 'Notice you\'re doomscrolling',
     cardB: 'Choose a clear stop cue (time, post, or song)',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Defining an exit condition helps you step out of the infinite feed.',
   },
-      id: 'MM-085',
-
+  {
     cardA: 'List three small things that went okay',
     cardB: 'Underline the one you had some control over',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Seeing controlled wins nudges your brain toward agency and gratitude.',
   },
-      id: 'MM-086',
-
+  {
     cardA: 'Notice shallow breathing',
     cardB: 'Shift to nose inhale and slow mouth exhale',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Changing breath route and pace can signal calm to your body.',
   },
-      id: 'MM-087',
-
+  {
     cardA: 'Ask what story am I telling about this person',
     cardB: 'Ask what story might they be telling about me',
     domain: 'connection',
     difficulty: 3,
     microTeach: 'Considering both stories fosters empathy and de-centers your assumptions.',
   },
-      id: 'MM-088',
-
+  {
     cardA: 'Choose one thing to do slowly today',
     cardB: 'Notice how it feels to move at that pace',
     domain: 'calm',
     difficulty: 2,
     microTeach: 'Intentional slowness contrasts with usual rush and reveals your baseline speed.',
   },
-      id: 'MM-089',
-
+  {
     cardA: 'Identify a repeated self-criticism',
     cardB: 'Write a counter-line starting with and also...',
     domain: 'confidence',
     difficulty: 3,
     microTeach: 'Pairing criticism with another truth softens its impact.',
   },
-      id: 'MM-090',
-
+  {
     cardA: 'Scan your day for shoulds',
     cardB: 'Transform one should into I choose or I won\'t',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Shifting language reflects more agency and clearer boundaries.',
   },
-      id: 'MM-091',
-
+  {
     cardA: 'Set a tiny pre-sleep ritual',
     cardB: 'Repeat it for 7 nights in a row',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Consistent cues train your body to associate them with winding down.',
   },
-      id: 'MM-092',
-
+  {
     cardA: 'Look around and name one thing that feels safe',
     cardB: 'Let your body linger on that sense of safety',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Noticing present-day safety can counter old threat stories.',
   },
-      id: 'MM-093',
-
+  {
     cardA: 'Ask what am I afraid will happen if I say no',
     cardB: 'Ask is that actually likely or just a fear',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Separating imagined outcomes from real risk clarifies boundaries.',
   },
-      id: 'MM-094',
-
+  {
     cardA: 'Pick one small kindness to do for someone',
     cardB: 'Pick one small kindness to do for yourself',
     domain: 'connection',
     difficulty: 1,
     microTeach: 'Balancing outward and inward kindness keeps you from burning out.',
   },
-      id: 'MM-095',
-
+  {
     cardA: 'Notice how you talk about a mistake',
     cardB: 'Rewrite it as a learning scene, not a failure scene',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Story reframing changes how your brain stores the memory.',
   },
-      id: 'MM-096',
-
+  {
     cardA: 'Choose one priority for the next 2 hours',
     cardB: 'Say no to unrelated tasks in that window',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Short-term boundaries protect deep focus and reduce chaos.',
   },
-      id: 'MM-097',
-
+  {
     cardA: 'Notice when you feel smaller in a room',
     cardB: 'Straighten your posture and ground your feet',
     domain: 'confidence',
     difficulty: 1,
     microTeach: 'Body adjustments can subtly shift your internal sense of presence.',
   },
-      id: 'MM-098',
-
+  {
     cardA: 'Pick one recurring worry',
     cardB: 'Ask what underlying value it might be protecting',
     domain: 'clarity',
     difficulty: 3,
     microTeach: 'Uncovering the value beneath worry gives constructive direction.',
   },
-      id: 'MM-099',
-
+  {
     cardA: 'Ask what can future-me thank me for tonight',
     cardB: 'Do one tiny action toward that now',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Acting for future-you creates a sense of continuity and care.',
   },
-      id: 'MM-100',
-
+  {
     cardA: 'Note one thing you\'re avoiding feeling',
     cardB: 'Give it 60 seconds of mindful attention',
     domain: 'calm',
     difficulty: 3,
     microTeach: 'Short, intentional contact with feelings reduces their shadow power.',
   },
-      id: 'MM-101',
-
+  {
     cardA: 'Pick a 5-minute joy activity',
     cardB: 'Schedule it like an appointment',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Treating joy as worth scheduling signals it matters.',
   },
-      id: 'MM-102',
-
+  {
     cardA: 'Ask what is the kindest outcome here',
     cardB: 'Ask what is the clearest outcome here',
     domain: 'connection',
     difficulty: 2,
     microTeach: 'Balancing kindness and clarity prevents either from being sacrificed.',
   },
-      id: 'MM-103',
-
+  {
     cardA: 'Identify a moment you felt respected',
     cardB: 'Note what behavior created that feeling',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Knowing what makes you feel respected informs your own boundaries.',
   },
-      id: 'MM-104',
-
+  {
     cardA: 'Notice the impulse to respond instantly',
     cardB: 'Give yourself three breaths before replying',
     domain: 'control',
     difficulty: 1,
     microTeach: 'A tiny buffer can dramatically change your tone and clarity.',
   },
-      id: 'MM-105',
-
+  {
     cardA: 'Choose a single word for how you want to show up today',
     cardB: 'Choose one action that embodies that word',
     domain: 'confidence',
     difficulty: 1,
     microTeach: 'A simple theme plus action aligns intention and behavior.',
   },
-      id: 'MM-106',
-
+  {
     cardA: 'Ask what am I clinging to that I can\'t control',
     cardB: 'Write one sentence releasing it for today',
     domain: 'calm',
     difficulty: 3,
     microTeach: 'Conscious release reclaims energy trapped in impossible tasks.',
   },
-      id: 'MM-107',
-
+  {
     cardA: 'Notice whose standards you\'re trying to meet',
     cardB: 'Ask if they match your own values',
     domain: 'clarity',
     difficulty: 3,
     microTeach: 'Checking whose script you\'re following can free you from outdated pressures.',
   },
-      id: 'MM-108',
-
+  {
     cardA: 'Pick one digital boundary (time or place)',
     cardB: 'Follow it for one day as an experiment',
     domain: 'control',
     difficulty: 2,
     microTeach: 'Treating boundaries as experiments lowers the pressure and invites learning.',
   },
-      id: 'MM-109',
-
+  {
     cardA: 'Recall a time you showed up for someone else',
     cardB: 'Ask how you could bring 10% of that care to yourself today',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Using your existing caring skills on yourself makes self-compassion more concrete.',
   },
-      id: 'MM-110',
-
+  {
     cardA: 'Identify one tiny habit that supports your calm',
     cardB: 'Attach it to an existing routine',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Habit stacking makes new behaviors easier to remember and repeat.',
   },
-      id: 'MM-111',
-
+  {
     cardA: 'Notice where you\'re saying yes to avoid discomfort',
     cardB: 'Choose one situation to tolerate a little discomfort and say no',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Practicing small discomfort builds boundary muscles.',
   },
-      id: 'MM-112',
-
+  {
     cardA: 'Pick a daily reflection question',
     cardB: 'Answer it in one or two sentences at night',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'A consistent question gives your brain a stable frame for your day.',
   },
-      id: 'MM-113',
-
+  {
     cardA: 'Ask what\'s the smallest next step that still counts',
     cardB: 'Do that step even if it feels too small',
     domain: 'control',
     difficulty: 1,
     microTeach: 'Lowering the entry bar gets you moving when stuck.',
   },
-      id: 'MM-114',
-
+  {
     cardA: 'Notice a moment of genuine joy or ease',
     cardB: 'Pause and mentally snapshot it for 10 seconds',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Savoring small positives counterbalances your brain\'s threat focus.',
   },
-      id: 'MM-115',
-
+  {
     cardA: 'Identify a repeating conflict theme',
     cardB: 'Write a one-line wish for how you\'d like that theme to change',
     domain: 'connection',
     difficulty: 3,
     microTeach: 'Defining the pattern and direction clarifies your role in changing it.',
   },
-      id: 'MM-116',
-
+  {
     cardA: 'Check if you\'re hungry, angry, lonely, or tired',
     cardB: 'Address at least one of these first',
     domain: 'calm',
     difficulty: 1,
     microTeach: 'Addressing basic states can resolve some emotional spikes by itself.',
   },
-      id: 'MM-117',
-
+  {
     cardA: 'Pick one scene today you\'re nervous about',
     cardB: 'Visualize yourself handling it with calm, not perfection',
     domain: 'confidence',
     difficulty: 2,
     microTeach: 'Imagining coping, not perfection, builds realistic confidence.',
   },
-      id: 'MM-118',
-
+  {
     cardA: 'Notice when you\'re multitasking',
     cardB: 'Choose which task gets your full attention for 10 minutes',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Single-tasking even briefly improves output and lowers stress.',
   },
-      id: 'MM-119',
-
+  {
     cardA: 'Ask if I say yes, what am I saying no to',
     cardB: 'Decide if that trade-off is worth it',
     domain: 'control',
     difficulty: 3,
     microTeach: 'Seeing hidden trade-offs makes decisions more deliberate.',
   },
-      id: 'MM-120',
-
+  {
     cardA: 'Spot one thing that is going okay right now',
     cardB: 'Name why it matters to you',
     domain: 'recovery',
     difficulty: 2,
     microTeach: 'Linking okay moments to values deepens everyday meaning.',
   },
-      id: 'MM-121',
-
+  {
     cardA: 'Recognize when you\'re narrating from a harsh inner director',
     cardB: 'Invite a kinder director voice to narrate the same scene',
     domain: 'confidence',
     difficulty: 3,
     microTeach: 'Changing the narrator changes how your story lands emotionally.',
   },
-      id: 'MM-122',
-
+  {
     cardA: 'Pick a weekly check-in time',
     cardB: 'Ask what do I need more of and less of next week',
     domain: 'clarity',
     difficulty: 2,
     microTeach: 'Regular edits prevent burnout and keep life aligned with your values.',
   },
-      id: 'MM-123',
-
+  {
     cardA: 'Name one way you already take care of yourself',
     cardB: 'Commit to repeating it this week on purpose',
     domain: 'recovery',
     difficulty: 1,
     microTeach: 'Reusing what already works is easier than inventing new routines.',
   },
-      id: 'MM-124',
-
+  {
     cardA: 'Notice if you\'re speaking from hurt or from hope',
     cardB: 'Choose one sentence that moves the scene toward hope',
     domain: 'connection',
     difficulty: 3,
     microTeach: 'Intentionally choosing hope shifts conversations away from escalation.',
   },
-      id: 'MM-125',
-
+  {
     cardA: 'At the end of the day, choose your favorite small moment',
     cardB: 'Mentally replay it once before sleep',
     domain: 'recovery',
@@ -2144,15 +1895,14 @@ async function main() {
   console.log('📝 Seeding questions...');
   let questionCount = 0;
   for (const q of questions) {
-    // Use provided ID or generate one
-    const id = q.id || `SS-${String(questionCount + 1).padStart(3, '0')}`;
-    questionCount++;
+    // Create a stable ID based on question content
+    const questionHash = Buffer.from(q.question).toString('base64').substring(0, 16).replace(/[^a-zA-Z0-9]/g, '');
+    const id = `q-${questionHash}-${questionCount++}`;
     
     try {
       await prisma.gameQuestion.upsert({
         where: { id },
-        update:     id: 'SS-125',
-
+        update: {
           question: q.question,
           options: JSON.parse(JSON.stringify(q.options)),
           correctIndex: q.correctIndex,
@@ -2181,15 +1931,14 @@ async function main() {
   console.log('🎯 Seeding pairs...');
   let pairCount = 0;
   for (const p of pairs) {
-    // Use provided ID or generate one
-    const id = p.id || `MM-${String(pairCount + 1).padStart(3, '0')}`;
+    // Use provided ID or generate sequential one (MM-001, MM-002, etc.)
+    const id = (p as any).id || `MM-${String(pairCount + 1).padStart(3, '0')}`;
     pairCount++;
     
     try {
       await prisma.gamePair.upsert({
         where: { id },
-        update:     id: 'MM-126',
-
+        update: {
           cardA: p.cardA,
           cardB: p.cardB,
           domain: p.domain,
