@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../../utils/logger';
+import * as emotionGardenService from './emotionGardenService';
 
 const prisma = new PrismaClient();
 
@@ -270,6 +271,22 @@ export async function recordGameSession(
       badgeUnlocked = '7-Day Streak';
     } else if (progress.currentStreak === 30) {
       badgeUnlocked = '30-Day Streak';
+    }
+
+    // Update Emotion Garden - games provide positive engagement
+    try {
+      const emotion = data.perfectScore ? 'joy' : 'gratitude'; // Perfect scores = joy, completion = gratitude
+      const intensity = data.perfectScore ? 8 : 6;
+      
+      await emotionGardenService.updateGardenState(
+        userId,
+        emotion,
+        intensity,
+        'game'
+      );
+    } catch (error) {
+      // Don't fail the request if garden update fails
+      logger.error('Error updating Emotion Garden after game session:', error);
     }
 
     return {

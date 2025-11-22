@@ -64,7 +64,7 @@ export async function updateGardenState(
   userId: string,
   emotion: string,
   intensity: number,
-  _activityType?: 'focus-room' | 'thought-tidy' | 'game' | 'breathing'
+  activityType?: 'focus-room' | 'thought-tidy' | 'game' | 'breathing'
 ): Promise<GardenState> {
   try {
     let gardenState = await prisma.emotionGardenState.findUnique({
@@ -96,14 +96,17 @@ export async function updateGardenState(
 
     const plantType = emotionToPlant[emotion.toLowerCase()] || 'grass';
 
-    // Add new plant based on emotion
+    // Add new plant based on emotion and activity type
+    // Activities like focus-room, thought-tidy, breathing create more growth
+    const activityMultiplier = activityType ? 1.2 : 1.0; // Activities create slightly larger plants
+    
     const newPlant: GardenPlant = {
       id: `plant-${Date.now()}-${Math.random()}`,
       type: plantType,
       emotion,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: 0.5 + (intensity / 10) * 0.5, // Size based on intensity
+      size: (0.5 + (intensity / 10) * 0.5) * activityMultiplier, // Size based on intensity and activity
       opacity: 0.7 + (intensity / 10) * 0.3,
       createdAt: now,
     };

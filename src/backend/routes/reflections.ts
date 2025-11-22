@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/auth';
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
 import { OpenAI } from 'openai';
+import * as emotionGardenService from '../services/games/emotionGardenService';
 
 const router = express.Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -106,6 +107,27 @@ router.post('/:meetingId', authenticate, async (req: Request, res: Response): Pr
       emotionalTone,
       privacyMode: !shouldStoreText
     });
+
+    // Update Emotion Garden based on reflection rating
+    try {
+      const emotionMap: Record<string, string> = {
+        'great': 'joy',
+        'neutral': 'calm',
+        'draining': 'overwhelm',
+      };
+      
+      const emotion = emotionMap[rating] || 'calm';
+      const intensity = rating === 'great' ? 8 : rating === 'neutral' ? 5 : 6;
+      
+      await emotionGardenService.updateGardenState(
+        userId,
+        emotion,
+        intensity
+      );
+    } catch (error) {
+      // Don't fail the request if garden update fails
+      logger.error('Error updating Emotion Garden after reflection:', error);
+    }
 
     res.json({
       success: true,

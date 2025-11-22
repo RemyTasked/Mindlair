@@ -352,6 +352,25 @@ router.post(
       } as any,
     });
 
+    // Update Emotion Garden if breathing exercise was completed
+    if (data.breathingExerciseCompleted) {
+      try {
+        // Breathing exercises promote calm and grounding
+        const emotion = 'calm';
+        const intensity = 7; // Moderate-high intensity for completed breathing
+        
+        await emotionGardenService.updateGardenState(
+          req.userId!,
+          emotion,
+          intensity,
+          'breathing'
+        );
+      } catch (error) {
+        // Don't fail the request if garden update fails
+        logger.error('Error updating Emotion Garden after breathing exercise:', error);
+      }
+    }
+
     // Update meeting with prep mode for pattern analysis
     if (data.prepMode) {
       await prisma.meeting.update({

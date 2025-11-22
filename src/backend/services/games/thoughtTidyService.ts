@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../../utils/logger';
+import * as emotionGardenService from './emotionGardenService';
 
 const prisma = new PrismaClient();
 
@@ -142,6 +143,24 @@ export async function recordThoughtTidySession(
           totalCredits: creditsEarned,
         },
       });
+    }
+
+    // Update Emotion Garden - Thought Tidy provides calm and relief
+    try {
+      // More "released" thoughts = more relief
+      const releaseRatio = releasedCount / (keptCount + parkedCount + releasedCount);
+      const emotion = releaseRatio > 0.5 ? 'calm' : 'gratitude'; // High release = calm, balanced = gratitude
+      const intensity = Math.min(10, 5 + Math.floor(releaseRatio * 5)); // 5-10 based on release ratio
+      
+      await emotionGardenService.updateGardenState(
+        userId,
+        emotion,
+        intensity,
+        'thought-tidy'
+      );
+    } catch (error) {
+      // Don't fail the request if garden update fails
+      logger.error('Error updating Emotion Garden after Thought Tidy session:', error);
     }
 
     return {

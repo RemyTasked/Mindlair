@@ -4,6 +4,7 @@ import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { prisma } from '../utils/prisma';
 import { z } from 'zod';
+import * as emotionGardenService from '../services/games/emotionGardenService';
 
 const router = express.Router();
 
@@ -126,6 +127,33 @@ router.post(
       creditsEarned,
       note: actuallyCompleted !== validated.completed ? 'Session marked incomplete - duration < 5 minutes' : undefined,
     });
+
+    // Update Emotion Garden if session was completed
+    if (actuallyCompleted) {
+      try {
+        // Map room types to emotions
+        const roomEmotionMap: Record<string, string> = {
+          'Deep Focus': 'calm',
+          'Soft Composure': 'calm',
+          'Warm Connection': 'joy',
+          'Pitch Pulse': 'joy',
+          'Recovery Lounge': 'calm',
+        };
+        
+        const emotion = roomEmotionMap[session.roomName] || 'calm';
+        const intensity = Math.min(10, Math.max(5, Math.floor(validated.duration / 60))); // Intensity based on duration
+        
+        await emotionGardenService.updateGardenState(
+          req.userId,
+          emotion,
+          intensity,
+          'focus-room'
+        );
+      } catch (error) {
+        // Don't fail the request if garden update fails
+        logger.error('Error updating Emotion Garden after Focus Room session:', error);
+      }
+    }
 
     res.json({
       success: true,
