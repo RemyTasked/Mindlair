@@ -222,23 +222,18 @@ router.post('/seed', authenticate, async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
     
-    // Use ts-node to run the seed script
-    const { execSync } = require('child_process');
-    const path = require('path');
-    const seedScriptPath = path.join(__dirname, '../../scripts/seedGames.ts');
+    // Import and run seed function directly
+    const { seedGames } = require('../scripts/seedGames');
+    await seedGames();
     
-    // Run seed script using ts-node
-    execSync(`npx ts-node "${seedScriptPath}"`, { 
-      stdio: 'inherit',
-      cwd: path.join(__dirname, '../../../..')
-    });
-    
-    // Check results
+    // Check results using shared Prisma instance
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
     const questionCount = await prisma.gameQuestion.count();
     const pairCount = await prisma.gamePair.count();
     await prisma.$disconnect();
+    
+    logger.info(`✅ Games seeded successfully: ${questionCount} questions, ${pairCount} pairs`);
     
     return res.json({ 
       success: true, 

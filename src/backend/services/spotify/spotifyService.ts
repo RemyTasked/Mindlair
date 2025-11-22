@@ -201,10 +201,23 @@ export class SpotifyService {
 
       logger.info('✅ Paused Spotify playback');
     } catch (error: any) {
+      // Spotify returns 404 if no active playback, 403 if no premium, etc.
+      // These are not critical errors - just means nothing is playing
+      if (error.response?.status === 404) {
+        logger.info('ℹ️ No active playback to pause');
+        return; // Not an error - just nothing playing
+      }
+      
+      if (error.response?.status === 403) {
+        logger.warn('⚠️ Spotify Premium required for playback control');
+        throw new Error('Spotify Premium required for playback control');
+      }
+
       logger.error('❌ Failed to pause Spotify playback', {
+        status: error.response?.status,
         error: error.response?.data || error.message,
       });
-      throw new Error('Failed to pause playback');
+      throw new Error(`Failed to pause playback: ${error.response?.data?.error?.message || error.message || 'Unknown error'}`);
     }
   }
 

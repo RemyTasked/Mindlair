@@ -1921,7 +1921,7 @@ async function main() {
           correctIndex: q.correctIndex,
           category: q.category,
           difficulty: q.difficulty,
-          sceneMatch: null,
+          sceneMatch: (q as any).sceneMatch || null,
           microTeach: q.microTeach,
         },
         create: {
@@ -1931,7 +1931,7 @@ async function main() {
           correctIndex: q.correctIndex,
           category: q.category,
           difficulty: q.difficulty,
-          sceneMatch: null,
+          sceneMatch: (q as any).sceneMatch || null,
           microTeach: q.microTeach,
         },
       });
@@ -1976,7 +1976,17 @@ async function main() {
   console.log('🎉 Game seeding complete!');
 }
 
-// Allow running as script or importing
+// Export the main function for use in API routes
+export const seedGames = async () => {
+  try {
+    await main();
+  } catch (error) {
+    console.error('❌ Error seeding games:', error);
+    throw error;
+  }
+};
+
+// Allow running as script
 if (require.main === module) {
   main()
     .catch((e) => {
@@ -1987,5 +1997,3 @@ if (require.main === module) {
       await prisma.$disconnect();
     });
 }
-
-export { main as seedGames };

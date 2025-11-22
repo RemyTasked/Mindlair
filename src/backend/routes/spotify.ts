@@ -193,13 +193,22 @@ router.post(
   '/pause',
   authenticate,
   asyncHandler(async (req, res) => {
-    const accessToken = await getAccessToken(req.userId!);
-    const devices = await spotifyService.getDevices(accessToken);
-    const activeDevice = devices.find((d) => d.is_active) || devices[0];
+    try {
+      const accessToken = await getAccessToken(req.userId!);
+      const devices = await spotifyService.getDevices(accessToken);
+      const activeDevice = devices.find((d) => d.is_active) || devices[0];
 
-    await spotifyService.pausePlayback(accessToken, activeDevice?.id);
+      // If no device found, try pausing without device ID (Spotify will use active device)
+      await spotifyService.pausePlayback(accessToken, activeDevice?.id);
 
-    res.json({ success: true });
+      return res.json({ success: true });
+    } catch (error: any) {
+      // If pause fails because nothing is playing, that's okay
+      if (error.message?.includes('No active playback') || error.message?.includes('404')) {
+        return res.json({ success: true, message: 'No active playback to pause' });
+      }
+      throw error;
+    }
   })
 );
 
