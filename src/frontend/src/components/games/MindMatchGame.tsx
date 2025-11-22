@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Sparkles, RotateCcw } from 'lucide-react';
+import { CheckCircle, Sparkles, RotateCcw, Target } from 'lucide-react';
 import api from '../../lib/axios';
 
 interface Pair {
@@ -34,8 +34,14 @@ export default function MindMatchGame({ onComplete }: MindMatchGameProps) {
   const [gameComplete, setGameComplete] = useState(false);
   const [creditsEarned, setCreditsEarned] = useState(0);
   const [moves, setMoves] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
+    // Check if user has seen onboarding
+    const hasSeenOnboarding = localStorage.getItem('mind-match-onboarding-seen');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
     loadPairs();
   }, []);
 
@@ -180,6 +186,77 @@ export default function MindMatchGame({ onComplete }: MindMatchGameProps) {
       onComplete(totalCredits, 0);
     }
   };
+
+  // Onboarding Modal
+  if (showOnboarding) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full"
+        >
+          <div className="text-center mb-6">
+            <Target className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Mind Match</h2>
+            <p className="text-gray-600">Learn winning skill combinations through pairing</p>
+          </div>
+          
+          <div className="space-y-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-purple-600 font-bold">1</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Flip Cards</h3>
+                <p className="text-gray-600 text-sm">You'll see 6 face-down cards. Click two cards to flip them over.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-purple-600 font-bold">2</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Find Matches</h3>
+                <p className="text-gray-600 text-sm">Match cards that belong together - they form powerful skill combinations.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-purple-600 font-bold">3</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Unlock Teaching</h3>
+                <p className="text-gray-600 text-sm">When you match a pair, you'll see why they connect and how to use them together.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-purple-600 font-bold">4</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Match All Pairs</h3>
+                <p className="text-gray-600 text-sm">Find all 3 pairs to complete the game and earn credits!</p>
+              </div>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              localStorage.setItem('mind-match-onboarding-seen', 'true');
+              setShowOnboarding(false);
+            }}
+            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-semibold"
+          >
+            Let's Play!
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

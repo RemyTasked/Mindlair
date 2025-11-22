@@ -30,8 +30,14 @@ export default function ThoughtTidyGame({ onComplete }: ThoughtTidyGameProps) {
   const [showSummary, setShowSummary] = useState(false);
   const [loading, setLoading] = useState(true);
   const [creditsEarned, setCreditsEarned] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
+    // Check if user has seen onboarding
+    const hasSeenOnboarding = localStorage.getItem('thought-tidy-onboarding-seen');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
     loadCards();
   }, []);
 
@@ -115,6 +121,87 @@ export default function ThoughtTidyGame({ onComplete }: ThoughtTidyGameProps) {
       console.error('Error submitting Thought Tidy:', error);
     }
   };
+
+  // Onboarding Modal
+  if (showOnboarding) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full"
+        >
+          <div className="text-center mb-6">
+            <Film className="w-16 h-16 text-teal-600 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Thought Tidy</h2>
+            <p className="text-gray-600">End-of-day brain declutter</p>
+          </div>
+          
+          <div className="space-y-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">1</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Review Your Thoughts</h3>
+                <p className="text-gray-600 text-sm">You'll see thought cards from your day. Drag each one to the right place.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Keep</h3>
+                <p className="text-gray-600 text-sm">Things that are meaningful and worth remembering.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-yellow-600 font-bold">P</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Park</h3>
+                <p className="text-gray-600 text-sm">Things that need action later - not now, but don't forget.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <X className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Release</h3>
+                <p className="text-gray-600 text-sm">Things that don't deserve more mental energy - let them go.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">✓</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Complete & Earn</h3>
+                <p className="text-gray-600 text-sm">Once all thoughts are sorted, complete to earn credits and reduce rumination.</p>
+              </div>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              localStorage.setItem('thought-tidy-onboarding-seen', 'true');
+              setShowOnboarding(false);
+            }}
+            className="w-full px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg hover:from-teal-700 hover:to-cyan-700 transition-all font-semibold"
+          >
+            Let's Tidy!
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

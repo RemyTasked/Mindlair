@@ -164,17 +164,47 @@ router.get('/seed-status', authenticate, async (req: Request, res: Response) => 
       return res.status(401).json({ error: 'Authentication required' });
     }
     
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
-    const questionCount = await prisma.gameQuestion.count();
-    const pairCount = await prisma.gamePair.count();
-    await prisma.$disconnect();
-    
-    return res.json({ 
-      seeded: questionCount > 0 && pairCount > 0,
-      questionCount,
-      pairCount
-    });
+    try {
+      const { PrismaClient } = require('@prisma/client');
+      const prisma = new PrismaClient();
+      
+      // Check if tables exist first
+      const tablesExist = await prisma.$queryRaw`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name IN ('game_questions', 'game_pairs')
+        )
+      `;
+      
+      if (!tablesExist || (Array.isArray(tablesExist) && !tablesExist[0]?.exists)) {
+        await prisma.$disconnect();
+        return res.json({ 
+          seeded: false,
+          questionCount: 0,
+          pairCount: 0,
+          error: 'Tables do not exist. Migrations may not have completed.'
+        });
+      }
+      
+      const questionCount = await prisma.gameQuestion.count().catch(() => 0);
+      const pairCount = await prisma.gamePair.count().catch(() => 0);
+      await prisma.$disconnect();
+      
+      return res.json({ 
+        seeded: questionCount > 0 && pairCount > 0,
+        questionCount,
+        pairCount
+      });
+    } catch (dbError: any) {
+      logger.error('Database error checking seed status:', dbError);
+      return res.json({ 
+        seeded: false,
+        questionCount: 0,
+        pairCount: 0,
+        error: dbError.message || 'Database connection error'
+      });
+    }
   } catch (error: any) {
     logger.error('Error checking seed status:', error);
     return res.status(500).json({ error: error.message || 'Failed to check seed status' });

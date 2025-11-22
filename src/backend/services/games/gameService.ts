@@ -89,7 +89,7 @@ export async function getSceneSenseQuestions(
     }
 
     // Get questions
-    const questions = await prisma.gameQuestion.findMany({
+    let questions = await prisma.gameQuestion.findMany({
       where,
       take: count * 2, // Get more than needed for variety
       orderBy: [
@@ -98,13 +98,55 @@ export async function getSceneSenseQuestions(
       ],
     });
 
-    // If no questions found, check if database needs seeding
+    // If no questions found with filters, try without the NOT clause (recent questions filter)
+    if (questions.length === 0 && where.NOT) {
+      logger.warn('No questions found with recent filter, trying without it');
+      const whereWithoutRecent = { ...where };
+      delete whereWithoutRecent.NOT;
+      questions = await prisma.gameQuestion.findMany({
+        where: whereWithoutRecent,
+        take: count * 2,
+        orderBy: [
+          { difficulty: 'asc' },
+          { createdAt: 'desc' },
+        ],
+      });
+    }
+
+    // If still no questions, try with any difficulty
+    if (questions.length === 0) {
+      logger.warn('No questions found with difficulty filter, trying any difficulty');
+      const whereAnyDifficulty: any = {};
+      if (sceneMatch) {
+        whereAnyDifficulty.sceneMatch = sceneMatch;
+      }
+      questions = await prisma.gameQuestion.findMany({
+        where: whereAnyDifficulty,
+        take: count * 2,
+        orderBy: [
+          { difficulty: 'asc' },
+          { createdAt: 'desc' },
+        ],
+      });
+    }
+
+    // If still no questions, check if database needs seeding
     if (questions.length === 0) {
       try {
         const totalQuestions = await prisma.gameQuestion.count();
         if (totalQuestions === 0) {
           logger.warn('No game questions found in database. Database may need seeding.');
           throw new Error('No game questions available. Please seed the database.');
+        } else {
+          // Database has questions but filters are too restrictive
+          logger.warn(`Database has ${totalQuestions} questions but filters returned none. Returning any questions.`);
+          questions = await prisma.gameQuestion.findMany({
+            take: count * 2,
+            orderBy: [
+              { difficulty: 'asc' },
+              { createdAt: 'desc' },
+            ],
+          });
         }
       } catch (dbError: any) {
         // If table doesn't exist, provide helpful error
@@ -158,7 +200,7 @@ export async function getMindMatchPairs(
     };
 
     // Get 3 pairs (6 cards total)
-    const pairs = await prisma.gamePair.findMany({
+    let pairs = await prisma.gamePair.findMany({
       where,
       take: 10, // Get more for variety
       orderBy: [
@@ -167,13 +209,35 @@ export async function getMindMatchPairs(
       ],
     });
 
-    // If no pairs found, check if database needs seeding
+    // If no pairs found, try with any difficulty
+    if (pairs.length === 0) {
+      logger.warn('No pairs found with difficulty filter, trying any difficulty');
+      pairs = await prisma.gamePair.findMany({
+        take: 10,
+        orderBy: [
+          { difficulty: 'asc' },
+          { createdAt: 'desc' },
+        ],
+      });
+    }
+
+    // If still no pairs, check if database needs seeding
     if (pairs.length === 0) {
       try {
         const totalPairs = await prisma.gamePair.count();
         if (totalPairs === 0) {
           logger.warn('No game pairs found in database. Database may need seeding.');
           throw new Error('No game pairs available. Please seed the database.');
+        } else {
+          // Database has pairs but filters are too restrictive
+          logger.warn(`Database has ${totalPairs} pairs but filters returned none. Returning any pairs.`);
+          pairs = await prisma.gamePair.findMany({
+            take: 10,
+            orderBy: [
+              { difficulty: 'asc' },
+              { createdAt: 'desc' },
+            ],
+          });
         }
       } catch (dbError: any) {
         // If table doesn't exist, provide helpful error

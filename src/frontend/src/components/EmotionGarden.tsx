@@ -262,17 +262,23 @@ export default function EmotionGarden(_props: EmotionGardenProps) {
                 
                 <motion.div
                   animate={isNewPlant ? {
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 10, -10, 0]
+                    scale: [1, 1.5, 1],
+                    rotate: [0, 15, -15, 0]
                   } : {
-                    scale: 1,
-                    rotate: 0
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 2, -2, 0],
+                    y: [0, -5, 0]
                   }}
                   transition={{
-                    duration: isNewPlant ? 1 : 0,
-                    repeat: isNewPlant ? 1 : 0
+                    duration: isNewPlant ? 1.5 : 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
                   }}
-                  className={colorClass}
+                  className={`${colorClass} drop-shadow-2xl filter brightness-110`}
+                  style={{
+                    fontSize: `${Math.max(24, plant.size * 32)}px`,
+                    filter: `drop-shadow(0 4px 8px rgba(0,0,0,0.2))`,
+                  }}
                 >
                   {getPlantIcon(plant.type)}
                 </motion.div>

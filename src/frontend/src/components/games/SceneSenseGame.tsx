@@ -27,8 +27,14 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
   const [loading, setLoading] = useState(true);
   const [gameComplete, setGameComplete] = useState(false);
   const [creditsEarned, setCreditsEarned] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
+    // Check if user has seen onboarding
+    const hasSeenOnboarding = localStorage.getItem('scene-sense-onboarding-seen');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
     loadQuestions();
   }, []);
 
@@ -185,6 +191,77 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
     );
   }
 
+  // Onboarding Modal
+  if (showOnboarding) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full"
+        >
+          <div className="text-center mb-6">
+            <Sparkles className="w-16 h-16 text-indigo-600 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Scene Sense</h2>
+            <p className="text-gray-600">Build your mental performance skills through quick questions</p>
+          </div>
+          
+          <div className="space-y-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-indigo-600 font-bold">1</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Answer Questions</h3>
+                <p className="text-gray-600 text-sm">You'll see 3-5 multiple-choice questions. Choose the answer that feels most right to you.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-indigo-600 font-bold">2</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Get Immediate Feedback</h3>
+                <p className="text-gray-600 text-sm">See if you got it right and learn why with instant feedback.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-indigo-600 font-bold">3</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Learn Micro-Teaching</h3>
+                <p className="text-gray-600 text-sm">Each question includes a short cinematic teaching point to help you grow.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-indigo-600 font-bold">4</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Earn Credits</h3>
+                <p className="text-gray-600 text-sm">Get credits for correct answers and bonus points for perfect scores!</p>
+              </div>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              localStorage.setItem('scene-sense-onboarding-seen', 'true');
+              setShowOnboarding(false);
+            }}
+            className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 transition-all font-semibold"
+          >
+            Let's Play!
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (questions.length === 0 && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -195,8 +272,17 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
             The game database hasn't been seeded yet. Please contact support or check the backend logs.
           </p>
           <button
+            onClick={() => {
+              // Try to reload questions
+              loadQuestions();
+            }}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 mr-2"
+          >
+            Retry
+          </button>
+          <button
             onClick={() => window.location.href = '/games'}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
           >
             Back to Games Hub
           </button>
