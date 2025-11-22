@@ -169,12 +169,16 @@ router.get('/seed-status', authenticate, async (_req: Request, res: Response) =>
  */
 router.post('/seed', authenticate, async (_req: Request, res: Response) => {
   try {
-    // Import and run the seed function directly
-    const seedGamesModule = require('../../scripts/seedGames');
-    const seedGames = seedGamesModule.seedGames || seedGamesModule.main || seedGamesModule;
+    // Use ts-node to run the seed script
+    const { execSync } = require('child_process');
+    const path = require('path');
+    const seedScriptPath = path.join(__dirname, '../../scripts/seedGames.ts');
     
-    // Run the seed function
-    await seedGames();
+    // Run seed script using ts-node
+    execSync(`npx ts-node "${seedScriptPath}"`, { 
+      stdio: 'inherit',
+      cwd: path.join(__dirname, '../../../..')
+    });
     
     // Check results
     const { PrismaClient } = require('@prisma/client');
@@ -193,7 +197,7 @@ router.post('/seed', authenticate, async (_req: Request, res: Response) => {
     logger.error('Error seeding games:', error);
     return res.status(500).json({ 
       error: error.message || 'Failed to seed games',
-      details: error.stack
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
