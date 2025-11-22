@@ -1122,16 +1122,16 @@ async function sendWellnessReminders() {
         const eveningFlowTime = user.preferences?.eveningFlowTime || '18:00';
         const [eveningHour] = eveningFlowTime.split(':').map(Number);
         
-        // Check if ANY delivery method is enabled
-        const hasDeliveryMethod = 
-          user.deliverySettings?.emailEnabled || 
-          user.deliverySettings?.pushEnabled ||
-          user.deliverySettings?.smsEnabled;
-          
-        if (!hasDeliveryMethod) {
-          logger.info('⏭️ Skipping wellness reminder - no delivery methods enabled', {
+        // Check if Wellness notifications are enabled
+        const { shouldSend, delivery } = await shouldSendNotification(
+          user.id,
+          'wellness',
+          user.deliverySettings
+        );
+
+        if (!shouldSend) {
+          logger.info('🔕 Wellness notifications disabled', {
             userId: user.id,
-            email: user.email,
           });
           continue;
         }
@@ -1342,15 +1342,15 @@ async function sendWindingDownNotifications() {
           continue; // Skip if not the user's winding down time
         }
         
-        // Check if ANY delivery method is enabled
-        const hasDeliveryMethod = 
-          user.deliverySettings?.emailEnabled || 
-          user.deliverySettings?.pushEnabled;
-        
-        if (!hasDeliveryMethod) {
-          logger.info('⏭️ Skipping winding down notification - no delivery methods enabled', {
-            userId: user.id,
-          });
+        // Check if Daily Rhythm notifications are enabled
+        const { shouldSend, delivery } = await shouldSendNotification(
+          user.id,
+          'dailyRhythm',
+          user.deliverySettings
+        );
+
+        if (!shouldSend) {
+          logger.info('🔕 Daily Rhythm notifications disabled', { userId: user.id });
           continue;
         }
         

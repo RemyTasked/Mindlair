@@ -196,6 +196,287 @@ export class SlackService {
       return false;
     }
   }
+
+  async sendPostMeetingCue(
+    webhookUrl: string | null,
+    title: string,
+    message: string,
+    ratingUrl?: string,
+    accessToken?: string | null,
+    channelId?: string | null
+  ): Promise<boolean> {
+    try {
+      const blocks: any[] = [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: '✨ Meeting Reflection',
+            emoji: true,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*${title}*`,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: message,
+          },
+        },
+      ];
+
+      if (ratingUrl) {
+        blocks.push({
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Reflect Now →',
+                emoji: true,
+              },
+              url: ratingUrl,
+              style: 'primary',
+            },
+          ],
+        });
+      }
+
+      return await this.sendSlackMessage(
+        accessToken || null,
+        channelId || null,
+        webhookUrl,
+        blocks
+      );
+    } catch (error: any) {
+      logger.error('Error sending post-meeting cue to Slack', {
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
+  async sendPresleyFlowNotification(
+    webhookUrl: string | null,
+    flowUrl: string,
+    meetingCount: number,
+    dateLabel: string,
+    flowType: 'morning' | 'evening',
+    accessToken?: string | null,
+    channelId?: string | null
+  ): Promise<boolean> {
+    try {
+      const blocks = [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: flowType === 'morning' ? '☀️ Opening Scene' : '🌙 Presley Flow Session',
+            emoji: true,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: flowType === 'morning'
+              ? `*Today's Scene* - ${meetingCount} meeting${meetingCount !== 1 ? 's' : ''} ahead`
+              : `*Tomorrow's Preview* - ${meetingCount} meeting${meetingCount !== 1 ? 's' : ''} scheduled`,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: dateLabel,
+          },
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Enter Flow →',
+                emoji: true,
+              },
+              url: flowUrl,
+              style: 'primary',
+            },
+          ],
+        },
+      ];
+
+      return await this.sendSlackMessage(
+        accessToken || null,
+        channelId || null,
+        webhookUrl,
+        blocks
+      );
+    } catch (error: any) {
+      logger.error('Error sending Presley Flow notification to Slack', {
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
+  async sendWellnessReminder(
+    webhookUrl: string | null,
+    type: string,
+    message: string,
+    accessToken?: string | null,
+    channelId?: string | null
+  ): Promise<boolean> {
+    try {
+      const emojiMap: Record<string, string> = {
+        breathing: '🫁',
+        walk: '🚶',
+        mindful_moment: '🧘',
+        sleep: '🌙',
+        morning_energy: '☀️',
+      };
+
+      const blocks = [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: `${emojiMap[type] || '💚'} Wellness Check-In`,
+            emoji: true,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: message,
+          },
+        },
+      ];
+
+      return await this.sendSlackMessage(
+        accessToken || null,
+        channelId || null,
+        webhookUrl,
+        blocks
+      );
+    } catch (error: any) {
+      logger.error('Error sending wellness reminder to Slack', {
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
+  async sendWindingDownNotification(
+    webhookUrl: string | null,
+    windingDownUrl: string,
+    accessToken?: string | null,
+    channelId?: string | null
+  ): Promise<boolean> {
+    try {
+      const blocks = [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: '🌜 Winding Down',
+            emoji: true,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'Time to unwind and prepare for restful sleep.',
+          },
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Start Winding Down →',
+                emoji: true,
+              },
+              url: windingDownUrl,
+              style: 'primary',
+            },
+          ],
+        },
+      ];
+
+      return await this.sendSlackMessage(
+        accessToken || null,
+        channelId || null,
+        webhookUrl,
+        blocks
+      );
+    } catch (error: any) {
+      logger.error('Error sending winding down notification to Slack', {
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
+  async sendMorningRecap(
+    webhookUrl: string | null,
+    recapMessage: string,
+    firstMeetingTime: string,
+    accessToken?: string | null,
+    channelId?: string | null
+  ): Promise<boolean> {
+    try {
+      const blocks = [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: '☀️ Morning Recap',
+            emoji: true,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: recapMessage,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*First meeting:* ${firstMeetingTime}`,
+          },
+        },
+      ];
+
+      return await this.sendSlackMessage(
+        accessToken || null,
+        channelId || null,
+        webhookUrl,
+        blocks
+      );
+    } catch (error: any) {
+      logger.error('Error sending morning recap to Slack', {
+        error: error.message,
+      });
+      return false;
+    }
+  }
 }
 
 export const slackService = new SlackService();
