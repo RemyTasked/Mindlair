@@ -100,10 +100,19 @@ export async function getSceneSenseQuestions(
 
     // If no questions found, check if database needs seeding
     if (questions.length === 0) {
-      const totalQuestions = await prisma.gameQuestion.count();
-      if (totalQuestions === 0) {
-        logger.warn('No game questions found in database. Database may need seeding.');
-        throw new Error('No game questions available. Please seed the database.');
+      try {
+        const totalQuestions = await prisma.gameQuestion.count();
+        if (totalQuestions === 0) {
+          logger.warn('No game questions found in database. Database may need seeding.');
+          throw new Error('No game questions available. Please seed the database.');
+        }
+      } catch (dbError: any) {
+        // If table doesn't exist, provide helpful error
+        if (dbError.message?.includes('does not exist') || dbError.code === '42P01') {
+          logger.error('Game questions table does not exist. Migrations may not have completed.');
+          throw new Error('Game database not initialized. Please run migrations first.');
+        }
+        throw dbError;
       }
     }
 
@@ -160,10 +169,19 @@ export async function getMindMatchPairs(
 
     // If no pairs found, check if database needs seeding
     if (pairs.length === 0) {
-      const totalPairs = await prisma.gamePair.count();
-      if (totalPairs === 0) {
-        logger.warn('No game pairs found in database. Database may need seeding.');
-        throw new Error('No game pairs available. Please seed the database.');
+      try {
+        const totalPairs = await prisma.gamePair.count();
+        if (totalPairs === 0) {
+          logger.warn('No game pairs found in database. Database may need seeding.');
+          throw new Error('No game pairs available. Please seed the database.');
+        }
+      } catch (dbError: any) {
+        // If table doesn't exist, provide helpful error
+        if (dbError.message?.includes('does not exist') || dbError.code === '42P01') {
+          logger.error('Game pairs table does not exist. Migrations may not have completed.');
+          throw new Error('Game database not initialized. Please run migrations first.');
+        }
+        throw dbError;
       }
     }
 

@@ -29,7 +29,11 @@ router.get('/today', authenticate, asyncHandler(async (req, res) => {
  * Submit completed Thought Tidy session
  */
 router.post('/submit', authenticate, asyncHandler(async (req, res) => {
-  const userId = req.userId!;
+  if (!req.userId) {
+    throw new AppError('Authentication required', 401);
+  }
+  
+  const userId = req.userId;
   const { kept, parked, released, actionItems } = req.body;
 
   if (!kept || !parked || !released) {

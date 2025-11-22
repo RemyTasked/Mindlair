@@ -18,7 +18,11 @@ const router = Router();
  */
 router.get('/daily', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const userId = req.userId;
     const gameType = gameService.getDailyGameType();
     
     // Get user progress
@@ -45,7 +49,11 @@ router.get('/daily', authenticate, async (req: Request, res: Response) => {
  */
 router.get('/scene-sense/questions', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const userId = req.userId;
     const count = parseInt(req.query.count as string) || 5;
     const sceneMatch = req.query.sceneMatch as string | undefined;
 
@@ -64,7 +72,11 @@ router.get('/scene-sense/questions', authenticate, async (req: Request, res: Res
  */
 router.get('/mind-match/pairs', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const userId = req.userId;
     const sceneMatch = req.query.sceneMatch as string | undefined;
 
     const pairs = await gameService.getMindMatchPairs(userId, sceneMatch);
@@ -114,7 +126,11 @@ router.post('/scene-sense/submit', authenticate, async (req: Request, res: Respo
  */
 router.post('/mind-match/submit', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const userId = req.userId;
     const { pairId, matchedPairs, totalPairs, perfectScore } = req.body;
 
     if (!pairId || matchedPairs === undefined || totalPairs === undefined) {
