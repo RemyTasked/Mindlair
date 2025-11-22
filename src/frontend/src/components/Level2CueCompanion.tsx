@@ -55,9 +55,9 @@ export default function Level2CueCompanion({
     const startAnalyzer = async () => {
       if (enabled && !isActive) {
         try {
-          // Signal that Level 2 is active (suppresses Level 1 cues)
+          // Signal that Level 2 is active
           localStorage.setItem('meetcute_level2_active', 'true');
-          console.log('🎯 Level 2 activated - Level 1 cues will be suppressed');
+          console.log('🎯 Level 2 activated');
           
           await analyzer.current.start();
           setIsActive(true);
@@ -68,28 +68,18 @@ export default function Level2CueCompanion({
           analyzer.current.onCue((cue) => {
             setCurrentCue(cue);
             
-            // Dispatch cue-toast event for CueToastManager (Level 1 system)
-            // This shows the cue in the standard toast UI
-            window.dispatchEvent(new CustomEvent('cue-toast', {
-              detail: {
-                cueId: `level2-${Date.now()}`,
-                text: cue.message,
-                actions: [], // Level 2 cues are brief, no actions needed
-              }
-            }));
-            
-            // Send browser notification for Level 2 cue (works even when tab is backgrounded)
+            // Send browser notification for cue (works even when tab is backgrounded)
             if ('Notification' in window && Notification.permission === 'granted') {
               try {
-                new Notification('💡 Level 2 Cue', {
+                new Notification('💡 Cue', {
                   body: cue.message,
-                  tag: `level2-cue-${Date.now()}`,
+                  tag: `cue-${Date.now()}`,
                   requireInteraction: false, // Auto-dismiss
                   icon: '/icons/meetcute-logo-192.png',
                   badge: '/icons/meetcute-logo-96.png',
                 });
               } catch (error: any) {
-                console.warn('⚠️ Failed to send Level 2 notification:', error);
+                console.warn('⚠️ Failed to send notification:', error);
               }
             }
             
@@ -107,20 +97,18 @@ export default function Level2CueCompanion({
             const baseline = analyzer.current.getBaseline();
             
             // Update progress based on samples collected
-            const progress = (baseline.samplesCollected / 60) * 100;
+            // Use 60 as the target, but ensure we show 100% when complete
+            const progress = baseline.calibrationComplete 
+              ? 100 
+              : Math.min((baseline.samplesCollected / 60) * 100, 100);
             
-            if (!baseline.calibrationComplete) {
-              // Update progress up to 100%
-              setCalibrationProgress(Math.min(progress, 100));
-            } else {
-              // Calibration is complete - ensure progress is 100%
-              if (isCalibrating) {
-                setIsCalibrating(false);
-                setCalibrationProgress(100);
-              } else {
-                // Keep progress at 100% if already complete
-                setCalibrationProgress(100);
-              }
+            setCalibrationProgress(progress);
+            
+            // Check if calibration just completed
+            if (baseline.calibrationComplete && isCalibrating) {
+              setIsCalibrating(false);
+              setCalibrationProgress(100);
+              console.log('✅ Calibration complete - Level 2 cues are now active');
             }
             
             // Update speaking indicator
@@ -138,9 +126,9 @@ export default function Level2CueCompanion({
     if (enabled) {
       startAnalyzer();
     } else if (isActive) {
-      // Signal that Level 2 is no longer active (re-enable Level 1 cues)
+      // Signal that Level 2 is no longer active
       localStorage.removeItem('meetcute_level2_active');
-      console.log('🔄 Level 2 deactivated - Level 1 cues will resume');
+      console.log('🔄 Level 2 deactivated');
       
       // Generate summary before stopping
       if (showSummary) {
@@ -149,6 +137,7 @@ export default function Level2CueCompanion({
       }
       
       analyzer.current.stop();
+      analyzer.current.clearDismissedCues(); // Clear dismissed state when stopping
       setIsActive(false);
       setIsCalibrating(false);
       setCalibrationProgress(0);
@@ -197,6 +186,11 @@ export default function Level2CueCompanion({
   
   // Handle cue dismiss
   const dismissCue = () => {
+    if (currentCue) {
+      // Mark this cue type as dismissed in the analyzer
+      analyzer.current.dismissCueType(currentCue.type);
+      console.log(`🚫 User dismissed ${currentCue.type} cue - will not show again for 5 minutes`);
+    }
     setCurrentCue(null);
     if (cueTimeoutRef.current) {
       clearTimeout(cueTimeoutRef.current);
@@ -352,7 +346,7 @@ export default function Level2CueCompanion({
           </div>
           
           <span className="text-sm whitespace-nowrap">
-            {isCalibrating ? 'Calibrating...' : enabled ? 'Level 2 ON' : 'Level 2 OFF'}
+            {isCalibrating ? 'Calibrating...' : enabled ? 'Cue Companion ON' : 'Cue Companion OFF'}
           </span>
           
           {/* Status Indicator Dot */}
@@ -468,7 +462,7 @@ export default function Level2CueCompanion({
                   >
                     <Activity className="w-12 h-12 text-white" />
                   </motion.div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Level 2 Real-Time Coach</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Real-Time Cue Companion</h3>
                   <p className="text-lg text-gray-700 mb-2">
                     Listens to <strong className="text-teal-600">how you sound</strong>
                   </p>

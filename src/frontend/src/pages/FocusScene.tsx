@@ -4,7 +4,6 @@ import api from '../lib/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountdownTimer from '../components/CountdownTimer';
 import AmbientSound from '../components/AmbientSound';
-import Level2CueCompanion from '../components/Level2CueCompanion';
 import PrepModeFlow from '../components/PrepModeFlow';
 import Logo from '../components/Logo';
 
@@ -116,8 +115,6 @@ export default function FocusScene() {
   const [useAISound, setUseAISound] = useState(true); // Toggle between AI recommendation and default
   const [prepFlowResponses, setPrepFlowResponses] = useState<Record<string, string>>({});
   const [reflectionNotes, setReflectionNotes] = useState('');
-  const [level2Enabled, setLevel2Enabled] = useState(false); // Level 2 is opt-in per meeting
-  const [isCalibrating, setIsCalibrating] = useState(false); // Track Level 2 calibration state
 
   useEffect(() => {
     loadMeetingData();
@@ -238,18 +235,11 @@ export default function FocusScene() {
       {/* Ambient Sound Player - AI-recommended or default sound based on user preference (muted during Level 2 calibration) */}
       <AmbientSound
         soundType="none"
-        enabled={(meeting?.soundPreferences?.enabled ?? true) && !isCalibrating}
+        enabled={meeting?.soundPreferences?.enabled ?? true}
         stopOnNavigation={false}
       />
 
-      {/* Level 2 Cue Companion - Real-time composure coach (opt-in during meeting) */}
-      {(currentPhase === 'reflection' || currentPhase === 'complete') && (
-        <Level2CueCompanion
-          enabled={level2Enabled}
-          onToggle={setLevel2Enabled}
-          onCalibrationChange={setIsCalibrating}
-        />
-      )}
+      {/* Cue Companion is not available in FocusScene - it's only available during live meetings in Dashboard */}
       
       <AnimatePresence mode="wait">
         {currentPhase === 'intro' && (

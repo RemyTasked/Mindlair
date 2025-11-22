@@ -80,6 +80,11 @@ interface DebounceState {
   lastAnyCue: number;       // For global cool-down
 }
 
+interface DismissedCueState {
+  dismissedTypes: Set<string>;  // Set of cue types that were dismissed
+  dismissedUntil: Map<string, number>;  // Timestamp when each type can trigger again
+}
+
 export class AudioAnalyzer {
   private audioContext: AudioContext | null = null;
   private analyserNode: AnalyserNode | null = null;
@@ -137,6 +142,12 @@ export class AudioAnalyzer {
     lastPauseCue: 0,
     lastMonologueCue: 0,
     lastAnyCue: 0,
+  };
+  
+  // Dismissed cues tracking (when user dismisses a cue, don't show that type again for a period)
+  private dismissedCues: DismissedCueState = {
+    dismissedTypes: new Set(),
+    dismissedUntil: new Map(),
   };
   
   // Cue limits
@@ -402,8 +413,8 @@ export class AudioAnalyzer {
     this.baseline.avgPauseRatio = ((this.baseline.avgPauseRatio * (n - 1)) + features.pauseRatio) / n;
     this.baseline.avgEnergy = ((this.baseline.avgEnergy * (n - 1)) + features.energy) / n;
     
-    // Check if calibration is complete
-    if (this.baseline.samplesCollected >= this.CALIBRATION_SAMPLES) {
+    // Check if calibration is complete (use >= and check !calibrationComplete to ensure it completes)
+    if (this.baseline.samplesCollected >= this.CALIBRATION_SAMPLES && !this.baseline.calibrationComplete) {
       // Calculate standard deviations
       this.baseline.stdRMS = this.calculateStd(this.baseline.rmsSamples, this.baseline.avgRMS);
       this.baseline.stdSpeechRate = this.calculateStd(this.baseline.speechRateSamples, this.baseline.avgSpeechRate);
@@ -412,6 +423,7 @@ export class AudioAnalyzer {
       
       this.baseline.calibrationComplete = true;
       console.log('✅ Baseline calibration complete:', {
+        samplesCollected: this.baseline.samplesCollected,
         rms: `${this.baseline.avgRMS.toFixed(4)} ± ${this.baseline.stdRMS.toFixed(4)}`,
         speechRate: `${this.baseline.avgSpeechRate.toFixed(2)} ± ${this.baseline.stdSpeechRate.toFixed(2)}`,
         pauseRatio: `${this.baseline.avgPauseRatio.toFixed(2)} ± ${this.baseline.stdPauseRatio.toFixed(2)}`,
@@ -815,6 +827,24 @@ export class AudioAnalyzer {
   }
   
   /**
+   * Mark a cue type as dismissed (don't show again for 5 minutes)
+   */
+  dismissCueType(cueType: string): void {
+    const dismissUntil = Date.now() + (5 * 60 * 1000); // 5 minutes
+    this.dismissedCues.dismissedTypes.add(cueType);
+    this.dismissedCues.dismissedUntil.set(cueType, dismissUntil);
+    console.log(`🚫 Cue type "${cueType}" dismissed - will not show again for 5 minutes`);
+  }
+  
+  /**
+   * Clear dismissed state (called when meeting ends or Level 2 is disabled)
+   */
+  clearDismissedCues(): void {
+    this.dismissedCues.dismissedTypes.clear();
+    this.dismissedCues.dismissedUntil.clear();
+  }
+  
+  /**
    * Reset for new meeting
    */
   reset(): void {
@@ -856,6 +886,8 @@ export class AudioAnalyzer {
       lastMonologueCue: 0,
       lastAnyCue: 0,
     };
+    
+    this.clearDismissedCues();
     
     this.cuesThisMeeting = 0;
     this.cueHistory = [];

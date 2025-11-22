@@ -14,6 +14,7 @@ import { getUserTimezone } from '../utils/timezone';
 import Onboarding from '../components/Onboarding';
 import OnboardingWelcome from '../components/OnboardingWelcome';
 import { getActiveMeeting, setActiveMeetingId } from '../utils/meetingDetection';
+import Level2CueCompanion from '../components/Level2CueCompanion';
 
 interface Meeting {
   id: string;
@@ -84,6 +85,7 @@ export default function Dashboard() {
   const [activeMeetings, setActiveMeetings] = useState<Meeting[]>([]);
   const [activeCues, setActiveCues] = useState<any[]>([]);
   const [userMetadata, setUserMetadata] = useState<any>(null);
+  const [level2Enabled, setLevel2Enabled] = useState(false);
   
   const ensureAuthToken = async (): Promise<string | null> => {
     let token = localStorage.getItem('meetcute_token');
@@ -253,7 +255,7 @@ export default function Dashboard() {
       setPresleyFlow(presleyData);
       setWindingDown(windingDownData);
       
-      // Detect active meeting for Level 1 cues
+      // Detect active meetings
       const activeMeeting = getActiveMeeting(meetingsResponse.data.meetings);
       if (activeMeeting) {
         console.log('🎯 Active meeting detected:', {
@@ -543,6 +545,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Cue Companion - Available during live meetings */}
+      {activeMeetings.length > 0 && (
+        <Level2CueCompanion
+          enabled={level2Enabled}
+          onToggle={setLevel2Enabled}
+        />
+      )}
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -762,8 +771,6 @@ export default function Dashboard() {
 
             <div className="space-y-4">
               {activeMeetings.map((meeting: any) => {
-                const activeCue = activeCues.find((c: any) => c.meetingId === meeting.id);
-                
                 return (
                   <div key={meeting.id} className="bg-white rounded-xl p-4 border-2 border-red-300">
                     <div className="flex items-start justify-between mb-2">
@@ -784,18 +791,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                     
-                    {/* No Level 2 toggle during live meetings - must be enabled before meeting starts */}
-                    
-                    {activeCue && (
-                      <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-teal-50 rounded-lg border border-indigo-200">
-                        <p className="text-sm font-medium text-indigo-900">
-                          💡 {activeCue.text}
-                        </p>
-                        <p className="text-xs text-indigo-600 mt-1">
-                          {activeCue.minutesIntoMeeting} min into {activeCue.totalDuration} min meeting
-                        </p>
-                      </div>
-                    )}
+                    {/* Level 1 cues removed - only real-time cues (Cue Companion) are used now */}
                   </div>
                 );
               })}

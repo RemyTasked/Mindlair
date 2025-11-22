@@ -388,6 +388,8 @@ function generateCues(
 }
 
 // Get active cues for user's current meetings
+// NOTE: Level 1 cues have been removed - only real-time cues (Level 2) are used now
+// This endpoint is kept for compatibility but returns empty cues
 router.get(
   '/active',
   authenticate,
@@ -395,7 +397,7 @@ router.get(
     const userId = (req as any).userId!;
     const now = new Date();
 
-    // Find meetings that are happening now
+    // Find meetings that are happening now (for active meeting detection)
     const activeMeetings = await prisma.meeting.findMany({
       where: {
         userId,
@@ -405,59 +407,7 @@ router.get(
       orderBy: { startTime: 'asc' },
     });
 
-    if (activeMeetings.length === 0) {
-      return res.json({ activeMeetings: [], activeCues: [] });
-    }
-
-    // Get latest cue for each active meeting
-    const activeCues = [];
-    for (const meeting of activeMeetings) {
-      const settings = await prisma.cueSettings.findUnique({
-        where: { userId },
-      });
-
-      if (!settings || !settings.enabled) continue;
-
-      const overrides = settings.perMeetingOverrides as Record<string, boolean>;
-      if (overrides[meeting.id] === false) continue;
-
-      const minutesIntoMeeting = Math.floor((now.getTime() - meeting.startTime.getTime()) / 60000);
-      const meetingDuration = Math.floor((meeting.endTime.getTime() - meeting.startTime.getTime()) / 60000);
-
-      let cueText = '';
-      let cueActions: { label: string; action: string }[] = [];
-
-      if (minutesIntoMeeting >= 12 && minutesIntoMeeting <= 15) {
-        cueText = settings.tone === 'calm' 
-          ? 'Breath check. Slow your next sentence.'
-          : 'Pace check. Take a breath.';
-        cueActions = [
-          { label: 'Breathe 20s', action: 'breathe' },
-          { label: 'Hide', action: 'hide' },
-        ];
-      } else if (minutesIntoMeeting >= meetingDuration / 2 - 2 && minutesIntoMeeting <= meetingDuration / 2 + 2) {
-        cueText = settings.tone === 'calm'
-          ? 'Halfway through. You\'re doing well.'
-          : 'Halfway mark. Stay focused.';
-        cueActions = [{ label: 'Got it', action: 'hide' }];
-      } else if (meetingDuration - minutesIntoMeeting <= 5 && meetingDuration - minutesIntoMeeting >= 3) {
-        cueText = '5 minutes left. Land one clear outcome.';
-        cueActions = [{ label: 'Got it', action: 'hide' }];
-      }
-
-      if (cueText) {
-        activeCues.push({
-          meetingId: meeting.id,
-          meetingTitle: meeting.title,
-          cueId: `active-${meeting.id}-${minutesIntoMeeting}`,
-          text: cueText,
-          actions: cueActions,
-          minutesIntoMeeting,
-          totalDuration: meetingDuration,
-        });
-      }
-    }
-
+    // Return active meetings but no cues (Level 1 cues removed)
     return res.json({ 
       activeMeetings: activeMeetings.map(m => ({
         id: m.id,
@@ -465,7 +415,7 @@ router.get(
         startTime: m.startTime,
         endTime: m.endTime,
       })),
-      activeCues,
+      activeCues: [], // Level 1 cues removed - only real-time cues are used
     });
   })
 );
