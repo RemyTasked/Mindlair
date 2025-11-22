@@ -59,10 +59,10 @@ router.get('/scene-sense/questions', authenticate, async (req: Request, res: Res
 
     const questions = await gameService.getSceneSenseQuestions(userId, count, sceneMatch);
 
-    res.json({ questions });
+    return res.json({ questions });
   } catch (error: any) {
     logger.error('Error getting Scene Sense questions:', error);
-    res.status(500).json({ error: error.message || 'Failed to get questions' });
+    return res.status(500).json({ error: error.message || 'Failed to get questions' });
   }
 });
 
@@ -81,10 +81,10 @@ router.get('/mind-match/pairs', authenticate, async (req: Request, res: Response
 
     const pairs = await gameService.getMindMatchPairs(userId, sceneMatch);
 
-    res.json({ pairs });
+    return res.json({ pairs });
   } catch (error: any) {
     logger.error('Error getting Mind Match pairs:', error);
-    res.status(500).json({ error: error.message || 'Failed to get pairs' });
+    return res.status(500).json({ error: error.message || 'Failed to get pairs' });
   }
 });
 
@@ -94,11 +94,15 @@ router.get('/mind-match/pairs', authenticate, async (req: Request, res: Response
  */
 router.post('/scene-sense/submit', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const userId = req.userId;
     const { questionId, userAnswer, isCorrect, perfectScore } = req.body;
 
     if (!questionId || userAnswer === undefined || isCorrect === undefined) {
-      throw new AppError('Missing required fields', 400);
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const result = await gameService.recordGameSession(userId, 'scene-sense', {
@@ -108,7 +112,7 @@ router.post('/scene-sense/submit', authenticate, async (req: Request, res: Respo
       perfectScore,
     });
 
-    res.json({
+    return res.json({
       success: true,
       credits: result.credits,
       streak: result.streak,
@@ -116,7 +120,7 @@ router.post('/scene-sense/submit', authenticate, async (req: Request, res: Respo
     });
   } catch (error: any) {
     logger.error('Error submitting Scene Sense answer:', error);
-    res.status(500).json({ error: error.message || 'Failed to submit answer' });
+    return res.status(500).json({ error: error.message || 'Failed to submit answer' });
   }
 });
 
