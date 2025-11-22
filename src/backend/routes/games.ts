@@ -141,6 +141,44 @@ router.post('/mind-match/submit', authenticate, async (req: Request, res: Respon
 });
 
 /**
+ * POST /api/games/seed
+ * Manually seed games database (admin/dev only)
+ */
+router.post('/seed', authenticate, async (_req: Request, res: Response) => {
+  try {
+    // Check if games are already seeded
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    const count = await prisma.gameQuestion.count();
+    
+    if (count > 0) {
+      await prisma.$disconnect();
+      return res.json({ 
+        success: true, 
+        message: `Games already seeded (${count} questions exist)`,
+        count 
+      });
+    }
+
+    // Run seed script
+    const { execSync } = require('child_process');
+    execSync('npm run seed:games', { stdio: 'inherit' });
+    
+    const newCount = await prisma.gameQuestion.count();
+    await prisma.$disconnect();
+    
+    return res.json({ 
+      success: true, 
+      message: `Games seeded successfully (${newCount} questions)`,
+      count: newCount 
+    });
+  } catch (error: any) {
+    logger.error('Error seeding games:', error);
+    return res.status(500).json({ error: error.message || 'Failed to seed games' });
+  }
+});
+
+/**
  * GET /api/games/progress
  * Get user's game progress
  */

@@ -36,10 +36,6 @@ export default function EmotionGarden(_props: EmotionGardenProps) {
   const [selectedEmotion, setSelectedEmotion] = useState<string>('');
   const [intensity, setIntensity] = useState(5);
 
-  useEffect(() => {
-    loadGardenState();
-  }, []);
-
   const loadGardenState = async () => {
     try {
       const response = await api.get('/api/emotion-garden/state');
@@ -51,17 +47,34 @@ export default function EmotionGarden(_props: EmotionGardenProps) {
     }
   };
 
+  useEffect(() => {
+    loadGardenState();
+    
+    // Poll for garden updates every 5 seconds
+    const interval = setInterval(() => {
+      loadGardenState();
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const handleCheckIn = async () => {
     if (!selectedEmotion) return;
 
     try {
-      const response = await api.post('/api/emotion-garden/checkin', {
+      await api.post('/api/emotion-garden/checkin', {
         emotion: selectedEmotion,
         intensity,
       });
-      setGardenState(response.data.state);
+      
+      // Add a small delay to show the planting animation
       setShowCheckIn(false);
       setSelectedEmotion('');
+      
+      // Reload garden state with animation
+      setTimeout(() => {
+        loadGardenState();
+      }, 300);
     } catch (error) {
       console.error('Error recording check-in:', error);
     }
@@ -155,27 +168,135 @@ export default function EmotionGarden(_props: EmotionGardenProps) {
           )}
 
           {/* Plants */}
-          {gardenState.plants.map((plant) => (
-            <motion.div
-              key={plant.id}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ 
-                opacity: plant.opacity,
-                scale: plant.size,
-                x: `${plant.x}%`,
-                y: `${plant.y}%`,
-              }}
-              className="absolute"
-              style={{
-                left: `${plant.x}%`,
-                top: `${plant.y}%`,
-              }}
-            >
-              <div className={`text-${plant.type === 'flower' ? 'pink' : plant.type === 'cloud' ? 'gray' : 'green'}-600`}>
-                {getPlantIcon(plant.type)}
-              </div>
-            </motion.div>
-          ))}
+          {gardenState.plants.map((plant, index) => {
+            const isNewPlant = new Date(plant.createdAt).getTime() > Date.now() - 5000; // Plant added in last 5 seconds
+            const colorClass = plant.type === 'flower' ? 'text-pink-600' : 
+                              plant.type === 'cloud' ? 'text-gray-600' : 
+                              plant.type === 'thorn' ? 'text-red-600' :
+                              plant.type === 'rock' ? 'text-gray-700' :
+                              'text-green-600';
+            
+            return (
+              <motion.div
+                key={plant.id}
+                initial={{ 
+                  opacity: 0, 
+                  scale: 0,
+                  y: 20,
+                  rotate: -180
+                }}
+                animate={{ 
+                  opacity: plant.opacity,
+                  scale: plant.size,
+                  y: 0,
+                  rotate: 0,
+                  x: 0,
+                }}
+                transition={{
+                  duration: isNewPlant ? 1.2 : 0.6,
+                  delay: isNewPlant ? index * 0.1 : 0,
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 15
+                }}
+                whileHover={{ 
+                  scale: plant.size * 1.3,
+                  rotate: [0, -5, 5, -5, 0],
+                  transition: { duration: 0.5 }
+                }}
+                className="absolute cursor-pointer"
+                style={{
+                  left: `${plant.x}%`,
+                  top: `${plant.y}%`,
+                }}
+              >
+                {/* Glow effect for new plants */}
+                {isNewPlant && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [0.8, 0, 0.8, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className={`absolute inset-0 ${colorClass.replace('text-', 'bg-').replace('-600', '-200')} rounded-full blur-xl -z-10`}
+                  />
+                )}
+                
+                {/* Particle burst for new plants */}
+                {isNewPlant && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    {[...Array(8)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ 
+                          x: 0, 
+                          y: 0, 
+                          opacity: 1,
+                          scale: 0
+                        }}
+                        animate={{ 
+                          x: Math.cos((i / 8) * Math.PI * 2) * 30,
+                          y: Math.sin((i / 8) * Math.PI * 2) * 30,
+                          opacity: [1, 0.5, 0],
+                          scale: [0, 1, 0]
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          delay: 0.2,
+                          ease: "easeOut"
+                        }}
+                        className={`absolute w-2 h-2 ${colorClass.replace('text-', 'bg-')} rounded-full`}
+                        style={{
+                          left: '50%',
+                          top: '50%',
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                <motion.div
+                  animate={isNewPlant ? {
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 10, -10, 0]
+                  } : {
+                    scale: 1,
+                    rotate: 0
+                  }}
+                  transition={{
+                    duration: isNewPlant ? 1 : 0,
+                    repeat: isNewPlant ? 1 : 0
+                  }}
+                  className={colorClass}
+                >
+                  {getPlantIcon(plant.type)}
+                </motion.div>
+                
+                {/* Gentle floating animation for all plants */}
+                <motion.div
+                  animate={{
+                    y: [0, -5, 0],
+                  }}
+                  transition={{
+                    duration: 3 + (index % 3),
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: index * 0.2
+                  }}
+                  className="absolute inset-0"
+                >
+                  <div className={colorClass}>
+                    {getPlantIcon(plant.type)}
+                  </div>
+                </motion.div>
+              </motion.div>
+            );
+          })}
 
           {gardenState.plants.length === 0 && (
             <div className="flex items-center justify-center h-full text-center">

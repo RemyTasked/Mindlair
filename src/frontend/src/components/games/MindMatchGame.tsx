@@ -42,12 +42,27 @@ export default function MindMatchGame({ onComplete }: MindMatchGameProps) {
   const loadPairs = async () => {
     try {
       const response = await api.get('/api/games/mind-match/pairs');
-      const loadedPairs = response.data.pairs || [];
+      let loadedPairs = response.data.pairs || [];
       
       if (loadedPairs.length === 0) {
-        console.error('No pairs available. Please seed the database with game pairs.');
-        setLoading(false);
-        return;
+        console.error('No pairs available. Attempting to seed database...');
+        // Try to seed the database
+        try {
+          await api.post('/api/games/seed');
+          // Reload pairs after seeding
+          const retryResponse = await api.get('/api/games/mind-match/pairs');
+          const retryPairs = retryResponse.data.pairs || [];
+          if (retryPairs.length > 0) {
+            loadedPairs = retryPairs;
+          } else {
+            setLoading(false);
+            return;
+          }
+        } catch (seedError) {
+          console.error('Error seeding games:', seedError);
+          setLoading(false);
+          return;
+        }
       }
       
       setPairs(loadedPairs);

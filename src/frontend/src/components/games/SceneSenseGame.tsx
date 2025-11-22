@@ -38,7 +38,21 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
       const questions = response.data.questions || [];
       
       if (questions.length === 0) {
-        console.error('No questions available. Please seed the database with game questions.');
+        console.error('No questions available. Attempting to seed database...');
+        // Try to seed the database
+        try {
+          await api.post('/api/games/seed');
+          // Reload questions after seeding
+          const retryResponse = await api.get('/api/games/scene-sense/questions?count=5');
+          const retryQuestions = retryResponse.data.questions || [];
+          if (retryQuestions.length > 0) {
+            setQuestions(retryQuestions);
+            setLoading(false);
+            return;
+          }
+        } catch (seedError) {
+          console.error('Error seeding games:', seedError);
+        }
         setLoading(false);
         return;
       }

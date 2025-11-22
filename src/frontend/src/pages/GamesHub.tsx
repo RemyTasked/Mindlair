@@ -36,6 +36,21 @@ export default function GamesHub() {
       console.log('✅ Daily game loaded:', response.data.gameType);
     } catch (error: any) {
       console.error('❌ Error loading daily game:', error);
+      
+      // If games aren't seeded, try to seed them
+      if (error.response?.status === 500 || error.message?.includes('game')) {
+        try {
+          console.log('🌱 Attempting to seed games database...');
+          await api.post('/api/games/seed');
+          // Reload after seeding
+          const retryResponse = await api.get('/api/games/daily');
+          setGameType(retryResponse.data.gameType);
+          setProgress(retryResponse.data.progress);
+        } catch (seedError: any) {
+          console.error('❌ Error seeding games:', seedError);
+        }
+      }
+      
       // Show error to user
       if (error.response?.status === 401) {
         // Not authenticated - redirect to login
