@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Trophy, Zap, Target, Sparkles, Play } from 'lucide-react';
+import { Trophy, Zap, Target, Sparkles, Play, Settings as SettingsIcon, Headphones, Gamepad2 } from 'lucide-react';
 import Logo from '../components/Logo';
 import api from '../lib/axios';
 import SceneSenseGame from '../components/games/SceneSenseGame';
@@ -23,10 +23,33 @@ export default function GamesHub() {
   const [progress, setProgress] = useState<GameProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    loadUser();
     loadDailyGame();
   }, []);
+
+  const loadUser = async () => {
+    try {
+      const response = await api.get('/api/user/me');
+      setUser(response.data);
+    } catch (error) {
+      console.error('Error loading user:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/api/auth/logout');
+      localStorage.removeItem('meetcute_token');
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      localStorage.removeItem('meetcute_token');
+      navigate('/');
+    }
+  };
 
   const loadDailyGame = async () => {
     try {
@@ -93,19 +116,129 @@ export default function GamesHub() {
     );
   }
 
+  // Render header component
+  const renderHeader = () => (
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex justify-between items-center">
+          {/* Logo and Navigation Section */}
+          <div className="flex items-center gap-6">
+            <Logo size="md" />
+            <nav className="hidden sm:flex items-center gap-1">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  window.location.pathname === '/dashboard'
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => navigate('/focus-rooms')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                  window.location.pathname === '/focus-rooms'
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Headphones className="w-4 h-4" />
+                Focus Rooms
+              </button>
+              <button
+                onClick={() => navigate('/games')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                  window.location.pathname === '/games'
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Gamepad2 className="w-4 h-4" />
+                Games
+              </button>
+            </nav>
+          </div>
+
+          {/* User Section */}
+          <div className="flex items-center gap-6">
+            <span className="text-sm text-gray-600 hidden sm:block">{user?.email}</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/settings')}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Settings"
+              >
+                <SettingsIcon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Mobile Navigation */}
+        <nav className="sm:hidden flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              window.location.pathname === '/dashboard'
+                ? 'bg-teal-50 text-teal-700'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => navigate('/focus-rooms')}
+            className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
+              window.location.pathname === '/focus-rooms'
+                ? 'bg-teal-50 text-teal-700'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <Headphones className="w-4 h-4" />
+            Focus
+          </button>
+          <button
+            onClick={() => navigate('/games')}
+            className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
+              window.location.pathname === '/games'
+                ? 'bg-teal-50 text-teal-700'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <Gamepad2 className="w-4 h-4" />
+            Games
+          </button>
+        </nav>
+      </div>
+    </header>
+  );
+
   if (showEmotionGarden) {
-    return <EmotionGarden />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+        {renderHeader()}
+        <EmotionGarden onExit={() => setShowEmotionGarden(false)} />
+      </div>
+    );
   }
 
   if (gameStarted && gameType) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-purple-50">
+        {renderHeader()}
         {gameType === 'scene-sense' ? (
-          <SceneSenseGame onComplete={handleGameComplete} />
+          <SceneSenseGame onComplete={handleGameComplete} onExit={() => setGameStarted(false)} />
         ) : gameType === 'mind-match' ? (
-          <MindMatchGame onComplete={handleGameComplete} />
+          <MindMatchGame onComplete={handleGameComplete} onExit={() => setGameStarted(false)} />
         ) : (
-          <ThoughtTidyGame onComplete={handleGameComplete} />
+          <ThoughtTidyGame onComplete={handleGameComplete} onExit={() => setGameStarted(false)} />
         )}
       </div>
     );
@@ -113,22 +246,7 @@ export default function GamesHub() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-purple-50">
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Back to dashboard"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Games Hub</h1>
-            </div>
-          </div>
-        </div>
-      </header>
+      {renderHeader()}
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-5xl">
         {/* Progress Stats */}

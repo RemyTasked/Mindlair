@@ -11,11 +11,12 @@ interface ThoughtCard {
 
 interface ThoughtTidyGameProps {
   onComplete: () => void;
+  onExit?: () => void;
 }
 
 type Category = 'keep' | 'park' | 'release';
 
-export default function ThoughtTidyGame({ onComplete }: ThoughtTidyGameProps) {
+export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameProps) {
   const [cards, setCards] = useState<ThoughtCard[]>([]);
   const [draggedCard, setDraggedCard] = useState<ThoughtCard | null>(null);
   const [buckets, setBuckets] = useState<{
@@ -262,6 +263,18 @@ export default function ThoughtTidyGame({ onComplete }: ThoughtTidyGameProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
+        {/* Exit Button */}
+        {onExit && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={onExit}
+              className="p-2 text-white/80 hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Exit Game"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">

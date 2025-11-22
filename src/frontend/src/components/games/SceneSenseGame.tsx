@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, Sparkles, X } from 'lucide-react';
 import api from '../../lib/axios';
 
 interface Question {
@@ -15,9 +15,10 @@ interface Question {
 
 interface SceneSenseGameProps {
   onComplete: (credits: number, streak: number) => void;
+  onExit?: () => void;
 }
 
-export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
+export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGameProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -296,6 +297,18 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
   return (
     <div className="min-h-screen p-4 sm:p-8">
       <div className="max-w-2xl mx-auto">
+        {/* Exit Button */}
+        {onExit && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={onExit}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Exit Game"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">

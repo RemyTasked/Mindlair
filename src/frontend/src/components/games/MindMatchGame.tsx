@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Sparkles, RotateCcw, Target } from 'lucide-react';
+import { CheckCircle, Sparkles, RotateCcw, Target, X } from 'lucide-react';
 import api from '../../lib/axios';
 
 interface Pair {
@@ -14,6 +14,7 @@ interface Pair {
 
 interface MindMatchGameProps {
   onComplete: (credits: number, streak: number) => void;
+  onExit?: () => void;
 }
 
 interface Card {
@@ -24,7 +25,7 @@ interface Card {
   isMatched: boolean;
 }
 
-export default function MindMatchGame({ onComplete }: MindMatchGameProps) {
+export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps) {
   const [pairs, setPairs] = useState<Pair[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [flippedCards, setFlippedCards] = useState<string[]>([]);
@@ -349,6 +350,19 @@ export default function MindMatchGame({ onComplete }: MindMatchGameProps) {
             />
           </div>
         </div>
+
+        {/* Exit Button */}
+        {onExit && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={onExit}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Exit Game"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         {/* Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">

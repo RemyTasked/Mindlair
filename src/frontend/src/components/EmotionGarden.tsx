@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Flower2, Cloud, TreePine, Mountain, Sparkles } from 'lucide-react';
+import { Flower2, Cloud, TreePine, Mountain, Sparkles, X } from 'lucide-react';
 import api from '../lib/axios';
 
 interface GardenPlant {
@@ -27,9 +27,10 @@ interface GardenState {
 
 interface EmotionGardenProps {
   userId?: string;
+  onExit?: () => void;
 }
 
-export default function EmotionGarden(_props: EmotionGardenProps) {
+export default function EmotionGarden({ onExit }: EmotionGardenProps) {
   const [gardenState, setGardenState] = useState<GardenState | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCheckIn, setShowCheckIn] = useState(false);
@@ -149,12 +150,23 @@ export default function EmotionGarden(_props: EmotionGardenProps) {
             </h1>
             <p className="text-gray-700">Your inner world, rendered as a living scene</p>
           </div>
-          <button
-            onClick={() => setShowCheckIn(true)}
-            className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all"
-          >
-            + Check In
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowCheckIn(true)}
+              className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all"
+            >
+              + Check In
+            </button>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Exit Emotion Garden"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Garden Canvas */}
