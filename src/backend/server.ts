@@ -33,6 +33,8 @@ import spotifyRoutes from './routes/spotify';
 import appleMusicRoutes from './routes/appleMusic';
 import focusRoomsRoutes from './routes/focusRooms';
 import gamesRoutes from './routes/games';
+import thoughtTidyRoutes from './routes/thoughtTidy';
+import emotionGardenRoutes from './routes/emotionGarden';
 import testRoutes from './routes/test';
 
 dotenv.config();
@@ -120,6 +122,8 @@ app.use('/api/spotify', spotifyRoutes);
 app.use('/api/apple-music', appleMusicRoutes);
 app.use('/api/focus-rooms', focusRoomsRoutes);
 app.use('/api/games', gamesRoutes);
+app.use('/api/thought-tidy', thoughtTidyRoutes);
+app.use('/api/emotion-garden', emotionGardenRoutes);
 app.use('/api/test', testRoutes);
 
 // Serve static files from frontend build in production

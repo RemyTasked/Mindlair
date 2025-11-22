@@ -59,6 +59,13 @@ model User {
   // Games Hub
   gameSessions GameSession[]
   gameProgress UserGameProgress?
+  
+  // Thought Tidy
+  thoughtTidySessions ThoughtTidySession[]
+  
+  // Emotion Garden
+  emotionCheckIns EmotionCheckIn[]
+  emotionGardenState EmotionGardenState?
 
   @@map("users")
 }
@@ -651,4 +658,67 @@ model GameBadge {
   updatedAt   DateTime @updatedAt
 
   @@map("game_badges")
+}
+
+// ============================================
+// THOUGHT TIDY MODELS
+// ============================================
+
+model ThoughtTidySession {
+  id          String   @id @default(uuid())
+  userId      String
+  date        DateTime @default(now()) @db.Date
+  completedAt DateTime?
+  creditsEarned Int     @default(0)
+  
+  // Thought cards and their sorting
+  thoughts    Json // Array of { id, text, category: 'keep' | 'park' | 'release' }
+  
+  // Summary
+  keptCount   Int      @default(0)
+  parkedCount Int      @default(0)
+  releasedCount Int    @default(0)
+  
+  // Optional action items from "Park" thoughts
+  actionItems Json? // Array of { text, completed: boolean }
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("thought_tidy_sessions")
+}
+
+// ============================================
+// EMOTION GARDEN MODELS
+// ============================================
+
+model EmotionCheckIn {
+  id          String   @id @default(uuid())
+  userId      String
+  date        DateTime @default(now()) @db.Date
+  emotion     String // "calm", "joy", "anxiety", "anger", "gratitude", "overwhelm", etc.
+  intensity   Int      @default(5) // 1-10 scale
+  notes       String? // Optional context
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("emotion_checkins")
+}
+
+model EmotionGardenState {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  gardenData  Json // Current state of the garden: { plants: [...], weather: {...}, growth: {...} }
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emotion_garden_states")
 }

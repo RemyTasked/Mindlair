@@ -6,6 +6,8 @@ import Logo from '../components/Logo';
 import api from '../lib/axios';
 import SceneSenseGame from '../components/games/SceneSenseGame';
 import MindMatchGame from '../components/games/MindMatchGame';
+import ThoughtTidyGame from '../components/games/ThoughtTidyGame';
+import EmotionGarden from '../components/EmotionGarden';
 
 interface GameProgress {
   totalCredits: number;
@@ -16,7 +18,8 @@ interface GameProgress {
 
 export default function GamesHub() {
   const navigate = useNavigate();
-  const [gameType, setGameType] = useState<'scene-sense' | 'mind-match' | null>(null);
+  const [gameType, setGameType] = useState<'scene-sense' | 'mind-match' | 'thought-tidy' | null>(null);
+  const [showEmotionGarden, setShowEmotionGarden] = useState(false);
   const [progress, setProgress] = useState<GameProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
@@ -61,13 +64,19 @@ export default function GamesHub() {
     );
   }
 
+  if (showEmotionGarden) {
+    return <EmotionGarden />;
+  }
+
   if (gameStarted && gameType) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-purple-50">
         {gameType === 'scene-sense' ? (
           <SceneSenseGame onComplete={handleGameComplete} />
-        ) : (
+        ) : gameType === 'mind-match' ? (
           <MindMatchGame onComplete={handleGameComplete} />
+        ) : (
+          <ThoughtTidyGame onComplete={handleGameComplete} />
         )}
       </div>
     );
@@ -216,8 +225,8 @@ export default function GamesHub() {
           </motion.div>
         )}
 
-        {/* Game Info Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* All Games Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -227,13 +236,49 @@ export default function GamesHub() {
               <span className="text-2xl">🧠</span>
               Scene Sense
             </h3>
-            <ul className="space-y-2 text-gray-600">
+            <ul className="space-y-2 text-gray-600 mb-4">
               <li>• 3-5 questions per session</li>
               <li>• Multiple choice format</li>
               <li>• Immediate feedback</li>
               <li>• Short cinematic micro-teaching</li>
               <li>• Build mental performance skills</li>
             </ul>
+            <button
+              onClick={() => {
+                setGameType('scene-sense');
+                setGameStarted(true);
+              }}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Play Now
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl p-6 shadow-md"
+          >
+            <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <span className="text-2xl">🎯</span>
+              Mind Match
+            </h3>
+            <ul className="space-y-2 text-gray-600 mb-4">
+              <li>• 6 face-down cards (3 pairs)</li>
+              <li>• Flip 2 cards to match</li>
+              <li>• Unlock teaching on match</li>
+              <li>• Short cinematic micro-reveal</li>
+              <li>• Learn winning skill combinations</li>
+            </ul>
+            <button
+              onClick={() => {
+                setGameType('mind-match');
+                setGameStarted(true);
+              }}
+              className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Play Now
+            </button>
           </motion.div>
 
           <motion.div
@@ -242,18 +287,56 @@ export default function GamesHub() {
             className="bg-white rounded-xl p-6 shadow-md"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <span className="text-2xl">🎯</span>
-              Mind Match
+              <span className="text-2xl">🎬</span>
+              Thought Tidy
             </h3>
-            <ul className="space-y-2 text-gray-600">
-              <li>• 6 face-down cards (3 pairs)</li>
-              <li>• Flip 2 cards to match</li>
-              <li>• Unlock teaching on match</li>
-              <li>• Short cinematic micro-reveal</li>
-              <li>• Learn winning skill combinations</li>
+            <ul className="space-y-2 text-gray-600 mb-4">
+              <li>• End-of-day brain declutter</li>
+              <li>• Sort thoughts into 3 buckets</li>
+              <li>• Keep, Park, or Release</li>
+              <li>• Reduce rumination</li>
+              <li>• Better sleep preparation</li>
             </ul>
+            <button
+              onClick={() => {
+                setGameType('thought-tidy');
+                setGameStarted(true);
+              }}
+              className="w-full px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors"
+            >
+              Start Tidy
+            </button>
           </motion.div>
         </div>
+
+        {/* Emotion Garden Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-6 shadow-md border-2 border-green-200"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="text-3xl">🌱</span>
+                Emotion Garden
+              </h3>
+              <p className="text-gray-700 mb-2">Your inner world, rendered as a living scene</p>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Visual representation of your emotional patterns</li>
+                <li>• Grows with check-ins and activities</li>
+                <li>• See your mental landscape over time</li>
+                <li>• Gentle insights into your patterns</li>
+              </ul>
+            </div>
+            <button
+              onClick={() => setShowEmotionGarden(true)}
+              className="px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold"
+            >
+              View Garden
+            </button>
+          </div>
+        </motion.div>
       </main>
     </div>
   );
