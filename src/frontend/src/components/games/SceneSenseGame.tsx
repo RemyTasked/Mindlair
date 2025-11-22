@@ -35,9 +35,18 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
   const loadQuestions = async () => {
     try {
       const response = await api.get('/api/games/scene-sense/questions?count=5');
-      setQuestions(response.data.questions);
-    } catch (error) {
+      const questions = response.data.questions || [];
+      
+      if (questions.length === 0) {
+        console.error('No questions available. Please seed the database with game questions.');
+        setLoading(false);
+        return;
+      }
+      
+      setQuestions(questions);
+    } catch (error: any) {
       console.error('Error loading questions:', error);
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -147,10 +156,22 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
     );
   }
 
-  if (questions.length === 0) {
+  if (questions.length === 0 && !loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">No questions available</p>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Questions Available</h2>
+          <p className="text-gray-600 mb-4">
+            The game database hasn't been seeded yet. Please contact support or check the backend logs.
+          </p>
+          <button
+            onClick={() => window.location.href = '/games'}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Back to Games Hub
+          </button>
+        </div>
       </div>
     );
   }

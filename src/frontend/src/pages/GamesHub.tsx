@@ -30,8 +30,14 @@ export default function GamesHub() {
       const response = await api.get('/api/games/daily');
       setGameType(response.data.gameType);
       setProgress(response.data.progress);
-    } catch (error) {
-      console.error('Error loading daily game:', error);
+      console.log('✅ Daily game loaded:', response.data.gameType);
+    } catch (error: any) {
+      console.error('❌ Error loading daily game:', error);
+      // Show error to user
+      if (error.response?.status === 401) {
+        // Not authenticated - redirect to login
+        navigate('/');
+      }
     } finally {
       setLoading(false);
     }
@@ -183,13 +189,30 @@ export default function GamesHub() {
               </div>
 
               <button
-                onClick={() => setGameStarted(true)}
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg flex items-center justify-center gap-3"
+                onClick={() => {
+                  console.log('Starting game:', gameType);
+                  setGameStarted(true);
+                }}
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!gameType}
               >
                 <Play className="w-6 h-6" />
                 Start Game
               </button>
             </div>
+          </motion.div>
+        )}
+
+        {!gameType && !loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8"
+          >
+            <h3 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Game Not Available</h3>
+            <p className="text-yellow-800">
+              Unable to load today's game. Please refresh the page or try again later.
+            </p>
           </motion.div>
         )}
 

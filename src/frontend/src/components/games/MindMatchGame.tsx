@@ -42,7 +42,14 @@ export default function MindMatchGame({ onComplete }: MindMatchGameProps) {
   const loadPairs = async () => {
     try {
       const response = await api.get('/api/games/mind-match/pairs');
-      const loadedPairs = response.data.pairs;
+      const loadedPairs = response.data.pairs || [];
+      
+      if (loadedPairs.length === 0) {
+        console.error('No pairs available. Please seed the database with game pairs.');
+        setLoading(false);
+        return;
+      }
+      
       setPairs(loadedPairs);
 
       // Create cards from pairs (2 cards per pair)
@@ -67,8 +74,9 @@ export default function MindMatchGame({ onComplete }: MindMatchGameProps) {
       // Shuffle cards
       const shuffled = newCards.sort(() => Math.random() - 0.5);
       setCards(shuffled);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading pairs:', error);
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -168,6 +176,26 @@ export default function MindMatchGame({ onComplete }: MindMatchGameProps) {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading pairs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pairs.length === 0 && !loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Pairs Available</h2>
+          <p className="text-gray-600 mb-4">
+            The game database hasn't been seeded yet. Please contact support or check the backend logs.
+          </p>
+          <button
+            onClick={() => window.location.href = '/games'}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Back to Games Hub
+          </button>
         </div>
       </div>
     );
