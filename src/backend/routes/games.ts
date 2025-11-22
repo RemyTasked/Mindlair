@@ -28,7 +28,7 @@ router.get('/daily', authenticate, async (req: Request, res: Response) => {
     // Get user progress
     const progress = await gameService.getUserGameProgress(userId);
 
-    res.json({
+    return res.json({
       gameType,
       progress: {
         totalCredits: progress.totalCredits,
@@ -39,7 +39,7 @@ router.get('/daily', authenticate, async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error('Error getting daily game:', error);
-    res.status(500).json({ error: error.message || 'Failed to get daily game' });
+    return res.status(500).json({ error: error.message || 'Failed to get daily game' });
   }
 });
 
@@ -138,7 +138,7 @@ router.post('/mind-match/submit', authenticate, async (req: Request, res: Respon
     const { pairId, matchedPairs, totalPairs, perfectScore } = req.body;
 
     if (!pairId || matchedPairs === undefined || totalPairs === undefined) {
-      throw new AppError('Missing required fields', 400);
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const result = await gameService.recordGameSession(userId, 'mind-match', {
@@ -148,7 +148,7 @@ router.post('/mind-match/submit', authenticate, async (req: Request, res: Respon
       perfectScore,
     });
 
-    res.json({
+    return res.json({
       success: true,
       credits: result.credits,
       streak: result.streak,
@@ -156,7 +156,7 @@ router.post('/mind-match/submit', authenticate, async (req: Request, res: Respon
     });
   } catch (error: any) {
     logger.error('Error submitting Mind Match results:', error);
-    res.status(500).json({ error: error.message || 'Failed to submit results' });
+    return res.status(500).json({ error: error.message || 'Failed to submit results' });
   }
 });
 
