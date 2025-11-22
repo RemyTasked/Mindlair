@@ -160,6 +160,15 @@ export class AudioAnalyzer {
   private featureHistory: AudioFeatures[] = [];
   private readonly MAX_HISTORY = 1000; // Keep last ~16 minutes at 60fps
   
+  // Current meeting context (for smarter cues)
+  private currentMeetingContext: {
+    id: string;
+    title: string;
+    description: string | null;
+    meetingType: string | null;
+    status: string;
+  } | null = null;
+  
   // Callbacks
   private onFeaturesCallback: ((features: AudioFeatures) => void) | null = null;
   private onCueCallback: ((cue: CueTrigger) => void) | null = null;
@@ -196,11 +205,20 @@ export class AudioAnalyzer {
   /**
    * Initialize audio capture and analysis
    */
-  async start(meetingContext?: MeetingContext): Promise<void> {
+  async start(meetingContext?: MeetingContext, fullMeetingContext?: {
+    id: string;
+    title: string;
+    description: string | null;
+    meetingType: string | null;
+    status: string;
+  }): Promise<void> {
     try {
       console.log('🎤 Level 2 Cue Companion: Requesting microphone access...');
       
       this.meetingStartTime = Date.now();
+      
+      // Store full meeting context for smarter cues
+      this.currentMeetingContext = fullMeetingContext || null;
       
       // Start adaptive learning session
       if (meetingContext) {
@@ -452,6 +470,12 @@ export class AudioAnalyzer {
    * Check if current features warrant a cue (Hybrid: ML + Z-score based with persistence)
    */
   private async checkForCueTriggers(features: AudioFeatures, mlFeatures: MLFeatures | null): Promise<void> {
+    // Check if meeting is still active (not cancelled or ended)
+    if (!this.isMeetingActive()) {
+      console.log('🚫 Meeting is cancelled or ended - stopping cue triggers');
+      return;
+    }
+    
     // Hard cap on cues
     if (this.cuesThisMeeting >= this.MAX_CUES_PER_MEETING) return;
     
@@ -522,10 +546,11 @@ export class AudioAnalyzer {
       
       const persistedMs = now - this.persistenceState.conditionStartTime;
       if (persistedMs >= 3000 && now - this.debounceState.lastVolumeCue >= 30000) {
+        const message = this.generateContextualCue('volume', this.currentMeetingContext);
         this.triggerCue({
           type: 'volume',
           severity: rmsZ,
-          message: Math.random() > 0.5 ? 'Softer tone' : 'Lower a notch',
+          message,
           timestamp: now,
           persistedFor: persistedMs,
         });
@@ -547,10 +572,11 @@ export class AudioAnalyzer {
       
       const persistedMs = now - this.persistenceState.conditionStartTime;
       if (persistedMs >= 8000 && now - this.debounceState.lastPauseCue >= 45000) {
+        const message = this.generateContextualCue('breathless', this.currentMeetingContext);
         this.triggerCue({
           type: 'breathless',
           severity: Math.abs(pauseRatioZ),
-          message: Math.random() > 0.5 ? 'Add a pause' : 'One breath now',
+          message,
           timestamp: now,
           persistedFor: persistedMs,
         });
@@ -572,10 +598,11 @@ export class AudioAnalyzer {
       
       const persistedMs = now - this.persistenceState.conditionStartTime;
       if (persistedMs >= 10000 && now - this.debounceState.lastPauseCue >= 45000) {
+        const message = this.generateContextualCue('stuck', this.currentMeetingContext);
         this.triggerCue({
           type: 'stuck',
           severity: pauseRatioZ,
-          message: Math.random() > 0.5 ? 'Finish the line' : 'Land your point',
+          message,
           timestamp: now,
           persistedFor: persistedMs,
         });
@@ -596,10 +623,11 @@ export class AudioAnalyzer {
       
       const monologueDuration = now - this.persistenceState.continuousSpeechStart;
       if (monologueDuration >= 90000 && now - this.debounceState.lastMonologueCue >= 120000) {
+        const message = this.generateContextualCue('monologue', this.currentMeetingContext);
         this.triggerCue({
           type: 'monologue',
           severity: monologueDuration / 1000, // Duration in seconds
-          message: 'Invite a reply',
+          message,
           timestamp: now,
           persistedFor: monologueDuration,
         });
@@ -613,9 +641,22 @@ export class AudioAnalyzer {
   }
   
   /**
-   * Trigger a cue
+   * Trigger a cue (only if meeting is active and not dismissed)
    */
   private triggerCue(cue: CueTrigger): void {
+    // Check if meeting is still active
+    if (!this.isMeetingActive()) {
+      console.log('🚫 Skipping cue - meeting is cancelled or ended');
+      return;
+    }
+    
+    // Check if this cue type was dismissed
+    const dismissedUntil = this.dismissedCues.dismissedUntil.get(cue.type);
+    if (dismissedUntil && Date.now() < dismissedUntil) {
+      console.log(`🚫 Skipping ${cue.type} cue - dismissed until ${new Date(dismissedUntil).toISOString()}`);
+      return;
+    }
+    
     this.debounceState.lastAnyCue = cue.timestamp;
     this.cuesThisMeeting++;
     this.cueHistory.push(cue);
@@ -824,6 +865,87 @@ export class AudioAnalyzer {
    */
   getBaseline(): UserBaseline {
     return { ...this.baseline };
+  }
+  
+  /**
+   * Generate context-aware cue messages based on meeting type and description
+   */
+  private generateContextualCue(
+    cueType: 'pace' | 'volume' | 'breathless' | 'stuck' | 'monologue',
+    meetingContext: { id: string; title: string; description: string | null; meetingType: string | null; status: string } | null
+  ): string {
+    const context = meetingContext;
+    
+    // Default messages
+    const defaultMessages: Record<string, string[]> = {
+      pace: ['Slow your pace', 'Breathe, then speak', 'Pause between thoughts'],
+      volume: ['Softer tone', 'Lower a notch', 'Gentle your voice'],
+      breathless: ['Take a breath', 'Breathe deeply', 'Pause and breathe'],
+      stuck: ['Pause and reset', 'Take a moment', 'Reset your flow'],
+      monologue: ['Check in with others', 'Invite others in', 'Open the floor'],
+    };
+    
+    // Context-aware messages based on meeting type
+    if (context) {
+      const meetingType = context.meetingType?.toLowerCase() || '';
+      const description = (context.description || '').toLowerCase();
+      
+      // Presentation-specific cues
+      if (meetingType.includes('presentation') || description.includes('present') || description.includes('demo')) {
+        if (cueType === 'pace') {
+          return Math.random() > 0.5 ? 'Slow down for clarity' : 'Pause for impact';
+        }
+        if (cueType === 'volume') {
+          return Math.random() > 0.5 ? 'Project, don\'t push' : 'Steady volume';
+        }
+        if (cueType === 'monologue') {
+          return 'Pause for questions';
+        }
+      }
+      
+      // 1-on-1 specific cues
+      if (meetingType.includes('1-on-1') || meetingType.includes('one-on-one') || description.includes('1:1')) {
+        if (cueType === 'monologue') {
+          return 'Listen and respond';
+        }
+        if (cueType === 'pace') {
+          return Math.random() > 0.5 ? 'Take your time' : 'Speak with intention';
+        }
+      }
+      
+      // Team meeting cues
+      if (meetingType.includes('team') || description.includes('team')) {
+        if (cueType === 'monologue') {
+          return 'Share the air';
+        }
+      }
+    }
+    
+    // Return random default message
+    const messages = defaultMessages[cueType] || ['Take a breath'];
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+  
+  /**
+   * Check if meeting is still active (not cancelled)
+   */
+  isMeetingActive(): boolean {
+    if (!this.currentMeetingContext) return true; // If no context, assume active
+    return this.currentMeetingContext.status !== 'cancelled' && 
+           this.currentMeetingContext.status !== 'ended';
+  }
+  
+  /**
+   * Update meeting context (for status checks)
+   */
+  updateMeetingContext(context: {
+    id: string;
+    title: string;
+    description: string | null;
+    meetingType: string | null;
+    status: string;
+  }): void {
+    this.currentMeetingContext = context;
   }
   
   /**

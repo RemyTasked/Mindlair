@@ -253,6 +253,22 @@ router.post(
         // Calculate attendee count
         const attendeeCount = event.attendees?.length || 0;
 
+        // Skip cancelled events and mark existing meetings as cancelled
+        if (event.status === 'cancelled') {
+          // Mark existing meeting as cancelled if it exists
+          await prisma.meeting.updateMany({
+            where: {
+              calendarEventId: event.id,
+              userId,
+            },
+            data: {
+              status: 'cancelled',
+            },
+          });
+          logger.info('🚫 Marked cancelled meeting', { calendarEventId: event.id, userId });
+          continue;
+        }
+
         // Upsert meeting to database
         await prisma.meeting.upsert({
           where: {
@@ -279,6 +295,7 @@ router.post(
             isOrganizer: event.isOrganizer || false,
             isBackToBack,
             cueDelivered: false,
+            status: 'scheduled', // Default status
           },
           update: {
             title: event.summary,
@@ -295,6 +312,9 @@ router.post(
             calendarAccountId,
             calendarLabel,
             calendarColor,
+            // Don't update status if meeting was cancelled (handled above)
+            // Only update if status is explicitly provided and not cancelled
+            ...(event.status && event.status !== 'cancelled' ? { status: 'scheduled' } : {}),
           },
         });
 

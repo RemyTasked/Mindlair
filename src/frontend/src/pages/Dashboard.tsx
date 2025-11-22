@@ -21,6 +21,11 @@ interface Meeting {
   title: string;
   startTime: string;
   endTime: string;
+  description?: string | null;
+  meetingType?: string | null;
+  status?: string; // "scheduled", "active", "ended", "cancelled"
+  actualStartTime?: string | null;
+  actualEndTime?: string | null;
   cueDelivered: boolean;
   focusSceneOpened: boolean;
   focusSceneUrl?: string;
@@ -348,13 +353,18 @@ export default function Dashboard() {
 
       const { activeMeetings: newActiveMeetings, activeCues: newActiveCues } = response.data;
       
-      console.log('📊 Level 1 active cues response:', {
-        activeMeetings: newActiveMeetings?.length || 0,
-        activeCues: newActiveCues?.length || 0,
-        cues: newActiveCues
+      // Filter out cancelled meetings
+      const validActiveMeetings = (newActiveMeetings || []).filter((m: any) => 
+        m.status !== 'cancelled' && m.status !== 'ended'
+      );
+      
+      console.log('📊 Active meetings response:', {
+        total: newActiveMeetings?.length || 0,
+        valid: validActiveMeetings.length,
+        cancelled: (newActiveMeetings || []).filter((m: any) => m.status === 'cancelled').length
       });
 
-      setActiveMeetings(newActiveMeetings || []);
+      setActiveMeetings(validActiveMeetings);
       
       // Display new cues as toasts (only if Level 2 is not active)
       // Note: We already checked Level 2 at the start, but double-check here in case
@@ -546,10 +556,17 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Cue Companion - Available during live meetings */}
-      {activeMeetings.length > 0 && (
+      {activeMeetings.length > 0 && activeMeetings[0] && (
         <Level2CueCompanion
           enabled={level2Enabled}
           onToggle={setLevel2Enabled}
+          meetingContext={{
+            id: activeMeetings[0].id,
+            title: activeMeetings[0].title,
+            description: activeMeetings[0].description || null,
+            meetingType: activeMeetings[0].meetingType || null,
+            status: activeMeetings[0].status || 'scheduled',
+          }}
         />
       )}
       {/* Header */}

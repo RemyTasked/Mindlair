@@ -10,11 +10,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Activity, Loader } from 'lucide-react';
 import { getAudioAnalyzer, type CueTrigger, type MeetingSummary } from '../services/audioAnalyzer';
 
+interface MeetingContext {
+  id: string;
+  title: string;
+  description: string | null;
+  meetingType: string | null;
+  status: string;
+}
+
 interface Level2CueCompanionProps {
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
   showSummary?: boolean;  // Show end-of-meeting summary
   onCalibrationChange?: (isCalibrating: boolean) => void;  // Notify parent when calibration starts/stops
+  meetingContext?: MeetingContext;  // Meeting context for smarter cues
 }
 
 export default function Level2CueCompanion({
@@ -22,6 +31,7 @@ export default function Level2CueCompanion({
   onToggle,
   showSummary = false,
   onCalibrationChange,
+  meetingContext,
 }: Level2CueCompanionProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentCue, setCurrentCue] = useState<CueTrigger | null>(null);
@@ -59,7 +69,16 @@ export default function Level2CueCompanion({
           localStorage.setItem('meetcute_level2_active', 'true');
           console.log('🎯 Level 2 activated');
           
-          await analyzer.current.start();
+          // Pass meeting context to analyzer for smarter cues
+          const meetingContextForAnalyzer = meetingContext ? {
+            id: meetingContext.id,
+            title: meetingContext.title,
+            description: meetingContext.description,
+            meetingType: meetingContext.meetingType,
+            status: meetingContext.status,
+          } : undefined;
+          
+          await analyzer.current.start(undefined, meetingContextForAnalyzer);
           setIsActive(true);
           setIsCalibrating(true);
           setPermissionDenied(false);

@@ -17,6 +17,7 @@ export interface CalendarEvent {
   calendarAccountId?: string;
   calendarProvider?: string;
   calendarEmail?: string;
+  status?: string; // 'confirmed', 'tentative', 'cancelled'
 }
 
 export class GoogleCalendarService {
@@ -89,7 +90,14 @@ export class GoogleCalendarService {
       const events = response.data.items || [];
 
       return events
-        .filter((event) => event.start?.dateTime && event.end?.dateTime)
+        .filter((event) => {
+          // Filter out cancelled events
+          if (event.status === 'cancelled') {
+            return false;
+          }
+          // Only include events with valid start/end times
+          return event.start?.dateTime && event.end?.dateTime;
+        })
         .map((event) => {
           // Check if user is the organizer
           // User is organizer if: event.organizer.email matches userEmail OR if organizer.self is true
@@ -110,6 +118,7 @@ export class GoogleCalendarService {
             location: event.location || undefined,
             hangoutLink: event.hangoutLink || undefined,
             isOrganizer: isOrganizer || false,
+            status: event.status || 'confirmed', // 'confirmed', 'tentative', 'cancelled'
           };
         });
     } catch (error: any) {

@@ -33,6 +33,7 @@ export function isMeetingActive(startTime: Date, endTime: Date): boolean {
 
 /**
  * Get the currently active meeting from a list of meetings
+ * Now checks meeting status to ensure meeting is actually happening
  */
 export function getActiveMeeting(meetings: Array<{
   id: string;
@@ -40,16 +41,45 @@ export function getActiveMeeting(meetings: Array<{
   startTime: string | Date;
   endTime?: string | Date;
   duration?: number; // in minutes
+  status?: string; // "scheduled", "active", "ended", "cancelled"
+  actualStartTime?: string | Date | null;
+  description?: string | null;
+  meetingType?: string | null;
 }>): MeetingWindow | null {
   const now = new Date();
   
   for (const meeting of meetings) {
+    // Skip cancelled meetings
+    if (meeting.status === 'cancelled') {
+      console.log('🚫 Skipping cancelled meeting:', meeting.id, meeting.title);
+      continue;
+    }
+    
+    // Skip ended meetings
+    if (meeting.status === 'ended') {
+      continue;
+    }
+    
     const startTime = new Date(meeting.startTime);
     const endTime = meeting.endTime 
       ? new Date(meeting.endTime)
       : new Date(startTime.getTime() + (meeting.duration || 60) * 60 * 1000);
     
+    // Check if meeting is within time window
     if (isMeetingActive(startTime, endTime)) {
+      // If meeting has actualStartTime, use that to verify it actually started
+      // If no actualStartTime but status is "active", consider it active
+      // If status is "scheduled" and we're past start time, meeting may not have started
+      const actualStart = meeting.actualStartTime ? new Date(meeting.actualStartTime) : null;
+      const isActuallyHappening = meeting.status === 'active' || 
+                                  (actualStart && now >= actualStart) ||
+                                  (now >= startTime && meeting.status !== 'ended' && meeting.status !== 'cancelled');
+      
+      if (!isActuallyHappening && now > startTime) {
+        // Meeting time has passed but status suggests it didn't start
+        continue;
+      }
+      
       const minutesUntilStart = Math.max(0, Math.floor((startTime.getTime() - now.getTime()) / (60 * 1000)));
       const minutesUntilEnd = Math.max(0, Math.floor((endTime.getTime() - now.getTime()) / (60 * 1000)));
       
@@ -58,7 +88,7 @@ export function getActiveMeeting(meetings: Array<{
         title: meeting.title,
         startTime,
         endTime,
-        isActive: now >= startTime && now <= endTime,
+        isActive: now >= startTime && now <= endTime && isActuallyHappening,
         minutesUntilStart,
         minutesUntilEnd,
       };

@@ -126,19 +126,31 @@ export class OutlookCalendarService {
 
       const events = response.data.value || [];
 
-      return events.map((event: any) => ({
-        id: event.id,
-        summary: event.subject || 'Untitled Meeting',
-        description: event.bodyPreview,
-        start: new Date(event.start.dateTime + 'Z'),
-        end: new Date(event.end.dateTime + 'Z'),
-        attendees:
-          event.attendees
-            ?.filter((a: any) => a.emailAddress?.address)
-            .map((a: any) => a.emailAddress.address) || [],
-        location: event.location?.displayName,
-        hangoutLink: event.onlineMeeting?.joinUrl,
-      }));
+      return events
+        .filter((event: any) => {
+          // Filter out cancelled events
+          // Outlook uses showAs: 'free', 'tentative', 'busy', 'oof', 'workingElsewhere', 'unknown'
+          // and isCancelled: true for cancelled events
+          if (event.isCancelled === true) {
+            return false;
+          }
+          // Only include events with valid start/end times
+          return event.start?.dateTime && event.end?.dateTime;
+        })
+        .map((event: any) => ({
+          id: event.id,
+          summary: event.subject || 'Untitled Meeting',
+          description: event.bodyPreview || event.body?.content || undefined,
+          start: new Date(event.start.dateTime + 'Z'),
+          end: new Date(event.end.dateTime + 'Z'),
+          attendees:
+            event.attendees
+              ?.filter((a: any) => a.emailAddress?.address)
+              .map((a: any) => a.emailAddress.address) || [],
+          location: event.location?.displayName,
+          hangoutLink: event.onlineMeeting?.joinUrl,
+          status: event.isCancelled ? 'cancelled' : (event.showAs === 'tentative' ? 'tentative' : 'confirmed'),
+        }));
     } catch (error: any) {
       logger.error('Error fetching Outlook Calendar events', {
         error: error.response?.data || error.message,
