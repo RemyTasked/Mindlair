@@ -40,8 +40,8 @@ if [ "$TABLE_EXISTS" = "t" ] || [ "$TABLE_EXISTS" = "true" ]; then
   GAME_COUNT=$(psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM game_questions;" 2>/dev/null | tr -d ' ' || echo "0")
   if [ "$GAME_COUNT" = "0" ] || [ -z "$GAME_COUNT" ]; then
     echo "🌱 No game data found, seeding games database..."
-    # Use ts-node to run the TypeScript seed script
-    npx ts-node src/backend/scripts/seedGames.ts || echo "⚠️ Seed script failed, continuing anyway..."
+    echo "⚠️ Games will be seeded automatically when the API endpoint is called on first access."
+    echo "⚠️ To seed manually, call POST /api/games/seed after server starts"
   else
     echo "✅ Game data already exists ($GAME_COUNT questions), skipping seed"
   fi

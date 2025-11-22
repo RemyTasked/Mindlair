@@ -227,11 +227,9 @@ router.post('/seed', authenticate, async (req: Request, res: Response) => {
     await seedGames();
     
     // Check results using shared Prisma instance
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    const { prisma } = require('../utils/prisma');
     const questionCount = await prisma.gameQuestion.count();
     const pairCount = await prisma.gamePair.count();
-    await prisma.$disconnect();
     
     logger.info(`✅ Games seeded successfully: ${questionCount} questions, ${pairCount} pairs`);
     

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../utils/prisma';
 
 /**
  * Seed game questions and pairs for Games Hub
@@ -1994,6 +1992,6 @@ if (require.main === module) {
       process.exit(1);
     })
     .finally(async () => {
-      await prisma.$disconnect();
+      // Don't disconnect - use shared instance
     });
 }
