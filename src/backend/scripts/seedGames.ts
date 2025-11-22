@@ -1895,9 +1895,9 @@ async function main() {
   console.log('📝 Seeding questions...');
   let questionCount = 0;
   for (const q of questions) {
-    // Create a stable ID based on question content
-    const questionHash = Buffer.from(q.question).toString('base64').substring(0, 16).replace(/[^a-zA-Z0-9]/g, '');
-    const id = `q-${questionHash}-${questionCount++}`;
+    // Use provided ID or generate sequential one (SS-001, SS-002, etc.)
+    const id = (q as any).id || `SS-${String(questionCount + 1).padStart(3, '0')}`;
+    questionCount++;
     
     try {
       await prisma.gameQuestion.upsert({
