@@ -156,7 +156,6 @@ export default function SceneSenseGame({ onComplete }: SceneSenseGameProps) {
   }
 
   const currentQuestion = questions[currentIndex];
-  const isCorrect = selectedAnswer !== null && selectedAnswer === currentQuestion.correctIndex;
 
   return (
     <div className="min-h-screen p-4 sm:p-8">

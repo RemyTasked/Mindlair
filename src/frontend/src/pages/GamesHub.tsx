@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowLeft, Trophy, Zap, Target, Sparkles, Play } from 'lucide-react';
 import Logo from '../components/Logo';
 import api from '../lib/axios';
@@ -37,7 +37,7 @@ export default function GamesHub() {
     }
   };
 
-  const handleGameComplete = async (newCredits: number, newStreak: number) => {
+  const handleGameComplete = async () => {
     // Refresh progress after game completion
     const response = await api.get('/api/games/progress');
     setProgress(response.data);
