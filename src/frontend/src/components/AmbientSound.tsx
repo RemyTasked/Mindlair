@@ -384,19 +384,28 @@ function generateSamples(type: SoundType): Float32Array {
   }
 
   // Apply smooth crossfade at loop boundaries for seamless transitions
+  // Use longer fade to prevent clicking
   const fadeSamples = SAMPLE_RATE * FADE_DURATION_SECONDS;
   
-  // Fade in at the beginning
+  // Fade in at the beginning (smooth curve)
   for (let i = 0; i < fadeSamples; i++) {
     const fadeIn = i / fadeSamples; // 0 to 1
-    data[i] *= fadeIn;
+    // Use smooth curve (ease-in-out) to prevent clicks
+    const smoothFade = fadeIn * fadeIn * (3 - 2 * fadeIn); // Smoothstep function
+    data[i] *= smoothFade;
   }
   
-  // Fade out at the end
+  // Fade out at the end (smooth curve)
   for (let i = 0; i < fadeSamples; i++) {
     const fadeOut = 1 - (i / fadeSamples); // 1 to 0
-    data[length - fadeSamples + i] *= fadeOut;
+    // Use smooth curve (ease-in-out) to prevent clicks
+    const smoothFade = fadeOut * fadeOut * (3 - 2 * fadeOut); // Smoothstep function
+    data[length - fadeSamples + i] *= smoothFade;
   }
+  
+  // Ensure the very first and last samples are exactly zero to prevent clicks
+  data[0] = 0;
+  data[length - 1] = 0;
   
   return data;
 }
@@ -900,51 +909,30 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         detail: customEvent.detail 
       });
       
-      // Gracefully fade out any currently playing audio first
+      if (!enabled) {
+        console.warn('⚠️ AmbientSound is disabled, not starting audio');
+        return;
+      }
+      
+      const soundToPlay = eventSoundTypeValue || soundType;
+      if (!soundToPlay || soundToPlay === 'none') {
+        console.warn('⚠️ No valid soundType provided:', { eventSoundTypeValue, soundType });
+        return;
+      }
+      
+      // Update event soundType state
+      if (eventSoundTypeValue) {
+        setEventSoundType(eventSoundTypeValue);
+      }
+      
+      // Gracefully fade out any currently playing audio first, then start new sound
       stopAudio(true).then(() => {
-        // Small delay to ensure fade out completes before starting new sound
+        // Longer delay to ensure fade out and cleanup fully completes
         setTimeout(() => {
-          const soundToPlay = eventSoundTypeValue || soundType;
-        console.log('🎵 Starting audio with soundType:', soundToPlay, { 
-          eventSoundTypeValue, 
-          soundType, 
-          enabled, 
-          source: customEvent.detail?.source,
-          roomId: customEvent.detail?.roomId
-        });
-        
-        if (!enabled) {
-          console.warn('⚠️ AmbientSound is disabled, not starting audio');
-          return;
-        }
-        
-        if (!soundToPlay || soundToPlay === 'none') {
-          console.warn('⚠️ No valid soundType provided:', { eventSoundTypeValue, soundType });
-          return;
-        }
-        
-        // Update event soundType state if provided (for future reference)
-        if (eventSoundTypeValue) {
-          setEventSoundType(eventSoundTypeValue);
-          console.log('✅ Updated eventSoundType state to:', eventSoundTypeValue);
-        }
-        
-        // Use the event soundType directly - pass it to startAudio immediately
-        const soundTypeToUse = eventSoundTypeValue || soundType;
-        
-        // Update state for future reference, but pass the value directly to startAudio
-        if (eventSoundTypeValue) {
-          setEventSoundType(eventSoundTypeValue);
-        }
-        
-        // Start audio immediately with the soundType from the event
-        // Don't wait for state updates - pass the value directly
-        setTimeout(() => {
-          console.log('🎵 Starting audio with soundType:', soundTypeToUse);
-          startAudio('event-dispatch', soundTypeToUse);
-        }, 200);
-        }, 100); // Small delay after fade completes
-      }); // Close the .then() callback
+          console.log('🎵 Starting audio with soundType:', soundToPlay);
+          startAudio('event-dispatch', soundToPlay);
+        }, 400); // Increased delay for smoother transition
+      });
     };
 
     const stopHandler = (e: Event) => {
@@ -1046,17 +1034,18 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     }
 
     // Always stop ALL previous audio completely before starting new sound
-    stopAudio();
-    
-    // Longer delay to ensure cleanup fully completes before starting new sound
-    const timer = setTimeout(() => {
-      if (!needsInteraction && enabled) {
-        // Double-check we're still supposed to play
-        startAudio('sound-change');
-      }
-    }, 150);
+    // Use fade out to prevent clicking
+    stopAudio(true).then(() => {
+      // Longer delay to ensure fade out fully completes before starting new sound
+      const timer = setTimeout(() => {
+        if (!needsInteraction && enabled) {
+          // Double-check we're still supposed to play
+          startAudio('sound-change');
+        }
+      }, 300); // Increased delay for smoother transition
 
-    return () => clearTimeout(timer);
+      return () => clearTimeout(timer);
+    });
   }, [enabled, soundType, eventSoundType, needsInteraction, startAudio, stopAudio]);
 
   useEffect(() => {

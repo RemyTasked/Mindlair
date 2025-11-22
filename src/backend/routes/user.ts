@@ -205,6 +205,15 @@ const preferencesSchema = z.object({
   privateReflectionMode: z.boolean().optional(),
   reflectionDataSharing: z.boolean().optional(),
   storeReflectionText: z.boolean().optional(),
+  // Simplified notification preferences
+  notificationPrimaryChannel: z.enum(['email', 'push']).optional(),
+  notificationSecondaryChannels: z.string().nullable().optional(),
+  notificationsMeetingMoments: z.boolean().optional(),
+  notificationsDailyRhythm: z.boolean().optional(),
+  notificationsWellness: z.boolean().optional(),
+  quietHoursStart: z.string().nullable().optional(),
+  quietHoursEnd: z.string().nullable().optional(),
+  notificationPreset: z.enum(['minimal', 'balanced', 'full', 'custom']).optional(),
 });
 
 router.put(

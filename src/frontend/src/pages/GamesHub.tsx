@@ -53,45 +53,69 @@ export default function GamesHub() {
 
   const loadDailyGame = async () => {
     try {
+      setLoading(true);
       // First check if games are seeded
-      const seedStatus = await api.get('/api/games/seed-status');
+      let seedStatus;
+      try {
+        seedStatus = await api.get('/api/games/seed-status');
+      } catch (statusError) {
+        console.warn('⚠️ Could not check seed status, attempting to seed anyway');
+        seedStatus = { data: { seeded: false } };
+      }
+
       if (!seedStatus.data.seeded) {
         console.log('🌱 Games not seeded, attempting to seed...');
         try {
           await api.post('/api/games/seed');
           console.log('✅ Games seeded successfully');
+          // Wait a moment for database to update
+          await new Promise(resolve => setTimeout(resolve, 500));
         } catch (seedError: any) {
           console.error('❌ Error seeding games:', seedError);
-          setLoading(false);
-          return;
+          // Don't return - try to load anyway in case some data exists
         }
       }
 
       const response = await api.get('/api/games/daily');
-      setGameType(response.data.gameType);
-      setProgress(response.data.progress);
-      console.log('✅ Daily game loaded:', response.data.gameType);
+      if (response.data.gameType) {
+        setGameType(response.data.gameType);
+        setProgress(response.data.progress);
+        console.log('✅ Daily game loaded:', response.data.gameType);
+      } else {
+        console.warn('⚠️ No game type returned, but no error');
+        // Set a default game type so user can still play
+        setGameType('scene-sense');
+      }
     } catch (error: any) {
       console.error('❌ Error loading daily game:', error);
       
       // If games aren't seeded, try to seed them
-      if (error.response?.status === 500 || error.message?.includes('seed') || error.message?.includes('No game')) {
+      if (error.response?.status === 500 || error.message?.includes('seed') || error.message?.includes('No game') || error.message?.includes('not available')) {
         try {
           console.log('🌱 Attempting to seed games database...');
           await api.post('/api/games/seed');
+          // Wait a moment for database to update
+          await new Promise(resolve => setTimeout(resolve, 500));
           // Reload after seeding
           const retryResponse = await api.get('/api/games/daily');
-          setGameType(retryResponse.data.gameType);
-          setProgress(retryResponse.data.progress);
+          if (retryResponse.data.gameType) {
+            setGameType(retryResponse.data.gameType);
+            setProgress(retryResponse.data.progress);
+          } else {
+            // Set default so user can still play
+            setGameType('scene-sense');
+          }
         } catch (seedError: any) {
           console.error('❌ Error seeding games:', seedError);
+          // Set default game type so user can still access games
+          setGameType('scene-sense');
         }
-      }
-      
-      // Show error to user
-      if (error.response?.status === 401) {
+      } else if (error.response?.status === 401) {
         // Not authenticated - redirect to login
         navigate('/');
+      } else {
+        // For other errors, set a default game type so user can still play
+        setGameType('scene-sense');
       }
     } finally {
       setLoading(false);

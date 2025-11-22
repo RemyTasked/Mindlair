@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../utils/prisma';
 import * as emotionGardenService from './emotionGardenService';
-
-const prisma = new PrismaClient();
 
 export interface GameQuestion {
   id: string;

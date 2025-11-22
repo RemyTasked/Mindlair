@@ -124,22 +124,17 @@ router.post(
         throw new AppError('Invalid playlist ID. Please try again or contact support.', 400);
       }
 
-      // If device is not active, transfer playback to it first
+      // If device is not active, transfer playback to it first (without playing)
       if (!targetDevice.is_active) {
         logger.info('🔄 Transferring playback to device', { deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
         try {
-          // Transfer playback AND start playing the playlist in one call
-          await spotifyService.transferPlayback(accessToken, targetDevice.id, true); // Transfer and play
-          // Wait a moment for transfer to complete
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Now play the playlist on the transferred device
-          await spotifyService.playPlaylist(accessToken, playlistId, targetDevice.id);
-          logger.info('✅ Started Spotify playback after transfer', { playlistId, deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
-          return res.json({ success: true, deviceId: targetDevice.id, playlistId, deviceName: targetDevice.name, deviceType: targetDevice.type });
+          // Transfer playback WITHOUT starting playback (play: false)
+          await spotifyService.transferPlayback(accessToken, targetDevice.id, false);
+          // Wait longer for transfer to complete before playing
+          await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (transferError: any) {
-          logger.warn('⚠️ Failed to transfer and play, trying direct play', { error: transferError.message });
-          // Fall through to direct play attempt
+          logger.warn('⚠️ Failed to transfer playback, trying direct play anyway', { error: transferError.message });
+          // Continue to try playing - device might still work
         }
       }
 
