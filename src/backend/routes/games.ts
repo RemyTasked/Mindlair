@@ -144,8 +144,13 @@ router.post('/mind-match/submit', authenticate, async (req: Request, res: Respon
  * GET /api/games/seed-status
  * Check if games database is seeded
  */
-router.get('/seed-status', authenticate, async (_req: Request, res: Response) => {
+router.get('/seed-status', authenticate, async (req: Request, res: Response) => {
   try {
+    // Verify userId is available
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
     const questionCount = await prisma.gameQuestion.count();
@@ -167,8 +172,13 @@ router.get('/seed-status', authenticate, async (_req: Request, res: Response) =>
  * POST /api/games/seed
  * Manually seed games database
  */
-router.post('/seed', authenticate, async (_req: Request, res: Response) => {
+router.post('/seed', authenticate, async (req: Request, res: Response) => {
   try {
+    // Verify userId is available
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
     // Use ts-node to run the seed script
     const { execSync } = require('child_process');
     const path = require('path');
