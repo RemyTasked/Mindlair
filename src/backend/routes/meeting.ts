@@ -256,10 +256,11 @@ router.post(
         // Skip cancelled events and mark existing meetings as cancelled
         if (event.status === 'cancelled') {
           // Mark existing meeting as cancelled if it exists
+          // Note: Using updateMany with both userId and calendarEventId since there's no direct unique constraint on calendarEventId alone
           await prisma.meeting.updateMany({
             where: {
               calendarEventId: event.id,
-              userId,
+              userId: userId,
             },
             data: {
               status: 'cancelled',
