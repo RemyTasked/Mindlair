@@ -1,7 +1,7 @@
 // Prisma Schema for Meet Cute
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -20,7 +20,7 @@ model User {
 
   // Onboarding
   onboardingCompleted Boolean @default(false)
-  onboardingData      Json?   // Stores: workStart, workEnd, focusGoals, customGoal, meetingComfort, meetingsPerDay, directorsNote
+  onboardingData      Json? // Stores: workStart, workEnd, focusGoals, customGoal, meetingComfort, meetingsPerDay, directorsNote
 
   // Calendar Integrations
   calendarAccounts CalendarAccount[]
@@ -29,21 +29,21 @@ model User {
   preferences UserPreferences?
 
   // Meetings & History
-  meetings           Meeting[]
-  focusSessions      FocusSession[]
-  dailyReflections   DailyReflection[]
-  wellnessCheckIns   WellnessCheckIn[]
+  meetings            Meeting[]
+  focusSessions       FocusSession[]
+  dailyReflections    DailyReflection[]
+  wellnessCheckIns    WellnessCheckIn[]
   presleyFlowSessions PresleyFlowSession[]
   windingDownSessions WindingDownSession[]
 
   // Delivery Settings
   deliverySettings DeliverySettings?
-  
+
   // Push Notifications
   pushSubscriptions PushSubscription[]
-  
+
   // Cue Companion
-  cueSettings CueSettings?
+  cueSettings  CueSettings?
   cueTelemetry CueTelemetry[]
   meetingMoods MeetingMood[]
 
@@ -56,19 +56,23 @@ model User {
   // Focus Room Sessions & Credits
   focusRoomSessions FocusRoomSession[]
 
+  // Games Hub
+  gameSessions GameSession[]
+  gameProgress UserGameProgress?
+
   @@map("users")
 }
 
 model SpotifyAccount {
-  id           String   @id @default(uuid())
-  userId       String   @unique
+  id           String    @id @default(uuid())
+  userId       String    @unique
   spotifyId    String
   displayName  String?
   accessToken  String
   refreshToken String?
   expiresAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -76,14 +80,14 @@ model SpotifyAccount {
 }
 
 model AppleMusicAccount {
-  id           String   @id @default(uuid())
-  userId       String   @unique
+  id           String    @id @default(uuid())
+  userId       String    @unique
   appleMusicId String
   displayName  String?
-  userToken    String   // MusicKit user token
+  userToken    String // MusicKit user token
   expiresAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -91,17 +95,17 @@ model AppleMusicAccount {
 }
 
 model FocusRoomSession {
-  id          String   @id @default(uuid())
-  userId      String
-  roomId      String   // 'deep-focus', 'soft-composure', etc.
-  roomName    String
-  duration    Int      // Duration in seconds
-  timerOption String   // '5', '10', '20', '∞'
-  completed   Boolean  @default(false)
-  creditsEarned Int    @default(0)
-  audioSource String   // 'spotify' or 'meetcute'
-  startedAt   DateTime @default(now())
-  completedAt DateTime?
+  id            String    @id @default(uuid())
+  userId        String
+  roomId        String // 'deep-focus', 'soft-composure', etc.
+  roomName      String
+  duration      Int // Duration in seconds
+  timerOption   String // '5', '10', '20', '∞'
+  completed     Boolean   @default(false)
+  creditsEarned Int       @default(0)
+  audioSource   String // 'spotify' or 'meetcute'
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -109,20 +113,20 @@ model FocusRoomSession {
 }
 
 model CalendarAccount {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   userId       String
-  provider     String   // "google" or "microsoft"
+  provider     String // "google" or "microsoft"
   email        String
-  label        String   @default("")
-  color        String?  // optional hex color for UI badges
-  isPrimary    Boolean  @default(false)
+  label        String    @default("")
+  color        String? // optional hex color for UI badges
+  isPrimary    Boolean   @default(false)
   accessToken  String
   refreshToken String?
   expiresAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   meetings Meeting[]
 
   @@unique([userId, provider, email])
@@ -130,51 +134,51 @@ model CalendarAccount {
 }
 
 model UserPreferences {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  tone      String   @default("balanced") // "executive", "cinematic", "balanced", "calm"
-  
+  id     String @id @default(uuid())
+  userId String @unique
+  tone   String @default("balanced") // "executive", "cinematic", "balanced", "calm"
+
   // Timing preferences
-  alertMinutesBefore Int @default(10)
+  alertMinutesBefore Int     @default(10)
   mergeBackToBack    Boolean @default(true)
-  
+
   // Feature toggles
   enableDailyWrapUp    Boolean @default(true)
   enableFocusScene     Boolean @default(true)
   enableAdaptiveTiming Boolean @default(false)
-  
+
   // Sound preferences
   enableFocusSound     Boolean @default(true)
   focusSoundType       String  @default("calm-ocean") // "calm-ocean", "rain", "forest", "meditation-bell", "white-noise", "none"
-  enableVoiceNarration Boolean @default(true)  // Enable voice narration in flows
-  
+  enableVoiceNarration Boolean @default(true) // Enable voice narration in flows
+
   // Presley Flow preferences
-  morningFlowTime      String  @default("06:00") // Time when morning flow becomes available (HH:mm format)
-  
+  morningFlowTime String @default("06:00") // Time when morning flow becomes available (HH:mm format)
+
   // Privacy & Reflection preferences
-  enableReflections         Boolean @default(true)   // Enable post-meeting reflection prompts
-  privateReflectionMode     Boolean @default(false)  // Private mode: only show trends, no raw text/words
-  reflectionDataSharing     Boolean @default(false)  // Allow anonymized data for product improvements
-  storeReflectionText       Boolean @default(true)   // Store one-word descriptions (can be disabled)
-  eveningFlowTime      String  @default("18:00") // Time when evening flow becomes available (HH:mm format)
-  enableMorningFlow    Boolean @default(true)  // Enable morning prep/recap
-  enableEveningFlow    Boolean @default(true)  // Enable evening wrap-up + mental rehearsal
-  
+  enableReflections     Boolean @default(true) // Enable post-meeting reflection prompts
+  privateReflectionMode Boolean @default(false) // Private mode: only show trends, no raw text/words
+  reflectionDataSharing Boolean @default(false) // Allow anonymized data for product improvements
+  storeReflectionText   Boolean @default(true) // Store one-word descriptions (can be disabled)
+  eveningFlowTime       String  @default("18:00") // Time when evening flow becomes available (HH:mm format)
+  enableMorningFlow     Boolean @default(true) // Enable morning prep/recap
+  enableEveningFlow     Boolean @default(true) // Enable evening wrap-up + mental rehearsal
+
   // Prep Mode defaults (JSON: { "1:1": "connection", "presentation": "confidence" })
-  defaultPrepModes     Json?   @default("{}")
-  
+  defaultPrepModes Json? @default("{}")
+
   // Wellness reminders (9am-6pm window)
-  enableWellnessReminders Boolean @default(true)  // Enable daily wellness check-ins
-  wellnessReminderFrequency Int @default(3)      // Hours between reminders (default: 3 hours)
-  
+  enableWellnessReminders   Boolean @default(true) // Enable daily wellness check-ins
+  wellnessReminderFrequency Int     @default(3) // Hours between reminders (default: 3 hours)
+
   // Winding Down session (separate from evening flow)
-  enableWindingDown    Boolean @default(true)   // Enable standalone winding down session
-  windingDownTime      String  @default("21:00") // Time for winding down session (HH:mm format, default: 9 PM)
-  
+  enableWindingDown Boolean @default(true) // Enable standalone winding down session
+  windingDownTime   String  @default("21:00") // Time for winding down session (HH:mm format, default: 9 PM)
+
   // Adaptive learning data
   averageEarlyJoinMinutes Float? // How early user typically joins
-  preferredAlertTime      Int?   // Learned optimal alert time
-  
+  preferredAlertTime      Int? // Learned optimal alert time
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -184,71 +188,71 @@ model UserPreferences {
 }
 
 model DeliverySettings {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  
+  id     String @id @default(uuid())
+  userId String @unique
+
   // Delivery channels - Master toggles
-  emailEnabled   Boolean @default(true)
-  slackEnabled   Boolean @default(false)
-  smsEnabled     Boolean @default(false)
-  pushEnabled    Boolean @default(true)  // Master toggle for web push notifications
-  
+  emailEnabled Boolean @default(true)
+  slackEnabled Boolean @default(false)
+  smsEnabled   Boolean @default(false)
+  pushEnabled  Boolean @default(true) // Master toggle for web push notifications
+
   // Granular EMAIL preferences (only applies if emailEnabled is true)
-  emailPreMeetingCues      Boolean @default(true)  // Pre-meeting focus session alerts
-  emailInMeetingCues       Boolean @default(false) // In-meeting cues (usually not needed via email)
-  emailPostMeetingCues     Boolean @default(true)  // Post-meeting cues (reflections, insights)
-  emailPresleyFlow         Boolean @default(true)  // Morning/evening Presley Flow alerts
-  emailWellnessReminders   Boolean @default(true)  // Wellness check-in reminders
-  emailMeetingInsights     Boolean @default(true)  // Post-meeting insights
-  emailMorningRecap        Boolean @default(true)  // Morning recap notifications
-  emailDailyWrapUp         Boolean @default(true)  // Evening wrap-up notifications
-  emailWindingDown         Boolean @default(true)  // Winding down session notifications
-  
+  emailPreMeetingCues    Boolean @default(true) // Pre-meeting focus session alerts
+  emailInMeetingCues     Boolean @default(false) // In-meeting cues (usually not needed via email)
+  emailPostMeetingCues   Boolean @default(true) // Post-meeting cues (reflections, insights)
+  emailPresleyFlow       Boolean @default(true) // Morning/evening Presley Flow alerts
+  emailWellnessReminders Boolean @default(true) // Wellness check-in reminders
+  emailMeetingInsights   Boolean @default(true) // Post-meeting insights
+  emailMorningRecap      Boolean @default(true) // Morning recap notifications
+  emailDailyWrapUp       Boolean @default(true) // Evening wrap-up notifications
+  emailWindingDown       Boolean @default(true) // Winding down session notifications
+
   // Granular SLACK preferences (only applies if slackEnabled is true)
-  slackPreMeetingCues      Boolean @default(true)  // Pre-meeting focus session alerts
-  slackInMeetingCues       Boolean @default(true)  // In-meeting cues (contextual nudges)
-  slackPostMeetingCues     Boolean @default(true)  // Post-meeting cues (reflections, insights)
-  slackPresleyFlow         Boolean @default(true)  // Morning/evening Presley Flow alerts
-  slackWellnessReminders   Boolean @default(true)  // Wellness check-in reminders
-  slackMeetingInsights     Boolean @default(true)  // Post-meeting insights
-  slackMorningRecap        Boolean @default(true)  // Morning recap notifications
-  slackDailyWrapUp         Boolean @default(true)  // Evening wrap-up notifications
-  slackWindingDown         Boolean @default(true)  // Winding down session notifications
-  
+  slackPreMeetingCues    Boolean @default(true) // Pre-meeting focus session alerts
+  slackInMeetingCues     Boolean @default(true) // In-meeting cues (contextual nudges)
+  slackPostMeetingCues   Boolean @default(true) // Post-meeting cues (reflections, insights)
+  slackPresleyFlow       Boolean @default(true) // Morning/evening Presley Flow alerts
+  slackWellnessReminders Boolean @default(true) // Wellness check-in reminders
+  slackMeetingInsights   Boolean @default(true) // Post-meeting insights
+  slackMorningRecap      Boolean @default(true) // Morning recap notifications
+  slackDailyWrapUp       Boolean @default(true) // Evening wrap-up notifications
+  slackWindingDown       Boolean @default(true) // Winding down session notifications
+
   // Granular SMS preferences (only applies if smsEnabled is true)
-  smsPreMeetingCues        Boolean @default(true)  // Pre-meeting focus session alerts
-  smsInMeetingCues         Boolean @default(false) // In-meeting cues (usually too intrusive via SMS)
-  smsPostMeetingCues       Boolean @default(false) // Post-meeting cues
-  smsPresleyFlow           Boolean @default(true)  // Morning/evening Presley Flow alerts
-  smsWellnessReminders     Boolean @default(true)  // Wellness check-in reminders
-  smsMeetingInsights       Boolean @default(false) // Post-meeting insights
-  smsMorningRecap          Boolean @default(true)  // Morning recap notifications
-  smsDailyWrapUp           Boolean @default(true)  // Evening wrap-up notifications
-  smsWindingDown           Boolean @default(true)  // Winding down session notifications
-  
+  smsPreMeetingCues    Boolean @default(true) // Pre-meeting focus session alerts
+  smsInMeetingCues     Boolean @default(false) // In-meeting cues (usually too intrusive via SMS)
+  smsPostMeetingCues   Boolean @default(false) // Post-meeting cues
+  smsPresleyFlow       Boolean @default(true) // Morning/evening Presley Flow alerts
+  smsWellnessReminders Boolean @default(true) // Wellness check-in reminders
+  smsMeetingInsights   Boolean @default(false) // Post-meeting insights
+  smsMorningRecap      Boolean @default(true) // Morning recap notifications
+  smsDailyWrapUp       Boolean @default(true) // Evening wrap-up notifications
+  smsWindingDown       Boolean @default(true) // Winding down session notifications
+
   // Granular PUSH notification preferences (only applies if pushEnabled is true)
-  pushPreMeetingCues      Boolean @default(true)  // Pre-meeting focus session alerts
-  pushInMeetingCues       Boolean @default(true)  // In-meeting cues (contextual nudges)
-  pushPostMeetingCues     Boolean @default(true)  // Post-meeting cues (reflections, insights)
-  pushPresleyFlow         Boolean @default(true)  // Morning/evening Presley Flow alerts
-  pushWellnessReminders   Boolean @default(true)  // Wellness check-in reminders
-  pushMeetingInsights     Boolean @default(true)  // Post-meeting insights
-  pushMorningRecap        Boolean @default(true)  // Morning recap notifications
-  pushDailyWrapUp         Boolean @default(true)  // Evening wrap-up notifications
-  pushWindingDown         Boolean @default(true)  // Winding down session notifications
-  
+  pushPreMeetingCues    Boolean @default(true) // Pre-meeting focus session alerts
+  pushInMeetingCues     Boolean @default(true) // In-meeting cues (contextual nudges)
+  pushPostMeetingCues   Boolean @default(true) // Post-meeting cues (reflections, insights)
+  pushPresleyFlow       Boolean @default(true) // Morning/evening Presley Flow alerts
+  pushWellnessReminders Boolean @default(true) // Wellness check-in reminders
+  pushMeetingInsights   Boolean @default(true) // Post-meeting insights
+  pushMorningRecap      Boolean @default(true) // Morning recap notifications
+  pushDailyWrapUp       Boolean @default(true) // Evening wrap-up notifications
+  pushWindingDown       Boolean @default(true) // Winding down session notifications
+
   // Contact info
   phoneNumber     String?
   slackWebhookUrl String? // Legacy webhook support
-  
+
   // Slack OAuth tokens (preferred method)
-  slackAccessToken  String? // OAuth access token
-  slackTeamId       String? // Slack workspace ID
-  slackTeamName     String? // Slack workspace name
-  slackChannelId    String? // Channel where notifications go
-  slackChannelName  String? // Channel name for display
-  slackUserId       String? // Slack user ID who authorized
-  
+  slackAccessToken String? // OAuth access token
+  slackTeamId      String? // Slack workspace ID
+  slackTeamName    String? // Slack workspace name
+  slackChannelId   String? // Channel where notifications go
+  slackChannelName String? // Channel name for display
+  slackUserId      String? // Slack user ID who authorized
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -258,67 +262,67 @@ model DeliverySettings {
 }
 
 model Meeting {
-  id              String    @id @default(uuid())
-  userId          String
-  calendarEventId String    // External calendar event ID
+  id                String  @id @default(uuid())
+  userId            String
+  calendarEventId   String // External calendar event ID
   calendarAccountId String?
   calendarLabel     String?
   calendarColor     String?
   calendarProvider  String?
-  
+
   calendarAccount CalendarAccount? @relation(fields: [calendarAccountId], references: [id], onDelete: SetNull)
-  
-  title           String
-  description     String?
-  startTime       DateTime
-  endTime         DateTime
-  attendees       String[]  // Array of email addresses
-  location        String?
-  meetingLink     String?
-  
+
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  attendees   String[] // Array of email addresses
+  location    String?
+  meetingLink String?
+
   // Meeting metadata
-  meetingType     String?   // Inferred type: "one-on-one", "team", "client", etc.
-  isOrganizer     Boolean   @default(false) // Is user the meeting organizer/host?
-  attendeeCount   Int       @default(0)     // Number of attendees in the meeting
-  isBackToBack    Boolean   @default(false)
-  status          String    @default("scheduled") // scheduled, active, ended
-  statusSource    String?   // google_meet, microsoft_graph, heuristic
-  actualStartTime DateTime?
-  actualEndTime   DateTime?
+  meetingType       String? // Inferred type: "one-on-one", "team", "client", etc.
+  isOrganizer       Boolean   @default(false) // Is user the meeting organizer/host?
+  attendeeCount     Int       @default(0) // Number of attendees in the meeting
+  isBackToBack      Boolean   @default(false)
+  status            String    @default("scheduled") // scheduled, active, ended
+  statusSource      String? // google_meet, microsoft_graph, heuristic
+  actualStartTime   DateTime?
+  actualEndTime     DateTime?
   lastPresenceCheck DateTime?
-  
+
   // Cue delivery
   cueScheduledFor DateTime?
   cueSentAt       DateTime?
   cueDelivered    Boolean   @default(false)
-  cueContent      String?   // The actual message sent
-  
-  // Focus Scene
-  focusSceneUrl   String?
-  focusSceneOpened Boolean  @default(false)
-  
-  // Post-meeting insights
-  postMeetingEmailSent Boolean @default(false)
-  postMeetingEmailSentAt DateTime?
-  meetingRating   Int?      // 1-5 star rating
-  meetingMood     String?   // User's mood during meeting: confident, calm, energized, focused, overwhelmed, uncertain
-  
-  // Post-meeting reflection (new cinematic system)
-  reflectionRating    String?   // "great", "neutral", "draining"
-  reflectionOneWord   String?   // One word to describe the meeting
-  reflectionEmotionalTone String? // AI-analyzed emotional tone
-  reflectionCapturedAt DateTime? // When reflection was captured
-  reflectionNotes     String?   // Optional longer reflection
-  meetingFeedback String?   // Optional user feedback
-  ratedAt         DateTime?
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  cueContent      String? // The actual message sent
 
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  focusSession  FocusSession?
-  cueTelemetry  CueTelemetry[]
-  meetingMoods  MeetingMood[]
+  // Focus Scene
+  focusSceneUrl    String?
+  focusSceneOpened Boolean @default(false)
+
+  // Post-meeting insights
+  postMeetingEmailSent   Boolean   @default(false)
+  postMeetingEmailSentAt DateTime?
+  meetingRating          Int? // 1-5 star rating
+  meetingMood            String? // User's mood during meeting: confident, calm, energized, focused, overwhelmed, uncertain
+
+  // Post-meeting reflection (new cinematic system)
+  reflectionRating        String? // "great", "neutral", "draining"
+  reflectionOneWord       String? // One word to describe the meeting
+  reflectionEmotionalTone String? // AI-analyzed emotional tone
+  reflectionCapturedAt    DateTime? // When reflection was captured
+  reflectionNotes         String? // Optional longer reflection
+  meetingFeedback         String? // Optional user feedback
+  ratedAt                 DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  focusSession FocusSession?
+  cueTelemetry CueTelemetry[]
+  meetingMoods MeetingMood[]
 
   @@unique([userId, calendarEventId])
   @@index([userId, startTime])
@@ -327,32 +331,32 @@ model Meeting {
 }
 
 model FocusSession {
-  id              String    @id @default(uuid())
-  userId          String
-  meetingId       String    @unique
-  
-  startedAt       DateTime  @default(now())
-  completedAt     DateTime?
-  duration        Int?      // Duration in seconds
-  
+  id        String @id @default(uuid())
+  userId    String
+  meetingId String @unique
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  duration    Int? // Duration in seconds
+
   // User interactions
   breathingExerciseCompleted Boolean @default(false)
-  reflectionNotes           String?
-  intention                 String?  // User's focus/goal for the meeting ("What's your focus for this meeting?")
-  
+  reflectionNotes            String?
+  intention                  String? // User's focus/goal for the meeting ("What's your focus for this meeting?")
+
   // Mind state tracking
-  mindState       String?   // "calm", "stressed", "focused", "unclear"
+  mindState         String? // "calm", "stressed", "focused", "unclear"
   breathingFlowType String? // Type of breathing flow used based on mind state
-  
+
   // Prep mode tracking (for behavioral insights)
-  prepMode        String?   // "Clarity", "Confidence", "Connection", "Composure", "Momentum"
-  prepFlowResponses Json?   // Responses from the prep flow steps
-  
+  prepMode          String? // "Clarity", "Confidence", "Connection", "Composure", "Momentum"
+  prepFlowResponses Json? // Responses from the prep flow steps
+
   // Sound preference learning
-  soundType       String?   // Which sound was played during this session
-  usedAISound     Boolean   @default(true)  // Did user use AI recommendation or override?
-  
-  createdAt       DateTime  @default(now())
+  soundType   String? // Which sound was played during this session
+  usedAISound Boolean @default(true) // Did user use AI recommendation or override?
+
+  createdAt DateTime @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
@@ -361,22 +365,22 @@ model FocusSession {
 }
 
 model DailyReflection {
-  id        String   @id @default(uuid())
-  userId    String
-  date      DateTime @db.Date
-  
+  id     String   @id @default(uuid())
+  userId String
+  date   DateTime @db.Date
+
   totalMeetings       Int
   scenesCompleted     Int
   focusSessionsOpened Int
-  
+
   // Insights
-  mostProductiveTime  String? // e.g., "morning", "afternoon"
-  averageJoinTime     Float?  // Average minutes before meeting joined
-  
-  wrapUpSentAt        DateTime?
-  
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  mostProductiveTime String? // e.g., "morning", "afternoon"
+  averageJoinTime    Float? // Average minutes before meeting joined
+
+  wrapUpSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -386,7 +390,7 @@ model DailyReflection {
 
 model SystemLog {
   id        String   @id @default(uuid())
-  level     String   // "info", "warn", "error"
+  level     String // "info", "warn", "error"
   message   String
   metadata  Json?
   createdAt DateTime @default(now())
@@ -398,9 +402,9 @@ model SystemLog {
 model WellnessCheckIn {
   id        String   @id @default(uuid())
   userId    String
-  type      String   // "breathing", "walk", "mindful_moment"
+  type      String // "breathing", "walk", "mindful_moment"
   completed Boolean  @default(false)
-  mindState String?  // User's mind state at check-in
+  mindState String? // User's mind state at check-in
   notes     String?
   createdAt DateTime @default(now())
 
@@ -411,21 +415,21 @@ model WellnessCheckIn {
 }
 
 model PresleyFlowSession {
-  id                 String   @id @default(uuid())
-  userId             String
-  date               DateTime // The date this session is for
-  flowType           String   // "morning" or "evening"
-  completedAt        DateTime?
-  journalNote        String?
-  
+  id          String    @id @default(uuid())
+  userId      String
+  date        DateTime // The date this session is for
+  flowType    String // "morning" or "evening"
+  completedAt DateTime?
+  journalNote String?
+
   // Evening-specific fields
-  dailyOutcomes      String?  // AI summary of today's meeting outcomes
-  reflectionText     String?  // User's reflection on the day
-  performanceRating  Int?     // 1-5 rating of today's performance
-  improvementNotes   String?  // What the user wants to improve tomorrow
-  
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  dailyOutcomes     String? // AI summary of today's meeting outcomes
+  reflectionText    String? // User's reflection on the day
+  performanceRating Int? // 1-5 rating of today's performance
+  improvementNotes  String? // What the user wants to improve tomorrow
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -435,14 +439,14 @@ model PresleyFlowSession {
 }
 
 model PushSubscription {
-  id         String   @id @default(uuid())
-  userId     String
-  endpoint   String   @unique // Push service endpoint URL
-  p256dh     String   // Encryption key
-  auth       String   // Authentication secret
-  userAgent  String?  // Browser/device info
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique // Push service endpoint URL
+  p256dh    String // Encryption key
+  auth      String // Authentication secret
+  userAgent String? // Browser/device info
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -455,41 +459,41 @@ model WindingDownSession {
   userId      String
   date        DateTime  @default(now()) // The date this session was started
   completedAt DateTime?
-  duration    Int?      // Duration in seconds
+  duration    Int? // Duration in seconds
   createdAt   DateTime  @default(now())
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, date])
   @@map("winding_down_sessions")
 }
 
 model CueSettings {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  enabled   Boolean  @default(true)
-  tone      String   @default("calm") // "calm" or "direct"
-  
+  id      String  @id @default(uuid())
+  userId  String  @unique
+  enabled Boolean @default(true)
+  tone    String  @default("calm") // "calm" or "direct"
+
   // Delivery channels
-  toastEnabled  Boolean @default(true)
-  slackEnabled  Boolean @default(false)
-  
+  toastEnabled Boolean @default(true)
+  slackEnabled Boolean @default(false)
+
   // Timing & frequency
-  quietHours   Json    @default("[]") // Array of { start: "HH:mm", end: "HH:mm" }
-  cueFrequency String  @default("balanced") // "minimal", "balanced", "frequent"
-  
+  quietHours   Json   @default("[]") // Array of { start: "HH:mm", end: "HH:mm" }
+  cueFrequency String @default("balanced") // "minimal", "balanced", "frequent"
+
   // Per-meeting overrides
   perMeetingOverrides Json @default("{}") // Record<meetingId, boolean>
-  
+
   // Low-energy window (for contextual cues)
   lowEnergyStart String @default("14:00") // HH:mm format
   lowEnergyEnd   String @default("16:00")
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@map("cue_settings")
 }
 
@@ -498,14 +502,14 @@ model CueTelemetry {
   cueId      String
   meetingId  String?
   userId     String
-  action     String   // "clicked", "dismissed", "ignored"
-  actionType String?  // "breathe", "focus-note", "hide", etc.
+  action     String // "clicked", "dismissed", "ignored"
+  actionType String? // "breathe", "focus-note", "hide", etc.
   timestamp  DateTime
   createdAt  DateTime @default(now())
-  
+
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   meeting Meeting? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, timestamp])
   @@index([cueId])
   @@map("cue_telemetry")
@@ -515,16 +519,136 @@ model MeetingMood {
   id        String   @id @default(uuid())
   meetingId String
   userId    String
-  value     Int      // -1 (stressed), 0 (neutral), 1 (energized)
+  value     Int // -1 (stressed), 0 (neutral), 1 (energized)
   timestamp DateTime
   createdAt DateTime @default(now())
-  
+
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  
+
   @@unique([meetingId, userId])
   @@index([userId])
   @@index([meetingId])
   @@map("meeting_moods")
 }
 
+// ============================================
+// GAMES HUB MODELS
+// ============================================
+
+model GameQuestion {
+  id           String   @id @default(uuid())
+  question     String
+  options      Json // Array of strings: ["Option A", "Option B", "Option C", "Option D"]
+  correctIndex Int // 0-3 index of correct answer
+  category     String // "calm", "confidence", "connection", "boundaries", "clarity", "recovery"
+  difficulty   Int // 1-5 (Tier 1-5)
+  sceneMatch   String? // Optional: "presentation", "1:1", "standup", etc.
+  microTeach   String // Short cinematic teaching point
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Game sessions that used this question
+  gameSessions GameSession[]
+
+  @@index([category, difficulty])
+  @@index([sceneMatch])
+  @@map("game_questions")
+}
+
+model GamePair {
+  id         String   @id @default(uuid())
+  cardA      String // First card text
+  cardB      String // Second card text (matches with cardA)
+  domain     String // "calm", "confidence", "boundaries", "clarity", "recovery"
+  difficulty Int // 1-5 (Tier 1-5)
+  microTeach String // Short cinematic teaching point shown on match
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Game sessions that used this pair
+  gameSessions GameSession[]
+
+  @@index([domain, difficulty])
+  @@map("game_pairs")
+}
+
+model GameSession {
+  id           String    @id @default(uuid())
+  userId       String
+  gameType     String // "scene-sense" or "mind-match"
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+  score        Int       @default(0) // Total score/credits earned
+  perfectScore Boolean   @default(false) // Did user get all questions/pairs correct?
+
+  // For Scene Sense (trivia)
+  questionId String?
+  question   GameQuestion? @relation(fields: [questionId], references: [id])
+  userAnswer Int? // User's selected answer index
+  isCorrect  Boolean?
+
+  // For Mind Match (pairing)
+  pairId       String?
+  pair         GamePair? @relation(fields: [pairId], references: [id])
+  matchedCards Json? // Array of matched card pairs: [["cardA1", "cardB1"], ["cardA2", "cardB2"]]
+  totalPairs   Int? // Total pairs in the game (usually 3)
+  matchedPairs Int? // Number of pairs successfully matched
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@index([gameType, startedAt])
+  @@map("game_sessions")
+}
+
+model UserGameProgress {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Credits & Streaks
+  totalCredits  Int       @default(0)
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  lastPlayedAt  DateTime?
+
+  // Difficulty unlocks
+  level1Unlocked Boolean @default(true) // Always available
+  level2Unlocked Boolean @default(false) // After X correct
+  level3Unlocked Boolean @default(false) // Badge unlock
+  level4Unlocked Boolean @default(false) // Legendary badge
+  level5Unlocked Boolean @default(false) // Completion of 3 Packs
+
+  // Category mastery tracking
+  categoryMastery Json @default("{}") // { "calm": { completed: 10, perfect: 5 }, "confidence": {...} }
+
+  // Badges earned
+  badges Json @default("[]") // Array of badge IDs/names
+
+  // Saved cards (for Mind Match)
+  savedCards Json @default("[]") // Array of saved pair IDs
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_game_progress")
+}
+
+model GameBadge {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  badgeType   String // "completion", "mastery", "legendary", "streak"
+  requirement Json // Requirements to earn badge (e.g., { "perfectScores": 10 })
+  icon        String? // Icon identifier or emoji
+  rarity      String   @default("common") // "common", "rare", "legendary"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("game_badges")
+}
