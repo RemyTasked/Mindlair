@@ -1891,6 +1891,19 @@ const pairs = [
 async function main() {
   console.log('🌱 Starting game data seeding...');
 
+  // Check if tables exist first
+  try {
+    await prisma.$queryRaw`SELECT 1 FROM game_questions LIMIT 1`;
+    await prisma.$queryRaw`SELECT 1 FROM game_pairs LIMIT 1`;
+  } catch (error: any) {
+    if (error.message?.includes('does not exist') || error.code === '42P01') {
+      console.error('❌ Database tables do not exist. Please run migrations first:');
+      console.error('   npx prisma migrate deploy');
+      process.exit(1);
+    }
+    throw error;
+  }
+
   // Seed questions
   console.log('📝 Seeding questions...');
   let questionCount = 0;

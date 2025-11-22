@@ -34,13 +34,20 @@ echo "Verifying schema..."
 psql $DATABASE_URL -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_preferences' AND column_name IN ('enablePresleyFlow', 'enableMorningFlow', 'enableEveningFlow');"
 
 echo "🎮 Checking if games need seeding..."
-GAME_COUNT=$(psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM game_questions;" 2>/dev/null | tr -d ' ' || echo "0")
-if [ "$GAME_COUNT" = "0" ] || [ -z "$GAME_COUNT" ]; then
-  echo "🌱 No game data found, seeding games database..."
-  # Use ts-node to run the TypeScript seed script
-  npx ts-node src/backend/scripts/seedGames.ts || echo "⚠️ Seed script failed, continuing anyway..."
+# First check if the table exists
+TABLE_EXISTS=$(psql $DATABASE_URL -t -c "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'game_questions');" 2>/dev/null | tr -d ' ' || echo "false")
+if [ "$TABLE_EXISTS" = "t" ] || [ "$TABLE_EXISTS" = "true" ]; then
+  GAME_COUNT=$(psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM game_questions;" 2>/dev/null | tr -d ' ' || echo "0")
+  if [ "$GAME_COUNT" = "0" ] || [ -z "$GAME_COUNT" ]; then
+    echo "🌱 No game data found, seeding games database..."
+    # Use ts-node to run the TypeScript seed script
+    npx ts-node src/backend/scripts/seedGames.ts || echo "⚠️ Seed script failed, continuing anyway..."
+  else
+    echo "✅ Game data already exists ($GAME_COUNT questions), skipping seed"
+  fi
 else
-  echo "✅ Game data already exists ($GAME_COUNT questions), skipping seed"
+  echo "⚠️ game_questions table does not exist yet. Migrations may not have completed. Skipping seed."
+  echo "⚠️ Games will be seeded automatically when the API endpoint is called."
 fi
 
 echo "Starting application..."
