@@ -7,6 +7,7 @@ import { analyzeMindStatePatterns } from '../services/ai/mindStateAnalyzer';
 import { recommendPrepMode, getRecommendationReason } from '../services/prepModeRecommender';
 import { getPreferredSound, getSmartSoundRecommendation } from '../services/soundLearningService';
 import { prisma } from '../utils/prisma';
+import * as emotionGardenService from '../services/games/emotionGardenService';
 
 const router = express.Router();
 
