@@ -450,12 +450,17 @@ async function main() {
   console.log('🎉 Game seeding complete!');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Error seeding games:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Allow running as script or importing
+if (require.main === module) {
+  main()
+    .catch((e) => {
+      console.error('❌ Error seeding games:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
+
+export { main as seedGames };
 

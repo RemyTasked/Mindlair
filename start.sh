@@ -33,6 +33,16 @@ psql $DATABASE_URL -c "SELECT migration_name, finished_at FROM _prisma_migration
 echo "Verifying schema..."
 psql $DATABASE_URL -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_preferences' AND column_name IN ('enablePresleyFlow', 'enableMorningFlow', 'enableEveningFlow');"
 
+echo "🎮 Checking if games need seeding..."
+GAME_COUNT=$(psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM game_questions;" 2>/dev/null | tr -d ' ' || echo "0")
+if [ "$GAME_COUNT" = "0" ] || [ -z "$GAME_COUNT" ]; then
+  echo "🌱 No game data found, seeding games database..."
+  # Use ts-node to run the TypeScript seed script
+  npx ts-node src/backend/scripts/seedGames.ts || echo "⚠️ Seed script failed, continuing anyway..."
+else
+  echo "✅ Game data already exists ($GAME_COUNT questions), skipping seed"
+fi
+
 echo "Starting application..."
 node dist/server.js
 
