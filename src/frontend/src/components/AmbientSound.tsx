@@ -850,26 +850,43 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       // Prioritize overrideSoundType (from event), then eventSoundType (from state), then soundType prop
       // But if soundType prop is 'none', only use overrideSoundType or eventSoundType
       const currentSoundType = overrideSoundType || eventSoundType || (soundType !== 'none' ? soundType : null);
-      console.log('🎵 startAudio called with:', { sourceLabel, currentSoundType, overrideSoundType, eventSoundType, soundType, enabled });
+      console.log('🎵 startAudio called with:', { sourceLabel, currentSoundType, overrideSoundType, eventSoundType, soundType, enabled, needsInteraction });
       if (!enabled || !currentSoundType || currentSoundType === 'none') {
         console.warn('⚠️ Cannot start audio:', { enabled, currentSoundType, overrideSoundType, eventSoundType, soundType });
         stopAudio();
         return;
       }
 
+      // Try to unlock audio context if needed
+      if (needsInteraction) {
+        try {
+          const context = ensureAudioContext();
+          if (context && context.state === 'suspended') {
+            await context.resume();
+            console.log('✅ Audio context resumed');
+          }
+        } catch (unlockError) {
+          console.warn('⚠️ Could not unlock audio context:', unlockError);
+        }
+      }
+
       try {
         await startWebAudio(sourceLabel, currentSoundType);
-      } catch (webAudioError) {
+      } catch (webAudioError: any) {
         console.warn('⚠️ WebAudio failed, falling back to HTMLAudio', webAudioError);
         try {
           await startFallbackAudio(currentSoundType);
-        } catch (fallbackError) {
+        } catch (fallbackError: any) {
           console.error('❌ Unable to start ambient sound', fallbackError);
-          setNeedsInteraction(true);
+          // Only set needsInteraction if it's actually a user interaction error
+          if (fallbackError.message?.includes('play()') || fallbackError.message?.includes('interaction') || fallbackError.name === 'NotAllowedError') {
+            setNeedsInteraction(true);
+            console.log('ℹ️ Audio requires user interaction');
+          }
         }
       }
     },
-    [enabled, eventSoundType, soundType, startWebAudio, startFallbackAudio, stopAudio]
+    [enabled, eventSoundType, soundType, startWebAudio, startFallbackAudio, stopAudio, needsInteraction, ensureAudioContext]
   );
 
   const toggleMute = useCallback(() => {
@@ -933,10 +950,34 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       // Gracefully fade out any currently playing audio first, then start new sound
       stopAudio(true).then(() => {
         // Longer delay to ensure fade out and cleanup fully completes
-        setTimeout(() => {
+        setTimeout(async () => {
           console.log('🎵 Starting audio with soundType:', soundToPlay);
+          
+          // If audio needs user interaction, try to unlock it first
+          if (needsInteraction) {
+            console.log('🎵 Audio needs interaction, attempting to unlock...');
+            try {
+              const context = ensureAudioContext();
+              if (context) {
+                await unlockAudioContext(context);
+                setNeedsInteraction(false);
+              }
+            } catch (unlockError) {
+              console.warn('⚠️ Could not unlock audio context:', unlockError);
+            }
+          }
+          
           // Pass the soundType directly to startAudio to ensure it's used
-          startAudio('event-dispatch', soundToPlay);
+          try {
+            await startAudio('event-dispatch', soundToPlay);
+          } catch (startError: any) {
+            console.error('❌ Failed to start audio:', startError);
+            // If it fails due to user interaction, set the flag so user can click to play
+            if (startError.message?.includes('interaction') || startError.message?.includes('play()')) {
+              setNeedsInteraction(true);
+              console.log('ℹ️ Audio requires user interaction - user can click play button to start');
+            }
+          }
         }, 400); // Increased delay for smoother transition
       });
     };

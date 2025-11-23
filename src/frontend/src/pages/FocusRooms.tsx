@@ -328,12 +328,31 @@ export default function FocusRooms() {
 
   const handleConnectSpotify = async () => {
     try {
+      // Check if user is authenticated first
+      const token = localStorage.getItem('meetcute_token');
+      if (!token) {
+        alert('Please log in first to connect Spotify.');
+        navigate('/');
+        return;
+      }
+
       const response = await api.get('/api/auth/spotify/url');
       // Open in same window to avoid popup blockers and ensure proper redirect
       window.location.href = response.data.authUrl;
     } catch (error: any) {
       console.error('Error connecting Spotify:', error);
-      alert(`Failed to connect Spotify: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+      
+      // Handle 401 specifically
+      if (error.response?.status === 401) {
+        const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Authentication required';
+        alert(`Authentication error: ${errorMessage}\n\nPlease log in again.`);
+        // Clear token and redirect to login
+        localStorage.removeItem('meetcute_token');
+        localStorage.removeItem('meetcute_profile_cache');
+        navigate('/');
+      } else {
+        alert(`Failed to connect Spotify: ${error.response?.data?.message || error.message || 'Unknown error'}\n\nPlease try again or contact support.`);
+      }
     }
   };
 
