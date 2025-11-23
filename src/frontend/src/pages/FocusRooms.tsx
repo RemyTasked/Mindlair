@@ -403,6 +403,17 @@ export default function FocusRooms() {
                   <Headphones className="w-4 h-4" />
                   Focus Rooms
                 </button>
+                <button
+                  onClick={() => navigate('/games')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                    window.location.pathname === '/games'
+                      ? 'bg-teal-50 text-teal-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Games
+                </button>
               </nav>
             </div>
             
@@ -451,6 +462,17 @@ export default function FocusRooms() {
             >
               <Headphones className="w-4 h-4" />
               Focus Rooms
+            </button>
+            <button
+              onClick={() => navigate('/games')}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                window.location.pathname === '/games'
+                  ? 'bg-teal-50 text-teal-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              Games
             </button>
           </nav>
         </div>

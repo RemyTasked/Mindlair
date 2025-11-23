@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flower2, Cloud, TreePine, Mountain, Sparkles, X, Sun, Wind, Leaf } from 'lucide-react';
+import { Flower2, Cloud, TreePine, Mountain, Sparkles, X, Sun, Wind, Leaf, Bug, Bird, Rabbit } from 'lucide-react';
 import api from '../lib/axios';
 
 interface GardenPlant {
@@ -41,7 +41,16 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
 
   const loadGardenState = async () => {
     try {
-      const response = await api.get('/api/emotion-garden/state');
+      // Optimize: Use Promise.race with timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Garden load timeout')), 5000)
+      );
+      
+      const response = await Promise.race([
+        api.get('/api/emotion-garden/state'),
+        timeoutPromise
+      ]) as any;
+      
       const newState = response.data.state;
       
       // Track which plants are new
@@ -63,6 +72,14 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
       setGardenState(newState);
     } catch (error) {
       console.error('Error loading garden state:', error);
+      // Set a default state if loading fails to prevent hanging
+      if (!gardenState) {
+        setGardenState({
+          plants: [],
+          weather: { type: 'calm', intensity: 5 },
+          lastUpdated: new Date()
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -274,22 +291,30 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
           />
         </motion.div>
 
-        {/* Leaves/particles floating around plants */}
+        {/* Enhanced Leaves/particles floating around plants */}
         {plant.type === 'tree' || plant.type === 'flower' ? (
-          <div className="absolute inset-0 pointer-events-none">
-            {[...Array(3)].map((_, i) => (
+          <div className="absolute inset-0 pointer-events-none overflow-visible">
+            {/* More leaves with varied paths */}
+            {[...Array(8)].map((_, i) => (
               <motion.div
-                key={i}
+                key={`leaf-${i}`}
+                initial={{ 
+                  x: 0, 
+                  y: 0, 
+                  opacity: 0,
+                  rotate: Math.random() * 360
+                }}
                 animate={{
-                  x: [0, Math.random() * 20 - 10],
-                  y: [0, -30 - Math.random() * 20],
-                  opacity: [0, 0.6, 0],
-                  rotate: [0, 360]
+                  x: [0, (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 80],
+                  y: [0, -40 - Math.random() * 40, -80 - Math.random() * 60],
+                  opacity: [0, 0.8, 0.6, 0],
+                  rotate: [0, 180 + Math.random() * 180, 360 + Math.random() * 180],
+                  scale: [0.5, 1, 0.8, 0]
                 }}
                 transition={{
-                  duration: 3 + Math.random() * 2,
+                  duration: 4 + Math.random() * 3,
                   repeat: Infinity,
-                  delay: i * 0.5 + Math.random(),
+                  delay: i * 0.3 + Math.random() * 2,
                   ease: "easeOut"
                 }}
                 className="absolute"
@@ -297,13 +322,46 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
                   left: '50%',
                   top: '50%',
                   color: baseColor,
+                  filter: `opacity(0.7)`,
                 }}
               >
-                <Leaf size={12} />
+                <Leaf size={10 + Math.random() * 8} />
               </motion.div>
             ))}
           </div>
         ) : null}
+        
+        {/* Shrubs around trees */}
+        {plant.type === 'tree' && (
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(3)].map((_, i) => (
+              <motion.div
+                key={`shrub-${i}`}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: [0.8, 1, 0.9, 1],
+                  opacity: [0.4, 0.7, 0.5, 0.7],
+                  x: [0, Math.sin(i) * 15],
+                  y: [0, Math.cos(i) * 10]
+                }}
+                transition={{
+                  duration: 3 + i,
+                  repeat: Infinity,
+                  delay: i * 0.5,
+                  ease: "easeInOut"
+                }}
+                className="absolute"
+                style={{
+                  left: `${50 + (i - 1) * 20}%`,
+                  top: `${50 + (i - 1) * 15}%`,
+                  color: '#4a7c59',
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>🌿</span>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Glow effect for growing plants */}
         {growthProgress < 1 && (
@@ -570,20 +628,22 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
 
           {/* Ambient particles for atmosphere */}
           {gardenState.plants.length > 0 && (
-            <div className="absolute inset-0 pointer-events-none z-10">
-              {[...Array(8)].map((_, i) => (
+            <div className="absolute inset-0 pointer-events-none z-10 overflow-visible">
+              {/* Floating particles */}
+              {[...Array(12)].map((_, i) => (
                 <motion.div
-                  key={i}
+                  key={`particle-${i}`}
                   animate={{
-                    x: [0, Math.random() * 200 - 100],
-                    y: [0, -100 - Math.random() * 100],
-                    opacity: [0, 0.3, 0.3, 0],
-                    scale: [0, 1, 1, 0]
+                    x: [0, (Math.random() - 0.5) * 300],
+                    y: [0, -150 - Math.random() * 150],
+                    opacity: [0, 0.4, 0.3, 0],
+                    scale: [0, 1.2, 1, 0],
+                    rotate: [0, 360]
                   }}
                   transition={{
-                    duration: 5 + Math.random() * 3,
+                    duration: 6 + Math.random() * 4,
                     repeat: Infinity,
-                    delay: i * 0.5,
+                    delay: i * 0.4,
                     ease: "easeOut"
                   }}
                   className="absolute w-2 h-2 bg-green-300 rounded-full blur-sm"
@@ -593,6 +653,96 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
                   }}
                 />
               ))}
+              
+              {/* Moving animals - butterflies, birds, bugs */}
+              {gardenState.plants.length >= 3 && (
+                <>
+                  {/* Butterflies */}
+                  {[...Array(2)].map((_, i) => (
+                    <motion.div
+                      key={`butterfly-${i}`}
+                      initial={{ 
+                        x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 800),
+                        y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight * 0.5 : 400) + 100,
+                        opacity: 0
+                      }}
+                      animate={{
+                        x: [null, Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 800)],
+                        y: [null, Math.random() * (typeof window !== 'undefined' ? window.innerHeight * 0.5 : 400) + 100],
+                        opacity: [0, 0.8, 0.8, 0],
+                        rotate: [0, 360],
+                        scale: [0.8, 1.2, 1, 0.8]
+                      }}
+                      transition={{
+                        duration: 8 + Math.random() * 4,
+                        repeat: Infinity,
+                        delay: i * 3,
+                        ease: "easeInOut"
+                      }}
+                      className="absolute pointer-events-none"
+                      style={{ zIndex: 15 }}
+                    >
+                      <span style={{ fontSize: '20px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>🦋</span>
+                    </motion.div>
+                  ))}
+                  
+                  {/* Birds */}
+                  {gardenState.plants.length >= 5 && [...Array(1)].map((_, i) => (
+                    <motion.div
+                      key={`bird-${i}`}
+                      initial={{ 
+                        x: -50,
+                        y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight * 0.3 : 300) + 50,
+                        opacity: 0
+                      }}
+                      animate={{
+                        x: [null, (typeof window !== 'undefined' ? window.innerWidth : 800) + 50],
+                        y: [null, Math.random() * (typeof window !== 'undefined' ? window.innerHeight * 0.3 : 300) + 50],
+                        opacity: [0, 0.7, 0.7, 0],
+                        rotate: [0, 5, -5, 0]
+                      }}
+                      transition={{
+                        duration: 12 + Math.random() * 6,
+                        repeat: Infinity,
+                        delay: i * 5,
+                        ease: "easeInOut"
+                      }}
+                      className="absolute pointer-events-none"
+                      style={{ zIndex: 15 }}
+                    >
+                      <Bird size={18} className="text-gray-600" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} />
+                    </motion.div>
+                  ))}
+                  
+                  {/* Bugs on ground */}
+                  {gardenState.plants.length >= 4 && [...Array(2)].map((_, i) => (
+                    <motion.div
+                      key={`bug-${i}`}
+                      initial={{ 
+                        x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 800),
+                        y: (typeof window !== 'undefined' ? window.innerHeight : 600) - 120,
+                        opacity: 0
+                      }}
+                      animate={{
+                        x: [null, Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 800)],
+                        y: [null, (typeof window !== 'undefined' ? window.innerHeight : 600) - 120 + (Math.random() - 0.5) * 20],
+                        opacity: [0, 0.6, 0.6, 0],
+                        rotate: [0, 180, 360]
+                      }}
+                      transition={{
+                        duration: 6 + Math.random() * 3,
+                        repeat: Infinity,
+                        delay: i * 2.5,
+                        ease: "easeInOut"
+                      }}
+                      className="absolute pointer-events-none"
+                      style={{ zIndex: 5 }}
+                    >
+                      <Bug size={14} className="text-green-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} />
+                    </motion.div>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>

@@ -484,28 +484,34 @@ export default function GamesHub() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-6 shadow-md border-2 border-green-200"
+          className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-4 sm:p-6 shadow-md border-2 border-green-200"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                <span className="text-3xl">🌱</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="text-2xl sm:text-3xl">🌱</span>
                 Emotion Garden
               </h3>
-              <p className="text-gray-700 mb-2">Your inner world, rendered as a living scene</p>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <p className="text-gray-700 mb-2 text-sm sm:text-base">Your inner world, rendered as a living scene</p>
+              <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
                 <li>• Visual representation of your emotional patterns</li>
                 <li>• Grows with check-ins and activities</li>
                 <li>• See your mental landscape over time</li>
                 <li>• Gentle insights into your patterns</li>
               </ul>
             </div>
-            <button
-              onClick={() => setShowEmotionGarden(true)}
-              className="px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold"
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                // Optimize: Pre-load garden state immediately
+                setShowEmotionGarden(true);
+              }}
+              className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base touch-manipulation"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               View Garden
-            </button>
+            </motion.button>
           </div>
         </motion.div>
       </main>
