@@ -23,6 +23,18 @@ import api from '../lib/axios';
 import { ArrowLeft, Save, ChevronDown, ChevronUp } from 'lucide-react';
 import { PushNotificationManager } from '../components/PushNotificationManager';
 
+// Simplified notification types
+type NotificationChannel = 'email' | 'push' | 'slack' | 'sms' | 'none';
+type NotificationCategory = 'meetingMoments' | 'dailyRhythm' | 'wellnessInsights';
+
+interface NotificationPreset {
+  name: string;
+  description: string;
+  primaryChannel: NotificationChannel;
+  secondaryChannels: NotificationChannel[];
+  categories: Record<NotificationCategory, boolean>;
+}
+
 // Simplified Preferences interface matching the new backend schema
 interface Preferences {
   tone: 'executive' | 'cinematic' | 'balanced' | 'calm';
@@ -1469,8 +1481,8 @@ export default function Settings() {
                 <p className="text-sm text-gray-600 mb-4">
                   The settings below are automatically managed by your choices above. You can still fine-tune them if needed.
                 </p>
-            
-            <div className="space-y-6">
+
+                <div className="space-y-6">
               <div>
                 <Toggle
                   label="Email"
@@ -1792,14 +1804,16 @@ export default function Settings() {
                     <div className="text-sm text-blue-900">
                       <p className="font-medium mb-1">How this works</p>
                       <p className="text-blue-700">
-                        Master toggles above (Email, Slack, Push, SMS) control whether each channel is enabled at all. 
+                        Master toggles above (Email, Slack, Push, SMS) control whether each channel is enabled at all.
                         Then use this table to choose which specific alerts you want through each channel.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+                </div> {/* Close space-y-6 div */}
+              </div> {/* Close border-t pt-6 mt-8 div */}
+            </div> {/* Close main space-y-6 div */}
           </Section>
 
           {/* Account Management */}
