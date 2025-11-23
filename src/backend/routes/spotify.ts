@@ -112,15 +112,34 @@ router.post(
       const devices = await spotifyService.getDevices(accessToken);
       logger.info('📱 Available Spotify devices', { count: devices.length, devices: devices.map(d => ({ id: d.id, name: d.name, type: d.type, is_active: d.is_active })) });
       
-      // Find active device or prefer web player, then desktop, then mobile
+      // Detect if request is from mobile device
+      const userAgent = req.headers['user-agent'] || '';
+      const isMobileRequest = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      logger.info('📱 Device detection', { userAgent: userAgent.substring(0, 100), isMobileRequest });
+      
+      // Find active device first
       let targetDevice = devices.find((d) => d.is_active);
       
       if (!targetDevice) {
-        // Prefer web player if available
-        targetDevice = devices.find((d) => d.type === 'Computer' || d.type === 'WebPlayer');
+        // If request is from mobile, prioritize mobile devices
+        if (isMobileRequest) {
+          targetDevice = devices.find((d) => d.type === 'Smartphone' || d.type === 'Tablet' || d.type === 'Mobile');
+          if (!targetDevice) {
+            // Fall back to any mobile-like device
+            targetDevice = devices.find((d) => d.name.toLowerCase().includes('phone') || d.name.toLowerCase().includes('mobile') || d.name.toLowerCase().includes('iphone') || d.name.toLowerCase().includes('android'));
+          }
+        }
+        
+        // If still no device, prefer web player for desktop requests, or any device
         if (!targetDevice) {
-          // Fall back to any available device
-          targetDevice = devices[0];
+          if (!isMobileRequest) {
+            // Prefer web player for desktop requests
+            targetDevice = devices.find((d) => d.type === 'Computer' || d.type === 'WebPlayer');
+          }
+          if (!targetDevice) {
+            // Fall back to any available device
+            targetDevice = devices[0];
+          }
         }
       }
 

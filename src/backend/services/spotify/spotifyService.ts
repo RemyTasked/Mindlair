@@ -310,57 +310,58 @@ export class SpotifyService {
     logger.info('🔍 Starting keyword search for room', { roomId });
 
     // Comprehensive keyword mapping for each room - multiple variations for reliability
-    // All keywords prioritize instrumental, soundscape, and lo-fi music (no lyrics)
+    // ALL keywords MUST include "instrumental" or "no vocals" to ensure no lyrics
+    // This is a CORE REQUIREMENT - all playlists must be instrumental lo-fi soundscapes
     const roomKeywords: Record<string, string[]> = {
       'deep-focus': [
-        'lo-fi deep focus study instrumental',
-        'lo-fi focus concentration no vocals',
-        'deep focus lofi beats',
-        'study focus lo-fi instrumental',
-        'concentration music lo-fi soundscape',
-        'lo-fi work focus background',
-        'focus beats lo-fi ambient',
-        'instrumental lo-fi study music',
+        'lo-fi deep focus study instrumental no vocals',
+        'lo-fi focus concentration instrumental only',
+        'deep focus lofi beats instrumental',
+        'study focus lo-fi instrumental no lyrics',
+        'concentration music lo-fi soundscape instrumental',
+        'lo-fi work focus background instrumental',
+        'focus beats lo-fi ambient instrumental',
+        'instrumental lo-fi study music no vocals',
       ],
       'soft-composure': [
-        'lo-fi calm peaceful instrumental',
-        'lo-fi meditation calm no vocals',
-        'peaceful lo-fi ambient soundscape',
-        'calm lo-fi chill beats',
-        'soft lo-fi relaxation instrumental',
-        'lo-fi composure peaceful ambient',
-        'meditation lo-fi calm soundscape',
-        'instrumental lo-fi zen music',
+        'lo-fi calm peaceful instrumental no vocals',
+        'lo-fi meditation calm instrumental only',
+        'peaceful lo-fi ambient soundscape instrumental',
+        'calm lo-fi chill beats instrumental',
+        'soft lo-fi relaxation instrumental no lyrics',
+        'lo-fi composure peaceful ambient instrumental',
+        'meditation lo-fi calm soundscape instrumental',
+        'instrumental lo-fi zen music no vocals',
       ],
       'warm-connection': [
-        'lo-fi chill vibes instrumental',
-        'lo-fi warm cozy beats',
-        'chill lo-fi beats no vocals',
-        'warm lo-fi jazz instrumental',
-        'cozy lo-fi vibes soundscape',
-        'lo-fi connection chill ambient',
-        'lo-fi friendly warm instrumental',
-        'instrumental lo-fi chill music',
+        'lo-fi chill vibes instrumental no vocals',
+        'lo-fi warm cozy beats instrumental',
+        'chill lo-fi beats instrumental only',
+        'warm lo-fi jazz instrumental no lyrics',
+        'cozy lo-fi vibes soundscape instrumental',
+        'lo-fi connection chill ambient instrumental',
+        'lo-fi friendly warm instrumental no vocals',
+        'instrumental lo-fi chill music only',
       ],
       'pitch-pulse': [
-        'lo-fi beats energy instrumental',
-        'lo-fi upbeat motivation no vocals',
-        'energetic lo-fi beats',
-        'lo-fi confidence boost instrumental',
-        'motivational lo-fi beats soundscape',
-        'lo-fi pulse energy ambient',
-        'upbeat lo-fi confidence instrumental',
-        'instrumental lo-fi energy music',
+        'lo-fi beats energy instrumental no vocals',
+        'lo-fi upbeat motivation instrumental only',
+        'energetic lo-fi beats instrumental',
+        'lo-fi confidence boost instrumental no lyrics',
+        'motivational lo-fi beats soundscape instrumental',
+        'lo-fi pulse energy ambient instrumental',
+        'upbeat lo-fi confidence instrumental only',
+        'instrumental lo-fi energy music no vocals',
       ],
       'recovery-lounge': [
-        'lo-fi ambient relaxation instrumental',
-        'lo-fi recovery decompress no vocals',
-        'ambient lo-fi rest soundscape',
-        'relaxation lo-fi sleep music',
-        'lo-fi unwind chill instrumental',
-        'lo-fi lounge ambient beats',
-        'decompress lo-fi ambient soundscape',
-        'instrumental lo-fi relaxation music',
+        'lo-fi ambient relaxation instrumental no vocals',
+        'lo-fi recovery decompress instrumental only',
+        'ambient lo-fi rest soundscape instrumental',
+        'relaxation lo-fi sleep music instrumental',
+        'lo-fi unwind chill instrumental no lyrics',
+        'lo-fi lounge ambient beats instrumental',
+        'decompress lo-fi ambient soundscape instrumental',
+        'instrumental lo-fi relaxation music no vocals',
       ],
     };
 
@@ -372,9 +373,16 @@ export class SpotifyService {
     for (const keyword of keywords) {
       logger.info('🔍 Searching with keyword', { roomId, keyword });
       try {
+        // ENFORCE instrumental requirement in search query
+        // Always append "instrumental" or "no vocals" to ensure we get instrumental playlists
+        let searchQuery = keyword;
+        if (!searchQuery.toLowerCase().includes('instrumental') && !searchQuery.toLowerCase().includes('no vocals') && !searchQuery.toLowerCase().includes('no lyrics')) {
+          searchQuery = `${keyword} instrumental`;
+        }
+        
         const response = await axios.get('https://api.spotify.com/v1/search', {
           params: {
-            q: keyword,
+            q: searchQuery,
             type: 'playlist',
             limit: 20, // Get more results for better matching
           },
@@ -386,13 +394,18 @@ export class SpotifyService {
         const playlists = response.data.playlists?.items || [];
         
         if (playlists.length > 0) {
-          // Keywords that indicate lyrics/vocals (should be avoided)
+          // Keywords that indicate lyrics/vocals (should be STRICTLY avoided)
+          // CORE RULE: Any playlist with these keywords should be REJECTED
           const lyricsKeywords = [
             'vocal', 'vocals', 'singing', 'singer', 'song', 'songs',
             'lyrics', 'lyric', 'feat', 'ft.', 'featuring', 'with',
             'rap', 'hip hop', 'hip-hop', 'r&b', 'rnb', 'pop',
             'acoustic', 'cover', 'covers', 'remix', 'remixes',
-            'karaoke', 'sing along', 'sing-along'
+            'karaoke', 'sing along', 'sing-along',
+            // Artist names that typically have vocals (common in lo-fi playlists)
+            'kendrick', 'lamar', 'drake', 'kanye', 'weeknd', 'post malone',
+            'travis scott', 'j cole', 'eminem', 'snoop', 'tupac', 'biggie',
+            'frank ocean', 'tyler the creator', 'childish gambino', 'anderson paak'
           ];
           
           // Keywords that indicate instrumental/no lyrics (preferred)
@@ -411,10 +424,12 @@ export class SpotifyService {
               const name = p.name.toLowerCase();
               let score = 0;
               
-              // HEAVY PENALTY for playlists with lyrics/vocals
+              // STRICT REJECTION for playlists with lyrics/vocals
+              // CORE RULE: No lyrics allowed - this is a hard requirement
               const hasLyrics = lyricsKeywords.some(keyword => name.includes(keyword));
               if (hasLyrics) {
-                score -= 50; // Strong penalty - will likely be filtered out
+                score -= 1000; // Massive penalty - will be filtered out completely
+                logger.warn('🚫 Rejecting playlist with lyrics/vocals', { playlistName: p.name, matchedKeyword: lyricsKeywords.find(k => name.includes(k)) });
               }
               
               // BONUS for instrumental/no-vocal indicators
@@ -450,8 +465,15 @@ export class SpotifyService {
               
               return { ...p, score, hasLyrics, isInstrumental };
             })
-            // Filter out playlists with lyrics (negative score from penalty)
-            .filter((p: any) => p.score > -10); // Only keep playlists that aren't heavily penalized
+            // STRICT FILTER: Reject any playlist with lyrics/vocals
+            // CORE RULE: Only instrumental playlists are allowed
+            .filter((p: any) => {
+              if (p.hasLyrics) {
+                logger.warn('🚫 Filtering out playlist with lyrics', { playlistName: p.name });
+                return false; // Hard reject - no lyrics allowed
+              }
+              return p.score > -10; // Only keep playlists that aren't heavily penalized
+            });
 
           // Sort by score and get the best match
           scoredPlaylists.sort((a: any, b: any) => b.score - a.score);
@@ -471,11 +493,14 @@ export class SpotifyService {
           }
 
           // If scoring didn't help much, try to find any instrumental lo-fi playlist
+          // STRICT: Must have "instrumental" or "no vocals" AND no lyrics keywords
           const anyInstrumentalLofi = playlists.find((p: any) => {
             const name = p.name.toLowerCase();
             const hasLofi = name.includes('lo-fi') || name.includes('lofi') || name.includes('lo fi');
+            const isInstrumental = name.includes('instrumental') || name.includes('no vocals') || name.includes('no lyrics') || name.includes('soundscape') || name.includes('ambient');
             const noLyrics = !lyricsKeywords.some(keyword => name.includes(keyword));
-            return hasLofi && noLyrics;
+            // Must be lo-fi AND explicitly instrumental AND no lyrics
+            return hasLofi && isInstrumental && noLyrics;
           });
 
           if (anyInstrumentalLofi) {
@@ -488,10 +513,14 @@ export class SpotifyService {
             return anyInstrumentalLofi.id;
           }
           
-          // Try to find any playlist without lyrics
+          // Try to find any playlist without lyrics AND with instrumental indicator
+          // CORE RULE: Must be explicitly instrumental
           const anyNoLyrics = playlists.find((p: any) => {
             const name = p.name.toLowerCase();
-            return !lyricsKeywords.some(keyword => name.includes(keyword));
+            const noLyrics = !lyricsKeywords.some(keyword => name.includes(keyword));
+            const isInstrumental = name.includes('instrumental') || name.includes('no vocals') || name.includes('no lyrics') || name.includes('soundscape') || name.includes('ambient') || name.includes('beats');
+            // Must have no lyrics AND be explicitly instrumental
+            return noLyrics && isInstrumental;
           });
 
           if (anyNoLyrics) {
