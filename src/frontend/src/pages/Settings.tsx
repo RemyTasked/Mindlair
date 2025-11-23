@@ -259,7 +259,7 @@ export default function Settings() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['basic'])); // Only 'basic' expanded by default
   const [preferences, setPreferences] = useState<Preferences>({
     tone: 'balanced',
-    alertMinutesBefore: 10,
+    alertMinutesBefore: 5,
     enableDailyWrapUp: true,
     enableFocusScene: true,
     enableFocusSound: true,
@@ -272,12 +272,20 @@ export default function Settings() {
     enableWindingDown: true,
     windingDownTime: '21:00',
     enableWellnessReminders: true,
-    defaultPrepModes: {},
     wellnessReminderFrequency: 3,
     enableReflections: true,
     privateReflectionMode: false,
     reflectionDataSharing: false,
     storeReflectionText: true,
+    defaultPrepModes: {},
+    // Simplified notification fields
+    primaryNotificationChannel: 'push',
+    secondaryNotificationChannels: [],
+    notificationCategoryMeetingMoments: true,
+    notificationCategoryDailyRhythm: true,
+    notificationCategoryWellnessInsights: true,
+    quietHoursStart: '22:00',
+    quietHoursEnd: '08:00',
   });
   // Simplified notification state
   const [primaryChannel, setPrimaryChannel] = useState<NotificationChannel>('push');
@@ -1307,9 +1315,160 @@ export default function Settings() {
 
           {/* Delivery Methods */}
           <Section title="Notification Preferences" id="delivery" isExpanded={expandedSections.has('delivery')} onToggle={toggleSection}>
-            <p className="text-sm text-gray-600 mb-6">
-              Choose which channels to receive each type of alert. You have full control over when and how Meet Cute reaches you.
-            </p>
+            <div className="space-y-6">
+
+              {/* Quick Presets */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Quick Setup</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {presets.map((preset) => (
+                    <button
+                      key={preset.name}
+                      onClick={() => applyPreset(preset)}
+                      className="p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition-all text-left"
+                    >
+                      <div className="font-semibold text-gray-900 mb-1">{preset.name}</div>
+                      <div className="text-sm text-gray-600 mb-2">{preset.description}</div>
+                      <div className="text-xs text-gray-500">
+                        {preset.primaryChannel !== 'none' && `Primary: ${preset.primaryChannel}`}
+                        {preset.secondaryChannels.length > 0 && ` + ${preset.secondaryChannels.join(', ')}`}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notification Categories */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">What to Notify About</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">🎯 Meeting Moments</div>
+                      <div className="text-sm text-gray-600">Pre, during, and post-meeting cues</div>
+                    </div>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={meetingMoments}
+                        onChange={(e) => setMeetingMoments(e.target.checked)}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">🌅 Daily Rhythm</div>
+                      <div className="text-sm text-gray-600">Morning flows, evening wrap-ups, and winding down</div>
+                    </div>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={dailyRhythm}
+                        onChange={(e) => setDailyRhythm(e.target.checked)}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">💡 Wellness Insights</div>
+                      <div className="text-sm text-gray-600">Check-ins, meeting insights, and wellness reminders</div>
+                    </div>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={wellnessInsights}
+                        onChange={(e) => setWellnessInsights(e.target.checked)}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery Channels */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">How to Deliver Notifications</h4>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Channel</label>
+                    <select
+                      value={primaryChannel}
+                      onChange={(e) => setPrimaryChannel(e.target.value as NotificationChannel)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="push">📱 Push Notifications</option>
+                      <option value="email">📧 Email</option>
+                      <option value="none">🚫 None</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Channels (Optional)</label>
+                    <div className="space-y-2">
+                      {(['email', 'slack', 'sms'] as NotificationChannel[]).map((channel) => (
+                        <label key={channel} className="inline-flex items-center mr-6">
+                          <input
+                            type="checkbox"
+                            checked={secondaryChannels.includes(channel)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSecondaryChannels([...secondaryChannels, channel]);
+                              } else {
+                                setSecondaryChannels(secondaryChannels.filter(c => c !== channel));
+                              }
+                            }}
+                            disabled={primaryChannel === channel}
+                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                          />
+                          <span className="ml-2 text-sm">
+                            {channel === 'email' && '📧 Email'}
+                            {channel === 'slack' && '💬 Slack'}
+                            {channel === 'sms' && '📱 SMS'}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quiet Hours */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">🌙 Quiet Hours</h4>
+                <p className="text-gray-600 text-sm mb-4">Pause notifications during these hours</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+                    <input
+                      type="time"
+                      value={quietHoursStart}
+                      onChange={(e) => setQuietHoursStart(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+                    <input
+                      type="time"
+                      value={quietHoursEnd}
+                      onChange={(e) => setQuietHoursEnd(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Legacy Channel Enablement */}
+              <div className="border-t pt-6 mt-8">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Legacy Channel Settings</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  The settings below are automatically managed by your choices above. You can still fine-tune them if needed.
+                </p>
             
             <div className="space-y-6">
               <div>
