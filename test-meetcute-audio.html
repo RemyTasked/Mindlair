@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet Cute Audio Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .sound-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        button.playing {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: rgba(0, 255, 0, 0.5);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Meet Cute Audio Test</h1>
+    <p>Test all the lo-fi sounds used in the focus rooms. Click any sound to play/pause.</p>
+
+    <div class="sound-grid">
+        <div class="sound-card">
+            <h3>Deep Focus</h3>
+            <button onclick="playSound('lofi-deep-focus')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Soft Composure</h3>
+            <button onclick="playSound('lofi-soft-composure')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Warm Connection</h3>
+            <button onclick="playSound('lofi-warm-connection')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Pitch Pulse</h3>
+            <button onclick="playSound('lofi-pitch-pulse')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Recovery Lounge</h3>
+            <button onclick="playSound('lofi-recovery-lounge')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Basic Lo-Fi</h3>
+            <button onclick="playSound('lofi-focus')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Lo-Fi Chill</h3>
+            <button onclick="playSound('lofi-chill')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Lo-Fi Morning</h3>
+            <button onclick="playSound('lofi-morning')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Lo-Fi Evening</h3>
+            <button onclick="playSound('lofi-evening')">▶️ Play</button>
+        </div>
+        <div class="sound-card">
+            <h3>Lo-Fi Calm</h3>
+            <button onclick="playSound('lofi-calm')">▶️ Play</button>
+        </div>
+    </div>
+
+    <div class="status" id="status">
+        Click any sound to test playback. Make sure your browser allows audio.
+    </div>
+
+    <script>
+        let currentAudio = null;
+        let currentButton = null;
+
+        async function playSound(soundType) {
+            const button = event.target;
+            const statusDiv = document.getElementById('status');
+
+            try {
+                // Stop current audio if playing
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                    if (currentButton) {
+                        currentButton.classList.remove('playing');
+                        currentButton.textContent = '▶️ Play';
+                    }
+                }
+
+                // If clicking the same button, just stop
+                if (currentButton === button && button.classList.contains('playing')) {
+                    statusDiv.textContent = 'Audio stopped.';
+                    return;
+                }
+
+                // Start new audio
+                statusDiv.textContent = `Loading ${soundType}...`;
+
+                // Create audio context for Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Generate the audio data (this would normally be in AmbientSound.tsx)
+                const buffer = await generateAudioBuffer(audioContext, soundType);
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+
+                // Create gain node for volume control
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 0.7;
+
+                // Connect nodes
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Start playback
+                source.start(0);
+                currentAudio = source;
+                currentButton = button;
+
+                button.classList.add('playing');
+                button.textContent = '⏸️ Pause';
+
+                statusDiv.textContent = `Playing ${soundType}. Audio should be working!`;
+
+                // Handle end of playback
+                source.onended = () => {
+                    button.classList.remove('playing');
+                    button.textContent = '▶️ Play';
+                    currentAudio = null;
+                    currentButton = null;
+                    statusDiv.textContent = `${soundType} finished playing.`;
+                };
+
+            } catch (error) {
+                console.error('Audio error:', error);
+                statusDiv.textContent = `Error playing ${soundType}: ${error.message}`;
+                button.textContent = '❌ Error';
+                setTimeout(() => {
+                    button.textContent = '▶️ Play';
+                }, 2000);
+            }
+        }
+
+        // Simplified audio generation (subset of AmbientSound.tsx logic)
+        async function generateAudioBuffer(audioContext, soundType) {
+            const SAMPLE_RATE = 44100;
+            const DURATION_SECONDS = 30; // Shorter for testing
+            const length = SAMPLE_RATE * DURATION_SECONDS;
+            const data = new Float32Array(length);
+
+            switch (soundType) {
+                case 'lofi-deep-focus':
+                    for (let i = 0; i < length; i++) {
+                        const t = i / SAMPLE_RATE;
+                        const bass = Math.sin(2 * Math.PI * 65.41 * t) * 0.18;
+                        const pad = Math.sin(2 * Math.PI * 659.25 * t) * 0.08;
+                        const kick = (t % 2.5 < 0.06) ? Math.exp(-30 * (t % 2.5)) * 0.25 : 0;
+                        const vinyl = (Math.random() * 2 - 1) * 0.005;
+                        const melodyFreq = [293.66, 329.63, 392.00, 440.00, 493.88][Math.floor((t / 5) % 5)];
+                        const melody = Math.sin(2 * Math.PI * melodyFreq * t) * 0.1 * Math.exp(-0.4 * (t % 5));
+                        const shimmer = Math.sin(2 * Math.PI * 880 * t) * 0.03 * Math.exp(-0.3 * (t % 3));
+                        data[i] = bass + pad + kick + vinyl + melody + shimmer;
+                    }
+                    break;
+
+                case 'lofi-soft-composure':
+                    for (let i = 0; i < length; i++) {
+                        const t = i / SAMPLE_RATE;
+                        const bass = Math.sin(2 * Math.PI * 110 * t) * 0.15;
+                        const pads = Math.sin(2 * Math.PI * 220 * t) * 0.08 + Math.sin(2 * Math.PI * 330 * t) * 0.06;
+                        const texture = (Math.random() * 2 - 1) * 0.01;
+                        const melody = Math.sin(2 * Math.PI * 261.63 * t) * 0.12 * Math.exp(-0.5 * (t % 4));
+                        data[i] = bass + pads + texture + melody;
+                    }
+                    break;
+
+                case 'lofi-focus':
+                    for (let i = 0; i < length; i++) {
+                        const t = i / SAMPLE_RATE;
+                        const bass = Math.sin(2 * Math.PI * 55 * t) * 0.2;
+                        const kick = (t % 2 < 0.05) ? Math.exp(-50 * (t % 2)) * 0.3 : 0;
+                        const hihat = (Math.random() > 0.7) ? (Math.random() * 2 - 1) * 0.1 : 0;
+                        const melody = Math.sin(2 * Math.PI * 220 * t) * 0.15 * Math.exp(-0.3 * (t % 3));
+                        data[i] = bass + kick + hihat + melody;
+                    }
+                    break;
+
+                case 'lofi-chill':
+                    for (let i = 0; i < length; i++) {
+                        const t = i / SAMPLE_RATE;
+                        const bass = Math.sin(2 * Math.PI * 82.41 * t) * 0.18;
+                        const pads = Math.sin(2 * Math.PI * 164.81 * t) * 0.12 + Math.sin(2 * Math.PI * 246.94 * t) * 0.08;
+                        const texture = (Math.random() * 2 - 1) * 0.008;
+                        data[i] = bass + pads + texture;
+                    }
+                    break;
+
+                case 'lofi-morning':
+                    for (let i = 0; i < length; i++) {
+                        const t = i / SAMPLE_RATE;
+                        const bass = Math.sin(2 * Math.PI * 73.42 * t) * 0.16;
+                        const pads = Math.sin(2 * Math.PI * 146.83 * t) * 0.1;
+                        const bell = Math.sin(2 * Math.PI * 523.25 * t) * 0.06 * Math.exp(-0.2 * (t % 4));
+                        data[i] = bass + pads + bell;
+                    }
+                    break;
+
+                case 'lofi-evening':
+                    for (let i = 0; i < length; i++) {
+                        const t = i / SAMPLE_RATE;
+                        const bass = Math.sin(2 * Math.PI * 61.74 * t) * 0.14;
+                        const pads = Math.sin(2 * Math.PI * 123.47 * t) * 0.08;
+                        const texture = (Math.random() * 2 - 1) * 0.006;
+                        const fade = Math.max(0, 1 - t / DURATION_SECONDS); // Fade out
+                        data[i] = (bass + pads + texture) * fade;
+                    }
+                    break;
+
+                case 'lofi-calm':
+                    for (let i = 0; i < length; i++) {
+                        const t = i / SAMPLE_RATE;
+                        const bass = Math.sin(2 * Math.PI * 65.41 * t) * 0.12;
+                        const pads = Math.sin(2 * Math.PI * 130.81 * t) * 0.08;
+                        const texture = (Math.random() * 2 - 1) * 0.004;
+                        data[i] = bass + pads + texture;
+                    }
+                    break;
+
+                default:
+                    // Generate a simple tone if sound type not recognized
+                    for (let i = 0; i < length; i++) {
+                        const t = i / SAMPLE_RATE;
+                        data[i] = Math.sin(2 * Math.PI * 220 * t) * 0.1;
+                    }
+                    break;
+            }
+
+            const buffer = audioContext.createBuffer(1, length, SAMPLE_RATE);
+            buffer.getChannelData(0).set(data);
+            return buffer;
+        }
+
+        // Add click to unlock audio context
+        document.addEventListener('click', () => {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        });
+    </script>
+</body>
+</html>

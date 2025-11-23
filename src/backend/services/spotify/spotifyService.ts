@@ -397,15 +397,30 @@ export class SpotifyService {
           // Keywords that indicate lyrics/vocals (should be STRICTLY avoided)
           // CORE RULE: Any playlist with these keywords should be REJECTED
           const lyricsKeywords = [
+            // Basic vocal indicators
             'vocal', 'vocals', 'singing', 'singer', 'song', 'songs',
             'lyrics', 'lyric', 'feat', 'ft.', 'featuring', 'with',
             'rap', 'hip hop', 'hip-hop', 'r&b', 'rnb', 'pop',
             'acoustic', 'cover', 'covers', 'remix', 'remixes',
-            'karaoke', 'sing along', 'sing-along',
-            // Artist names that typically have vocals (common in lo-fi playlists)
-            'kendrick', 'lamar', 'drake', 'kanye', 'weeknd', 'post malone',
-            'travis scott', 'j cole', 'eminem', 'snoop', 'tupac', 'biggie',
-            'frank ocean', 'tyler the creator', 'childish gambino', 'anderson paak'
+            'karaoke', 'sing along', 'sing-along', 'explicit', 'clean',
+            // Artist names that typically have vocals (expanded list)
+            'kendrick', 'lamar', 'drake', 'kanye', 'west', 'weeknd', 'the weeknd',
+            'post malone', 'travis scott', 'j cole', 'eminem', 'snoop', 'dogg',
+            'tupac', 'biggie', 'notorious', 'frank ocean', 'tyler the creator',
+            'childish gambino', 'anderson paak', 'jhené', 'jhene aiko',
+            'billie eilish', 'olivia rodrigo', 'taylor swift', 'ariana grande',
+            'beyoncé', 'beyonce', 'rihanna', 'lady gaga', 'katy perry',
+            'justin bieber', 'selena gomez', 'ed sheeran', 'bruno mars',
+            'michael bublé', 'michael buble', 'adele', 'sam smith',
+            'harry styles', 'dua lipa', 'bad bunny', 'ozuna', 'j balvin',
+            // Vocal music genres and styles
+            'indie', 'folk', 'country', 'blues', 'jazz vocal', 'vocal jazz',
+            'soul', 'gospel', 'christian', 'worship', 'hymn', 'hymns',
+            'broadway', 'musical', 'show tunes', 'opera', 'classical vocal',
+            // Specific vocal terms
+            'chorus', 'verse', 'bridge', 'hook', 'melody', 'harmony',
+            'duet', 'trio', 'quartet', 'choir', 'ensemble', 'band',
+            'singer-songwriter', 'ballad', 'anthem', 'theme song'
           ];
           
           // Keywords that indicate instrumental/no lyrics (preferred)
@@ -422,14 +437,51 @@ export class SpotifyService {
           const scoredPlaylists = playlists
             .map((p: any) => {
               const name = p.name.toLowerCase();
+              const description = p.description?.toLowerCase() || '';
               let score = 0;
-              
-              // STRICT REJECTION for playlists with lyrics/vocals
-              // CORE RULE: No lyrics allowed - this is a hard requirement
-              const hasLyrics = lyricsKeywords.some(keyword => name.includes(keyword));
+
+              // SMART REJECTION for playlists with lyrics/vocals - check BOTH name AND description
+              // CORE RULE: No lyrics allowed - but be smart about "no vocals" vs actual vocals
+              const hasLyricsInName = lyricsKeywords.some(keyword => {
+                // Don't reject if it's clearly indicating instrumental/no vocals
+                if (keyword === 'vocal' || keyword === 'vocals') {
+                  if (name.includes('no vocal') || name.includes('no vocals') ||
+                      name.includes('instrumental') || name.includes('no lyrics') ||
+                      name.includes('beats') || name.includes('soundscape')) {
+                    return false;
+                  }
+                }
+                return name.includes(keyword);
+              });
+
+              const hasLyricsInDescription = lyricsKeywords.some(keyword => {
+                // Don't reject if it's clearly indicating instrumental/no vocals
+                if (keyword === 'vocal' || keyword === 'vocals') {
+                  if (description.includes('no vocal') || description.includes('no vocals') ||
+                      description.includes('instrumental') || description.includes('no lyrics') ||
+                      description.includes('beats') || description.includes('soundscape')) {
+                    return false;
+                  }
+                }
+                return description.includes(keyword);
+              });
+
+              const hasLyrics = hasLyricsInName || hasLyricsInDescription;
+
               if (hasLyrics) {
                 score -= 1000; // Massive penalty - will be filtered out completely
-                logger.warn('🚫 Rejecting playlist with lyrics/vocals', { playlistName: p.name, matchedKeyword: lyricsKeywords.find(k => name.includes(k)) });
+                logger.warn('🚫 Rejecting playlist with lyrics/vocals', {
+                  playlistName: p.name,
+                  description: p.description,
+                  matchedKeyword: lyricsKeywords.find(k => {
+                    if (k === 'vocal') {
+                      return (name.includes(k) && !name.includes('no vocal') && !name.includes('instrumental') && !name.includes('no lyrics')) ||
+                             (description.includes(k) && !description.includes('no vocal') && !description.includes('instrumental') && !description.includes('no lyrics'));
+                    }
+                    return name.includes(k) || description.includes(k);
+                  }),
+                  source: hasLyricsInName ? 'name' : 'description'
+                });
               }
               
               // BONUS for instrumental/no-vocal indicators
