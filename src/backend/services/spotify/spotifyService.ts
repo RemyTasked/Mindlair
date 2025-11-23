@@ -265,12 +265,18 @@ export class SpotifyService {
 
   async transferPlayback(accessToken: string, deviceId: string, play?: boolean): Promise<void> {
     try {
+      const payload: any = {
+        device_ids: [deviceId],
+      };
+      
+      // Only include play parameter if explicitly set (false means don't play, undefined means default behavior)
+      if (play !== undefined) {
+        payload.play = play;
+      }
+
       await axios.put(
         'https://api.spotify.com/v1/me/player',
-        {
-          device_ids: [deviceId],
-          play: play !== false, // Default to true if not specified
-        },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -279,10 +285,17 @@ export class SpotifyService {
         }
       );
 
-      logger.info('✅ Transferred Spotify playback to device', { deviceId, play });
+      logger.info('✅ Transferred Spotify playback to device', { deviceId, play: play !== undefined ? play : 'default' });
     } catch (error: any) {
+      // 404 means no active device - that's okay for transfer
+      if (error.response?.status === 404) {
+        logger.info('ℹ️ No active device to transfer from (this is okay)', { deviceId });
+        return; // Not an error - device will be activated when we play
+      }
+      
       logger.error('❌ Failed to transfer Spotify playback', {
         error: error.response?.data || error.message,
+        status: error.response?.status,
         deviceId,
       });
       throw new Error('Failed to transfer playback to device');

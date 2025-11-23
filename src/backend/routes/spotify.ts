@@ -143,11 +143,26 @@ router.post(
         logger.info('🔄 Transferring playback to device', { deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
         try {
           // Transfer playback WITHOUT starting playback (play: false)
+          // This ensures the device is active before we try to play
           await spotifyService.transferPlayback(accessToken, targetDevice.id, false);
-          // Wait longer for transfer to complete before playing
+          // Wait for transfer to complete and device to become active
           await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Verify device is now active (optional check)
+          const updatedDevices = await spotifyService.getDevices(accessToken);
+          const updatedDevice = updatedDevices.find((d) => d.id === targetDevice.id);
+          if (updatedDevice?.is_active) {
+            logger.info('✅ Device is now active after transfer', { deviceId: targetDevice.id });
+          } else {
+            logger.warn('⚠️ Device may not be active yet, but continuing with play attempt', { deviceId: targetDevice.id });
+          }
         } catch (transferError: any) {
-          logger.warn('⚠️ Failed to transfer playback, trying direct play anyway', { error: transferError.message });
+          // If transfer fails, log but continue - we'll try to play anyway
+          // Sometimes Spotify can play on a device even if transfer fails
+          logger.warn('⚠️ Failed to transfer playback, trying direct play anyway', { 
+            error: transferError.message,
+            deviceId: targetDevice.id 
+          });
           // Continue to try playing - device might still work
         }
       }
