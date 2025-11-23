@@ -909,9 +909,22 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     });
   }, [getVolume]);
 
-  const handlePlayClick = useCallback(() => {
+  const handlePlayClick = useCallback(async () => {
+    console.log('▶️ Manual play button clicked');
+    try {
+      // Try to unlock audio context first
+      const context = ensureAudioContext();
+      if (context && context.state === 'suspended') {
+        console.log('🔓 Unlocking audio context before manual play...');
+        await unlockAudioContext(context);
+        setNeedsInteraction(false);
+      }
+    } catch (unlockError) {
+      console.warn('⚠️ Could not unlock audio context:', unlockError);
+    }
+
     startAudio('manual-click');
-  }, [startAudio]);
+  }, [startAudio, ensureAudioContext]);
 
   useEffect(() => {
     if (!enabled) {

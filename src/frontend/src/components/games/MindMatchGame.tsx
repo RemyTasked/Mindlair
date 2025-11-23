@@ -25,6 +25,8 @@ interface Card {
   isMatched: boolean;
 }
 
+console.log('🎯 MindMatchGame component loaded');
+
 export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps) {
   const [pairs, setPairs] = useState<Pair[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
@@ -48,31 +50,33 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
 
   const loadPairs = async () => {
     try {
+      console.log('🎯 Loading Mind Match pairs...');
+
       // Force seeding first to ensure data exists
       try {
-        console.log('🌱 Checking and seeding games database...');
+        console.log('🌱 Seeding games database...');
         const seedResponse = await api.post('/api/games/seed');
         console.log('✅ Games seeded successfully:', seedResponse.data);
-        // Wait for database to update
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (seedError) {
-        console.error('Error seeding games:', seedError);
+        // Wait longer for database to update
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      } catch (seedError: any) {
+        console.error('❌ Error seeding games:', seedError);
+        alert('Failed to load game data. Please try again.');
+        setLoading(false);
+        return;
       }
 
+      console.log('🎯 Fetching pairs...');
       const response = await api.get('/api/games/mind-match/pairs');
       let loadedPairs = response.data.pairs || [];
 
+      console.log('🎯 Received pairs:', loadedPairs.length);
+
       if (loadedPairs.length === 0) {
-        console.error('No pairs available after seeding. Trying fallback...');
-        // Try one more time after a longer delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const retryResponse = await api.get('/api/games/mind-match/pairs');
-        loadedPairs = retryResponse.data.pairs || [];
-        if (loadedPairs.length === 0) {
-          console.error('Still no pairs available. Please contact support.');
-          setLoading(false);
-          return;
-        }
+        console.error('❌ No pairs available after seeding');
+        alert('No pairs available. Please try again in a moment.');
+        setLoading(false);
+        return;
       }
 
       setPairs(loadedPairs);

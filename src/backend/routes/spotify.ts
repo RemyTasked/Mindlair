@@ -111,25 +111,30 @@ router.post(
       // Get available devices
       const devices = await spotifyService.getDevices(accessToken);
       logger.info('📱 Available Spotify devices', { count: devices.length, devices: devices.map(d => ({ id: d.id, name: d.name, type: d.type, is_active: d.is_active })) });
-      
+
+      if (devices.length === 0) {
+        logger.warn('⚠️ No Spotify devices available');
+        throw new AppError('No Spotify devices found. Please open Spotify on at least one device (web player, desktop app, or mobile app) and try again.', 400);
+      }
+
       // Detect if request is from mobile device
       const userAgent = req.headers['user-agent'] || '';
       const isMobileRequest = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
       logger.info('📱 Device detection', { userAgent: userAgent.substring(0, 100), isMobileRequest });
-      
+
       // Find active device first
       let targetDevice = devices.find((d) => d.is_active);
-      
+
       if (!targetDevice) {
         // If request is from mobile, prioritize mobile devices
         if (isMobileRequest) {
           targetDevice = devices.find((d) => d.type === 'Smartphone' || d.type === 'Tablet' || d.type === 'Mobile');
           if (!targetDevice) {
-            // Fall back to any mobile-like device
+            // Fall back to any mobile-like device by name
             targetDevice = devices.find((d) => d.name.toLowerCase().includes('phone') || d.name.toLowerCase().includes('mobile') || d.name.toLowerCase().includes('iphone') || d.name.toLowerCase().includes('android'));
           }
         }
-        
+
         // If still no device, prefer web player for desktop requests, or any device
         if (!targetDevice) {
           if (!isMobileRequest) {
@@ -139,8 +144,14 @@ router.post(
           if (!targetDevice) {
             // Fall back to any available device
             targetDevice = devices[0];
+            logger.info('🔄 Using fallback device', { deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
           }
         }
+      }
+
+      if (!targetDevice) {
+        logger.error('❌ No suitable Spotify device found');
+        throw new AppError('No suitable Spotify device found. Please ensure Spotify is open on at least one device.', 400);
       }
 
       if (!targetDevice) {

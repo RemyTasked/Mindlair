@@ -16,6 +16,8 @@ interface ThoughtTidyGameProps {
 
 type Category = 'keep' | 'park' | 'release';
 
+console.log('🎬 ThoughtTidyGame component loaded');
+
 export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameProps) {
   const [cards, setCards] = useState<ThoughtCard[]>([]);
   const [draggedCard, setDraggedCard] = useState<ThoughtCard | null>(null);

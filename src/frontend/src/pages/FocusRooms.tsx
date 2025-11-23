@@ -829,6 +829,7 @@ export default function FocusRooms() {
                             setAudioProvider('meetcute');
                             // Start Meet-Cute audio
                             if (isPlaying) {
+                              console.log('🎵 Switching to Meet-Cute audio for room:', room.id);
                               startMeetCuteAudio(room);
                             }
                           }

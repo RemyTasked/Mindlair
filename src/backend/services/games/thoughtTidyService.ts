@@ -57,9 +57,9 @@ export async function recordThoughtTidySession(
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
-    const keptCount = result.kept?.length || 0;
-    const parkedCount = result.parked?.length || 0;
-    const releasedCount = result.released?.length || 0;
+    const keptCount = Array.isArray(result.kept) ? result.kept.length : 0;
+    const parkedCount = Array.isArray(result.parked) ? result.parked.length : 0;
+    const releasedCount = Array.isArray(result.released) ? result.released.length : 0;
 
     // Validate that we have at least some thoughts
     if (keptCount + parkedCount + releasedCount === 0) {
@@ -99,11 +99,11 @@ export async function recordThoughtTidySession(
       logger.warn('Error checking for badge unlock:', badgeError);
     }
 
-    // Prepare thoughts data - Prisma handles JSON automatically, no need for double stringify
+    // Prepare thoughts data - ensure arrays are properly formatted
     const thoughtsData = {
-      kept: result.kept || [],
-      parked: result.parked || [],
-      released: result.released || [],
+      kept: Array.isArray(result.kept) ? result.kept : [],
+      parked: Array.isArray(result.parked) ? result.parked : [],
+      released: Array.isArray(result.released) ? result.released : [],
     };
 
     // Create or update session

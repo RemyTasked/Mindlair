@@ -41,37 +41,38 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
 
   const loadQuestions = async () => {
     try {
+      console.log('🧠 Loading Scene Sense questions...');
+
       // Force seeding first to ensure data exists
       try {
-        console.log('🌱 Checking and seeding games database...');
+        console.log('🌱 Seeding games database...');
         const seedResponse = await api.post('/api/games/seed');
         console.log('✅ Games seeded successfully:', seedResponse.data);
-        // Wait for database to update
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (seedError) {
-        console.error('Error seeding games:', seedError);
+        // Wait longer for database to update
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      } catch (seedError: any) {
+        console.error('❌ Error seeding games:', seedError);
+        setLoading(false);
+        return;
       }
 
+      console.log('📝 Fetching questions...');
       const response = await api.get('/api/games/scene-sense/questions?count=5');
       const questions = response.data.questions || [];
 
+      console.log('📝 Received questions:', questions.length);
+
       if (questions.length === 0) {
-        console.error('No questions available after seeding. Trying fallback...');
-        // Try one more time after a longer delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const retryResponse = await api.get('/api/games/scene-sense/questions?count=5');
-        const retryQuestions = retryResponse.data.questions || [];
-        if (retryQuestions.length > 0) {
-          setQuestions(retryQuestions);
-        } else {
-          console.error('Still no questions available. Please contact support.');
-        }
+        console.error('❌ No questions available after seeding');
+        alert('No questions available. Please try again in a moment.');
+        setLoading(false);
         return;
       }
 
       setQuestions(questions);
     } catch (error: any) {
-      console.error('Error loading questions:', error);
+      console.error('❌ Error loading questions:', error);
+      alert('Failed to load questions. Please try again.');
       setLoading(false);
     } finally {
       setLoading(false);
