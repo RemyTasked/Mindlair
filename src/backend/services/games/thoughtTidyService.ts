@@ -53,12 +53,18 @@ export async function recordThoughtTidySession(
   result: ThoughtTidyResult
 ): Promise<{ credits: number; badge?: string }> {
   try {
+    // Create date at midnight in UTC to match database Date type
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
-    const keptCount = result.kept.length;
-    const parkedCount = result.parked.length;
-    const releasedCount = result.released.length;
+    const keptCount = result.kept?.length || 0;
+    const parkedCount = result.parked?.length || 0;
+    const releasedCount = result.released?.length || 0;
+
+    // Validate that we have at least some thoughts
+    if (keptCount + parkedCount + releasedCount === 0) {
+      throw new Error('No thoughts to record. Please sort at least one thought before completing.');
+    }
 
     // Award 2 credits for completion
     const creditsEarned = 2;
@@ -67,95 +73,124 @@ export async function recordThoughtTidySession(
     let badgeUnlocked: string | undefined;
 
     // Check for "Scene Wrap Artist" badge (7 days of nightly tidy)
-    const recentSessions = await prisma.thoughtTidySession.findMany({
-      where: {
-        userId,
-        completedAt: {
-          not: null,
-        },
-        date: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        },
-      },
-      distinct: ['date'],
-    });
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setUTCHours(0, 0, 0, 0);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    if (recentSessions.length >= 7) {
-      badgeUnlocked = 'Scene Wrap Artist';
+      const recentSessions = await prisma.thoughtTidySession.findMany({
+        where: {
+          userId,
+          completedAt: {
+            not: null,
+          },
+          date: {
+            gte: sevenDaysAgo,
+          },
+        },
+        distinct: ['date'],
+      });
+
+      if (recentSessions.length >= 7) {
+        badgeUnlocked = 'Scene Wrap Artist';
+      }
+    } catch (badgeError) {
+      // Don't fail the request if badge check fails
+      logger.warn('Error checking for badge unlock:', badgeError);
     }
 
+    // Prepare thoughts data - Prisma handles JSON automatically, no need for double stringify
+    const thoughtsData = {
+      kept: result.kept || [],
+      parked: result.parked || [],
+      released: result.released || [],
+    };
+
     // Create or update session
-    await prisma.thoughtTidySession.upsert({
-      where: {
-        userId_date: {
+    try {
+      await prisma.thoughtTidySession.upsert({
+        where: {
+          userId_date: {
+            userId,
+            date: today,
+          },
+        },
+        update: {
+          completedAt: new Date(),
+          creditsEarned,
+          thoughts: thoughtsData as any,
+          keptCount,
+          parkedCount,
+          releasedCount,
+          actionItems: result.actionItems ? (result.actionItems as any) : null,
+        },
+        create: {
           userId,
           date: today,
+          completedAt: new Date(),
+          creditsEarned,
+          thoughts: thoughtsData as any,
+          keptCount,
+          parkedCount,
+          releasedCount,
+          actionItems: result.actionItems ? (result.actionItems as any) : null,
         },
-      },
-      update: {
-        completedAt: new Date(),
-        creditsEarned,
-        thoughts: JSON.parse(JSON.stringify({
-          kept: result.kept,
-          parked: result.parked,
-          released: result.released,
-        })),
-        keptCount,
-        parkedCount,
-        releasedCount,
-        actionItems: result.actionItems ? JSON.parse(JSON.stringify(result.actionItems)) : null,
-      },
-      create: {
+      });
+    } catch (upsertError: any) {
+      logger.error('Error upserting Thought Tidy session:', {
+        error: upsertError.message,
+        code: upsertError.code,
         userId,
         date: today,
-        completedAt: new Date(),
-        creditsEarned,
-        thoughts: JSON.parse(JSON.stringify({
-          kept: result.kept,
-          parked: result.parked,
-          released: result.released,
-        })),
-        keptCount,
-        parkedCount,
-        releasedCount,
-        actionItems: result.actionItems ? JSON.parse(JSON.stringify(result.actionItems)) : null,
-      },
-    });
+      });
+      throw new Error(`Failed to save Thought Tidy session: ${upsertError.message}`);
+    }
 
     // Update user game progress credits
-    const progress = await prisma.userGameProgress.findUnique({
-      where: { userId },
-    });
-
-    if (progress) {
-      await prisma.userGameProgress.update({
+    try {
+      const progress = await prisma.userGameProgress.findUnique({
         where: { userId },
-        data: {
-          totalCredits: progress.totalCredits + creditsEarned,
-        },
       });
-    } else {
-      await prisma.userGameProgress.create({
-        data: {
-          userId,
-          totalCredits: creditsEarned,
-        },
-      });
+
+      if (progress) {
+        await prisma.userGameProgress.update({
+          where: { userId },
+          data: {
+            totalCredits: progress.totalCredits + creditsEarned,
+          },
+        });
+      } else {
+        await prisma.userGameProgress.create({
+          data: {
+            userId,
+            totalCredits: creditsEarned,
+            currentStreak: 1,
+            longestStreak: 1,
+            lastPlayedAt: new Date(),
+          },
+        });
+      }
+    } catch (progressError) {
+      // Don't fail the request if progress update fails
+      logger.error('Error updating user game progress:', progressError);
     }
 
     // Update Emotion Garden - Thought Tidy provides calm and relief
     try {
-      // More "released" thoughts = more relief
-      const releaseRatio = releasedCount / (keptCount + parkedCount + releasedCount);
-      const emotion = releaseRatio > 0.5 ? 'calm' : 'gratitude'; // High release = calm, balanced = gratitude
-      const intensity = Math.min(10, 5 + Math.floor(releaseRatio * 5)); // 5-10 based on release ratio
-      
-      await emotionGardenService.updateGardenState(
-        userId,
-        emotion,
-        intensity,
-        'thought-tidy'
-      );
+      const totalThoughts = keptCount + parkedCount + releasedCount;
+      if (totalThoughts > 0) {
+        // More "released" thoughts = more relief
+        const releaseRatio = releasedCount / totalThoughts;
+        const emotion = releaseRatio > 0.5 ? 'calm' : 'gratitude'; // High release = calm, balanced = gratitude
+        const intensity = Math.min(10, 5 + Math.floor(releaseRatio * 5)); // 5-10 based on release ratio
+        
+        await emotionGardenService.updateGardenState(
+          userId,
+          emotion,
+          intensity,
+          'thought-tidy'
+        );
+      }
     } catch (error) {
       // Don't fail the request if garden update fails
       logger.error('Error updating Emotion Garden after Thought Tidy session:', error);
@@ -165,9 +200,18 @@ export async function recordThoughtTidySession(
       credits: creditsEarned,
       badge: badgeUnlocked,
     };
-  } catch (error) {
-    logger.error('Error recording Thought Tidy session:', error);
-    throw error;
+  } catch (error: any) {
+    logger.error('Error recording Thought Tidy session:', {
+      error: error.message,
+      stack: error.stack,
+      code: error.code,
+      userId,
+    });
+    // Re-throw with a more user-friendly message
+    if (error.message?.includes('Failed to save')) {
+      throw error;
+    }
+    throw new Error(`Failed to record Thought Tidy session: ${error.message || 'Unknown error'}`);
   }
 }
 
