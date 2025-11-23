@@ -527,13 +527,14 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
           >
             <Flower2 className="w-20 h-20 text-green-500 mx-auto mb-4" />
           </motion.div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Start Your Garden</h2>
-          <p className="text-gray-600 mb-6 text-lg">Your emotional world, rendered as a living scene</p>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Start Your Garden</h2>
+          <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg">Your emotional world, rendered as a living scene</p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowCheckIn(true)}
-            className="px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl hover:from-green-700 hover:to-teal-700 transition-all shadow-lg text-lg font-semibold"
+            className="px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl hover:from-green-700 hover:to-teal-700 active:from-green-800 active:to-teal-800 transition-all shadow-lg text-base sm:text-lg font-semibold touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             Plant Your First Seed
           </motion.button>
@@ -543,7 +544,7 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
   }
 
   return (
-    <div className={`min-h-screen p-4 sm:p-8 ${getWeatherClass(gardenState.weather)} transition-colors duration-1000 relative overflow-hidden`}>
+    <div className={`min-h-screen p-3 sm:p-4 md:p-8 ${getWeatherClass(gardenState.weather)} transition-colors duration-1000 relative overflow-hidden`}>
       {/* Weather effects layer */}
       <div className="absolute inset-0 pointer-events-none z-10">
         {getWeatherEffects(gardenState.weather)}
@@ -551,46 +552,48 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
 
       <div className="max-w-7xl mx-auto relative z-20">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 mb-4 sm:mb-6 md:mb-8"
         >
-          <div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Flower2 className="w-10 h-10 text-green-600" />
+                <Flower2 className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-green-600" />
               </motion.div>
-              Emotion Garden
+              <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">Emotion Garden</span>
             </h1>
-            <p className="text-gray-700 text-lg">Your inner world, rendered as a living scene</p>
+            <p className="text-gray-700 text-sm sm:text-base md:text-lg">Your inner world, rendered as a living scene</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowCheckIn(true)}
-              className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-md font-medium"
+              className="px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-2.5 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 active:from-green-800 active:to-teal-800 transition-all shadow-md font-medium text-sm sm:text-base touch-manipulation"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               + Check In
             </motion.button>
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 text-gray-600 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-2 text-gray-600 hover:bg-white/20 rounded-lg transition-colors touch-manipulation"
                 aria-label="Exit Emotion Garden"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             )}
           </div>
         </motion.div>
 
         {/* Garden Canvas with layered rendering */}
-        <div className="relative bg-white/30 backdrop-blur-md rounded-3xl p-8 min-h-[600px] border-2 border-white/50 shadow-2xl overflow-hidden">
+        <div className="relative bg-white/30 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 min-h-[400px] sm:min-h-[500px] md:min-h-[600px] border-2 border-white/50 shadow-2xl overflow-hidden">
           {/* Ground layer (canvas) */}
           <canvas
             ref={canvasRef}
@@ -599,7 +602,7 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
           />
 
           {/* Plants layer */}
-          <div className="relative z-20 w-full h-full min-h-[500px]">
+          <div className="relative z-20 w-full h-full min-h-[300px] sm:min-h-[400px] md:min-h-[500px]">
             <AnimatePresence>
               {gardenState.plants.map((plant, index) => getPlantComponent(plant, index))}
             </AnimatePresence>
@@ -752,27 +755,27 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4"
+            className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4"
           >
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 text-center border border-white/80">
-              <div className="text-2xl font-bold text-green-600">{gardenState.plants.length}</div>
-              <div className="text-sm text-gray-600">Plants</div>
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 text-center border border-white/80">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600">{gardenState.plants.length}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Plants</div>
             </div>
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 text-center border border-white/80">
-              <div className="text-2xl font-bold text-blue-600 capitalize">{gardenState.weather.type}</div>
-              <div className="text-sm text-gray-600">Weather</div>
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 text-center border border-white/80">
+              <div className="text-base sm:text-lg md:text-xl font-bold text-blue-600 capitalize">{gardenState.weather.type}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Weather</div>
             </div>
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 text-center border border-white/80">
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 text-center border border-white/80">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-600">
                 {gardenState.plants.filter(p => p.type === 'flower').length}
               </div>
-              <div className="text-sm text-gray-600">Flowers</div>
+              <div className="text-xs sm:text-sm text-gray-600">Flowers</div>
             </div>
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 text-center border border-white/80">
-              <div className="text-2xl font-bold text-emerald-600">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 text-center border border-white/80">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-600">
                 {gardenState.plants.filter(p => p.type === 'tree').length}
               </div>
-              <div className="text-sm text-gray-600">Trees</div>
+              <div className="text-xs sm:text-sm text-gray-600">Trees</div>
             </div>
           </motion.div>
         )}

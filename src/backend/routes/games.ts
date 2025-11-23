@@ -353,11 +353,13 @@ router.post('/seed', authenticate, async (req: Request, res: Response) => {
     // Import and run seed function directly with timeout
     const { seedGames } = require('../scripts/seedGames');
     await Promise.race([seedGames(), timeoutPromise]);
-    
+
     // Check results using shared Prisma instance
     const { prisma } = require('../utils/prisma');
     const questionCount = await prisma.gameQuestion.count().catch(() => 0);
     const pairCount = await prisma.gamePair.count().catch(() => 0);
+
+    logger.info('Seeding completed', { questionCount, pairCount });
     
     logger.info(`✅ Games seeded successfully: ${questionCount} questions, ${pairCount} pairs`);
     

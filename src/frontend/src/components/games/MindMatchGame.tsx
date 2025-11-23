@@ -48,26 +48,33 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
 
   const loadPairs = async () => {
     try {
-      // Check seed status first
+      // Force seeding first to ensure data exists
       try {
-        const seedStatus = await api.get('/api/games/seed-status');
-        if (!seedStatus.data.seeded) {
-          console.log('🌱 Seeding games database...');
-          await api.post('/api/games/seed');
-        }
+        console.log('🌱 Checking and seeding games database...');
+        const seedResponse = await api.post('/api/games/seed');
+        console.log('✅ Games seeded successfully:', seedResponse.data);
+        // Wait for database to update
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (seedError) {
-        console.error('Error checking/seeding games:', seedError);
+        console.error('Error seeding games:', seedError);
       }
 
       const response = await api.get('/api/games/mind-match/pairs');
       let loadedPairs = response.data.pairs || [];
-      
+
       if (loadedPairs.length === 0) {
-        console.error('No pairs available after seeding. Please contact support.');
-        setLoading(false);
-        return;
+        console.error('No pairs available after seeding. Trying fallback...');
+        // Try one more time after a longer delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const retryResponse = await api.get('/api/games/mind-match/pairs');
+        loadedPairs = retryResponse.data.pairs || [];
+        if (loadedPairs.length === 0) {
+          console.error('Still no pairs available. Please contact support.');
+          setLoading(false);
+          return;
+        }
       }
-      
+
       setPairs(loadedPairs);
 
       // Create cards from pairs (2 cards per pair)

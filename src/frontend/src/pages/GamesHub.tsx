@@ -63,13 +63,14 @@ export default function GamesHub() {
         seedStatus = { data: { seeded: false } };
       }
 
-      if (!seedStatus.data.seeded) {
+      // Check if games are seeded - if not, force seeding
+      if (!seedStatus.data.seeded || seedStatus.data.questionCount === 0 || seedStatus.data.pairCount === 0) {
         console.log('🌱 Games not seeded, attempting to seed...');
         try {
-          await api.post('/api/games/seed');
-          console.log('✅ Games seeded successfully');
-          // Wait a moment for database to update
-          await new Promise(resolve => setTimeout(resolve, 500));
+          const seedResponse = await api.post('/api/games/seed');
+          console.log('✅ Games seeded successfully:', seedResponse.data);
+          // Wait longer for database to update
+          await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (seedError: any) {
           console.error('❌ Error seeding games:', seedError);
           // Don't return - try to load anyway in case some data exists
@@ -93,9 +94,10 @@ export default function GamesHub() {
       if (error.response?.status === 500 || error.message?.includes('seed') || error.message?.includes('No game') || error.message?.includes('not available')) {
         try {
           console.log('🌱 Attempting to seed games database...');
-          await api.post('/api/games/seed');
-          // Wait a moment for database to update
-          await new Promise(resolve => setTimeout(resolve, 500));
+          const seedResponse = await api.post('/api/games/seed');
+          console.log('✅ Games seeded successfully:', seedResponse.data);
+          // Wait longer for database to update
+          await new Promise(resolve => setTimeout(resolve, 2000));
           // Reload after seeding
           const retryResponse = await api.get('/api/games/daily');
           if (retryResponse.data.gameType) {
