@@ -79,10 +79,29 @@ router.get('/scene-sense/questions', authenticate, async (req: Request, res: Res
     let questions;
     try {
       questions = await gameService.getSceneSenseQuestions(userId, count, sceneMatch);
+      
+      // If no questions returned, check if database needs seeding
+      if (!questions || questions.length === 0) {
+        logger.info('🌱 No questions found, checking if database needs seeding');
+        try {
+          const { prisma } = require('../utils/prisma');
+          const questionCount = await prisma.gameQuestion.count().catch(() => 0);
+          
+          if (questionCount === 0) {
+            logger.info('🌱 Database empty, attempting to seed games database');
+            const { seedGames } = require('../scripts/seedGames');
+            await seedGames();
+            // Retry getting questions
+            questions = await gameService.getSceneSenseQuestions(userId, count, sceneMatch);
+          }
+        } catch (seedError: any) {
+          logger.error('Error seeding games:', seedError);
+        }
+      }
     } catch (error: any) {
       // If error suggests missing data, try to seed
-      if (error.message?.includes('seed') || error.message?.includes('not available') || error.message?.includes('not found')) {
-        logger.info('🌱 Attempting to seed games database due to missing questions');
+      if (error.message?.includes('seed') || error.message?.includes('not available') || error.message?.includes('not found') || error.message?.includes('not initialized')) {
+        logger.info('🌱 Attempting to seed games database due to error');
         try {
           const { seedGames } = require('../scripts/seedGames');
           await seedGames();
@@ -132,10 +151,29 @@ router.get('/mind-match/pairs', authenticate, async (req: Request, res: Response
     let pairs;
     try {
       pairs = await gameService.getMindMatchPairs(userId, sceneMatch);
+      
+      // If no pairs returned, check if database needs seeding
+      if (!pairs || pairs.length === 0) {
+        logger.info('🌱 No pairs found, checking if database needs seeding');
+        try {
+          const { prisma } = require('../utils/prisma');
+          const pairCount = await prisma.gamePair.count().catch(() => 0);
+          
+          if (pairCount === 0) {
+            logger.info('🌱 Database empty, attempting to seed games database');
+            const { seedGames } = require('../scripts/seedGames');
+            await seedGames();
+            // Retry getting pairs
+            pairs = await gameService.getMindMatchPairs(userId, sceneMatch);
+          }
+        } catch (seedError: any) {
+          logger.error('Error seeding games:', seedError);
+        }
+      }
     } catch (error: any) {
       // If error suggests missing data, try to seed
-      if (error.message?.includes('seed') || error.message?.includes('not available') || error.message?.includes('not found')) {
-        logger.info('🌱 Attempting to seed games database due to missing pairs');
+      if (error.message?.includes('seed') || error.message?.includes('not available') || error.message?.includes('not found') || error.message?.includes('not initialized')) {
+        logger.info('🌱 Attempting to seed games database due to error');
         try {
           const { seedGames } = require('../scripts/seedGames');
           await seedGames();

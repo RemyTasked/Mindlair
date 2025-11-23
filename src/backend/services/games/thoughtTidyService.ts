@@ -9,9 +9,9 @@ export interface ThoughtCard {
 }
 
 export interface ThoughtTidyResult {
-  kept: ThoughtCard[];
-  parked: ThoughtCard[];
-  released: ThoughtCard[];
+  kept: string[] | ThoughtCard[];
+  parked: string[] | ThoughtCard[];
+  released: string[] | ThoughtCard[];
   actionItems?: Array<{ text: string; completed: boolean }>;
 }
 

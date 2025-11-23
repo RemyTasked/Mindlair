@@ -105,10 +105,11 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
     }
 
     try {
+      // Send arrays of strings (thought text) as the backend expects
       const response = await api.post('/api/thought-tidy/submit', {
-        kept: buckets.keep,
-        parked: buckets.park,
-        released: buckets.release,
+        kept: buckets.keep.map(card => typeof card === 'string' ? card : card.text || card.id),
+        parked: buckets.park.map(card => typeof card === 'string' ? card : card.text || card.id),
+        released: buckets.release.map(card => typeof card === 'string' ? card : card.text || card.id),
       });
 
       setCreditsEarned(response.data.credits || 2);
@@ -118,8 +119,11 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
       setTimeout(() => {
         onComplete();
       }, 5000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting Thought Tidy:', error);
+      // Show user-friendly error message
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
+      alert(`Failed to complete Thought Tidy: ${errorMessage}\n\nPlease try again.`);
     }
   };
 
@@ -324,11 +328,12 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
                   draggable
                   onDragStart={() => handleDragStart(card)}
                   onDragEnd={handleDragEnd}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 cursor-move hover:bg-white/20 transition-all"
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20 cursor-move hover:bg-white/20 active:bg-white/30 transition-all touch-manipulation"
                   whileHover={{ scale: 1.05 }}
                   whileDrag={{ opacity: 0.5, scale: 0.95 }}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <p className="text-white text-sm leading-relaxed">{card.text}</p>
+                  <p className="text-white text-sm sm:text-base leading-relaxed">{card.text}</p>
                 </motion.div>
               ))}
             </div>
@@ -341,9 +346,9 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDrop('keep', e)}
-            className={`bg-green-500/20 backdrop-blur-sm rounded-xl p-6 border-2 border-dashed ${
+            className={`bg-green-500/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 border-2 border-dashed ${
               draggedCard ? 'border-green-400' : 'border-green-500/50'
-            } min-h-[200px]`}
+            } min-h-[180px] sm:min-h-[200px]`}
           >
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle className="w-5 h-5 text-green-300" />
@@ -447,7 +452,8 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={handleComplete}
-            className="w-full sm:w-auto mx-auto block px-8 py-4 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg"
+            className="w-full sm:w-auto mx-auto block px-8 py-4 sm:py-5 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 active:from-indigo-800 active:to-teal-800 transition-all shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             Complete Thought Tidy
           </motion.button>

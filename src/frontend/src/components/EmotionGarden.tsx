@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flower2, Cloud, TreePine, Mountain, Sparkles, X, Sun, Wind, Leaf, Bug, Bird, Rabbit } from 'lucide-react';
+import { Flower2, Cloud, TreePine, Mountain, Sparkles, X, Sun, Wind, Leaf, Bug, Bird } from 'lucide-react';
 import api from '../lib/axios';
 
 interface GardenPlant {

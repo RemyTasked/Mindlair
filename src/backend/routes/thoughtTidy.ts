@@ -48,10 +48,20 @@ router.post('/submit', authenticate, asyncHandler(async (req, res) => {
       throw new AppError('Please sort at least one thought before completing', 400);
     }
 
+    // Normalize: convert any objects to strings (extract text property if it exists)
+    const normalizeThoughts = (arr: any[]): string[] => {
+      return arr.map(item => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object' && item.text) return item.text;
+        if (item && typeof item === 'object' && item.id) return item.id;
+        return String(item);
+      });
+    };
+
     const result = await thoughtTidyService.recordThoughtTidySession(userId, {
-      kept: kept || [],
-      parked: parked || [],
-      released: released || [],
+      kept: normalizeThoughts(kept || []),
+      parked: normalizeThoughts(parked || []),
+      released: normalizeThoughts(released || []),
       actionItems: actionItems || undefined,
     });
 

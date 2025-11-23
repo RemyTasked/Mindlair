@@ -354,7 +354,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
             </div>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-8">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-6 sm:mb-8 leading-relaxed">
             {currentQuestion.question}
           </h2>
 
@@ -370,7 +370,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
                   key={index}
                   onClick={() => handleAnswerSelect(index)}
                   disabled={showFeedback}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                  className={`w-full text-left p-4 sm:p-5 rounded-lg border-2 transition-all touch-manipulation ${
                     showResult
                       ? isCorrectOption
                         ? 'border-green-500 bg-green-50'
@@ -379,11 +379,12 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
                         : 'border-gray-200 bg-gray-50'
                       : isSelected
                       ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
+                      : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 active:bg-indigo-100'
                   } ${showFeedback ? 'cursor-default' : 'cursor-pointer'}`}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-gray-900 text-base sm:text-lg leading-relaxed">
                       {String.fromCharCode(65 + index)}. {option}
                     </span>
                     {showResult && (
@@ -428,7 +429,8 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={handleNext}
-            className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg flex items-center justify-center gap-3 mx-auto"
+            className="w-full sm:w-auto px-8 py-4 sm:py-5 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 active:from-indigo-800 active:to-teal-800 transition-all shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg flex items-center justify-center gap-3 mx-auto touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             {currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Game'}
             <ArrowRight className="w-5 h-5" />

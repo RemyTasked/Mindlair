@@ -375,21 +375,22 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
           {cards.map((card) => (
             <motion.button
               key={card.id}
               onClick={() => handleCardClick(card.id)}
               disabled={card.isFlipped || card.isMatched}
-              className={`aspect-[4/3] rounded-xl p-4 font-semibold text-sm sm:text-base transition-all ${
+              className={`aspect-[4/3] rounded-xl p-3 sm:p-4 font-semibold text-xs sm:text-sm md:text-base transition-all touch-manipulation ${
                 card.isMatched
                   ? 'bg-gradient-to-br from-green-400 to-green-600 text-white'
                   : card.isFlipped
                   ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white'
-                  : 'bg-gradient-to-br from-gray-200 to-gray-300 text-gray-600 hover:from-gray-300 hover:to-gray-400'
+                  : 'bg-gradient-to-br from-gray-200 to-gray-300 text-gray-600 hover:from-gray-300 hover:to-gray-400 active:from-gray-400 active:to-gray-500'
               } ${card.isFlipped || card.isMatched ? 'cursor-default' : 'cursor-pointer'}`}
               whileHover={!card.isFlipped && !card.isMatched ? { scale: 1.05 } : {}}
               whileTap={!card.isFlipped && !card.isMatched ? { scale: 0.95 } : {}}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <div className="h-full flex items-center justify-center">
                 {card.isFlipped || card.isMatched ? (
