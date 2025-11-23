@@ -117,36 +117,75 @@ router.post(
         throw new AppError('No Spotify devices found. Please open Spotify on at least one device (web player, desktop app, or mobile app) and try again.', 400);
       }
 
-      // Detect if request is from mobile device
+      // Detect if request is from mobile device with improved detection
       const userAgent = req.headers['user-agent'] || '';
-      const isMobileRequest = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-      logger.info('📱 Device detection', { userAgent: userAgent.substring(0, 100), isMobileRequest });
-
-      // Find active device first
-      let targetDevice = devices.find((d) => d.is_active);
-
-      if (!targetDevice) {
-        // If request is from mobile, prioritize mobile devices
-        if (isMobileRequest) {
-          targetDevice = devices.find((d) => d.type === 'Smartphone' || d.type === 'Tablet' || d.type === 'Mobile');
-          if (!targetDevice) {
-            // Fall back to any mobile-like device by name
-            targetDevice = devices.find((d) => d.name.toLowerCase().includes('phone') || d.name.toLowerCase().includes('mobile') || d.name.toLowerCase().includes('iphone') || d.name.toLowerCase().includes('android'));
-          }
+      const isMobileRequest = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone/i.test(userAgent) ||
+                             userAgent.includes('Mobile') || userAgent.includes('Android');
+      logger.info('📱 Device detection', {
+        userAgent: userAgent.substring(0, 100),
+        isMobileRequest,
+        keyIndicators: {
+          mobile: userAgent.includes('Mobile'),
+          android: userAgent.includes('Android'),
+          iphone: userAgent.includes('iPhone'),
+          ipad: userAgent.includes('iPad')
         }
+      });
 
-        // If still no device, prefer web player for desktop requests, or any device
+      // STRONG PRIORITY: If mobile request, aggressively prioritize mobile devices
+      let targetDevice = null;
+
+      if (isMobileRequest) {
+        logger.info('📱 Mobile request detected - prioritizing mobile devices');
+
+        // Step 1: Find active mobile device
+        targetDevice = devices.find((d) => d.is_active && (d.type === 'Smartphone' || d.type === 'Tablet'));
+
+        // Step 2: Find any mobile device by type
         if (!targetDevice) {
-          if (!isMobileRequest) {
-            // Prefer web player for desktop requests
-            targetDevice = devices.find((d) => d.type === 'Computer' || d.type === 'WebPlayer');
-          }
-          if (!targetDevice) {
-            // Fall back to any available device
-            targetDevice = devices[0];
-            logger.info('🔄 Using fallback device', { deviceId: targetDevice.id, deviceName: targetDevice.name, deviceType: targetDevice.type });
-          }
+          targetDevice = devices.find((d) => d.type === 'Smartphone' || d.type === 'Tablet' || d.type === 'Mobile');
         }
+
+        // Step 3: Find mobile device by name patterns (very comprehensive)
+        if (!targetDevice) {
+          const mobilePatterns = [
+            'iphone', 'ipad', 'ipod', 'android', 'phone', 'mobile',
+            'samsung', 'pixel', 'galaxy', 'huawei', 'xiaomi', 'oneplus',
+            'motorola', 'lg', 'nokia', 'sony', 'htc'
+          ];
+          targetDevice = devices.find((d) =>
+            mobilePatterns.some(pattern => d.name.toLowerCase().includes(pattern)) ||
+            d.name.toLowerCase().includes('mobile') ||
+            d.name.toLowerCase().includes('phone')
+          );
+        }
+
+        if (targetDevice) {
+          logger.info('📱 Selected mobile device for mobile request', {
+            deviceId: targetDevice.id,
+            deviceName: targetDevice.name,
+            deviceType: targetDevice.type,
+            isActive: targetDevice.is_active
+          });
+        } else {
+          logger.warn('⚠️ Mobile request but no mobile devices found', {
+            availableDevices: devices.map(d => ({ name: d.name, type: d.type, is_active: d.is_active }))
+          });
+        }
+      }
+
+      // If no mobile device found (or not mobile request), find active device
+      if (!targetDevice) {
+        targetDevice = devices.find((d) => d.is_active);
+        if (targetDevice) {
+          logger.info('🎵 Using active device', { deviceId: targetDevice.id, deviceName: targetDevice.name });
+        }
+      }
+
+      // Final fallback: any device
+      if (!targetDevice) {
+        targetDevice = devices[0];
+        logger.info('🔄 Using first available device as fallback', { deviceId: targetDevice.id, deviceName: targetDevice.name });
       }
 
       if (!targetDevice) {

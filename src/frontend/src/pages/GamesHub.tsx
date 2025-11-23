@@ -418,6 +418,7 @@ export default function GamesHub() {
             </ul>
             <button
               onClick={() => {
+                console.log('🎮 Starting Scene Sense game');
                 setGameType('scene-sense');
                 setGameStarted(true);
               }}
@@ -445,6 +446,7 @@ export default function GamesHub() {
             </ul>
             <button
               onClick={() => {
+                console.log('🎯 Starting Mind Match game');
                 setGameType('mind-match');
                 setGameStarted(true);
               }}
@@ -472,6 +474,7 @@ export default function GamesHub() {
             </ul>
             <button
               onClick={() => {
+                console.log('🎬 Starting Thought Tidy game');
                 setGameType('thought-tidy');
                 setGameStarted(true);
               }}

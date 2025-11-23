@@ -39,6 +39,9 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
   const [newPlants, setNewPlants] = useState<Set<string>>(new Set());
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Performance optimization: detect mobile for reduced animations
+  const [isMobile] = useState(() => /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+
   const loadGardenState = async () => {
     try {
       // Optimize: Use Promise.race with timeout to prevent hanging
@@ -211,41 +214,43 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
           damping: 12
         }}
       >
-        {/* Sprouting animation for new plants */}
+        {/* Sprouting animation for new plants - simplified on mobile */}
         {isNew && (
           <>
-            {/* Ground burst effect */}
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ 
-                scale: [0, 2, 1.5],
-                opacity: [0, 0.6, 0]
-              }}
-              transition={{ duration: 0.8 }}
-              className="absolute inset-0 -z-10"
-            >
-              <div className="w-20 h-20 bg-green-300 rounded-full blur-xl" />
-            </motion.div>
-            
-            {/* Sprouting particles */}
-            {[...Array(12)].map((_, i) => (
+            {/* Ground burst effect - simplified on mobile */}
+            {!isMobile && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: [0, 1.5, 1],
+                  opacity: [0, 0.4, 0]
+                }}
+                transition={{ duration: 0.6 }}
+                className="absolute inset-0 -z-10"
+              >
+                <div className="w-12 h-12 bg-green-300 rounded-full blur-lg" />
+              </motion.div>
+            )}
+
+            {/* Sprouting particles - reduced on mobile */}
+            {[...Array(isMobile ? 4 : 8)].map((_, i) => (
               <motion.div
                 key={i}
-                initial={{ 
-                  x: 0, 
-                  y: 0, 
+                initial={{
+                  x: 0,
+                  y: 0,
                   opacity: 0,
                   scale: 0
                 }}
-                animate={{ 
-                  x: Math.cos((i / 12) * Math.PI * 2) * (40 + Math.random() * 20),
-                  y: Math.sin((i / 12) * Math.PI * 2) * (40 + Math.random() * 20) - 20,
-                  opacity: [0, 1, 0.8, 0],
-                  scale: [0, 1.2, 0.8, 0]
+                animate={{
+                  x: Math.cos((i / (isMobile ? 4 : 8)) * Math.PI * 2) * (20 + Math.random() * 10),
+                  y: Math.sin((i / (isMobile ? 4 : 8)) * Math.PI * 2) * (20 + Math.random() * 10) - 10,
+                  opacity: [0, 0.8, 0],
+                  scale: [0, 1, 0]
                 }}
                 transition={{
-                  duration: 2,
-                  delay: 0.3 + i * 0.05,
+                  duration: 1.5,
+                  delay: 0.2 + i * 0.03,
                   ease: "easeOut"
                 }}
                 className="absolute"
@@ -254,8 +259,8 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
                   top: '50%',
                 }}
               >
-                <div 
-                  className="w-3 h-3 rounded-full"
+                <div
+                  className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: baseColor }}
                 />
               </motion.div>
@@ -291,11 +296,11 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
           />
         </motion.div>
 
-        {/* Enhanced Leaves/particles floating around plants */}
+        {/* Enhanced Leaves/particles floating around plants - optimized for mobile */}
         {plant.type === 'tree' || plant.type === 'flower' ? (
           <div className="absolute inset-0 pointer-events-none overflow-visible">
-            {/* More leaves with varied paths */}
-            {[...Array(8)].map((_, i) => (
+            {/* Leaves with varied paths - reduced on mobile */}
+            {[...Array(isMobile ? 3 : 6)].map((_, i) => (
               <motion.div
                 key={`leaf-${i}`}
                 initial={{ 
@@ -331,29 +336,29 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
           </div>
         ) : null}
         
-        {/* Shrubs around trees */}
-        {plant.type === 'tree' && (
+        {/* Shrubs around trees - disabled on mobile */}
+        {plant.type === 'tree' && !isMobile && (
           <div className="absolute inset-0 pointer-events-none">
-            {[...Array(3)].map((_, i) => (
+            {[...Array(2)].map((_, i) => (
               <motion.div
                 key={`shrub-${i}`}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{
-                  scale: [0.8, 1, 0.9, 1],
-                  opacity: [0.4, 0.7, 0.5, 0.7],
-                  x: [0, Math.sin(i) * 15],
-                  y: [0, Math.cos(i) * 10]
+                  scale: [0.9, 1, 0.95, 1],
+                  opacity: [0.3, 0.6, 0.4, 0.6],
+                  x: [0, Math.sin(i) * 8],
+                  y: [0, Math.cos(i) * 5]
                 }}
                 transition={{
-                  duration: 3 + i,
+                  duration: 6 + i,
                   repeat: Infinity,
-                  delay: i * 0.5,
+                  delay: i * 1,
                   ease: "easeInOut"
                 }}
                 className="absolute"
                 style={{
-                  left: `${50 + (i - 1) * 20}%`,
-                  top: `${50 + (i - 1) * 15}%`,
+                  left: `${45 + (i - 0.5) * 25}%`,
+                  top: `${55 + (i - 0.5) * 10}%`,
                   color: '#4a7c59',
                 }}
               >
@@ -391,39 +396,41 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
       case 'stormy':
         return (
           <>
-            {/* Rain drops */}
-            {[...Array(20)].map((_, i) => (
+            {/* Rain drops - reduced on mobile */}
+            {[...Array(isMobile ? 8 : 15)].map((_, i) => (
               <motion.div
                 key={i}
                 animate={{
                   y: [0, window.innerHeight],
-                  opacity: [0, 1, 1, 0]
+                  opacity: [0, 0.7, 0.7, 0]
                 }}
                 transition={{
-                  duration: 1 + Math.random(),
+                  duration: 1.2 + Math.random() * 0.5,
                   repeat: Infinity,
-                  delay: Math.random() * 2,
+                  delay: Math.random() * 1.5,
                   ease: "linear"
                 }}
-                className="absolute w-0.5 h-8 bg-blue-400"
+                className={`absolute ${isMobile ? 'w-0.5 h-6' : 'w-0.5 h-8'} bg-blue-400`}
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: '-10%',
                 }}
               />
             ))}
-            {/* Lightning flashes */}
-            <motion.div
-              animate={{
-                opacity: [0, 0.3, 0]
-              }}
-              transition={{
-                duration: 0.2,
-                repeat: Infinity,
-                repeatDelay: 3 + Math.random() * 2
-              }}
-              className="absolute inset-0 bg-white pointer-events-none"
-            />
+            {/* Lightning flashes - disabled on mobile */}
+            {!isMobile && (
+              <motion.div
+                animate={{
+                  opacity: [0, 0.2, 0]
+                }}
+                transition={{
+                  duration: 0.15,
+                  repeat: Infinity,
+                  repeatDelay: 4 + Math.random() * 3
+                }}
+                className="absolute inset-0 bg-white pointer-events-none"
+              />
+            )}
           </>
         );
       case 'sunny':
@@ -446,44 +453,55 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
       case 'windy':
         return (
           <>
-            {/* Wind particles */}
-            {[...Array(15)].map((_, i) => (
+            {/* Wind particles - reduced on mobile */}
+            {[...Array(isMobile ? 6 : 10)].map((_, i) => (
               <motion.div
                 key={i}
                 animate={{
-                  x: [0, window.innerWidth],
-                  y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
-                  opacity: [0, 0.4, 0.4, 0]
+                  x: [0, window.innerWidth * 0.8],
+                  y: [Math.random() * window.innerHeight * 0.6, Math.random() * window.innerHeight * 0.6],
+                  opacity: [0, 0.3, 0.3, 0]
                 }}
                 transition={{
-                  duration: 4 + Math.random() * 2,
+                  duration: 5 + Math.random(),
                   repeat: Infinity,
                   delay: Math.random() * 2,
                   ease: "easeInOut"
                 }}
                 className="absolute"
               >
-                <Wind size={24} className="text-blue-300 opacity-50" />
+                <Wind size={isMobile ? 16 : 20} className="text-blue-300 opacity-40" />
               </motion.div>
             ))}
           </>
         );
       default:
         return (
-          <motion.div
-            animate={{
-              scale: [1, 1.05, 1],
-              opacity: [0.05, 0.1, 0.05]
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-5 right-5 pointer-events-none"
-          >
-            <Sparkles size={60} className="text-blue-200" />
-          </motion.div>
+          <>
+            {/* Sparkles - reduced on mobile */}
+            {[...Array(isMobile ? 3 : 5)].map((_, i) => (
+              <motion.div
+                key={i}
+                animate={{
+                  scale: [0.8, 1.2, 0.8],
+                  opacity: [0.1, 0.3, 0.1]
+                }}
+                transition={{
+                  duration: 3 + Math.random(),
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                  ease: "easeInOut"
+                }}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${20 + Math.random() * 60}%`,
+                  top: `${15 + Math.random() * 30}%`,
+                }}
+              >
+                <Sparkles size={isMobile ? 20 : 30} className="text-blue-200" />
+              </motion.div>
+            ))}
+          </>
         );
     }
   };
