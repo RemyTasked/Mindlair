@@ -129,7 +129,15 @@ router.post(
           deviceCount: devices.length,
           devices: devices.map(d => ({ id: d.id, name: d.name, type: d.type, is_active: d.is_active }))
         });
-        throw new AppError('No Spotify device found. Please open Spotify on one of your devices (web player at open.spotify.com, desktop app, or mobile app) and try again. Make sure Spotify is actively running on at least one device.', 400);
+        throw new AppError(
+          'No Spotify device found. This is a Spotify API requirement - you need Spotify open on at least one device to control playback.\n\n' +
+          'Quick fix:\n' +
+          '1. Open Spotify on any device (web player at open.spotify.com, desktop app, or mobile app)\n' +
+          '2. Make sure it\'s actively playing or ready to play\n' +
+          '3. Try again\n\n' +
+          'Why? Spotify\'s API requires an active device to control playback - this is a security feature to prevent unauthorized remote control.',
+          400
+        );
       }
       
       // Validate playlist ID format

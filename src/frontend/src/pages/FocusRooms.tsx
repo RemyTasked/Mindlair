@@ -1023,17 +1023,46 @@ export default function FocusRooms() {
                                   console.error('❌ Error starting Spotify:', error);
                                   const errorMessage = error.response?.data?.message || error.message || 'Failed to start Spotify playback';
                                   
-                                  // Show user-friendly error message
-                                  alert(`Spotify playback failed: ${errorMessage}\n\nFalling back to Meet-Cute audio.`);
+                                  // Check if it's a "no device" error and provide helpful guidance
+                                  const isNoDeviceError = errorMessage.toLowerCase().includes('no spotify device') || 
+                                                         errorMessage.toLowerCase().includes('no active device') ||
+                                                         error.response?.status === 404;
                                   
-                                  // Fallback to Meet-Cute audio
-                                  setAudioProvider('meetcute');
-                                  if (room.meetCuteSoundType) {
-                                    startMeetCuteAudio(room);
-                                    setIsPlaying(true);
+                                  if (isNoDeviceError) {
+                                    // More helpful message for device requirement
+                                    const userMessage = `Spotify needs to be open on at least one device to play music.\n\n` +
+                                      `Quick fix:\n` +
+                                      `1. Open Spotify web player (open.spotify.com) in a new tab\n` +
+                                      `2. Or open Spotify desktop/mobile app\n` +
+                                      `3. Then try playing again\n\n` +
+                                      `Would you like to use Meet-Cute audio instead?`;
+                                    
+                                    if (confirm(userMessage)) {
+                                      // Fallback to Meet-Cute audio
+                                      setAudioProvider('meetcute');
+                                      if (room.meetCuteSoundType) {
+                                        startMeetCuteAudio(room);
+                                        setIsPlaying(true);
+                                      } else {
+                                        console.error('❌ Cannot fallback to Meet-Cute audio: no meetCuteSoundType for room', room.id);
+                                        setIsPlaying(false);
+                                      }
+                                    } else {
+                                      setIsPlaying(false);
+                                    }
                                   } else {
-                                    console.error('❌ Cannot fallback to Meet-Cute audio: no meetCuteSoundType for room', room.id);
-                                    setIsPlaying(false);
+                                    // Other errors - show standard message
+                                    alert(`Spotify playback failed: ${errorMessage}\n\nFalling back to Meet-Cute audio.`);
+                                    
+                                    // Fallback to Meet-Cute audio
+                                    setAudioProvider('meetcute');
+                                    if (room.meetCuteSoundType) {
+                                      startMeetCuteAudio(room);
+                                      setIsPlaying(true);
+                                    } else {
+                                      console.error('❌ Cannot fallback to Meet-Cute audio: no meetCuteSoundType for room', room.id);
+                                      setIsPlaying(false);
+                                    }
                                   }
                                 }
                               } else if (audioProvider === 'apple-music') {
