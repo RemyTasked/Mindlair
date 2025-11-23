@@ -11,49 +11,55 @@
   "categories": ["productivity", "business", "lifestyle"],
   "icons": [
     {
-      "src": "/icons/icon-72x72.png?v=20251120000000",
+      "src": "/icons/meetcute-icon-72x72.png?v=20251123000000",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-96x96.png?v=20251120000000",
+      "src": "/icons/meetcute-icon-96x96.png?v=20251123000000",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-128x128.png?v=20251120000000",
+      "src": "/icons/meetcute-icon-128x128.png?v=20251123000000",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-144x144.png?v=20251120000000",
+      "src": "/icons/meetcute-icon-144x144.png?v=20251123000000",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-152x152.png?v=20251120000000",
+      "src": "/icons/meetcute-icon-152x152.png?v=20251123000000",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-192x192.png?v=20251120000000",
+      "src": "/icons/meetcute-icon-180x180.png?v=20251123000000",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/meetcute-icon-192x192.png?v=20251123000000",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-384x384.png?v=20251120000000",
+      "src": "/icons/meetcute-icon-384x384.png?v=20251123000000",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png?v=20251120000000",
+      "src": "/icons/meetcute-icon-512x512.png?v=20251123000000",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -73,14 +79,14 @@
       "short_name": "Home",
       "description": "View your dashboard",
       "url": "/dashboard",
-      "icons": [{ "src": "/icons/icon-96x96.png?v=20251120000000", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/meetcute-icon-96x96.png?v=20251123000000", "sizes": "96x96" }]
     },
     {
       "name": "Settings",
       "short_name": "Settings",
       "description": "Manage your preferences",
       "url": "/settings",
-      "icons": [{ "src": "/icons/icon-96x96.png?v=20251120000000", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/meetcute-icon-96x96.png?v=20251123000000", "sizes": "96x96" }]
     }
   ]
 }

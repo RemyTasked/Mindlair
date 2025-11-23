@@ -37,20 +37,22 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#14b8a6" />
     
-    <!-- Preload critical logo to prevent flash of old logo -->
-    <link rel="preload" href="/icons/meetcute-logo.png?v=20251120000000" as="image" type="image/png" />
-    
-    <!-- Favicon with cache-busting - optimized sizes for browser tabs -->
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20251120000000" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=20251120000000" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png?v=20251120000000" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png?v=20251120000000" />
-    <link rel="shortcut icon" href="/favicon.png?v=20251120000000" />
-    
-    <!-- iOS-specific meta tags with cache-busting -->
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=20251120000000" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png?v=20251120000000" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20251120000000" />
+    <!-- Preload critical icons to prevent flash of old icons -->
+    <link rel="preload" href="/favicon.png?v=20251123000000" as="image" type="image/png" />
+    <link rel="preload" href="/icons/meetcute-icon-192x192.png?v=20251123000000" as="image" type="image/png" />
+
+    <!-- Favicon with cache-busting - optimized for all contexts -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=20251123000000" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20251123000000" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=20251123000000" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/meetcute-icon-192x192.png?v=20251123000000" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/meetcute-icon-512x512.png?v=20251123000000" />
+    <link rel="shortcut icon" href="/favicon.ico?v=20251123000000" />
+
+    <!-- iOS-specific meta tags with cache-busting - optimized for home screen -->
+    <link rel="apple-touch-icon" href="/icons/meetcute-icon-180x180.png?v=20251123000000" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/meetcute-icon-152x152.png?v=20251123000000" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/meetcute-icon-180x180.png?v=20251123000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Meet Cute" />
@@ -71,7 +73,7 @@
       "description": "AI-powered 5-minute pre-meeting preparation. Get personalized cues, guided breathing, and calming sounds before every meeting. Transform meeting anxiety into confident preparation. Syncs with Google Calendar & Outlook.",
       "url": "https://www.meetcuteai.com",
       "image": "https://www.meetcuteai.com/og-image.png?v=20251120000000",
-      "logo": "https://www.meetcuteai.com/icons/meetcute-logo.png?v=20251120000000",
+      "logo": "https://www.meetcuteai.com/icons/meetcute-icon-512x512.png?v=20251123000000",
       "operatingSystem": "Web, iOS, Android",
       "browserRequirements": "Requires JavaScript. Supports Chrome, Safari, Firefox, Edge.",
       "softwareVersion": "1.10.0",
