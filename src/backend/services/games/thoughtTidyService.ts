@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../utils/prisma';
 import { logger } from '../../utils/logger';
 import * as emotionGardenService from './emotionGardenService';
-
-const prisma = new PrismaClient();
 
 export interface ThoughtCard {
   id: string;

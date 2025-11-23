@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { logger } from '../utils/logger';
 import * as emotionGardenService from '../services/games/emotionGardenService';
 
 const router = express.Router();
@@ -10,9 +11,15 @@ const router = express.Router();
  * Get current garden state
  */
 router.get('/state', authenticate, asyncHandler(async (req, res) => {
-  const userId = req.userId!;
-  const state = await emotionGardenService.getGardenState(userId);
-  res.json({ state });
+  try {
+    const userId = req.userId!;
+    const state = await emotionGardenService.getGardenState(userId);
+    res.json({ state: state || { plants: [], weather: { type: 'calm', intensity: 0 }, lastUpdated: new Date() } });
+  } catch (error: any) {
+    logger.error('Error getting garden state:', error);
+    // Return default state instead of crashing
+    res.json({ state: { plants: [], weather: { type: 'calm', intensity: 0 }, lastUpdated: new Date() } });
+  }
 }));
 
 /**
