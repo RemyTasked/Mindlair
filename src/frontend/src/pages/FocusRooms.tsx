@@ -1009,7 +1009,7 @@ export default function FocusRooms() {
                             setIsPlaying(false);
                           } else {
                             // Start audio - wait a moment for all stops to complete
-                            console.log('▶️ Starting audio');
+                            console.log('▶️ Starting audio', { audioProvider, roomId: room.id, roomName: room.name, meetCuteSoundType: room.meetCuteSoundType });
                             
                             setTimeout(async () => {
                               if (audioProvider === 'spotify') {
@@ -1028,8 +1028,13 @@ export default function FocusRooms() {
                                   
                                   // Fallback to Meet-Cute audio
                                   setAudioProvider('meetcute');
-                                  startMeetCuteAudio(room);
-                                  setIsPlaying(true);
+                                  if (room.meetCuteSoundType) {
+                                    startMeetCuteAudio(room);
+                                    setIsPlaying(true);
+                                  } else {
+                                    console.error('❌ Cannot fallback to Meet-Cute audio: no meetCuteSoundType for room', room.id);
+                                    setIsPlaying(false);
+                                  }
                                 }
                               } else if (audioProvider === 'apple-music') {
                                 try {
@@ -1048,12 +1053,23 @@ export default function FocusRooms() {
                                   console.error('Error starting Apple Music:', error);
                                   // Fallback to Meet-Cute
                                   setAudioProvider('meetcute');
-                                  startMeetCuteAudio(room);
-                                  setIsPlaying(true);
+                                  if (room.meetCuteSoundType) {
+                                    startMeetCuteAudio(room);
+                                    setIsPlaying(true);
+                                  } else {
+                                    console.error('❌ Cannot fallback to Meet-Cute audio: no meetCuteSoundType for room', room.id);
+                                    setIsPlaying(false);
+                                  }
                                 }
                               } else {
-                                startMeetCuteAudio(room);
-                                setIsPlaying(true);
+                                // Meet-Cute audio
+                                if (room.meetCuteSoundType) {
+                                  startMeetCuteAudio(room);
+                                  setIsPlaying(true);
+                                } else {
+                                  console.error('❌ Cannot start Meet-Cute audio: no meetCuteSoundType for room', room.id);
+                                  setIsPlaying(false);
+                                }
                               }
                             }, 300); // Wait for all stops to complete
                           }

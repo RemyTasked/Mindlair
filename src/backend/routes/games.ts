@@ -18,21 +18,46 @@ router.get('/daily', authenticate, async (req: Request, res: Response) => {
     const userId = req.userId;
     const gameType = gameService.getDailyGameType();
     
-    // Get user progress
-    const progress = await gameService.getUserGameProgress(userId);
+    // Get user progress with error handling
+    let progress;
+    try {
+      progress = await gameService.getUserGameProgress(userId);
+    } catch (progressError: any) {
+      logger.error('Error getting user progress, using defaults', { error: progressError.message });
+      // Return default progress if there's an error
+      progress = {
+        totalCredits: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        badges: [],
+      };
+    }
 
     return res.json({
       gameType,
       progress: {
-        totalCredits: progress.totalCredits,
-        currentStreak: progress.currentStreak,
-        longestStreak: progress.longestStreak,
-        badges: progress.badges as string[],
+        totalCredits: progress.totalCredits || 0,
+        currentStreak: progress.currentStreak || 0,
+        longestStreak: progress.longestStreak || 0,
+        badges: (progress.badges || []) as string[],
       },
     });
   } catch (error: any) {
-    logger.error('Error getting daily game:', error);
-    return res.status(500).json({ error: error.message || 'Failed to get daily game' });
+    logger.error('Error getting daily game:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.userId
+    });
+    // Return a default game type so the frontend can still work
+    return res.json({
+      gameType: 'scene-sense',
+      progress: {
+        totalCredits: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        badges: [],
+      },
+    });
   }
 });
 
@@ -50,12 +75,43 @@ router.get('/scene-sense/questions', authenticate, async (req: Request, res: Res
     const count = parseInt(req.query.count as string) || 5;
     const sceneMatch = req.query.sceneMatch as string | undefined;
 
-    const questions = await gameService.getSceneSenseQuestions(userId, count, sceneMatch);
+    // Try to get questions, but if seeding is needed, try to seed first
+    let questions;
+    try {
+      questions = await gameService.getSceneSenseQuestions(userId, count, sceneMatch);
+    } catch (error: any) {
+      // If error suggests missing data, try to seed
+      if (error.message?.includes('seed') || error.message?.includes('not available') || error.message?.includes('not found')) {
+        logger.info('🌱 Attempting to seed games database due to missing questions');
+        try {
+          const { seedGames } = require('../scripts/seedGames');
+          await seedGames();
+          // Retry getting questions
+          questions = await gameService.getSceneSenseQuestions(userId, count, sceneMatch);
+        } catch (seedError: any) {
+          logger.error('Error seeding games:', seedError);
+          // Return empty array so frontend can handle gracefully
+          return res.json({ questions: [] });
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    if (!questions || questions.length === 0) {
+      logger.warn('No questions returned, returning empty array');
+      return res.json({ questions: [] });
+    }
 
     return res.json({ questions });
   } catch (error: any) {
-    logger.error('Error getting Scene Sense questions:', error);
-    return res.status(500).json({ error: error.message || 'Failed to get questions' });
+    logger.error('Error getting Scene Sense questions:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.userId
+    });
+    // Return empty array instead of 500 error so frontend can handle gracefully
+    return res.json({ questions: [] });
   }
 });
 
@@ -72,12 +128,43 @@ router.get('/mind-match/pairs', authenticate, async (req: Request, res: Response
     const userId = req.userId;
     const sceneMatch = req.query.sceneMatch as string | undefined;
 
-    const pairs = await gameService.getMindMatchPairs(userId, sceneMatch);
+    // Try to get pairs, but if seeding is needed, try to seed first
+    let pairs;
+    try {
+      pairs = await gameService.getMindMatchPairs(userId, sceneMatch);
+    } catch (error: any) {
+      // If error suggests missing data, try to seed
+      if (error.message?.includes('seed') || error.message?.includes('not available') || error.message?.includes('not found')) {
+        logger.info('🌱 Attempting to seed games database due to missing pairs');
+        try {
+          const { seedGames } = require('../scripts/seedGames');
+          await seedGames();
+          // Retry getting pairs
+          pairs = await gameService.getMindMatchPairs(userId, sceneMatch);
+        } catch (seedError: any) {
+          logger.error('Error seeding games:', seedError);
+          // Return empty array so frontend can handle gracefully
+          return res.json({ pairs: [] });
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    if (!pairs || pairs.length === 0) {
+      logger.warn('No pairs returned, returning empty array');
+      return res.json({ pairs: [] });
+    }
 
     return res.json({ pairs });
   } catch (error: any) {
-    logger.error('Error getting Mind Match pairs:', error);
-    return res.status(500).json({ error: error.message || 'Failed to get pairs' });
+    logger.error('Error getting Mind Match pairs:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.userId
+    });
+    // Return empty array instead of 500 error so frontend can handle gracefully
+    return res.json({ pairs: [] });
   }
 });
 
@@ -220,14 +307,19 @@ router.post('/seed', authenticate, async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
     
-    // Import and run seed function directly
+    // Set a timeout to prevent hanging requests
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Seeding operation timed out after 30 seconds')), 30000);
+    });
+    
+    // Import and run seed function directly with timeout
     const { seedGames } = require('../scripts/seedGames');
-    await seedGames();
+    await Promise.race([seedGames(), timeoutPromise]);
     
     // Check results using shared Prisma instance
     const { prisma } = require('../utils/prisma');
-    const questionCount = await prisma.gameQuestion.count();
-    const pairCount = await prisma.gamePair.count();
+    const questionCount = await prisma.gameQuestion.count().catch(() => 0);
+    const pairCount = await prisma.gamePair.count().catch(() => 0);
     
     logger.info(`✅ Games seeded successfully: ${questionCount} questions, ${pairCount} pairs`);
     
@@ -238,7 +330,13 @@ router.post('/seed', authenticate, async (req: Request, res: Response) => {
       pairCount
     });
   } catch (error: any) {
-    logger.error('Error seeding games:', error);
+    logger.error('Error seeding games:', {
+      error: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // Return 500 but don't crash the server
     return res.status(500).json({ 
       error: error.message || 'Failed to seed games',
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined

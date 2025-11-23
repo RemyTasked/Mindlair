@@ -847,10 +847,12 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
 
   const startAudio = useCallback(
     async (sourceLabel: string, overrideSoundType?: SoundType) => {
-      const currentSoundType = overrideSoundType || eventSoundType || soundType;
+      // Prioritize overrideSoundType (from event), then eventSoundType (from state), then soundType prop
+      // But if soundType prop is 'none', only use overrideSoundType or eventSoundType
+      const currentSoundType = overrideSoundType || eventSoundType || (soundType !== 'none' ? soundType : null);
       console.log('🎵 startAudio called with:', { sourceLabel, currentSoundType, overrideSoundType, eventSoundType, soundType, enabled });
       if (!enabled || !currentSoundType || currentSoundType === 'none') {
-        console.warn('⚠️ Cannot start audio:', { enabled, currentSoundType });
+        console.warn('⚠️ Cannot start audio:', { enabled, currentSoundType, overrideSoundType, eventSoundType, soundType });
         stopAudio();
         return;
       }
@@ -914,13 +916,16 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         return;
       }
       
-      const soundToPlay = eventSoundTypeValue || soundType;
+      // CRITICAL: Use event's soundType if provided, otherwise fall back to prop
+      // But if prop is 'none', only use event's soundType
+      const soundToPlay = eventSoundTypeValue || (soundType !== 'none' ? soundType : null);
+      
       if (!soundToPlay || soundToPlay === 'none') {
-        console.warn('⚠️ No valid soundType provided:', { eventSoundTypeValue, soundType });
+        console.warn('⚠️ No valid soundType provided:', { eventSoundTypeValue, soundType, enabled });
         return;
       }
       
-      // Update event soundType state
+      // Update event soundType state immediately
       if (eventSoundTypeValue) {
         setEventSoundType(eventSoundTypeValue);
       }
@@ -930,6 +935,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         // Longer delay to ensure fade out and cleanup fully completes
         setTimeout(() => {
           console.log('🎵 Starting audio with soundType:', soundToPlay);
+          // Pass the soundType directly to startAudio to ensure it's used
           startAudio('event-dispatch', soundToPlay);
         }, 400); // Increased delay for smoother transition
       });

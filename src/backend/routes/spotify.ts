@@ -83,16 +83,30 @@ router.post(
   asyncHandler(async (req, res) => {
     const { roomId } = req.body;
 
-    if (!roomId) {
-      throw new AppError('roomId is required', 400);
+    if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+      logger.error('❌ Invalid roomId in Spotify play request', { roomId, body: req.body });
+      throw new AppError('roomId is required and must be a non-empty string', 400);
     }
 
     try {
       const accessToken = await getAccessToken(req.userId!);
 
+      // Validate roomId is one of the known rooms
+      const validRoomIds = ['deep-focus', 'soft-composure', 'warm-connection', 'pitch-pulse', 'recovery-lounge'];
+      if (!validRoomIds.includes(roomId)) {
+        logger.error('❌ Invalid roomId', { roomId, validRoomIds });
+        throw new AppError(`Invalid roomId: ${roomId}. Must be one of: ${validRoomIds.join(', ')}`, 400);
+      }
+
       // Automatically find appropriate lo-fi playlist for this room
-      const playlistId = await spotifyService.findPlaylistForRoom(accessToken, roomId);
-      logger.info('✅ Found playlist for room', { roomId, playlistId });
+      let playlistId: string;
+      try {
+        playlistId = await spotifyService.findPlaylistForRoom(accessToken, roomId);
+        logger.info('✅ Found playlist for room', { roomId, playlistId });
+      } catch (playlistError: any) {
+        logger.error('❌ Failed to find playlist for room', { roomId, error: playlistError.message });
+        throw new AppError(`Failed to find Spotify playlist for room "${roomId}". Please try again or use Meet-Cute audio instead.`, 400);
+      }
 
       // Get available devices
       const devices = await spotifyService.getDevices(accessToken);
