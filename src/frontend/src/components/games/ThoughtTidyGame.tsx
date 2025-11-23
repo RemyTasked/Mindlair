@@ -380,9 +380,9 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDrop('park', e)}
-            className={`bg-yellow-500/20 backdrop-blur-sm rounded-xl p-6 border-2 border-dashed ${
+            className={`bg-yellow-500/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 border-2 border-dashed ${
               draggedCard ? 'border-yellow-400' : 'border-yellow-500/50'
-            } min-h-[200px]`}
+            } min-h-[180px] sm:min-h-[200px]`}
           >
             <div className="flex items-center gap-2 mb-4">
               <Film className="w-5 h-5 text-yellow-300" />
@@ -414,9 +414,9 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDrop('release', e)}
-            className={`bg-purple-500/20 backdrop-blur-sm rounded-xl p-6 border-2 border-dashed ${
+            className={`bg-purple-500/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 border-2 border-dashed ${
               draggedCard ? 'border-purple-400' : 'border-purple-500/50'
-            } min-h-[200px]`}
+            } min-h-[180px] sm:min-h-[200px]`}
           >
             <div className="flex items-center gap-2 mb-4">
               <X className="w-5 h-5 text-purple-300" />
