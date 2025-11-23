@@ -14,7 +14,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up">
-      <div className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-xl shadow-2xl p-4 border border-indigo-400">
+      <div className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-xl shadow-2xl p-4 border border-indigo-400 animate-pulse">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-1">
             <RefreshCw className={`w-6 h-6 text-white ${isUpdating ? 'animate-spin' : ''}`} />
@@ -29,9 +29,9 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
               </>
             ) : (
               <>
-                <h3 className="font-semibold text-lg mb-1">Update Available! ✨</h3>
+                <h3 className="font-semibold text-lg mb-1">🚀 Update Ready!</h3>
                 <p className="text-sm text-indigo-100 mb-3">
-                  A new version of Meet Cute is ready. Update now to get the latest features and improvements.
+                  A fresh version of Meet Cute is waiting! Get the latest features and improvements.
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -48,12 +48,15 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
                   </button>
                   <button
                     onClick={() => {
-                      setIsVisible(false);
-                      onDismiss();
+                      // Small delay to prevent accidental dismissal
+                      setTimeout(() => {
+                        setIsVisible(false);
+                        onDismiss();
+                      }, 300);
                     }}
                     className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 rounded-lg transition-colors font-medium text-sm"
                   >
-                    Later
+                    Maybe Later
                   </button>
                 </div>
                 <p className="text-xs text-indigo-200 mt-2">
@@ -84,7 +87,19 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
 let updateNotificationCallback: (() => void) | null = null;
 
 export const showUpdateNotification = (onUpdate: () => void) => {
-  console.log('🔔 showUpdateNotification called - showing notification');
+  console.log('🔔 showUpdateNotification called - checking if user recently dismissed');
+
+  // Check if user dismissed within the last 24 hours
+  const dismissedTime = localStorage.getItem('meetcute_update_dismissed');
+  if (dismissedTime) {
+    const hoursSinceDismissal = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60);
+    if (hoursSinceDismissal < 24) {
+      console.log('🔔 Update notification dismissed recently, not showing again');
+      return;
+    }
+  }
+
+  console.log('🔔 Showing update notification');
   updateNotificationCallback = onUpdate;
   // Dispatch event immediately to show notification
   window.dispatchEvent(new CustomEvent('show-update-notification'));
@@ -137,10 +152,8 @@ export const UpdateNotificationManager: React.FC = () => {
       }}
       onDismiss={() => {
         setShowNotification(false);
-        // Show again in 1 hour if user dismisses
-        setTimeout(() => {
-          setShowNotification(true);
-        }, 60 * 60 * 1000);
+        // Store dismissal time - only show again if app is reopened after 24 hours
+        localStorage.setItem('meetcute_update_dismissed', Date.now().toString());
       }}
     />
   );

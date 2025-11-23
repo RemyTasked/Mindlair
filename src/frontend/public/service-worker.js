@@ -5,9 +5,9 @@
 // - Server sends Cache-Control headers to prevent stale content
 // - Service worker cache version bumped on each deployment
 // - ETags enabled for efficient cache validation
-// DEPLOYMENT: 2025-11-15 - Notification sounds + 5 prep modes
-const CACHE_NAME = 'meetcute-v15-notification-sounds';
-const RUNTIME_CACHE = 'meetcute-runtime-v15';
+// DEPLOYMENT: 2025-11-23 - Automatic update detection + mobile optimizations
+const CACHE_NAME = 'meetcute-v16-automatic-updates';
+const RUNTIME_CACHE = 'meetcute-runtime-v16';
 
 // Assets to cache on install
 // Using NEW filename that iOS has never cached before

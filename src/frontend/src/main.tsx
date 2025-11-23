@@ -65,11 +65,12 @@ bootstrap().catch((error) => {
 // Listen for service worker cache updates
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', async (event) => {
+    console.log('🎬 Service Worker message received:', event.data);
     if (event.data && event.data.type === 'CACHE_UPDATED') {
       console.log('🎬 Service Worker: Cache updated to', event.data.version);
-      
-      // Show update notification instead of auto-reloading
-      // This gives users control over when to update (better UX during meetings)
+      console.log('🔄 Showing automatic update notification...');
+
+      // Show update notification automatically when cache is updated
       const { showUpdateNotification } = await import('./components/UpdateNotification');
       showUpdateNotification(() => {
         console.log('🔄 User initiated update - reloading...');
@@ -77,24 +78,51 @@ if ('serviceWorker' in navigator) {
       });
     }
   });
+
+  // Also listen for controller change (when a new service worker takes over)
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    console.log('🎬 Service Worker: Controller changed - new version activated');
+    // Optional: Could show notification here too if needed
+  });
 }
+
+// Check for waiting service worker immediately on load
+const checkForWaitingServiceWorker = async () => {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      if (registration.waiting) {
+        console.log('🎬 Found waiting service worker on app load - showing update notification immediately');
+        showUpdateNotification(() => {
+          console.log('✨ User accepted update, activating waiting service worker...');
+          registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+          window.location.reload();
+        });
+      }
+    } catch (error) {
+      console.error('⚠️ Error checking for waiting service worker:', error);
+    }
+  }
+};
 
 // Register service worker for PWA functionality
 serviceWorkerRegistration.register({
   onSuccess: () => {
     console.log('🎬 PWA: App is ready for offline use!');
+    // Check for waiting service worker after successful registration
+    setTimeout(checkForWaitingServiceWorker, 1000);
   },
   onUpdate: (registration) => {
-    console.log('🎬 PWA: New version available! Showing gentle update notification...');
-    
-    // Show gentle update notification instead of forcing reload
+    console.log('🎬 PWA: New version available! Showing update notification...');
+
+    // Show update notification immediately
     showUpdateNotification(() => {
       console.log('✨ User accepted update, activating new version...');
-      
+
       // Skip waiting and activate new service worker immediately
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        
+
         // Listen for the service worker to become active
         registration.waiting.addEventListener('statechange', (e: any) => {
           if (e.target.state === 'activated') {
@@ -109,4 +137,7 @@ serviceWorkerRegistration.register({
     });
   },
 });
+
+// Also check for waiting service worker on app load
+setTimeout(checkForWaitingServiceWorker, 2000);
 
