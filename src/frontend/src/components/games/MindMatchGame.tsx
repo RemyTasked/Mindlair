@@ -351,18 +351,28 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
           </div>
         </div>
 
-        {/* Exit Button */}
-        {onExit && (
-          <div className="mb-6 flex justify-end">
+        {/* Exit Button - Always show */}
+        <div className="mb-6 flex justify-end">
+          {onExit ? (
             <button
               onClick={onExit}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
               aria-label="Exit Game"
             >
               <X className="w-5 h-5" />
+              <span className="text-sm">Back to Games</span>
             </button>
-          </div>
-        )}
+          ) : (
+            <button
+              onClick={() => window.location.href = '/games'}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+              aria-label="Back to Games"
+            >
+              <X className="w-5 h-5" />
+              <span className="text-sm">Back to Games</span>
+            </button>
+          )}
+        </div>
 
         {/* Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
