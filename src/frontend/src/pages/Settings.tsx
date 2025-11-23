@@ -23,6 +23,7 @@ import api from '../lib/axios';
 import { ArrowLeft, Save, ChevronDown, ChevronUp } from 'lucide-react';
 import { PushNotificationManager } from '../components/PushNotificationManager';
 
+// Simplified Preferences interface matching the new backend schema
 interface Preferences {
   tone: 'executive' | 'cinematic' | 'balanced' | 'calm';
   alertMinutesBefore: number;
@@ -44,6 +45,14 @@ interface Preferences {
   reflectionDataSharing: boolean;
   storeReflectionText: boolean;
   defaultPrepModes: Record<string, string>;
+  // New simplified notification fields
+  primaryNotificationChannel: 'email' | 'push' | 'none';
+  secondaryNotificationChannels: string[];
+  notificationCategoryMeetingMoments: boolean;
+  notificationCategoryDailyRhythm: boolean;
+  notificationCategoryWellnessInsights: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
 }
 
 interface DeliverySettings {
@@ -270,6 +279,60 @@ export default function Settings() {
     reflectionDataSharing: false,
     storeReflectionText: true,
   });
+  // Simplified notification state
+  const [primaryChannel, setPrimaryChannel] = useState<NotificationChannel>('push');
+  const [secondaryChannels, setSecondaryChannels] = useState<NotificationChannel[]>([]);
+  const [meetingMoments, setMeetingMoments] = useState(true);
+  const [dailyRhythm, setDailyRhythm] = useState(true);
+  const [wellnessInsights, setWellnessInsights] = useState(true);
+  const [quietHoursStart, setQuietHoursStart] = useState('22:00');
+  const [quietHoursEnd, setQuietHoursEnd] = useState('08:00');
+
+  // Notification presets
+  const presets: NotificationPreset[] = [
+    {
+      name: 'Minimal',
+      description: 'Only essential notifications',
+      primaryChannel: 'push',
+      secondaryChannels: [],
+      categories: {
+        meetingMoments: true,
+        dailyRhythm: false,
+        wellnessInsights: false,
+      },
+    },
+    {
+      name: 'Balanced',
+      description: 'Key moments and daily rhythm',
+      primaryChannel: 'push',
+      secondaryChannels: [],
+      categories: {
+        meetingMoments: true,
+        dailyRhythm: true,
+        wellnessInsights: false,
+      },
+    },
+    {
+      name: 'Full',
+      description: 'All notifications enabled',
+      primaryChannel: 'push',
+      secondaryChannels: ['email'],
+      categories: {
+        meetingMoments: true,
+        dailyRhythm: true,
+        wellnessInsights: true,
+      },
+    },
+  ];
+
+  const applyPreset = (preset: NotificationPreset) => {
+    setPrimaryChannel(preset.primaryChannel);
+    setSecondaryChannels(preset.secondaryChannels);
+    setMeetingMoments(preset.categories.meetingMoments);
+    setDailyRhythm(preset.categories.dailyRhythm);
+    setWellnessInsights(preset.categories.wellnessInsights);
+  };
+
   const [delivery, setDelivery] = useState<DeliverySettings>({
     emailEnabled: true,
     slackEnabled: false,
