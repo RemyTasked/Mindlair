@@ -1,0 +1,477 @@
+/**
+ * Mind Garden - Sidebar & Widget Styles
+ */
+
+/* Floating Widget */
+#mindgarden-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+}
+
+.mindgarden-toggle-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.mindgarden-toggle-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+}
+
+.mindgarden-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #6366f1;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* Sidebar */
+.mindgarden-sidebar {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  width: 320px;
+  height: 100vh;
+  background: #fafafa;
+  border-left: 1px solid #e5e7eb;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+  z-index: 99998;
+  transition: right 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.mindgarden-sidebar.visible {
+  right: 0;
+}
+
+/* Sidebar Header */
+.mindgarden-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mindgarden-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mindgarden-icon {
+  font-size: 24px;
+}
+
+.mindgarden-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.mindgarden-close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mindgarden-close-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Sidebar Content */
+.mindgarden-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* Loading */
+.mindgarden-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #6b7280;
+}
+
+.mindgarden-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Login Prompt */
+.mindgarden-login-prompt {
+  text-align: center;
+  padding: 24px;
+}
+
+.mindgarden-garden-preview {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.mindgarden-login-prompt h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.mindgarden-login-prompt p {
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+/* Buttons */
+.mindgarden-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mindgarden-btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.mindgarden-btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Mini Garden */
+.mindgarden-mini-garden {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mindgarden-mini-garden:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.mindgarden-garden-visual {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.mindgarden-flow-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: white;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #10b981;
+}
+
+/* Stress Forecast */
+.mindgarden-forecast {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.mindgarden-forecast-icon {
+  font-size: 24px;
+}
+
+.mindgarden-forecast-text strong {
+  display: block;
+  font-size: 14px;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.mindgarden-forecast-text p {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Quick Actions */
+.mindgarden-quick-actions {
+  margin-bottom: 16px;
+}
+
+.mindgarden-quick-actions h4 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.mindgarden-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mindgarden-action-btn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mindgarden-action-btn:hover {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.mindgarden-action-icon {
+  display: block;
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.mindgarden-action-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.mindgarden-action-time {
+  display: block;
+  font-size: 10px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* Spotify */
+.mindgarden-spotify {
+  margin-bottom: 16px;
+}
+
+.mindgarden-spotify h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.mindgarden-spotify-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.mindgarden-spotify-btn {
+  flex: 1;
+  padding: 8px;
+  background: #1db954;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mindgarden-spotify-btn:hover {
+  background: #1ed760;
+}
+
+/* Footer */
+.mindgarden-footer {
+  padding: 16px;
+  text-align: center;
+  border-top: 1px solid #e5e7eb;
+}
+
+.mindgarden-dashboard-link {
+  color: #6366f1;
+  font-size: 14px;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.mindgarden-dashboard-link:hover {
+  text-decoration: underline;
+}
+
+/* Flow Overlay */
+.mindgarden-flow-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mindgarden-flow-container {
+  width: 90%;
+  max-width: 480px;
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mindgarden-flow-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  color: #6b7280;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.mindgarden-flow-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.mindgarden-flow-content {
+  padding: 48px 32px;
+  text-align: center;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mindgarden-flow-intro h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.mindgarden-flow-intro p {
+  color: #6b7280;
+  margin-bottom: 32px;
+}
+
+.mindgarden-flow-step h2 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.mindgarden-breathing-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  margin: 0 auto 24px;
+  animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(0.8); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+.mindgarden-flow-complete {
+  text-align: center;
+}
+
+.mindgarden-complete-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.mindgarden-flow-complete h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.mindgarden-flow-complete p {
+  color: #10b981;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+/* Progress Bar */
+.mindgarden-flow-progress {
+  height: 4px;
+  background: #e5e7eb;
+}
+
+.mindgarden-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981 0%, #6366f1 100%);
+  transition: width 0.1s linear;
+}
+

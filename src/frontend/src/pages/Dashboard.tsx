@@ -14,7 +14,6 @@ import { getUserTimezone } from '../utils/timezone';
 import Onboarding from '../components/Onboarding';
 import OnboardingWelcome from '../components/OnboardingWelcome';
 import { getActiveMeeting, setActiveMeetingId } from '../utils/meetingDetection';
-import Level2CueCompanion from '../components/Level2CueCompanion';
 
 interface Meeting {
   id: string;
@@ -87,10 +86,15 @@ export default function Dashboard() {
   const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
-  const [activeMeetings, setActiveMeetings] = useState<Meeting[]>([]);
-  const [activeCues, setActiveCues] = useState<any[]>([]);
   const [userMetadata, setUserMetadata] = useState<any>(null);
-  const [level2Enabled, setLevel2Enabled] = useState(false);
+  
+  // Compute active meetings (currently in progress) from meetings list
+  const activeMeetings = meetings.filter(meeting => {
+    const now = new Date();
+    const startTime = new Date(meeting.startTime);
+    const endTime = new Date(meeting.endTime);
+    return now >= startTime && now <= endTime;
+  });
   
   const ensureAuthToken = async (): Promise<string | null> => {
     let token = localStorage.getItem('meetcute_token');
@@ -122,18 +126,9 @@ export default function Dashboard() {
       refreshMeetings();
     }, 5 * 60 * 1000); // 5 minutes
 
-    // Poll for active cues every 30 seconds
-    const cueInterval = setInterval(() => {
-      pollActiveCues();
-    }, 30 * 1000); // 30 seconds
-
-    // Initial cue poll
-    pollActiveCues();
-
     // Cleanup intervals on unmount
     return () => {
       clearInterval(refreshInterval);
-      clearInterval(cueInterval);
     };
   }, []);
 
@@ -330,91 +325,6 @@ export default function Dashboard() {
     }
   };
 
-  const pollActiveCues = async () => {
-    try {
-      // Check if Level 2 is active - if so, skip Level 1 cues
-      // Note: Only one level2Active declaration in this function scope
-      const level2Active = localStorage.getItem('meetcute_level2_active') === 'true';
-      if (level2Active) {
-        console.log('🎯 Level 2 is active - suppressing Level 1 cues');
-        return;
-      }
-
-      const token = await ensureAuthToken();
-      if (!token) {
-        console.log('⚠️ No token available for cue polling');
-        return;
-      }
-
-      console.log('🔄 Polling for Level 1 active cues...');
-      const response = await api.get('/api/cues/active', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const { activeMeetings: newActiveMeetings, activeCues: newActiveCues } = response.data;
-      
-      // Filter out cancelled meetings
-      const validActiveMeetings = (newActiveMeetings || []).filter((m: any) => 
-        m.status !== 'cancelled' && m.status !== 'ended'
-      );
-      
-      console.log('📊 Active meetings response:', {
-        total: newActiveMeetings?.length || 0,
-        valid: validActiveMeetings.length,
-        cancelled: (newActiveMeetings || []).filter((m: any) => m.status === 'cancelled').length
-      });
-
-      setActiveMeetings(validActiveMeetings);
-      
-      // Display new cues as toasts (only if Level 2 is not active)
-      // Note: We already checked Level 2 at the start, but double-check here in case
-      // Level 2 was activated between the check and API response
-      const level2StillActive = localStorage.getItem('meetcute_level2_active') === 'true';
-      if (level2StillActive) {
-        console.log('🎯 Level 2 is active - suppressing Level 1 cue toasts');
-        setActiveCues(newActiveCues || []);
-        return; // Don't show Level 1 cues when Level 2 is active
-      }
-      
-      if (newActiveCues && newActiveCues.length > 0) {
-        console.log('🔔 Processing Level 1 cues for toast display...');
-        newActiveCues.forEach((cue: any) => {
-          // Double-check Level 2 status before showing each cue
-          const level2NowActive = localStorage.getItem('meetcute_level2_active') === 'true';
-          if (level2NowActive) {
-            console.log('🎯 Level 2 activated during cue processing - skipping cue', cue.cueId);
-            return;
-          }
-          
-          // Check if this cue was already shown
-          const alreadyShown = activeCues.some(existing => existing.cueId === cue.cueId);
-          console.log(`Level 1 Cue ${cue.cueId}: alreadyShown=${alreadyShown}`);
-          
-          if (!alreadyShown) {
-            console.log('🔔 Dispatching NEW Level 1 cue toast event:', cue);
-            // Trigger cue toast event
-            const event = new CustomEvent('cue-toast', {
-              detail: {
-                cueId: cue.cueId,
-                text: cue.text,
-                actions: cue.actions || [],
-                meetingId: cue.meetingId,
-              }
-            });
-            window.dispatchEvent(event);
-            console.log('✅ Level 1 toast event dispatched');
-          }
-        });
-      } else {
-        console.log('ℹ️ No Level 1 active cues at this time');
-      }
-      
-      setActiveCues(newActiveCues || []);
-    } catch (error) {
-      console.error('❌ Failed to poll active cues:', error);
-    }
-  };
-
   const handleLogout = () => {
     // Clear all session data on logout
     localStorage.removeItem('meetcute_token');
@@ -555,20 +465,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Cue Companion - Available during live meetings */}
-      {activeMeetings.length > 0 && activeMeetings[0] && (
-        <Level2CueCompanion
-          enabled={level2Enabled}
-          onToggle={setLevel2Enabled}
-          meetingContext={{
-            id: activeMeetings[0].id,
-            title: activeMeetings[0].title,
-            description: activeMeetings[0].description || null,
-            meetingType: activeMeetings[0].meetingType || null,
-            status: activeMeetings[0].status || 'scheduled',
-          }}
-        />
-      )}
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -1037,11 +933,7 @@ function StatCard({ icon, label, value }: { icon: ReactNode; label: string; valu
 }
 
 function MeetingCard({ meeting }: { meeting: Meeting }) {
-  const [level2Enabled, setLevel2Enabled] = useState(false);
-  const navigate = useNavigate();
-  
   const startTime = new Date(meeting.startTime);
-  const endTime = new Date(meeting.endTime);
   const timeString = startTime.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -1053,8 +945,6 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
   const isCompleted = meeting.focusSession?.completedAt != null;
   // Allow prep 15 minutes before meeting (avoids conflicts with back-to-back 30min meetings)
   const canStartFocusSession = minutesUntilMeeting > 0 && minutesUntilMeeting <= 15 && !isCompleted;
-  const meetingIsActive = now >= startTime && now <= endTime;
-  const canEnableLevel2 = isCompleted && !meetingIsActive && minutesUntilMeeting > 0; // Prep done, meeting hasn't started yet
 
   // Format time until meeting
   let timeUntilText = '';
@@ -1107,44 +997,12 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
 
       <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
         {isCompleted ? (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium">
-              ✓ Prep Complete
-            </span>
-            {canEnableLevel2 && (
-              <button
-                onClick={() => {
-                  if (!level2Enabled) {
-                    // Enable Level 2 and navigate to focus scene
-                    setLevel2Enabled(true);
-                    localStorage.setItem(`meetcute_level2_meeting_${meeting.id}`, 'true');
-                    if (meeting.focusSceneUrl) {
-                      navigate(meeting.focusSceneUrl);
-                    }
-                  } else {
-                    // Disable Level 2
-                    setLevel2Enabled(false);
-                    localStorage.removeItem(`meetcute_level2_meeting_${meeting.id}`);
-                  }
-                }}
-                className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium transition-all ${
-                  level2Enabled
-                    ? 'bg-teal-600 text-white hover:bg-teal-700'
-                    : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
-                }`}
-                title={level2Enabled ? 'Level 2 Audio Coaching Enabled' : 'Enable Level 2 Audio Coaching'}
-              >
-                {level2Enabled ? '🎙️ Level 2 Active' : '🎙️ Enable Level 2'}
-              </button>
-            )}
-          </div>
+          <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium">
+            ✓ Prep Complete
+          </span>
         ) : (
           <>
-            {isCompleted ? (
-              <span className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm sm:text-base font-semibold text-center whitespace-nowrap cursor-not-allowed">
-                ✓ Prep Complete
-              </span>
-            ) : canStartFocusSession && meeting.focusSceneUrl ? (
+            {canStartFocusSession && meeting.focusSceneUrl ? (
               <a
                 href={meeting.focusSceneUrl}
                 target="_blank"
@@ -1163,11 +1021,6 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
             {!canStartFocusSession && minutesUntilMeeting > 15 && (
               <span className="px-2 sm:px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs sm:text-sm whitespace-nowrap">
                 Available in {minutesUntilMeeting - 15} min
-              </span>
-            )}
-            {meeting.cueDelivered && (
-              <span className="px-2 sm:px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm whitespace-nowrap">
-                Cue Sent
               </span>
             )}
           </>

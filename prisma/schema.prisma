@@ -42,9 +42,7 @@ model User {
   // Push Notifications
   pushSubscriptions PushSubscription[]
 
-  // Cue Companion
-  cueSettings  CueSettings?
-  cueTelemetry CueTelemetry[]
+  // Meeting Moods (for pre-meeting mood tracking)
   meetingMoods MeetingMood[]
 
   // Spotify Integration
@@ -201,6 +199,10 @@ model UserPreferences {
   // Notification preset: "minimal", "balanced", "full", or "custom"
   notificationPreset String @default("balanced")
 
+  // Mind Garden preferences (NEW)
+  gardenTheme      String @default("zen") // "zen", "forest", "meadow", "night"
+  stressThresholds Json?  // { "backToBack": 15, "longMeeting": 60, "highDensity": 6 } - customizable stress triggers
+
   // Adaptive learning data
   averageEarlyJoinMinutes Float? // How early user typically joins
   preferredAlertTime      Int? // Learned optimal alert time
@@ -225,7 +227,6 @@ model DeliverySettings {
 
   // Granular EMAIL preferences (only applies if emailEnabled is true)
   emailPreMeetingCues    Boolean @default(true) // Pre-meeting focus session alerts
-  emailInMeetingCues     Boolean @default(false) // In-meeting cues (usually not needed via email)
   emailPostMeetingCues   Boolean @default(true) // Post-meeting cues (reflections, insights)
   emailPresleyFlow       Boolean @default(true) // Morning/evening Presley Flow alerts
   emailWellnessReminders Boolean @default(true) // Wellness check-in reminders
@@ -236,7 +237,6 @@ model DeliverySettings {
 
   // Granular SLACK preferences (only applies if slackEnabled is true)
   slackPreMeetingCues    Boolean @default(true) // Pre-meeting focus session alerts
-  slackInMeetingCues     Boolean @default(true) // In-meeting cues (contextual nudges)
   slackPostMeetingCues   Boolean @default(true) // Post-meeting cues (reflections, insights)
   slackPresleyFlow       Boolean @default(true) // Morning/evening Presley Flow alerts
   slackWellnessReminders Boolean @default(true) // Wellness check-in reminders
@@ -247,7 +247,6 @@ model DeliverySettings {
 
   // Granular SMS preferences (only applies if smsEnabled is true)
   smsPreMeetingCues    Boolean @default(true) // Pre-meeting focus session alerts
-  smsInMeetingCues     Boolean @default(false) // In-meeting cues (usually too intrusive via SMS)
   smsPostMeetingCues   Boolean @default(false) // Post-meeting cues
   smsPresleyFlow       Boolean @default(true) // Morning/evening Presley Flow alerts
   smsWellnessReminders Boolean @default(true) // Wellness check-in reminders
@@ -258,7 +257,6 @@ model DeliverySettings {
 
   // Granular PUSH notification preferences (only applies if pushEnabled is true)
   pushPreMeetingCues    Boolean @default(true) // Pre-meeting focus session alerts
-  pushInMeetingCues     Boolean @default(true) // In-meeting cues (contextual nudges)
   pushPostMeetingCues   Boolean @default(true) // Post-meeting cues (reflections, insights)
   pushPresleyFlow       Boolean @default(true) // Morning/evening Presley Flow alerts
   pushWellnessReminders Boolean @default(true) // Wellness check-in reminders
@@ -345,9 +343,8 @@ model Meeting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   focusSession FocusSession?
-  cueTelemetry CueTelemetry[]
   meetingMoods MeetingMood[]
 
   @@unique([userId, calendarEventId])
@@ -492,53 +489,6 @@ model WindingDownSession {
 
   @@index([userId, date])
   @@map("winding_down_sessions")
-}
-
-model CueSettings {
-  id      String  @id @default(uuid())
-  userId  String  @unique
-  enabled Boolean @default(true)
-  tone    String  @default("calm") // "calm" or "direct"
-
-  // Delivery channels
-  toastEnabled Boolean @default(true)
-  slackEnabled Boolean @default(false)
-
-  // Timing & frequency
-  quietHours   Json   @default("[]") // Array of { start: "HH:mm", end: "HH:mm" }
-  cueFrequency String @default("balanced") // "minimal", "balanced", "frequent"
-
-  // Per-meeting overrides
-  perMeetingOverrides Json @default("{}") // Record<meetingId, boolean>
-
-  // Low-energy window (for contextual cues)
-  lowEnergyStart String @default("14:00") // HH:mm format
-  lowEnergyEnd   String @default("16:00")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("cue_settings")
-}
-
-model CueTelemetry {
-  id         String   @id @default(uuid())
-  cueId      String
-  meetingId  String?
-  userId     String
-  action     String // "clicked", "dismissed", "ignored"
-  actionType String? // "breathe", "focus-note", "hide", etc.
-  timestamp  DateTime
-  createdAt  DateTime @default(now())
-
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  meeting Meeting? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-
-  @@index([userId, timestamp])
-  @@index([cueId])
-  @@map("cue_telemetry")
 }
 
 model MeetingMood {

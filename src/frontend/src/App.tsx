@@ -3,7 +3,6 @@ import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AuthCallback from './pages/AuthCallback';
 import Logo from './components/Logo';
-import { CueToastManager } from './components/CueToast';
 import { UpdateNotificationManager } from './components/UpdateNotification';
 
 // Lazy load heavy routes
@@ -53,9 +52,6 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
         </Routes>
       </Suspense>
-      
-      {/* Global Cue Toast Manager */}
-      <CueToastManager />
       
       {/* Global Update Notification Manager */}
       <UpdateNotificationManager />

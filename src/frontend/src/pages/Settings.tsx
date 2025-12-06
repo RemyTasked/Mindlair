@@ -76,7 +76,6 @@ interface DeliverySettings {
   
   // Email granular
   emailPreMeetingCues: boolean;
-  emailInMeetingCues: boolean;
   emailPostMeetingCues: boolean;
   emailPresleyFlow: boolean;
   emailWellnessReminders: boolean;
@@ -87,7 +86,6 @@ interface DeliverySettings {
   
   // Slack granular
   slackPreMeetingCues: boolean;
-  slackInMeetingCues: boolean;
   slackPostMeetingCues: boolean;
   slackPresleyFlow: boolean;
   slackWellnessReminders: boolean;
@@ -98,7 +96,6 @@ interface DeliverySettings {
   
   // SMS granular
   smsPreMeetingCues: boolean;
-  smsInMeetingCues: boolean;
   smsPostMeetingCues: boolean;
   smsPresleyFlow: boolean;
   smsWellnessReminders: boolean;
@@ -109,7 +106,6 @@ interface DeliverySettings {
   
   // Push granular
   pushPreMeetingCues: boolean;
-  pushInMeetingCues: boolean;
   pushPostMeetingCues: boolean;
   pushPresleyFlow: boolean;
   pushWellnessReminders: boolean;
@@ -160,18 +156,6 @@ const ALERT_TYPES: AlertType[] = [
       slack: 'slackPreMeetingCues',
       push: 'pushPreMeetingCues',
       sms: 'smsPreMeetingCues',
-    },
-  },
-  {
-    id: 'in-meeting',
-    label: 'In-Meeting Cues',
-    description: 'Real-time nudges during meetings',
-    highlight: true,
-    fields: {
-      email: 'emailInMeetingCues',
-      slack: 'slackInMeetingCues',
-      push: 'pushInMeetingCues',
-      sms: 'smsInMeetingCues',
     },
   },
   {
@@ -253,17 +237,6 @@ const ALERT_TYPES: AlertType[] = [
   },
 ];
 
-interface CueSettings {
-  enabled: boolean;
-  tone: 'calm' | 'direct';
-  toastEnabled: boolean;
-  slackEnabled: boolean;
-  quietHours: Array<{ start: string; end: string }>;
-  cueFrequency: 'minimal' | 'balanced' | 'frequent';
-  lowEnergyStart: string;
-  lowEnergyEnd: string;
-  perMeetingOverrides: Record<string, boolean>;
-}
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -361,7 +334,6 @@ export default function Settings() {
     
     // Email defaults
     emailPreMeetingCues: true,
-    emailInMeetingCues: false,
     emailPostMeetingCues: true,
     emailPresleyFlow: true,
     emailWellnessReminders: true,
@@ -372,7 +344,6 @@ export default function Settings() {
     
     // Slack defaults
     slackPreMeetingCues: true,
-    slackInMeetingCues: true,
     slackPostMeetingCues: true,
     slackPresleyFlow: true,
     slackWellnessReminders: true,
@@ -383,7 +354,6 @@ export default function Settings() {
     
     // SMS defaults
     smsPreMeetingCues: true,
-    smsInMeetingCues: false,
     smsPostMeetingCues: false,
     smsPresleyFlow: true,
     smsWellnessReminders: true,
@@ -394,7 +364,6 @@ export default function Settings() {
     
     // Push defaults
     pushPreMeetingCues: true,
-    pushInMeetingCues: true,
     pushPostMeetingCues: true,
     pushPresleyFlow: true,
     pushWellnessReminders: true,
@@ -419,17 +388,6 @@ export default function Settings() {
     color: string | null;
     isPrimary: boolean;
   }>>([]);
-  const [cueSettings, setCueSettings] = useState<CueSettings>({
-    enabled: true,
-    tone: 'calm',
-    toastEnabled: true,
-    slackEnabled: false,
-    quietHours: [],
-    cueFrequency: 'balanced',
-    lowEnergyStart: '14:00',
-    lowEnergyEnd: '16:00',
-    perMeetingOverrides: {},
-  });
 
   const updateDeliveryField = (field: BooleanDeliveryKey, value: boolean) => {
     setDelivery((prev) => ({
@@ -529,56 +487,6 @@ export default function Settings() {
       if (response.data.user.calendarAccounts) {
         setCalendarAccounts(response.data.user.calendarAccounts);
       }
-      
-      // Load Cue Companion settings
-      const cueResponse = await api.get('/api/cues/settings');
-      if (cueResponse.data) {
-        const data = cueResponse.data;
-
-        let parsedQuietHours: Array<{ start: string; end: string }> = [];
-        if (Array.isArray(data.quietHours)) {
-          parsedQuietHours = data.quietHours;
-        } else if (typeof data.quietHours === 'string' && data.quietHours.trim().length > 0) {
-          try {
-            const parsed = JSON.parse(data.quietHours);
-            if (Array.isArray(parsed)) {
-              parsedQuietHours = parsed;
-            }
-          } catch (parseError) {
-            console.warn('Unable to parse cue quietHours JSON', parseError);
-          }
-        }
-
-        let parsedOverrides: Record<string, boolean> = {};
-        if (data.perMeetingOverrides && typeof data.perMeetingOverrides === 'object' && !Array.isArray(data.perMeetingOverrides)) {
-          parsedOverrides = data.perMeetingOverrides as Record<string, boolean>;
-        } else if (typeof data.perMeetingOverrides === 'string' && data.perMeetingOverrides.trim().length > 0) {
-          try {
-            const parsed = JSON.parse(data.perMeetingOverrides);
-            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-              parsedOverrides = parsed;
-            }
-          } catch (parseError) {
-            console.warn('Unable to parse cue perMeetingOverrides JSON', parseError);
-          }
-        }
-
-        const normalizedCueSettings: CueSettings = {
-          enabled: data.enabled ?? true,
-          tone: (data.tone === 'direct' ? 'direct' : 'calm'),
-          toastEnabled: data.toastEnabled ?? true,
-          slackEnabled: data.slackEnabled ?? false,
-          quietHours: parsedQuietHours,
-          cueFrequency: (data.cueFrequency === 'minimal' || data.cueFrequency === 'frequent')
-            ? data.cueFrequency
-            : 'balanced',
-          lowEnergyStart: data.lowEnergyStart || '14:00',
-          lowEnergyEnd: data.lowEnergyEnd || '16:00',
-          perMeetingOverrides: parsedOverrides,
-        };
-
-        setCueSettings(normalizedCueSettings);
-      }
     } catch (error) {
       console.error('Error loading settings:', error);
     }
@@ -600,30 +508,10 @@ export default function Settings() {
     setSaving(true);
     setMessage('');
 
-    if (cueSettings.slackEnabled && !slackStatus?.connected) {
-      setSaving(false);
-      setMessage('Connect Slack before enabling Slack cue notifications.');
-      setTimeout(() => setMessage(''), 4000);
-      return;
-    }
-
     try {
-      const cuePayload = {
-        enabled: cueSettings.enabled,
-        tone: cueSettings.tone,
-        toastEnabled: cueSettings.toastEnabled,
-        slackEnabled: cueSettings.slackEnabled,
-        quietHours: Array.isArray(cueSettings.quietHours) ? cueSettings.quietHours : [],
-        cueFrequency: cueSettings.cueFrequency,
-        lowEnergyStart: cueSettings.lowEnergyStart,
-        lowEnergyEnd: cueSettings.lowEnergyEnd,
-        perMeetingOverrides: cueSettings.perMeetingOverrides || {},
-      };
-
       await Promise.all([
         api.put('/api/user/preferences', preferences),
         api.put('/api/user/delivery', delivery),
-        api.put('/api/cues/settings', cuePayload),
       ]);
 
       await Promise.all([loadSettings(), loadSlackStatus()]);
@@ -1965,140 +1853,6 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
-            </div>
-          </Section>
-
-          {/* Cue Companion Section */}
-          <Section title="🔔 Cue Companion" id="cues" isExpanded={expandedSections.has('cues')} onToggle={toggleSection}>
-            <div className="space-y-6">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-6 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">Contextual Meeting Nudges</h3>
-                <p className="text-sm text-blue-800 mb-4">
-                  Get timed, context-aware cues during meetings to help you stay grounded, focused, and intentional—no audio access required.
-                </p>
-              </div>
-
-              <Toggle
-                label="Enable Cue Companion"
-                description="Receive contextual nudges before, during, and after meetings"
-                checked={cueSettings.enabled}
-                onChange={(checked) => setCueSettings({ ...cueSettings, enabled: checked })}
-              />
-
-              {cueSettings.enabled && (
-                <div className="space-y-6 pl-4 border-l-2 border-gray-200">
-                  {/* Info about Level 2 */}
-                  <div className="bg-gradient-to-r from-teal-50 to-indigo-50 rounded-lg p-4 border border-teal-200">
-                    <div className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                      <div>
-                        <h4 className="text-sm font-semibold text-teal-900 mb-1">Level 2: Real-Time Coach Available</h4>
-                        <p className="text-xs text-teal-800 mb-2">
-                          During meetings, you can optionally enable <strong>Level 2</strong> for real-time audio analysis. 
-                          It listens to how you sound (not what you say) to provide composure cues.
-                        </p>
-                        <p className="text-xs text-teal-700">
-                          💡 Look for the "Level 2" toggle button during your next meeting to try it out!
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Tone */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cue Tone
-                    </label>
-                    <select
-                      value={cueSettings.tone}
-                      onChange={(e) => setCueSettings({ ...cueSettings, tone: e.target.value as 'calm' | 'direct' })}
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="calm">Calm & Supportive</option>
-                      <option value="direct">Direct & Brief</option>
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {cueSettings.tone === 'calm' ? 'Gentle, encouraging language' : 'Short, actionable prompts'}
-                    </p>
-                  </div>
-
-                  {/* Frequency */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cue Frequency
-                    </label>
-                    <select
-                      value={cueSettings.cueFrequency}
-                      onChange={(e) => setCueSettings({ ...cueSettings, cueFrequency: e.target.value as 'minimal' | 'balanced' | 'frequent' })}
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="minimal">Minimal (Pre-meeting + 5-min-left only)</option>
-                      <option value="balanced">Balanced (Recommended)</option>
-                      <option value="frequent">Frequent (All cues enabled)</option>
-                    </select>
-                  </div>
-
-                  {/* Delivery Channels */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Delivery Channels</h4>
-                    <div className="space-y-3">
-                      <Toggle
-                        label="Toast Notifications"
-                        description="Show cues as small toasts in the bottom-right corner"
-                        checked={cueSettings.toastEnabled}
-                        onChange={(checked) => setCueSettings({ ...cueSettings, toastEnabled: checked })}
-                      />
-                      <Toggle
-                        label="Slack DM to Self"
-                        description="Send cues as Slack direct messages (requires Slack connection)"
-                        checked={cueSettings.slackEnabled}
-                        onChange={(checked) => setCueSettings({ ...cueSettings, slackEnabled: checked })}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Low-Energy Window */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Low-Energy Window</h4>
-                    <p className="text-xs text-gray-500 mb-3">
-                      Time window when you typically experience an energy dip (e.g., 2-4 PM). Cues will be adjusted accordingly.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Start</label>
-                        <input
-                          type="time"
-                          value={cueSettings.lowEnergyStart}
-                          onChange={(e) => setCueSettings({ ...cueSettings, lowEnergyStart: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">End</label>
-                        <input
-                          type="time"
-                          value={cueSettings.lowEnergyEnd}
-                          onChange={(e) => setCueSettings({ ...cueSettings, lowEnergyEnd: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Example Cues */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-2">Example Cues</h4>
-                    <ul className="text-xs text-gray-600 space-y-1">
-                      <li>• <span className="font-medium">Pre-meeting:</span> "Take one breath before you unmute."</li>
-                      <li>• <span className="font-medium">Mid-meeting:</span> "Breath check. Slow your next sentence."</li>
-                      <li>• <span className="font-medium">5 min left:</span> "Land one clear outcome → who does what, by when?"</li>
-                      <li>• <span className="font-medium">Post-meeting:</span> "Next call in 3 min. Breathe first."</li>
-                    </ul>
-                  </div>
-                </div>
-              )}
             </div>
           </Section>
 

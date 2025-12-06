@@ -28,13 +28,15 @@ import pushNotificationRoutes from './routes/pushNotifications';
 import slackRoutes from './routes/slack';
 import reflectionRoutes from './routes/reflections';
 import windingDownRoutes from './routes/windingDown';
-import cuesRoutes from './routes/cues';
 import spotifyRoutes from './routes/spotify';
 import appleMusicRoutes from './routes/appleMusic';
 import focusRoomsRoutes from './routes/focusRooms';
 import gamesRoutes from './routes/games';
 import thoughtTidyRoutes from './routes/thoughtTidy';
 import emotionGardenRoutes from './routes/emotionGarden';
+import flowsRoutes from './routes/flows';
+import gardenRoutes from './routes/garden';
+import analysisRoutes from './routes/analysis';
 import testRoutes from './routes/test';
 
 dotenv.config();
@@ -117,13 +119,15 @@ app.use('/api/push', pushNotificationRoutes);
 app.use('/api/slack', slackRoutes);
 app.use('/api/reflections', reflectionRoutes);
 app.use('/api/winding-down', windingDownRoutes);
-app.use('/api/cues', cuesRoutes);
 app.use('/api/spotify', spotifyRoutes);
 app.use('/api/apple-music', appleMusicRoutes);
 app.use('/api/focus-rooms', focusRoomsRoutes);
 app.use('/api/games', gamesRoutes);
 app.use('/api/thought-tidy', thoughtTidyRoutes);
 app.use('/api/emotion-garden', emotionGardenRoutes);
+app.use('/api/flows', flowsRoutes);
+app.use('/api/garden', gardenRoutes);
+app.use('/api/analysis', analysisRoutes);
 app.use('/api/test', testRoutes);
 
 // Serve static files from frontend build in production

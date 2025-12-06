@@ -1,0 +1,79 @@
+{
+  "manifest_version": 3,
+  "name": "Mind Garden",
+  "short_name": "Mind Garden",
+  "version": "1.0.0",
+  "description": "Calendar-integrated mental fitness tool with contextual micro-interventions for stressed professionals",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "Mind Garden"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "identity",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://calendar.google.com/*",
+    "https://outlook.office.com/*",
+    "https://outlook.live.com/*",
+    "https://*.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://calendar.google.com/*"
+      ],
+      "js": ["content-scripts/google-calendar.js"],
+      "css": ["content-scripts/sidebar.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://outlook.office.com/calendar/*",
+        "https://outlook.live.com/calendar/*"
+      ],
+      "js": ["content-scripts/outlook-calendar.js"],
+      "css": ["content-scripts/sidebar.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "sounds/*",
+        "sidebar/*"
+      ],
+      "matches": [
+        "https://calendar.google.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.live.com/*"
+      ]
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://*.mindgarden.app/*",
+      "http://localhost:*/*"
+    ]
+  }
+}
+
