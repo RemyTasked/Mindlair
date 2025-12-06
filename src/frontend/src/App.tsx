@@ -5,8 +5,12 @@ import AuthCallback from './pages/AuthCallback';
 import Logo from './components/Logo';
 import { UpdateNotificationManager } from './components/UpdateNotification';
 
+// Import garden theme CSS
+import './styles/garden-theme.css';
+
 // Lazy load heavy routes
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const GardenDashboard = lazy(() => import('./pages/GardenDashboard'));
 const FocusRooms = lazy(() => import('./pages/FocusRooms'));
 const Settings = lazy(() => import('./pages/Settings'));
 const FocusScene = lazy(() => import('./pages/FocusScene'));
@@ -17,6 +21,10 @@ const WeekendFlow = lazy(() => import('./pages/WeekendFlow'));
 const MeetingRating = lazy(() => import('./pages/MeetingRating'));
 const GamesHub = lazy(() => import('./pages/GamesHub'));
 const FlowPage = lazy(() => import('./pages/FlowPage'));
+const FlowsLibrary = lazy(() => import('./pages/FlowsLibrary'));
+const Activities = lazy(() => import('./pages/Activities'));
+const GratitudeGarden = lazy(() => import('./pages/GratitudeGarden'));
+const Insights = lazy(() => import('./pages/Insights'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 
@@ -45,6 +53,11 @@ function App() {
           <Route path="/winding-down/:userId" element={<WindingDown />} />
           <Route path="/weekend-flow/:userId" element={<WeekendFlow />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/garden" element={<GardenDashboard />} />
+          <Route path="/flows" element={<FlowsLibrary />} />
+          <Route path="/activities" element={<Activities />} />
+          <Route path="/activities/gratitude" element={<GratitudeGarden />} />
+          <Route path="/insights" element={<Insights />} />
           <Route path="/focus-rooms" element={<FocusRooms />} />
           <Route path="/games" element={<GamesHub />} />
           <Route path="/flow/:flowId" element={<FlowPage />} />

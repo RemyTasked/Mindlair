@@ -109,7 +109,7 @@ router.get(
       return res.status(404).json({ error: 'Flow not found' });
     }
     
-    res.json({ flow });
+    return res.json({ flow });
   })
 );
 
@@ -171,7 +171,7 @@ router.post(
 /**
  * Update garden state after completing a flow
  */
-async function updateGardenState(userId: string, flowType: string) {
+async function updateGardenState(userId: string, _flowType: string) {
   // Get or create garden state
   let gardenState = await prisma.emotionGardenState.findUnique({
     where: { userId },
@@ -220,7 +220,7 @@ async function updateGardenState(userId: string, flowType: string) {
   }
   
   // Update garden metrics
-  gardenData.lastFlowDate = new Date().toISOString();
+  (gardenData as Record<string, unknown>).lastFlowDate = new Date().toISOString();
   gardenData.totalFlows = (gardenData.totalFlows || 0) + 1;
   gardenData.flowsToday = (gardenData.flowsToday || 0) + 1;
   gardenData.health = Math.min(100, (gardenData.health || 50) + 5); // Increase health

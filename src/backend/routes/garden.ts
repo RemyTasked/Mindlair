@@ -5,12 +5,96 @@
  */
 
 import express from 'express';
+import { Prisma } from '@prisma/client';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
+
+// Plant types that can be grown
+type PlantType = 
+  | 'sunflower' | 'moonflower' | 'lavender' | 'chamomile' | 'daisy'
+  | 'rose' | 'lotus' | 'bamboo' | 'fern' | 'cherry-tree' | 'oak-sapling'
+  | 'golden-flower' | 'ivy' | 'succulent';
+
+type GrowthStage = 'seed' | 'sprout' | 'growing' | 'blooming' | 'full';
+
+interface Plant {
+  id: string;
+  type: PlantType;
+  x: number;
+  y: number;
+  growthStage: GrowthStage;
+  plantedAt: string;
+  lastWatered?: string;
+  bloomCount: number;
+  associatedWith?: string;
+}
+
+interface GardenData {
+  health: number;
+  plants: Plant[];
+  weather: 'sunny' | 'cloudy' | 'rain';
+  streak: number;
+  lastFlowDate: string | null;
+  totalFlows: number;
+  flowsToday: number;
+  growth: number;
+  gridSize: number;
+  theme: string;
+  decorations: Array<{ id: string; type: string; x: number; y: number }>;
+  [key: string]: unknown; // Index signature for Prisma JSON compatibility
+}
+
+// Map flow types to plant types
+const FLOW_TO_PLANT: Record<string, PlantType> = {
+  'pre-meeting-focus': 'lavender',
+  'pre-presentation-power': 'sunflower',
+  'difficult-conversation-prep': 'fern',
+  'quick-reset': 'chamomile',
+  'post-meeting-decompress': 'daisy',
+  'end-of-day-transition': 'moonflower',
+  'morning-intention': 'sunflower',
+  'evening-wind-down': 'moonflower',
+  'weekend-wellness': 'lotus',
+  'breathing': 'bamboo',
+  'gratitude': 'golden-flower',
+  'deep-meditation': 'oak-sapling',
+};
+
+// Calculate grid size based on progress
+function calculateGridSize(totalFlows: number): number {
+  if (totalFlows >= 200) return 15;
+  if (totalFlows >= 100) return 12;
+  if (totalFlows >= 50) return 10;
+  if (totalFlows >= 20) return 7;
+  return 5;
+}
+
+// Find empty position in grid
+function findEmptyPosition(plants: Plant[], gridSize: number): { x: number; y: number } | null {
+  const occupied = new Set(plants.map(p => `${p.x},${p.y}`));
+  
+  // Try to find position near center first, then expand
+  const center = Math.floor(gridSize / 2);
+  for (let radius = 0; radius <= center; radius++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        const x = center + dx;
+        const y = center + dy;
+        if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+          if (!occupied.has(`${x},${y}`)) {
+            return { x, y };
+          }
+        }
+      }
+    }
+  }
+  
+  return null;
+}
 
 /**
  * GET /api/garden/state
@@ -47,38 +131,90 @@ router.get(
       },
     });
     
+    // Calculate streak
+    const recentCheckIns = await prisma.wellnessCheckIn.findMany({
+      where: { userId, type: { startsWith: 'flow-' } },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    });
+    
+    let streak = 0;
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    
+    for (let i = 0; i < 30; i++) {
+      const hasFlowOnDate = recentCheckIns.some(ci => {
+        const ciDate = new Date(ci.createdAt);
+        ciDate.setHours(0, 0, 0, 0);
+        return ciDate.getTime() === currentDate.getTime();
+      });
+      
+      if (hasFlowOnDate) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else if (i === 0) {
+        // Allow today to be skipped if checking during the day
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    
+    const gridSize = calculateGridSize(totalFlows);
+    
     // Default garden data
-    const defaultData = {
-      health: 50,
+    const defaultData: GardenData = {
+      health: 50 + Math.min(streak * 5, 30) + Math.min(todaysFlows * 5, 20),
       plants: [],
       weather: 'sunny',
-      streak: 0,
-      lastFlowDate: null,
+      streak,
+      lastFlowDate: recentCheckIns[0]?.createdAt?.toISOString() || null,
       totalFlows,
       flowsToday: todaysFlows,
       growth: 0,
+      gridSize,
+      theme: 'cottage',
+      decorations: [],
     };
     
-    const gardenData = gardenState?.gardenData as typeof defaultData || defaultData;
+    let gardenData = gardenState?.gardenData as GardenData || defaultData;
     
-    // Override with actual counts
-    gardenData.flowsToday = todaysFlows;
-    gardenData.totalFlows = totalFlows;
+    // Ensure gardenData has all required fields
+    gardenData = {
+      ...defaultData,
+      ...gardenData,
+      flowsToday: todaysFlows,
+      totalFlows,
+      streak,
+      gridSize,
+      health: Math.min(100, Math.max(0, 50 + streak * 5 + todaysFlows * 5)),
+    };
     
-    // Determine visual state based on health
-    let visualState: 'thriving' | 'growing' | 'stable' | 'idle' = 'stable';
-    if (gardenData.health >= 80 && gardenData.streak >= 3) {
+    // Determine visual state based on health and activity
+    let visualState: 'thriving' | 'growing' | 'stable' | 'idle' | 'dormant' = 'stable';
+    if (gardenData.health >= 80 && streak >= 3) {
       visualState = 'thriving';
-    } else if (gardenData.health >= 60 || gardenData.flowsToday > 0) {
+    } else if (gardenData.health >= 60 || todaysFlows > 0) {
       visualState = 'growing';
     } else if (gardenData.health >= 40) {
       visualState = 'stable';
-    } else {
+    } else if (gardenData.health >= 20) {
       visualState = 'idle';
+    } else {
+      visualState = 'dormant';
+    }
+    
+    // Determine weather based on recent activity
+    let weather: 'sunny' | 'cloudy' | 'rain' = 'sunny';
+    if (gardenData.health < 40) {
+      weather = 'rain'; // Nourishing rain for struggling gardens
+    } else if (gardenData.health < 70) {
+      weather = 'cloudy';
     }
     
     res.json({
       ...gardenData,
+      weather,
       visualState,
       lastUpdated: gardenState?.lastUpdated || new Date(),
     });
@@ -115,6 +251,191 @@ router.post(
       success: true,
       checkIn,
       gardenState,
+    });
+  })
+);
+
+/**
+ * POST /api/garden/plant
+ * Plant a new flower in the garden after completing a flow
+ */
+router.post(
+  '/plant',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { flowType, flowName } = req.body;
+    
+    // Get current garden state
+    let gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    const totalFlows = await prisma.wellnessCheckIn.count({
+      where: { userId, type: { startsWith: 'flow-' } },
+    });
+    
+    const gridSize = calculateGridSize(totalFlows);
+    
+    const defaultData: GardenData = {
+      health: 50,
+      plants: [],
+      weather: 'sunny',
+      streak: 0,
+      lastFlowDate: null,
+      totalFlows: 0,
+      flowsToday: 0,
+      growth: 0,
+      gridSize,
+      theme: 'cottage',
+      decorations: [],
+    };
+    
+    let gardenData = (gardenState?.gardenData as unknown as GardenData) || defaultData;
+    
+    // Determine plant type
+    const plantType: PlantType = FLOW_TO_PLANT[flowType] || 'daisy';
+    
+    // Find empty position
+    const position = findEmptyPosition(gardenData.plants, gridSize);
+    
+    if (position) {
+      const newPlant: Plant = {
+        id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: plantType,
+        x: position.x,
+        y: position.y,
+        growthStage: 'sprout',
+        plantedAt: new Date().toISOString(),
+        bloomCount: 0,
+        associatedWith: flowName || flowType,
+      };
+      
+      gardenData.plants.push(newPlant);
+      gardenData.growth++;
+      gardenData.health = Math.min(100, gardenData.health + 5);
+      gardenData.gridSize = gridSize;
+      
+      // Save garden state
+      if (gardenState) {
+        await prisma.emotionGardenState.update({
+          where: { userId },
+          data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+        });
+      } else {
+        await prisma.emotionGardenState.create({
+          data: { userId, gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+        });
+      }
+      
+      logger.info('Plant added to garden', { userId, plantType, position });
+      
+      res.json({
+        success: true,
+        plant: newPlant,
+        gardenHealth: gardenData.health,
+      });
+    } else {
+      // Garden is full - need to expand
+      res.json({
+        success: false,
+        message: 'Garden is full! Complete more flows to expand.',
+        gardenHealth: gardenData.health,
+      });
+    }
+  })
+);
+
+/**
+ * POST /api/garden/water
+ * Water the garden (cosmetic effect)
+ */
+router.post(
+  '/water',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      return res.status(404).json({ error: 'Garden not found' });
+    }
+    
+    const gardenData = JSON.parse(JSON.stringify(gardenState.gardenData)) as GardenData;
+    
+    // Update last watered time on all plants
+    gardenData.plants = gardenData.plants.map(plant => ({
+      ...plant,
+      lastWatered: new Date().toISOString(),
+    }));
+    
+    // Small health boost
+    gardenData.health = Math.min(100, gardenData.health + 2);
+    
+    await prisma.emotionGardenState.update({
+      where: { userId },
+      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+    });
+    
+    logger.info('Garden watered', { userId });
+    
+    return res.json({
+      success: true,
+      message: 'Garden watered! ✨',
+      gardenHealth: gardenData.health,
+    });
+  })
+);
+
+/**
+ * POST /api/garden/grow
+ * Progress plant growth stages
+ */
+router.post(
+  '/grow',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { plantId } = req.body;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      return res.status(404).json({ error: 'Garden not found' });
+    }
+    
+    const gardenData = JSON.parse(JSON.stringify(gardenState.gardenData)) as GardenData;
+    const growthOrder: GrowthStage[] = ['seed', 'sprout', 'growing', 'blooming', 'full'];
+    
+    gardenData.plants = gardenData.plants.map(plant => {
+      if (plant.id === plantId) {
+        const currentIndex = growthOrder.indexOf(plant.growthStage);
+        if (currentIndex < growthOrder.length - 1) {
+          return {
+            ...plant,
+            growthStage: growthOrder[currentIndex + 1],
+            bloomCount: plant.growthStage === 'growing' ? plant.bloomCount + 1 : plant.bloomCount,
+          };
+        }
+      }
+      return plant;
+    });
+    
+    await prisma.emotionGardenState.update({
+      where: { userId },
+      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+    });
+    
+    const updatedPlant = gardenData.plants.find(p => p.id === plantId);
+    
+    return res.json({
+      success: true,
+      plant: updatedPlant,
     });
   })
 );

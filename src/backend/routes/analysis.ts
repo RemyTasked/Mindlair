@@ -75,7 +75,7 @@ router.post(
     
     const forecast = calculateStressForecast(meetings);
     
-    res.json(forecast);
+    return res.json(forecast);
   })
 );
 

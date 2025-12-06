@@ -1,3 +1,9 @@
+/**
+ * Mind Garden - Extension Authentication API
+ * 
+ * Endpoints for browser extension authentication
+ */
+
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma';
@@ -19,8 +25,15 @@ const extensionGoogleLoginSchema = z.object({
   googleAccessToken: z.string(),
   email: z.string().email(),
   name: z.string().optional(),
-  picture: z.string().url().optional(),
 });
+
+// Interface for Google user info response
+interface GoogleUserInfo {
+  id: string;
+  email: string;
+  name?: string;
+  picture?: string;
+}
 
 /**
  * Verify an existing JWT token from the extension
@@ -40,7 +53,6 @@ router.post(
           id: true,
           email: true,
           name: true,
-          picture: true,
         },
       });
 
@@ -68,7 +80,7 @@ router.post(
 router.post(
   '/google',
   asyncHandler(async (req, res) => {
-    const { googleAccessToken, email, name, picture } = extensionGoogleLoginSchema.parse(req.body);
+    const { googleAccessToken, email, name } = extensionGoogleLoginSchema.parse(req.body);
 
     // Verify the Google token by fetching user info
     try {
@@ -81,7 +93,7 @@ router.post(
         return res.status(401).json({ error: 'Invalid Google token' });
       }
 
-      const googleUser = await googleResponse.json();
+      const googleUser = await googleResponse.json() as GoogleUserInfo;
 
       // Verify email matches
       if (googleUser.email !== email) {
@@ -99,20 +111,16 @@ router.post(
           data: {
             email: googleUser.email,
             name: googleUser.name || name,
-            picture: googleUser.picture || picture,
-            provider: 'google',
-            providerId: googleUser.id,
           },
         });
         logger.info('New user created from extension', { userId: user.id, email: user.email });
       } else {
-        // Update existing user info if needed
-        if (googleUser.name || googleUser.picture) {
-          await prisma.user.update({
+        // Update existing user name if needed
+        if (googleUser.name && !user.name) {
+          user = await prisma.user.update({
             where: { id: user.id },
             data: {
-              name: googleUser.name || user.name,
-              picture: googleUser.picture || user.picture,
+              name: googleUser.name,
             },
           });
         }
@@ -134,7 +142,6 @@ router.post(
           id: user.id,
           email: user.email,
           name: user.name,
-          picture: user.picture,
         },
       });
     } catch (error) {
@@ -168,7 +175,6 @@ router.get(
           id: true,
           email: true,
           name: true,
-          picture: true,
         },
       });
 
@@ -201,7 +207,7 @@ router.get(
  */
 router.post(
   '/logout',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     // In a production system, you might want to maintain a token blacklist
     // For now, the client just needs to clear the stored token
     logger.info('Extension logout requested');
@@ -210,4 +216,3 @@ router.post(
 );
 
 export default router;
-

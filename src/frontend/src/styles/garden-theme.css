@@ -1,0 +1,572 @@
+/* Mind Garden - Design System & Theme Variables */
+
+:root {
+  /* ========================================
+     Nature-Inspired Color Palette
+     ======================================== */
+  
+  /* Primary Greens - Garden Life */
+  --mg-green-50: #ecfdf5;
+  --mg-green-100: #d1fae5;
+  --mg-green-200: #a7f3d0;
+  --mg-green-300: #6ee7b7;
+  --mg-green-400: #34d399;
+  --mg-green-500: #10b981;
+  --mg-green-600: #059669;
+  --mg-green-700: #047857;
+  --mg-green-800: #065f46;
+  --mg-green-900: #064e3b;
+  --mg-green-950: #022c22;
+  
+  /* Earth Tones - Grounding */
+  --mg-earth-50: #fdf8f6;
+  --mg-earth-100: #f7efe8;
+  --mg-earth-200: #e8d5c4;
+  --mg-earth-300: #d4b896;
+  --mg-earth-400: #c19a6b;
+  --mg-earth-500: #a67c52;
+  --mg-earth-600: #8b6914;
+  --mg-earth-700: #6b4423;
+  --mg-earth-800: #4a2c17;
+  --mg-earth-900: #3d2414;
+  
+  /* Sky Blues - Calm & Clarity */
+  --mg-sky-50: #f0f9ff;
+  --mg-sky-100: #e0f2fe;
+  --mg-sky-200: #bae6fd;
+  --mg-sky-300: #7dd3fc;
+  --mg-sky-400: #38bdf8;
+  --mg-sky-500: #0ea5e9;
+  --mg-sky-600: #0284c7;
+  --mg-sky-700: #0369a1;
+  
+  /* Sunset/Warmth - Evening & Reflection */
+  --mg-sunset-50: #fff7ed;
+  --mg-sunset-100: #ffedd5;
+  --mg-sunset-200: #fed7aa;
+  --mg-sunset-300: #fdba74;
+  --mg-sunset-400: #fb923c;
+  --mg-sunset-500: #f97316;
+  --mg-sunset-600: #ea580c;
+  --mg-sunset-700: #c2410c;
+  
+  /* Night/Deep - Rest & Sleep */
+  --mg-night-50: #f8fafc;
+  --mg-night-100: #f1f5f9;
+  --mg-night-200: #e2e8f0;
+  --mg-night-300: #cbd5e1;
+  --mg-night-400: #94a3b8;
+  --mg-night-500: #64748b;
+  --mg-night-600: #475569;
+  --mg-night-700: #334155;
+  --mg-night-800: #1e293b;
+  --mg-night-900: #0f172a;
+  --mg-night-950: #020617;
+  
+  /* Accent Colors - Flowers & Highlights */
+  --mg-rose-400: #fb7185;
+  --mg-rose-500: #f43f5e;
+  --mg-violet-400: #a78bfa;
+  --mg-violet-500: #8b5cf6;
+  --mg-amber-400: #fbbf24;
+  --mg-amber-500: #f59e0b;
+  
+  /* ========================================
+     Semantic Colors
+     ======================================== */
+  
+  /* Backgrounds */
+  --mg-bg-primary: var(--mg-green-950);
+  --mg-bg-secondary: var(--mg-night-900);
+  --mg-bg-card: rgba(6, 78, 59, 0.3);
+  --mg-bg-overlay: rgba(0, 0, 0, 0.5);
+  
+  /* Text */
+  --mg-text-primary: var(--mg-green-50);
+  --mg-text-secondary: var(--mg-green-200);
+  --mg-text-muted: var(--mg-green-400);
+  
+  /* Borders */
+  --mg-border: rgba(52, 211, 153, 0.15);
+  --mg-border-active: var(--mg-green-500);
+  
+  /* Accents */
+  --mg-accent: var(--mg-green-500);
+  --mg-accent-light: var(--mg-green-400);
+  --mg-accent-dark: var(--mg-green-600);
+  
+  /* ========================================
+     Garden States
+     ======================================== */
+  
+  --mg-state-thriving: var(--mg-green-400);
+  --mg-state-growing: var(--mg-green-500);
+  --mg-state-stable: var(--mg-sky-400);
+  --mg-state-idle: var(--mg-night-400);
+  --mg-state-dormant: var(--mg-night-500);
+  
+  /* ========================================
+     Time of Day Themes
+     ======================================== */
+  
+  /* Morning (6am - 12pm) */
+  --mg-morning-sky: linear-gradient(180deg, #87ceeb 0%, #e0f7fa 50%, #fff9c4 100%);
+  --mg-morning-light: rgba(255, 249, 196, 0.3);
+  
+  /* Afternoon (12pm - 5pm) */
+  --mg-afternoon-sky: linear-gradient(180deg, #4fc3f7 0%, #81d4fa 50%, #b3e5fc 100%);
+  --mg-afternoon-light: rgba(255, 255, 255, 0.2);
+  
+  /* Evening (5pm - 9pm) */
+  --mg-evening-sky: linear-gradient(180deg, #ff8a65 0%, #ffab91 30%, #ffd54f 60%, #4fc3f7 100%);
+  --mg-evening-light: rgba(255, 171, 145, 0.3);
+  
+  /* Night (9pm - 6am) */
+  --mg-night-sky: linear-gradient(180deg, #1a237e 0%, #283593 30%, #3949ab 60%, #5c6bc0 100%);
+  --mg-night-light: rgba(92, 107, 192, 0.2);
+  
+  /* ========================================
+     Shadows & Effects
+     ======================================== */
+  
+  --mg-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --mg-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --mg-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --mg-shadow-glow: 0 0 20px rgba(16, 185, 129, 0.3);
+  
+  /* ========================================
+     Layout Dimensions
+     ======================================== */
+  
+  --mg-sidebar-width: 280px;
+  --mg-sidebar-collapsed: 72px;
+  --mg-topbar-height: 64px;
+  --mg-bottom-panel-height: 320px;
+  --mg-bottom-panel-collapsed: 80px;
+  
+  /* ========================================
+     Animation Timing
+     ======================================== */
+  
+  --mg-transition-fast: 150ms ease;
+  --mg-transition-normal: 250ms ease;
+  --mg-transition-slow: 400ms ease;
+  --mg-transition-garden: 800ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* ========================================
+     Z-Index Layers
+     ======================================== */
+  
+  --mg-z-garden: 1;
+  --mg-z-plants: 10;
+  --mg-z-weather: 20;
+  --mg-z-ui: 100;
+  --mg-z-sidebar: 200;
+  --mg-z-topbar: 300;
+  --mg-z-bottom-panel: 400;
+  --mg-z-modal: 500;
+  --mg-z-toast: 600;
+}
+
+/* ========================================
+   Dark Mode Adjustments (Default)
+   ======================================== */
+
+[data-theme="dark"] {
+  --mg-bg-primary: var(--mg-green-950);
+  --mg-bg-secondary: var(--mg-night-900);
+  --mg-text-primary: var(--mg-green-50);
+  --mg-text-secondary: var(--mg-green-200);
+}
+
+/* ========================================
+   Light Mode (Optional)
+   ======================================== */
+
+[data-theme="light"] {
+  --mg-bg-primary: var(--mg-green-50);
+  --mg-bg-secondary: white;
+  --mg-bg-card: rgba(255, 255, 255, 0.9);
+  --mg-text-primary: var(--mg-green-900);
+  --mg-text-secondary: var(--mg-green-700);
+  --mg-text-muted: var(--mg-green-600);
+  --mg-border: rgba(16, 185, 129, 0.2);
+}
+
+/* ========================================
+   Garden Canvas Base Styles
+   ======================================== */
+
+.mg-garden-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--mg-bg-primary);
+}
+
+.mg-garden-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 2px;
+  padding: 20px;
+  transform-origin: center;
+  transition: transform var(--mg-transition-garden);
+}
+
+.mg-garden-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid transparent;
+  transition: all var(--mg-transition-normal);
+  cursor: pointer;
+}
+
+.mg-garden-cell:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--mg-border);
+}
+
+.mg-garden-cell.has-plant {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+/* ========================================
+   Plant Animation Classes
+   ======================================== */
+
+@keyframes mg-plant-grow {
+  0% {
+    transform: scale(0) translateY(20px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) translateY(-5px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes mg-plant-sway {
+  0%, 100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes mg-plant-bloom {
+  0% {
+    transform: scale(0.8);
+    filter: saturate(0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: saturate(1.2);
+  }
+  100% {
+    transform: scale(1);
+    filter: saturate(1);
+  }
+}
+
+@keyframes mg-sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mg-plant {
+  animation: mg-plant-grow 0.6s ease-out forwards;
+}
+
+.mg-plant-sway {
+  animation: mg-plant-sway 4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.mg-plant-bloom {
+  animation: mg-plant-bloom 0.8s ease-out forwards;
+}
+
+.mg-sparkle {
+  animation: mg-sparkle 2s ease-in-out infinite;
+}
+
+/* ========================================
+   Weather Effects
+   ======================================== */
+
+.mg-weather-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--mg-z-weather);
+}
+
+.mg-weather-sunny {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 249, 196, 0.1) 0%,
+    transparent 50%
+  );
+}
+
+.mg-weather-cloudy {
+  background: linear-gradient(
+    180deg,
+    rgba(100, 116, 139, 0.2) 0%,
+    transparent 50%
+  );
+}
+
+.mg-weather-rain {
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.15) 0%,
+    transparent 50%
+  );
+}
+
+/* Rain drops animation */
+@keyframes mg-rain-fall {
+  0% {
+    transform: translateY(-100vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+.mg-rain-drop {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(56, 189, 248, 0.6) 100%
+  );
+  border-radius: 2px;
+  animation: mg-rain-fall 1.5s linear infinite;
+}
+
+/* ========================================
+   Sidebar Styles
+   ======================================== */
+
+.mg-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--mg-sidebar-width);
+  background: linear-gradient(
+    180deg,
+    var(--mg-bg-primary) 0%,
+    var(--mg-bg-secondary) 100%
+  );
+  border-right: 1px solid var(--mg-border);
+  z-index: var(--mg-z-sidebar);
+  display: flex;
+  flex-direction: column;
+  transition: width var(--mg-transition-normal);
+}
+
+.mg-sidebar.collapsed {
+  width: var(--mg-sidebar-collapsed);
+}
+
+.mg-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--mg-border);
+}
+
+.mg-sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+.mg-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: var(--mg-text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--mg-transition-fast);
+  margin-bottom: 4px;
+}
+
+.mg-nav-item:hover {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--mg-text-primary);
+}
+
+.mg-nav-item.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--mg-accent-light);
+}
+
+.mg-nav-item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   Bottom Panel Styles
+   ======================================== */
+
+.mg-bottom-panel {
+  position: fixed;
+  left: var(--mg-sidebar-width);
+  right: 0;
+  bottom: 0;
+  height: var(--mg-bottom-panel-collapsed);
+  background: var(--mg-bg-secondary);
+  border-top: 1px solid var(--mg-border);
+  border-radius: 24px 24px 0 0;
+  z-index: var(--mg-z-bottom-panel);
+  transition: height var(--mg-transition-normal);
+  overflow: hidden;
+}
+
+.mg-bottom-panel.expanded {
+  height: var(--mg-bottom-panel-height);
+}
+
+.mg-bottom-panel-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--mg-border-active);
+  border-radius: 2px;
+  margin: 12px auto;
+  cursor: pointer;
+}
+
+/* ========================================
+   Main Content Area
+   ======================================== */
+
+.mg-main {
+  margin-left: var(--mg-sidebar-width);
+  padding-bottom: var(--mg-bottom-panel-collapsed);
+  min-height: 100vh;
+  transition: margin-left var(--mg-transition-normal);
+}
+
+.mg-main.sidebar-collapsed {
+  margin-left: var(--mg-sidebar-collapsed);
+}
+
+/* ========================================
+   Card Styles
+   ======================================== */
+
+.mg-card {
+  background: var(--mg-bg-card);
+  border: 1px solid var(--mg-border);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.mg-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mg-text-primary);
+  margin-bottom: 12px;
+}
+
+/* ========================================
+   Button Styles
+   ======================================== */
+
+.mg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--mg-transition-fast);
+  border: none;
+}
+
+.mg-btn-primary {
+  background: linear-gradient(135deg, var(--mg-green-500) 0%, var(--mg-green-600) 100%);
+  color: white;
+}
+
+.mg-btn-primary:hover {
+  background: linear-gradient(135deg, var(--mg-green-400) 0%, var(--mg-green-500) 100%);
+  transform: translateY(-1px);
+  box-shadow: var(--mg-shadow-glow);
+}
+
+.mg-btn-secondary {
+  background: var(--mg-bg-card);
+  color: var(--mg-text-primary);
+  border: 1px solid var(--mg-border);
+}
+
+.mg-btn-secondary:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--mg-accent);
+}
+
+/* ========================================
+   Mobile Responsive
+   ======================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --mg-sidebar-width: 0px;
+    --mg-sidebar-collapsed: 0px;
+  }
+  
+  .mg-sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+  
+  .mg-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .mg-main {
+    margin-left: 0;
+  }
+  
+  .mg-bottom-panel {
+    left: 0;
+  }
+}
+

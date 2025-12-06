@@ -12,7 +12,14 @@ export type MicroFlowType =
   | 'difficult-conversation-prep'
   | 'quick-reset'
   | 'post-meeting-decompress'
-  | 'end-of-day-transition';
+  | 'end-of-day-transition'
+  // Extended flows (5-20 minutes)
+  | 'morning-intention'
+  | 'evening-wind-down'
+  | 'weekend-wellness'
+  | 'breathing'
+  | 'deep-breath-meditation'
+  | 'body-scan';
 
 // Breathing pattern types
 export type BreathingPattern = 
@@ -478,6 +485,190 @@ export const MICRO_FLOWS: Record<MicroFlowType, MicroFlow> = {
     ],
   },
 };
+
+// ============================================
+// EXTENDED FLOWS (5-20 minutes)
+// ============================================
+
+/**
+ * MORNING INTENTION (10 minutes)
+ * Gratitude + calendar preview + intention setting + energizing
+ */
+const morningIntention: MicroFlow = {
+  id: 'morning-intention',
+  name: 'Morning Intention',
+  shortName: 'Morning',
+  description: 'Start your day with gratitude, intention setting, and gentle energizing.',
+  duration: 600, // 10 minutes
+  bestFor: ['Morning routine', 'Daily start', 'Setting intentions'],
+  breathingPattern: 'energizing',
+  spotifyMood: 'confidence-uplifting',
+  icon: '☀️',
+  benefits: ['Clear intention', 'Positive mindset', 'Day preparation'],
+  steps: [
+    { id: 'intro', type: 'intro', duration: 15, text: 'Good morning. Take a moment to arrive.', guidance: 'Find a comfortable position. Let your body wake up naturally.', animation: 'fade' },
+    { id: 'breathing-1', type: 'breathing', duration: 60, text: 'Wake Up Breathing', guidance: 'Gentle breaths to energize. In through the nose... out through the mouth.', animation: 'breathe' },
+    { id: 'body-scan', type: 'body-scan', duration: 60, text: 'Body Awareness', guidance: "Scan from your feet to your head. Notice how you're feeling today.", animation: 'pulse' },
+    { id: 'gratitude', type: 'journaling', duration: 90, text: 'Morning Gratitude', guidance: 'Name three things you are grateful for this morning. Let each one sink in.', animation: 'expand' },
+    { id: 'breathing-2', type: 'breathing', duration: 60, text: 'Energizing Breath', guidance: 'Slightly faster, energizing breaths. Feel vitality flowing in.', animation: 'breathe' },
+    { id: 'intention', type: 'visualization', duration: 90, text: 'Set Your Intention', guidance: "What is your focus for today? What one thing will make today meaningful?", animation: 'expand' },
+    { id: 'movement', type: 'movement', duration: 90, text: 'Gentle Movement', guidance: 'Stretch your arms up... roll your shoulders... gentle neck rolls.', animation: 'pulse' },
+    { id: 'affirmation', type: 'affirmation', duration: 60, text: 'Morning Affirmation', guidance: "Say to yourself: 'I am capable. I am focused. Today is full of possibility.'", animation: 'expand' },
+    { id: 'breathing-3', type: 'breathing', duration: 60, text: 'Centering Breath', guidance: 'Three deep breaths. Feel centered and ready.', animation: 'breathe' },
+    { id: 'closing', type: 'closing', duration: 15, text: 'Your day begins now.', guidance: 'Carry this intention with you.', animation: 'fade' },
+  ],
+};
+
+/**
+ * EVENING WIND-DOWN (15 minutes)
+ * Day reflection + tension release + gratitude + sleep prep
+ */
+const eveningWindDown: MicroFlow = {
+  id: 'evening-wind-down',
+  name: 'Evening Wind-Down',
+  shortName: 'Wind Down',
+  description: 'Transition from work mode with body scan, reflection, and sleep preparation.',
+  duration: 900, // 15 minutes
+  bestFor: ['Evening routine', 'Before sleep', 'Day reflection'],
+  breathingPattern: 'calming',
+  spotifyMood: 'calming-transition',
+  icon: '🌙',
+  benefits: ['Work-life separation', 'Better sleep', 'Day closure'],
+  steps: [
+    { id: 'intro', type: 'intro', duration: 20, text: 'The day is complete.', guidance: 'Find a comfortable position. Allow your body to relax.', animation: 'fade' },
+    { id: 'breathing-1', type: 'breathing', duration: 90, text: 'Transition Breathing', guidance: 'Slow, calming breaths. In for 4... hold for 6... out for 8.', animation: 'breathe' },
+    { id: 'body-scan', type: 'body-scan', duration: 120, text: 'Full Body Scan', guidance: 'Starting at your feet, release tension as you scan up. Feet... legs... hips... torso... shoulders... face.', animation: 'pulse' },
+    { id: 'reflection-1', type: 'visualization', duration: 90, text: 'Day Reflection', guidance: 'What went well today? Acknowledge your accomplishments without judgment.', animation: 'expand' },
+    { id: 'breathing-2', type: 'breathing', duration: 60, text: 'Continue Calming', guidance: 'In for 4... hold for 6... out for 8.', animation: 'breathe' },
+    { id: 'reflection-2', type: 'visualization', duration: 90, text: 'Release Challenges', guidance: 'What was challenging? Acknowledge it, then visualize letting it go.', animation: 'pulse' },
+    { id: 'gratitude', type: 'journaling', duration: 90, text: 'Evening Gratitude', guidance: 'Name three good things from today. Small pleasures count.', animation: 'expand' },
+    { id: 'breathing-3', type: 'breathing', duration: 90, text: 'Sleep Preparation', guidance: '4-7-8 breathing for sleep. In for 4... hold for 7... out for 8.', animation: 'breathe' },
+    { id: 'visualization', type: 'visualization', duration: 90, text: 'Tomorrow Preview', guidance: 'Gently think about tomorrow. What matters most? Set a gentle intention.', animation: 'pulse' },
+    { id: 'body-release', type: 'body-scan', duration: 60, text: 'Final Release', guidance: 'Release any remaining tension. Let your body become heavy and relaxed.', animation: 'pulse' },
+    { id: 'breathing-4', type: 'breathing', duration: 60, text: 'Sleep Breathing', guidance: 'Continue 4-7-8 breathing as you drift.', animation: 'breathe' },
+    { id: 'closing', type: 'closing', duration: 40, text: 'Rest well. You deserve it.', guidance: 'Let sleep come naturally.', animation: 'fade' },
+  ],
+};
+
+/**
+ * WEEKEND WELLNESS (20 minutes)
+ * Week reflection + longer meditation + self-compassion + week-ahead intention
+ */
+const weekendWellness: MicroFlow = {
+  id: 'weekend-wellness',
+  name: 'Weekend Wellness',
+  shortName: 'Weekend',
+  description: 'Longer meditation session for weekends with week reflection and self-compassion.',
+  duration: 1200, // 20 minutes
+  bestFor: ['Weekends', 'Deep relaxation', 'Self-care'],
+  breathingPattern: 'calming',
+  spotifyMood: 'soothing-release',
+  icon: '🧘',
+  benefits: ['Deep relaxation', 'Week closure', 'Self-compassion'],
+  steps: [
+    { id: 'intro', type: 'intro', duration: 30, text: 'Welcome to your weekend wellness practice.', guidance: 'Find a comfortable position. This is your time.', animation: 'fade' },
+    { id: 'breathing-1', type: 'breathing', duration: 120, text: 'Settling Breath', guidance: 'Long, slow breaths. Let the week fall away with each exhale.', animation: 'breathe' },
+    { id: 'body-scan', type: 'body-scan', duration: 180, text: 'Deep Body Scan', guidance: 'A thorough scan from head to toe. Notice every sensation without judgment.', animation: 'pulse' },
+    { id: 'week-reflection', type: 'visualization', duration: 150, text: 'Week Reflection', guidance: 'Review the week that passed. What moments stand out? What did you learn?', animation: 'expand' },
+    { id: 'breathing-2', type: 'breathing', duration: 90, text: 'Releasing Breath', guidance: 'With each exhale, release any lingering stress from the week.', animation: 'breathe' },
+    { id: 'self-compassion', type: 'affirmation', duration: 150, text: 'Self-Compassion Practice', guidance: "Place a hand on your heart. Say: 'May I be kind to myself. May I accept myself as I am.'", animation: 'expand' },
+    { id: 'meditation', type: 'visualization', duration: 180, text: 'Open Awareness', guidance: 'Simply sit with awareness. Notice thoughts like clouds passing. No need to follow them.', animation: 'pulse' },
+    { id: 'breathing-3', type: 'breathing', duration: 90, text: 'Centering Breath', guidance: 'Return to your breath as an anchor. Present and grounded.', animation: 'breathe' },
+    { id: 'intention', type: 'visualization', duration: 120, text: 'Week Ahead Intention', guidance: 'What do you want to cultivate in the week ahead? Set a gentle intention.', animation: 'expand' },
+    { id: 'gratitude', type: 'journaling', duration: 60, text: 'Gratitude', guidance: 'What are you grateful for right now, in this moment?', animation: 'expand' },
+    { id: 'closing', type: 'closing', duration: 30, text: 'You are renewed.', guidance: 'Carry this peace with you into the week.', animation: 'fade' },
+  ],
+};
+
+/**
+ * SIMPLE BREATHING (1 minute)
+ * Quick breathing exercise
+ */
+const breathing: MicroFlow = {
+  id: 'breathing',
+  name: 'Simple Breathing',
+  shortName: 'Breathe',
+  description: 'A calming breathing exercise to center your mind.',
+  duration: 60, // 1 minute
+  bestFor: ['Quick calm', 'Anxiety relief', 'Focus boost'],
+  breathingPattern: 'box',
+  spotifyMood: 'calming-reassuring',
+  icon: '🌬️',
+  benefits: ['Instant calm', 'Focus', 'Stress relief'],
+  steps: [
+    { id: 'intro', type: 'intro', duration: 5, text: 'One minute of calm.', guidance: 'Close your eyes if comfortable.', animation: 'fade' },
+    { id: 'breathing', type: 'breathing', duration: 50, text: 'Box Breathing', guidance: 'In for 4... hold for 4... out for 4... hold for 4.', animation: 'breathe' },
+    { id: 'closing', type: 'closing', duration: 5, text: 'You are centered.', guidance: '', animation: 'fade' },
+  ],
+};
+
+/**
+ * DEEP BREATH MEDITATION (20 minutes)
+ * Extended breath-focused meditation
+ */
+const deepBreathMeditation: MicroFlow = {
+  id: 'deep-breath-meditation',
+  name: 'Deep Breath Meditation',
+  shortName: 'Deep Breath',
+  description: 'Extended breath-focused meditation for profound calm.',
+  duration: 1200, // 20 minutes
+  bestFor: ['Deep relaxation', 'Stress relief', 'Mental clarity'],
+  breathingPattern: 'calming',
+  spotifyMood: 'soothing-release',
+  icon: '🍃',
+  benefits: ['Deep calm', 'Mental clarity', 'Stress release'],
+  steps: [
+    { id: 'intro', type: 'intro', duration: 30, text: 'Begin your deep meditation.', guidance: 'Find a comfortable position. This is your sanctuary.', animation: 'fade' },
+    { id: 'breathing-1', type: 'breathing', duration: 180, text: 'Settling', guidance: 'Natural breaths. Simply observe your breath without changing it.', animation: 'breathe' },
+    { id: 'breathing-2', type: 'breathing', duration: 180, text: 'Deepening', guidance: 'Begin to deepen your breath. Long inhales... longer exhales.', animation: 'breathe' },
+    { id: 'breathing-3', type: 'breathing', duration: 180, text: 'Calming Pattern', guidance: '4-7-8 breathing. In for 4... hold for 7... out for 8.', animation: 'breathe' },
+    { id: 'stillness', type: 'visualization', duration: 180, text: 'Stillness', guidance: 'Rest in stillness between breaths. Find peace in the pause.', animation: 'pulse' },
+    { id: 'breathing-4', type: 'breathing', duration: 180, text: 'Natural Rhythm', guidance: 'Return to natural breathing. Your body knows what it needs.', animation: 'breathe' },
+    { id: 'awareness', type: 'visualization', duration: 120, text: 'Open Awareness', guidance: 'Expand your awareness. Notice sounds... sensations... the space around you.', animation: 'expand' },
+    { id: 'breathing-5', type: 'breathing', duration: 120, text: 'Closing Breaths', guidance: 'Three deep, nourishing breaths.', animation: 'breathe' },
+    { id: 'closing', type: 'closing', duration: 30, text: 'You are at peace.', guidance: 'Carry this calm with you.', animation: 'fade' },
+  ],
+};
+
+/**
+ * FULL BODY SCAN (25 minutes)
+ * Complete body awareness meditation
+ */
+const bodyScan: MicroFlow = {
+  id: 'body-scan',
+  name: 'Full Body Scan',
+  shortName: 'Body Scan',
+  description: 'Complete body awareness meditation for tension release.',
+  duration: 1500, // 25 minutes
+  bestFor: ['Physical tension', 'Awareness', 'Relaxation'],
+  breathingPattern: 'calming',
+  spotifyMood: 'soothing-release',
+  icon: '✨',
+  benefits: ['Tension release', 'Body awareness', 'Deep relaxation'],
+  steps: [
+    { id: 'intro', type: 'intro', duration: 30, text: 'Begin your body scan journey.', guidance: 'Lie down or sit comfortably. This is a journey through your body.', animation: 'fade' },
+    { id: 'breathing', type: 'breathing', duration: 90, text: 'Settling', guidance: 'A few deep breaths to settle in.', animation: 'breathe' },
+    { id: 'feet', type: 'body-scan', duration: 90, text: 'Feet', guidance: 'Bring attention to your feet. Notice sensations in your toes, soles, heels.', animation: 'pulse' },
+    { id: 'legs', type: 'body-scan', duration: 120, text: 'Legs', guidance: 'Move up to your ankles, calves, knees, thighs. Release any tension.', animation: 'pulse' },
+    { id: 'hips', type: 'body-scan', duration: 90, text: 'Hips & Lower Back', guidance: 'Notice your hips, lower back. Let them sink into support.', animation: 'pulse' },
+    { id: 'abdomen', type: 'body-scan', duration: 120, text: 'Abdomen & Chest', guidance: 'Feel your belly rise and fall. Notice your chest, ribs.', animation: 'pulse' },
+    { id: 'hands', type: 'body-scan', duration: 90, text: 'Hands & Arms', guidance: 'Awareness to your fingertips, hands, forearms, upper arms.', animation: 'pulse' },
+    { id: 'shoulders', type: 'body-scan', duration: 120, text: 'Shoulders & Neck', guidance: 'Common tension areas. Soften your shoulders. Release your neck.', animation: 'pulse' },
+    { id: 'face', type: 'body-scan', duration: 120, text: 'Face & Head', guidance: 'Relax your jaw, eyes, forehead. Let your face be soft.', animation: 'pulse' },
+    { id: 'whole-body', type: 'body-scan', duration: 180, text: 'Whole Body Awareness', guidance: 'Feel your entire body as one. A sense of wholeness and peace.', animation: 'expand' },
+    { id: 'breathing-2', type: 'breathing', duration: 120, text: 'Integration', guidance: 'A few deep breaths. Integrate this relaxation.', animation: 'breathe' },
+    { id: 'reawaken', type: 'movement', duration: 90, text: 'Gentle Reawakening', guidance: 'Slowly wiggle fingers and toes. Gentle movements to return.', animation: 'pulse' },
+    { id: 'closing', type: 'closing', duration: 60, text: 'You are renewed.', guidance: 'Take your time opening your eyes.', animation: 'fade' },
+  ],
+};
+
+// Add extended flows to the main record
+MICRO_FLOWS['morning-intention'] = morningIntention;
+MICRO_FLOWS['evening-wind-down'] = eveningWindDown;
+MICRO_FLOWS['weekend-wellness'] = weekendWellness;
+MICRO_FLOWS['breathing'] = breathing;
+MICRO_FLOWS['deep-breath-meditation'] = deepBreathMeditation;
+MICRO_FLOWS['body-scan'] = bodyScan;
 
 // ============================================
 // HELPER FUNCTIONS
