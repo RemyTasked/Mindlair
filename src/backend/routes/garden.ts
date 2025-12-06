@@ -535,7 +535,7 @@ async function updateGardenFromEmotion(userId: string, emotion: string, intensit
     growth: 0,
   };
   
-  let gardenData = gardenState?.gardenData as typeof defaultData || defaultData;
+  let gardenData = (gardenState?.gardenData as unknown as GardenData) || defaultData;
   
   // Positive emotions boost health
   const positiveEmotions = ['calm', 'joy', 'gratitude', 'confidence', 'peace'];
@@ -560,11 +560,11 @@ async function updateGardenFromEmotion(userId: string, emotion: string, intensit
   if (gardenState) {
     gardenState = await prisma.emotionGardenState.update({
       where: { userId },
-      data: { gardenData, lastUpdated: new Date() },
+      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
     });
   } else {
     gardenState = await prisma.emotionGardenState.create({
-      data: { userId, gardenData, lastUpdated: new Date() },
+      data: { userId, gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
     });
   }
   
