@@ -1,7 +1,6 @@
-// Meet Cute Backend Server - v1.11.3
-// Includes: PWA Support, Director's Insights, Post-Meeting Reflections, Privacy Controls, AI Emotional Analysis, Winding Down Session, Onboarding Flow, Weekend Flow
-// Latest: NEW LOGO FILENAME to bypass iOS aggressive caching + Audio + Migrations
-// Cache-Busting: New filename strategy, Service Worker v12, Content hashes
+// Mind Garden Backend Server - v2.0.0
+// Calendar-integrated mental fitness with contextual micro-interventions
+// Features: Flows, Garden, Focus Rooms, Games Hub, Spotify Integration
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -37,6 +36,7 @@ import emotionGardenRoutes from './routes/emotionGarden';
 import flowsRoutes from './routes/flows';
 import gardenRoutes from './routes/garden';
 import analysisRoutes from './routes/analysis';
+import extensionAuthRoutes from './routes/extensionAuth';
 import testRoutes from './routes/test';
 
 dotenv.config();
@@ -90,7 +90,7 @@ app.use(
       tableName: 'session',
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || 'meet-cute-secret',
+    secret: process.env.SESSION_SECRET || 'mind-garden-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -128,6 +128,7 @@ app.use('/api/emotion-garden', emotionGardenRoutes);
 app.use('/api/flows', flowsRoutes);
 app.use('/api/garden', gardenRoutes);
 app.use('/api/analysis', analysisRoutes);
+app.use('/api/extension', extensionAuthRoutes);
 app.use('/api/test', testRoutes);
 
 // Serve static files from frontend build in production
@@ -174,7 +175,7 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  logger.info(`🚀 Meet Cute server running on port ${PORT}`);
+  logger.info(`🌱 Mind Garden server running on port ${PORT}`);
   logger.info(`📅 Environment: ${process.env.NODE_ENV || 'development'}`);
   
   // Start background scheduler

@@ -16,6 +16,7 @@ const WindingDown = lazy(() => import('./pages/WindingDown'));
 const WeekendFlow = lazy(() => import('./pages/WeekendFlow'));
 const MeetingRating = lazy(() => import('./pages/MeetingRating'));
 const GamesHub = lazy(() => import('./pages/GamesHub'));
+const FlowPage = lazy(() => import('./pages/FlowPage'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 
@@ -46,6 +47,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/focus-rooms" element={<FocusRooms />} />
           <Route path="/games" element={<GamesHub />} />
+          <Route path="/flow/:flowId" element={<FlowPage />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/terms" element={<Terms />} />

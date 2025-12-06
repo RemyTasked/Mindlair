@@ -1,7 +1,7 @@
 {
-  "name": "meet-cute",
+  "name": "mind-garden",
   "version": "1.0.0",
-  "description": "AI-enhanced pre-meeting ritual for professionals",
+  "description": "Calendar-integrated mental fitness tool with contextual micro-interventions",
   "main": "dist/server.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
@@ -11,6 +11,10 @@
     "build": "npm run build:backend && npm run build:frontend",
     "build:backend": "prisma generate && tsc -p tsconfig.backend.json",
     "build:frontend": "cd src/frontend && npm run build",
+    "build:extensions": "node scripts/build-extensions.js",
+    "build:extension:chrome": "node scripts/build-extensions.js chrome",
+    "build:extension:firefox": "node scripts/build-extensions.js firefox",
+    "build:all": "npm run build && npm run build:extensions",
     "start": "npm run prisma:migrate:deploy && npm run seed:games:once && node dist/server.js",
     "seed:games:once": "node -e \"const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.gameQuestion.count().then(count => { if (count === 0) { console.log('🌱 No game data found, seeding...'); require('child_process').execSync('npm run seed:games', { stdio: 'inherit' }); } else { console.log('✅ Game data already exists, skipping seed'); } process.exit(0); }).catch(e => { console.error('Error checking game data:', e); process.exit(1); });\"",
     "prisma:generate": "prisma generate",

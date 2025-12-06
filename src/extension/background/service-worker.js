@@ -1,17 +1,13 @@
 /**
- * Mind Garden - Background Service Worker
+ * Mind Garden - Chrome Extension Background Service Worker
  * 
- * Handles:
- * - Authentication state management
- * - API communication with Mind Garden backend
- * - Smart Meeting Analysis (parsing calendar events)
- * - Alarm scheduling for flow triggers
- * - Cross-tab state synchronization
+ * Handles authentication, API calls, calendar event monitoring,
+ * stress forecasting, and flow triggers.
  */
 
 // Configuration
-const API_BASE_URL = 'https://mindgarden.app/api'; // Production
-const DEV_API_BASE_URL = 'http://localhost:3000/api'; // Development
+const API_BASE_URL = 'http://localhost:3000/api';
+const PROD_API_BASE_URL = 'https://mindgarden.app/api';
 
 // State
 let authToken = null;
@@ -23,13 +19,14 @@ let gardenState = null;
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('🌱 Mind Garden extension installed/updated:', details.reason);
   
-  // Initialize storage with defaults
+  // Initialize default settings
   await chrome.storage.local.set({
     settings: {
       notificationTiming: 10, // minutes before meeting
       autoSuggestFlows: true,
       spotifyAutoPlay: false,
       theme: 'zen',
+      voice: 'calm',
     },
     flowHistory: [],
     dailyFlowCount: 0,
@@ -39,11 +36,20 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   // Set up daily reset alarm
   chrome.alarms.create('dailyReset', {
     when: getNextMidnight(),
-    periodInMinutes: 24 * 60, // Every 24 hours
+    periodInMinutes: 24 * 60,
   });
+  
+  // Show welcome notification
+  if (details.reason === 'install') {
+    chrome.notifications.create('welcome', {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+      title: 'Welcome to Mind Garden! 🌱',
+      message: 'Click the extension icon to get started and connect your calendar.',
+    });
+  }
 });
 
-// Helper: Get next midnight timestamp
 function getNextMidnight() {
   const now = new Date();
   const midnight = new Date(now);
@@ -56,195 +62,201 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   console.log('⏰ Alarm fired:', alarm.name);
   
   if (alarm.name === 'dailyReset') {
-    // Reset daily flow count
     await chrome.storage.local.set({ dailyFlowCount: 0 });
     console.log('🌅 Daily flow count reset');
   } else if (alarm.name.startsWith('meeting-')) {
-    // Pre-meeting flow trigger
     const meetingId = alarm.name.replace('meeting-', '');
     await triggerPreMeetingFlow(meetingId);
+  } else if (alarm.name.startsWith('post-meeting-')) {
+    const meetingId = alarm.name.replace('post-meeting-', '');
+    await triggerPostMeetingFlow(meetingId);
   }
 });
 
-// Trigger pre-meeting flow notification
 async function triggerPreMeetingFlow(meetingId) {
   const meeting = todaysMeetings.find(m => m.id === meetingId);
-  if (!meeting) {
-    console.warn('Meeting not found for alarm:', meetingId);
-    return;
-  }
+  if (!meeting) return;
   
-  // Send notification
-  chrome.notifications.create(`flow-${meetingId}`, {
+  const minutesUntil = getMinutesUntil(meeting.startTime);
+  const suggestedFlow = getSuggestedFlow(meeting, 'pre');
+  
+  chrome.notifications.create(`pre-flow-${meetingId}`, {
     type: 'basic',
     iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
-    title: 'Time to Prepare',
-    message: `"${meeting.title}" starts in ${getMinutesUntil(meeting.startTime)} minutes. Take a moment to center yourself.`,
+    title: '🎯 Time to Prepare',
+    message: `"${meeting.title}" starts in ${minutesUntil} minutes. Take a ${suggestedFlow.name}?`,
     buttons: [
-      { title: '🧘 Start Flow' },
-      { title: '⏰ Remind in 5 min' },
+      { title: 'Start Flow' },
+      { title: 'Skip' },
     ],
     requireInteraction: true,
   });
 }
 
-// Helper: Get minutes until a time
-function getMinutesUntil(isoTime) {
-  const targetTime = new Date(isoTime).getTime();
-  const now = Date.now();
-  return Math.round((targetTime - now) / (1000 * 60));
-}
-
-// Handle notification button clicks
-chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIndex) => {
-  if (notificationId.startsWith('flow-')) {
-    const meetingId = notificationId.replace('flow-', '');
-    
-    if (buttonIndex === 0) {
-      // Start Flow - open sidebar or popup
-      await startFlow(meetingId);
-    } else if (buttonIndex === 1) {
-      // Remind in 5 min
-      chrome.alarms.create(`meeting-${meetingId}`, {
-        delayInMinutes: 5,
-      });
-    }
-    
-    chrome.notifications.clear(notificationId);
-  }
-});
-
-// Start a flow for a meeting
-async function startFlow(meetingId) {
+async function triggerPostMeetingFlow(meetingId) {
   const meeting = todaysMeetings.find(m => m.id === meetingId);
   if (!meeting) return;
   
-  // Determine flow type based on meeting context
-  const flowType = suggestFlowType(meeting);
-  
-  // Send message to content script to open flow UI
-  const tabs = await chrome.tabs.query({
-    url: ['https://calendar.google.com/*', 'https://outlook.office.com/*']
+  chrome.notifications.create(`post-flow-${meetingId}`, {
+    type: 'basic',
+    iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+    title: '🌊 Meeting Complete',
+    message: `"${meeting.title}" just ended. Take 90 seconds to decompress?`,
+    buttons: [
+      { title: 'Start Flow' },
+      { title: 'Skip' },
+    ],
+    requireInteraction: true,
   });
-  
-  if (tabs.length > 0) {
-    chrome.tabs.sendMessage(tabs[0].id, {
-      type: 'START_FLOW',
-      meetingId,
-      meetingTitle: meeting.title,
-      flowType,
-    });
-  } else {
-    // Open in popup if no calendar tab
-    chrome.action.openPopup();
-  }
 }
 
-// Suggest flow type based on meeting context
-function suggestFlowType(meeting) {
+function getSuggestedFlow(meeting, timing) {
   const title = meeting.title.toLowerCase();
   
-  // Check for high-stakes keywords
-  if (title.includes('presentation') || title.includes('demo') || title.includes('pitch')) {
-    return 'pre-presentation';
+  if (timing === 'pre') {
+    if (title.includes('presentation') || title.includes('demo') || title.includes('pitch')) {
+      return { id: 'pre-presentation-power', name: 'Pre-Presentation Power' };
+    }
+    if (title.includes('difficult') || title.includes('feedback') || title.includes('review')) {
+      return { id: 'difficult-conversation-prep', name: 'Difficult Conversation Prep' };
+    }
+    return { id: 'pre-meeting-focus', name: 'Pre-Meeting Focus' };
   }
   
-  if (title.includes('review') || title.includes('feedback') || title.includes('performance')) {
-    return 'difficult-conversation';
-  }
-  
-  if (title.includes('interview')) {
-    return 'pre-presentation';
-  }
-  
-  // Default to pre-meeting focus
-  return 'pre-meeting';
+  return { id: 'post-meeting-decompress', name: 'Post-Meeting Decompress' };
 }
 
-// Handle messages from content scripts and popup
+function getMinutesUntil(isoTime) {
+  const targetTime = new Date(isoTime).getTime();
+  return Math.max(0, Math.round((targetTime - Date.now()) / (1000 * 60)));
+}
+
+// Handle notification button clicks
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+  if (buttonIndex === 0) { // Start Flow
+    let flowId = 'quick-reset';
+    
+    if (notificationId.includes('pre-flow')) {
+      flowId = 'pre-meeting-focus';
+    } else if (notificationId.includes('post-flow')) {
+      flowId = 'post-meeting-decompress';
+    }
+    
+    chrome.tabs.create({ url: `http://localhost:5173/flow/${flowId}` });
+  }
+  
+  chrome.notifications.clear(notificationId);
+});
+
+// Handle messages from popup and content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('📨 Message received:', message.type);
   
-  switch (message.type) {
-    case 'GET_AUTH_STATUS':
-      sendResponse({ authenticated: !!authToken, user: userProfile });
-      break;
-      
-    case 'LOGIN':
-      handleLogin(message.token).then(sendResponse);
-      return true; // Will respond async
-      
-    case 'LOGOUT':
-      handleLogout().then(sendResponse);
-      return true;
-      
-    case 'SYNC_MEETINGS':
-      syncMeetings(message.meetings).then(sendResponse);
-      return true;
-      
-    case 'GET_STRESS_FORECAST':
-      sendResponse(calculateStressForecast());
-      break;
-      
-    case 'COMPLETE_FLOW':
-      completeFlow(message.flowType, message.meetingId).then(sendResponse);
-      return true;
-      
-    case 'GET_GARDEN_STATE':
-      sendResponse(gardenState);
-      break;
-      
-    case 'GET_TODAYS_MEETINGS':
-      sendResponse(todaysMeetings);
-      break;
-      
-    default:
-      console.warn('Unknown message type:', message.type);
-  }
+  const handleAsync = async () => {
+    switch (message.type) {
+      case 'GET_AUTH_STATUS':
+        return { authenticated: !!authToken, user: userProfile };
+        
+      case 'LOGIN':
+        return await handleLogin(message.token, message.provider);
+        
+      case 'LOGOUT':
+        return await handleLogout();
+        
+      case 'SYNC_MEETINGS':
+        return await syncMeetings(message.meetings);
+        
+      case 'GET_STRESS_FORECAST':
+        return calculateStressForecast();
+        
+      case 'COMPLETE_FLOW':
+        return await completeFlow(message.flowType, message.meetingId);
+        
+      case 'GET_GARDEN_STATE':
+        return gardenState || { streak: 0, health: 'idle' };
+        
+      case 'GET_TODAYS_MEETINGS':
+        return todaysMeetings;
+        
+      case 'GET_SETTINGS':
+        const { settings } = await chrome.storage.local.get('settings');
+        return settings;
+        
+      case 'UPDATE_SETTINGS':
+        await chrome.storage.local.set({ settings: message.settings });
+        return { success: true };
+        
+      default:
+        return { error: 'Unknown message type' };
+    }
+  };
+  
+  handleAsync().then(sendResponse);
+  return true; // Keep message channel open for async response
 });
 
-// Handle login
-async function handleLogin(token) {
+async function handleLogin(token, provider = 'google') {
   try {
     authToken = token;
-    await chrome.storage.local.set({ authToken: token });
     
-    // Fetch user profile
-    const response = await fetch(`${getApiBaseUrl()}/user/profile`, {
-      headers: { Authorization: `Bearer ${token}` },
+    // Fetch user profile from Google
+    if (provider === 'google') {
+      const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (response.ok) {
+        const googleProfile = await response.json();
+        userProfile = {
+          id: googleProfile.id,
+          email: googleProfile.email,
+          name: googleProfile.name,
+          picture: googleProfile.picture,
+        };
+      }
+    }
+    
+    // Store auth data
+    await chrome.storage.local.set({ 
+      authToken: token, 
+      userProfile,
+      authProvider: provider,
     });
     
-    if (response.ok) {
-      userProfile = await response.json();
-      await chrome.storage.local.set({ userProfile });
-      
-      // Fetch garden state
-      await fetchGardenState();
-      
-      return { success: true, user: userProfile };
-    } else {
-      throw new Error('Failed to fetch profile');
+    // Fetch garden state from backend
+    await fetchGardenState();
+    
+    // Fetch calendar events
+    if (provider === 'google') {
+      await fetchGoogleCalendarEvents();
     }
+    
+    return { success: true, user: userProfile };
   } catch (error) {
     console.error('Login error:', error);
     authToken = null;
+    userProfile = null;
     return { success: false, error: error.message };
   }
 }
 
-// Handle logout
 async function handleLogout() {
+  // Revoke Google token if applicable
+  if (authToken) {
+    chrome.identity.removeCachedAuthToken({ token: authToken });
+  }
+  
   authToken = null;
   userProfile = null;
   gardenState = null;
   todaysMeetings = [];
   
-  await chrome.storage.local.remove(['authToken', 'userProfile']);
+  await chrome.storage.local.remove(['authToken', 'userProfile', 'authProvider']);
   
-  // Clear all meeting alarms
+  // Clear meeting alarms
   const alarms = await chrome.alarms.getAll();
   for (const alarm of alarms) {
-    if (alarm.name.startsWith('meeting-')) {
+    if (alarm.name.startsWith('meeting-') || alarm.name.startsWith('post-meeting-')) {
       chrome.alarms.clear(alarm.name);
     }
   }
@@ -252,165 +264,180 @@ async function handleLogout() {
   return { success: true };
 }
 
-// Sync meetings from calendar
+async function fetchGoogleCalendarEvents() {
+  if (!authToken) return;
+  
+  try {
+    const now = new Date();
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
+      `timeMin=${now.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
+    
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      const meetings = (data.items || []).map(event => ({
+        id: event.id,
+        title: event.summary || 'Untitled Meeting',
+        startTime: event.start.dateTime || event.start.date,
+        endTime: event.end.dateTime || event.end.date,
+        attendees: event.attendees?.length || 0,
+        isOrganizer: event.organizer?.self || false,
+      }));
+      
+      await syncMeetings(meetings);
+    }
+  } catch (error) {
+    console.error('Failed to fetch calendar:', error);
+  }
+}
+
 async function syncMeetings(meetings) {
   todaysMeetings = meetings;
   
-  // Clear old meeting alarms
+  // Clear existing meeting alarms
   const alarms = await chrome.alarms.getAll();
   for (const alarm of alarms) {
-    if (alarm.name.startsWith('meeting-')) {
+    if (alarm.name.startsWith('meeting-') || alarm.name.startsWith('post-meeting-')) {
       chrome.alarms.clear(alarm.name);
     }
   }
   
-  // Get user's notification timing preference
+  // Set up new alarms for each meeting
   const { settings } = await chrome.storage.local.get('settings');
   const notificationMinutes = settings?.notificationTiming || 10;
   
-  // Schedule alarms for upcoming meetings
   const now = Date.now();
   for (const meeting of meetings) {
-    const meetingTime = new Date(meeting.startTime).getTime();
-    const alertTime = meetingTime - (notificationMinutes * 60 * 1000);
+    const meetingStart = new Date(meeting.startTime).getTime();
+    const meetingEnd = new Date(meeting.endTime).getTime();
     
-    if (alertTime > now) {
-      chrome.alarms.create(`meeting-${meeting.id}`, {
-        when: alertTime,
-      });
-      console.log(`⏰ Scheduled alarm for "${meeting.title}" at ${new Date(alertTime).toLocaleTimeString()}`);
+    // Pre-meeting alert
+    const preAlertTime = meetingStart - (notificationMinutes * 60 * 1000);
+    if (preAlertTime > now) {
+      chrome.alarms.create(`meeting-${meeting.id}`, { when: preAlertTime });
+    }
+    
+    // Post-meeting alert (2 minutes after end)
+    const postAlertTime = meetingEnd + (2 * 60 * 1000);
+    if (postAlertTime > now) {
+      chrome.alarms.create(`post-meeting-${meeting.id}`, { when: postAlertTime });
     }
   }
   
-  // Sync to backend if authenticated
-  if (authToken) {
-    try {
-      await fetch(`${getApiBaseUrl()}/analysis/forecast`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({ meetings }),
-      });
-    } catch (error) {
-      console.warn('Failed to sync meetings to backend:', error);
-    }
-  }
+  await chrome.storage.local.set({ 
+    lastSyncTime: new Date().toISOString(),
+    todaysMeetingCount: meetings.length,
+  });
   
+  console.log(`📅 Synced ${meetings.length} meetings`);
   return { success: true, meetingCount: meetings.length };
 }
 
-// Calculate stress forecast based on today's meetings
 function calculateStressForecast() {
   if (todaysMeetings.length === 0) {
     return {
       level: 'light',
-      label: 'Light day',
-      description: 'No meetings scheduled',
+      label: 'Clear day ahead',
+      description: 'No meetings scheduled - great time for deep work',
       color: 'green',
+      indicators: { totalMeetings: 0 },
     };
   }
   
-  const stressIndicators = {
+  const indicators = {
+    totalMeetings: todaysMeetings.length,
     backToBack: 0,
     longMeetings: 0,
     highStakes: 0,
-    totalMeetings: todaysMeetings.length,
+    totalHours: 0,
   };
   
-  // Sort by start time
   const sorted = [...todaysMeetings].sort((a, b) => 
     new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
   );
   
-  // Analyze meetings
   for (let i = 0; i < sorted.length; i++) {
     const meeting = sorted[i];
     const duration = (new Date(meeting.endTime) - new Date(meeting.startTime)) / (1000 * 60);
     const title = meeting.title.toLowerCase();
     
-    // Long meeting (> 60 min)
-    if (duration > 60) {
-      stressIndicators.longMeetings++;
-    }
+    indicators.totalHours += duration / 60;
     
-    // High-stakes keywords
-    const highStakeWords = ['presentation', 'review', 'interview', 'pitch', 'board', 'exec', 'client'];
-    if (highStakeWords.some(word => title.includes(word))) {
-      stressIndicators.highStakes++;
-    }
+    if (duration > 60) indicators.longMeetings++;
     
-    // Back-to-back (< 15 min gap)
+    const highStakeWords = ['presentation', 'review', 'interview', 'pitch', 'board', 'exec', 'client', 'demo', '1:1', 'performance'];
+    if (highStakeWords.some(word => title.includes(word))) indicators.highStakes++;
+    
+    // Check for back-to-back
     if (i > 0) {
       const prevEnd = new Date(sorted[i - 1].endTime).getTime();
       const currStart = new Date(meeting.startTime).getTime();
-      const gap = (currStart - prevEnd) / (1000 * 60);
-      
-      if (gap < 15) {
-        stressIndicators.backToBack++;
-      }
+      if ((currStart - prevEnd) / (1000 * 60) < 15) indicators.backToBack++;
     }
   }
   
   // Calculate stress score
-  let score = stressIndicators.totalMeetings * 1;
-  score += stressIndicators.backToBack * 2;
-  score += stressIndicators.longMeetings * 1.5;
-  score += stressIndicators.highStakes * 2;
+  let score = indicators.totalMeetings + 
+              (indicators.backToBack * 2) + 
+              (indicators.longMeetings * 1.5) + 
+              (indicators.highStakes * 2);
   
-  // Determine level
   if (score <= 4) {
-    return {
-      level: 'light',
-      label: `${stressIndicators.totalMeetings} meeting${stressIndicators.totalMeetings !== 1 ? 's' : ''} with good spacing`,
-      description: 'A manageable day ahead',
-      color: 'green',
-      indicators: stressIndicators,
+    return { 
+      level: 'light', 
+      label: `${indicators.totalMeetings} meeting${indicators.totalMeetings > 1 ? 's' : ''} today`, 
+      description: 'Good spacing - manageable day ☀️', 
+      color: 'green', 
+      indicators 
     };
   } else if (score <= 8) {
-    return {
-      level: 'moderate',
-      label: `${stressIndicators.totalMeetings} meetings, ${stressIndicators.backToBack} back-to-back`,
-      description: 'Consider taking breaks between calls',
-      color: 'yellow',
-      indicators: stressIndicators,
-    };
-  } else {
-    return {
-      level: 'heavy',
-      label: `${stressIndicators.totalMeetings} meetings, ${stressIndicators.backToBack} back-to-back${stressIndicators.highStakes > 0 ? ', includes high-stakes' : ''}`,
-      description: 'Heavy day - prioritize self-care',
-      color: 'orange',
-      indicators: stressIndicators,
+    return { 
+      level: 'moderate', 
+      label: `${indicators.totalMeetings} meetings${indicators.backToBack > 0 ? `, ${indicators.backToBack} back-to-back` : ''}`, 
+      description: 'Consider short breaks between meetings ⛅', 
+      color: 'yellow', 
+      indicators 
     };
   }
+  
+  return { 
+    level: 'heavy', 
+    label: `${indicators.totalMeetings} meetings, ${Math.round(indicators.totalHours)}h total`, 
+    description: 'Heavy day - prioritize micro-breaks 🌧️', 
+    color: 'orange', 
+    indicators 
+  };
 }
 
-// Complete a flow and update garden
 async function completeFlow(flowType, meetingId) {
   const { flowHistory, dailyFlowCount } = await chrome.storage.local.get(['flowHistory', 'dailyFlowCount']);
   
-  // Add to history
-  const newEntry = {
-    flowType,
-    meetingId,
-    completedAt: new Date().toISOString(),
+  const newCount = (dailyFlowCount || 0) + 1;
+  const flowEntry = { 
+    flowType, 
+    meetingId, 
+    completedAt: new Date().toISOString() 
   };
   
   await chrome.storage.local.set({
-    flowHistory: [...(flowHistory || []), newEntry],
-    dailyFlowCount: (dailyFlowCount || 0) + 1,
+    flowHistory: [...(flowHistory || []).slice(-50), flowEntry], // Keep last 50
+    dailyFlowCount: newCount,
   });
   
-  // Sync to backend if authenticated
+  // Sync with backend if authenticated
   if (authToken) {
     try {
       const response = await fetch(`${getApiBaseUrl()}/flows/complete`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${authToken}` 
         },
         body: JSON.stringify({ flowType, meetingId }),
       });
@@ -418,22 +445,21 @@ async function completeFlow(flowType, meetingId) {
       if (response.ok) {
         const result = await response.json();
         gardenState = result.gardenState;
-        return { success: true, gardenState };
+        return { success: true, gardenState, dailyFlowCount: newCount };
       }
     } catch (error) {
-      console.warn('Failed to sync flow completion:', error);
+      console.warn('Failed to sync flow to backend:', error);
     }
   }
   
-  return { success: true };
+  return { success: true, dailyFlowCount: newCount };
 }
 
-// Fetch garden state from backend
 async function fetchGardenState() {
   if (!authToken) return null;
   
   try {
-    const response = await fetch(`${getApiBaseUrl()}/garden/state`, {
+    const response = await fetch(`${getApiBaseUrl()}/garden`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
     
@@ -448,22 +474,19 @@ async function fetchGardenState() {
   return null;
 }
 
-// Get API base URL (dev vs prod)
 function getApiBaseUrl() {
-  // Check if we're in development mode
-  const isDev = !('update_url' in chrome.runtime.getManifest());
-  return isDev ? DEV_API_BASE_URL : API_BASE_URL;
+  // In development, use localhost
+  return API_BASE_URL;
 }
 
-// Restore auth on startup
+// Restore auth state on startup
 chrome.storage.local.get(['authToken', 'userProfile']).then(({ authToken: token, userProfile: profile }) => {
   if (token) {
     authToken = token;
     userProfile = profile;
     fetchGardenState();
-    console.log('🔐 Auth restored from storage');
+    fetchGoogleCalendarEvents();
   }
 });
 
-console.log('🌱 Mind Garden background service worker started');
-
+console.log('🌱 Mind Garden Chrome service worker started');
