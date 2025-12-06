@@ -13,11 +13,16 @@ import { logger } from '../utils/logger';
 
 const router = express.Router();
 
-// Plant types that can be grown
+// Plant types that can be grown (aligned with spec)
 type PlantType = 
   | 'sunflower' | 'moonflower' | 'lavender' | 'chamomile' | 'daisy'
   | 'rose' | 'lotus' | 'bamboo' | 'fern' | 'cherry-tree' | 'oak-sapling'
-  | 'golden-flower' | 'ivy' | 'succulent';
+  | 'golden-flower' | 'ivy' | 'succulent'
+  // New plants from spec
+  | 'evening-primrose'  // Post-Meeting Decompress
+  | 'morning-glory'     // Morning Intention Flow
+  | 'night-jasmine'     // Evening Wind-Down Flow
+  | 'mature-tree';      // Deep Meditation
 
 type GrowthStage = 'seed' | 'sprout' | 'growing' | 'blooming' | 'full';
 
@@ -48,20 +53,24 @@ interface GardenData {
   [key: string]: unknown; // Index signature for Prisma JSON compatibility
 }
 
-// Map flow types to plant types
+// Map flow types to plant types (aligned with Mind Garden spec)
 const FLOW_TO_PLANT: Record<string, PlantType> = {
-  'pre-meeting-focus': 'lavender',
-  'pre-presentation-power': 'sunflower',
-  'difficult-conversation-prep': 'fern',
-  'quick-reset': 'chamomile',
-  'post-meeting-decompress': 'daisy',
-  'end-of-day-transition': 'moonflower',
-  'morning-intention': 'sunflower',
-  'evening-wind-down': 'moonflower',
-  'weekend-wellness': 'lotus',
+  // Micro-flows (Calendar Plugin)
+  'pre-meeting-focus': 'daisy',              // Small daisy
+  'pre-presentation-power': 'sunflower',     // Bold sunflower
+  'difficult-conversation-prep': 'lavender', // Resilient lavender
+  'quick-reset': 'chamomile',                // Quick-blooming chamomile
+  'post-meeting-decompress': 'evening-primrose', // Calming evening primrose
+  'end-of-day-transition': 'moonflower',     // Twilight moonflower
+  // Extended flows (Web Dashboard)
+  'morning-intention': 'morning-glory',      // Morning glory vine
+  'evening-wind-down': 'night-jasmine',      // Serene night jasmine
+  'weekend-wellness': 'lotus',               // Contemplative lotus
+  'deep-meditation': 'mature-tree',          // Mature tree (grows slowly)
+  // Other flows
   'breathing': 'bamboo',
+  'body-scan': 'lotus',
   'gratitude': 'golden-flower',
-  'deep-meditation': 'oak-sapling',
 };
 
 // Calculate grid size based on progress

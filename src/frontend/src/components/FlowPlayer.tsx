@@ -2,12 +2,14 @@
  * Mind Garden - Flow Player Component
  * 
  * A beautiful, immersive flow player for guided micro-interventions.
- * Features animated breathing indicators, step progress, and Spotify integration.
+ * Features animated breathing indicators, step progress, Spotify integration,
+ * and garden growth rewards with cross-promotion prompts.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Pause, Play, SkipForward, Volume2, VolumeX, RotateCcw, Check, Music } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, Pause, Play, SkipForward, Volume2, VolumeX, RotateCcw, Music, Leaf, Sparkles } from 'lucide-react';
 
 // Types from shared (simplified for frontend)
 interface FlowStep {
@@ -26,12 +28,49 @@ interface MicroFlow {
   description: string;
   duration: number;
   bestFor: string[];
-  breathingPattern: 'box' | 'calming' | 'energizing' | 'cleansing';
+  breathingPattern: 'box' | 'calming' | 'energizing' | 'cleansing' | 'extended-exhale';
   spotifyMood: string;
+  gardenPlant?: string;
   steps: FlowStep[];
   benefits: string[];
   icon: string;
 }
+
+// Map flow types to plant names for display
+const FLOW_PLANT_NAMES: Record<string, string> = {
+  'pre-meeting-focus': 'a small daisy',
+  'pre-presentation-power': 'a bold sunflower',
+  'difficult-conversation-prep': 'resilient lavender',
+  'quick-reset': 'quick-blooming chamomile',
+  'post-meeting-decompress': 'calming evening primrose',
+  'end-of-day-transition': 'a twilight moonflower',
+  'morning-intention': 'a morning glory vine',
+  'evening-wind-down': 'serene night jasmine',
+  'weekend-wellness': 'a contemplative lotus',
+  'deep-meditation': 'your meditation tree',
+  'breathing': 'gentle bamboo',
+  'body-scan': 'a peaceful lotus',
+};
+
+// Get flow completion count from localStorage
+const getFlowCount = (): number => {
+  try {
+    return parseInt(localStorage.getItem('mindgarden_flow_count') || '0', 10);
+  } catch {
+    return 0;
+  }
+};
+
+// Increment flow count
+const incrementFlowCount = (): number => {
+  const newCount = getFlowCount() + 1;
+  try {
+    localStorage.setItem('mindgarden_flow_count', newCount.toString());
+  } catch {
+    // Ignore storage errors
+  }
+  return newCount;
+};
 
 interface FlowPlayerProps {
   flow: MicroFlow;
@@ -40,15 +79,17 @@ interface FlowPlayerProps {
   spotifyEnabled?: boolean;
 }
 
-// Breathing timing patterns
+// Breathing timing patterns (aligned with spec)
 const BREATHING_PATTERNS = {
   box: { inhale: 4, holdIn: 4, exhale: 4, holdOut: 4 },
-  calming: { inhale: 4, holdIn: 6, exhale: 4, holdOut: 8 },
+  calming: { inhale: 4, holdIn: 7, exhale: 8, holdOut: 0 },          // 4-7-8 breathing
+  'extended-exhale': { inhale: 4, holdIn: 6, exhale: 8, holdOut: 0 }, // Calms nervous system
   energizing: { inhale: 4, holdIn: 2, exhale: 4, holdOut: 2 },
   cleansing: { inhale: 4, holdIn: 0, exhale: 6, holdOut: 0 },
 };
 
 export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled = false }: FlowPlayerProps) {
+  const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [stepProgress, setStepProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -58,6 +99,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
   const [showCompletion, setShowCompletion] = useState(false);
   const [rating, setRating] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
+  const [flowCount, setFlowCount] = useState(0);
+  const [showCrossPromo, setShowCrossPromo] = useState(false);
 
   const startTimeRef = useRef<number>(Date.now());
   const stepStartTimeRef = useRef<number>(Date.now());
@@ -108,6 +151,13 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     } else {
       // Flow complete
       setIsPlaying(false);
+      
+      // Increment flow count and check if we should show cross-promotion
+      const newCount = incrementFlowCount();
+      setFlowCount(newCount);
+      // Show cross-promo every 3rd flow
+      setShowCrossPromo(newCount % 3 === 0);
+      
       setShowCompletion(true);
     }
   }, [currentStepIndex, totalSteps]);
@@ -255,6 +305,15 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     }
   };
 
+  // Get plant name for this flow
+  const plantName = FLOW_PLANT_NAMES[flow.id] || 'a new plant';
+
+  // Handle navigation to garden
+  const goToGarden = () => {
+    handleComplete();
+    navigate('/garden');
+  };
+
   if (showCompletion) {
     return (
       <motion.div
@@ -269,21 +328,89 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
           transition={{ delay: 0.2 }}
           className="w-full max-w-md text-center"
         >
-          {/* Success Animation */}
+          {/* Garden Growth Animation */}
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="w-24 h-24 mx-auto mb-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center"
+            className="relative w-32 h-32 mx-auto mb-6"
           >
-            <Check className="w-12 h-12 text-white" />
+            {/* Soil */}
+            <motion.div 
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-4 bg-amber-900/60 rounded-full"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+            />
+            {/* Plant growing animation */}
+            <motion.div
+              className="absolute bottom-4 left-1/2 -translate-x-1/2"
+              initial={{ scaleY: 0, originY: 1 }}
+              animate={{ scaleY: 1 }}
+              transition={{ delay: 0.5, duration: 0.6, ease: 'easeOut' }}
+            >
+              <Leaf className="w-16 h-16 text-emerald-400" />
+            </motion.div>
+            {/* Sparkles */}
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute"
+                style={{
+                  left: `${20 + Math.random() * 60}%`,
+                  top: `${10 + Math.random() * 40}%`,
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, 1, 0], opacity: [0, 1, 0] }}
+                transition={{ delay: 0.8 + i * 0.1, duration: 0.6 }}
+              >
+                <Sparkles className="w-4 h-4 text-yellow-300" />
+              </motion.div>
+            ))}
+            {/* Glow effect */}
+            <motion.div
+              className="absolute inset-0 rounded-full bg-emerald-400/20 blur-xl"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1.5 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+            />
           </motion.div>
 
-          <h2 className="text-3xl font-bold text-emerald-300 mb-2">Flow Complete!</h2>
-          <p className="text-emerald-100/70 mb-8">Your garden grew 🌱</p>
+          {/* Completion Message */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <h2 className="text-3xl font-bold text-emerald-300 mb-2">Flow Complete!</h2>
+            <p className="text-emerald-100/70 mb-2">Your garden grew 🌱</p>
+            <p className="text-emerald-400/80 text-sm mb-6">You planted {plantName}</p>
+          </motion.div>
+
+          {/* Cross-promotion prompt (shown every 3rd flow) */}
+          {showCrossPromo && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1 }}
+              className="mb-6 p-4 bg-emerald-900/30 border border-emerald-700/30 rounded-xl"
+            >
+              <p className="text-emerald-200 font-medium mb-1">
+                🎉 {flowCount} flows completed!
+              </p>
+              <p className="text-emerald-300/70 text-sm">
+                Your garden is growing beautifully. Check it out!
+              </p>
+            </motion.div>
+          )}
 
           {/* Rating */}
-          <div className="mb-6">
+          <motion.div 
+            className="mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.1 }}
+          >
             <p className="text-sm text-emerald-200/60 mb-3">How do you feel?</p>
             <div className="flex justify-center gap-3">
               {[1, 2, 3, 4, 5].map((value) => (
@@ -300,10 +427,15 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Optional Note */}
-          <div className="mb-8">
+          <motion.div 
+            className="mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+          >
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -311,24 +443,57 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
               className="w-full px-4 py-3 bg-emerald-900/20 border border-emerald-800/30 rounded-xl text-emerald-100 placeholder-emerald-500/50 focus:outline-none focus:border-emerald-500/50 resize-none"
               rows={2}
             />
-          </div>
+          </motion.div>
 
           {/* Actions */}
-          <div className="flex gap-4">
-            <button
-              onClick={restartFlow}
-              className="flex-1 px-6 py-3 bg-emerald-900/30 text-emerald-300 rounded-xl hover:bg-emerald-800/50 transition-colors flex items-center justify-center gap-2"
-            >
-              <RotateCcw className="w-5 h-5" />
-              Repeat
-            </button>
-            <button
-              onClick={handleComplete}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-400 hover:to-teal-400 transition-colors font-medium"
-            >
-              Done
-            </button>
-          </div>
+          <motion.div 
+            className="space-y-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.3 }}
+          >
+            {/* View Garden button - prominent when cross-promo is shown */}
+            {showCrossPromo && (
+              <button
+                onClick={goToGarden}
+                className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-400 hover:to-teal-400 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                <Leaf className="w-5 h-5" />
+                View My Garden
+              </button>
+            )}
+            
+            <div className="flex gap-3">
+              <button
+                onClick={restartFlow}
+                className="flex-1 px-6 py-3 bg-emerald-900/30 text-emerald-300 rounded-xl hover:bg-emerald-800/50 transition-colors flex items-center justify-center gap-2"
+              >
+                <RotateCcw className="w-5 h-5" />
+                Repeat
+              </button>
+              <button
+                onClick={handleComplete}
+                className={`flex-1 px-6 py-3 rounded-xl transition-colors font-medium ${
+                  showCrossPromo
+                    ? 'bg-emerald-900/30 text-emerald-300 hover:bg-emerald-800/50'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400'
+                }`}
+              >
+                {showCrossPromo ? 'Close' : 'Done'}
+              </button>
+            </div>
+            
+            {/* Subtle garden link when cross-promo not shown */}
+            {!showCrossPromo && (
+              <button
+                onClick={goToGarden}
+                className="w-full text-emerald-400/70 hover:text-emerald-300 text-sm transition-colors flex items-center justify-center gap-1"
+              >
+                <Leaf className="w-4 h-4" />
+                View my garden
+              </button>
+            )}
+          </motion.div>
         </motion.div>
       </motion.div>
     );

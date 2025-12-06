@@ -13,22 +13,27 @@ import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZoomIn, ZoomOut, RotateCcw, Droplet, Scissors, Eye } from 'lucide-react';
 
-// Plant Types
+// Plant Types (aligned with Mind Garden spec)
 export type PlantType = 
-  | 'sunflower'      // Morning flows
-  | 'moonflower'     // Evening flows  
-  | 'lavender'       // Micro-flows
-  | 'chamomile'      // Quick resets
-  | 'daisy'          // Standard flows
-  | 'rose'           // Unlockable
-  | 'lotus'          // Unlockable
-  | 'bamboo'         // Breathing practice
-  | 'fern'           // Reflection
-  | 'cherry-tree'    // Long meditation (grows over time)
-  | 'oak-sapling'    // Long meditation (grows over time)
-  | 'golden-flower'  // Gratitude journaling
-  | 'ivy'            // Streak connector
-  | 'succulent';     // Games/activities
+  | 'sunflower'        // Pre-Presentation Power (bold)
+  | 'moonflower'       // End-of-Day Transition (twilight)
+  | 'lavender'         // Difficult Conversation Prep (resilient)
+  | 'chamomile'        // Quick Reset (quick-blooming)
+  | 'daisy'            // Pre-Meeting Focus (small)
+  | 'rose'             // Unlockable
+  | 'lotus'            // Weekend Wellness (contemplative)
+  | 'bamboo'           // Breathing practice
+  | 'fern'             // Reflection
+  | 'cherry-tree'      // Long meditation (grows over time)
+  | 'oak-sapling'      // Long meditation (grows over time)
+  | 'golden-flower'    // Gratitude journaling
+  | 'ivy'              // Streak connector
+  | 'succulent'        // Games/activities
+  // New plants from spec
+  | 'evening-primrose' // Post-Meeting Decompress (calming)
+  | 'morning-glory'    // Morning Intention Flow (vine)
+  | 'night-jasmine'    // Evening Wind-Down (serene)
+  | 'mature-tree';     // Deep Meditation (grows slowly)
 
 // Growth stages
 export type GrowthStage = 'seed' | 'sprout' | 'growing' | 'blooming' | 'full';
@@ -434,6 +439,287 @@ const PlantSVG: Record<PlantType, (props: { stage: GrowthStage; size: number }) 
         ))}
         <circle cx="0" cy="0" r="5" fill="#22c55e" />
       </g>
+    </svg>
+  ),
+
+  // ============================================
+  // NEW PLANTS FROM SPEC
+  // ============================================
+
+  /**
+   * Evening Primrose - Post-Meeting Decompress
+   * Soft yellow petals that open in evening light
+   */
+  'evening-primrose': ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant mg-plant-sway">
+      {/* Stem */}
+      <path d="M50 100 Q48 75, 50 45" stroke="#16a34a" strokeWidth="2" fill="none" />
+      {/* Leaves */}
+      {stage !== 'seed' && (
+        <>
+          <path d="M50 80 Q35 75, 32 85 Q42 82, 50 80" fill="#22c55e" />
+          <path d="M50 65 Q65 60, 68 70 Q58 67, 50 65" fill="#22c55e" />
+        </>
+      )}
+      {/* Flower - soft yellow evening bloom */}
+      {(stage === 'blooming' || stage === 'full') && (
+        <g transform="translate(50, 38)">
+          {/* Outer petals - soft yellow */}
+          {[...Array(4)].map((_, i) => (
+            <ellipse
+              key={i}
+              cx="0"
+              cy="-15"
+              rx="10"
+              ry="18"
+              fill="#fef08a"
+              stroke="#fde047"
+              strokeWidth="0.5"
+              transform={`rotate(${i * 90})`}
+              className="mg-plant-bloom"
+            />
+          ))}
+          {/* Inner cup */}
+          <ellipse cx="0" cy="0" rx="6" ry="5" fill="#fbbf24" />
+          {/* Stamens */}
+          {[...Array(6)].map((_, i) => (
+            <line
+              key={i}
+              x1="0"
+              y1="0"
+              x2={Math.cos(i * 60 * Math.PI / 180) * 5}
+              y2={Math.sin(i * 60 * Math.PI / 180) * 5 - 3}
+              stroke="#f59e0b"
+              strokeWidth="1"
+            />
+          ))}
+        </g>
+      )}
+      {/* Bud */}
+      {stage === 'growing' && (
+        <ellipse cx="50" cy="40" rx="6" ry="10" fill="#fef9c3" stroke="#fde047" strokeWidth="0.5" />
+      )}
+      {/* Sprout */}
+      {stage === 'sprout' && (
+        <path d="M50 85 Q45 75, 50 65 Q55 75, 50 85" fill="#22c55e" />
+      )}
+    </svg>
+  ),
+
+  /**
+   * Morning Glory - Morning Intention Flow
+   * Trumpet-shaped purple/blue flowers on climbing vine
+   */
+  'morning-glory': ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant mg-plant-sway">
+      {/* Climbing vine */}
+      <path 
+        d="M30 100 Q25 80, 35 65 Q45 50, 40 35 Q35 20, 50 15" 
+        stroke="#16a34a" 
+        strokeWidth="2" 
+        fill="none" 
+      />
+      {/* Tendrils */}
+      {stage !== 'seed' && (
+        <>
+          <path d="M35 70 Q25 65, 20 70" stroke="#22c55e" strokeWidth="1" fill="none" />
+          <path d="M40 50 Q50 45, 55 50" stroke="#22c55e" strokeWidth="1" fill="none" />
+        </>
+      )}
+      {/* Heart-shaped leaves */}
+      {stage !== 'seed' && (
+        <>
+          <path d="M35 75 Q25 70, 25 80 Q30 85, 35 75" fill="#22c55e" />
+          <path d="M42 55 Q52 50, 55 60 Q48 62, 42 55" fill="#22c55e" />
+          <path d="M38 35 Q28 30, 30 40 Q35 42, 38 35" fill="#22c55e" />
+        </>
+      )}
+      {/* Trumpet flowers */}
+      {(stage === 'blooming' || stage === 'full') && (
+        <>
+          {/* Main flower */}
+          <g transform="translate(50, 18) rotate(-15)">
+            <ellipse cx="0" cy="0" rx="12" ry="10" fill="#8b5cf6" />
+            <ellipse cx="0" cy="2" rx="10" ry="8" fill="#a78bfa" />
+            <ellipse cx="0" cy="4" rx="6" ry="5" fill="#c4b5fd" />
+            <circle cx="0" cy="5" r="3" fill="#fef9c3" />
+            {/* Star pattern in center */}
+            {[...Array(5)].map((_, i) => (
+              <line
+                key={i}
+                x1="0"
+                y1="5"
+                x2={Math.cos((i * 72 - 90) * Math.PI / 180) * 4}
+                y2={5 + Math.sin((i * 72 - 90) * Math.PI / 180) * 4}
+                stroke="white"
+                strokeWidth="0.5"
+                opacity="0.6"
+              />
+            ))}
+          </g>
+          {/* Secondary flower */}
+          {stage === 'full' && (
+            <g transform="translate(28, 40) rotate(15)">
+              <ellipse cx="0" cy="0" rx="8" ry="7" fill="#7c3aed" />
+              <ellipse cx="0" cy="2" rx="6" ry="5" fill="#8b5cf6" />
+              <circle cx="0" cy="3" r="2" fill="#fef9c3" />
+            </g>
+          )}
+        </>
+      )}
+      {/* Bud */}
+      {stage === 'growing' && (
+        <g transform="translate(48, 20)">
+          <ellipse cx="0" cy="0" rx="5" ry="8" fill="#c4b5fd" />
+        </g>
+      )}
+    </svg>
+  ),
+
+  /**
+   * Night Jasmine - Evening Wind-Down Flow
+   * Small white star-shaped flowers, delicate and fragrant
+   */
+  'night-jasmine': ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant mg-plant-sway">
+      {/* Main stem */}
+      <path d="M50 100 Q50 75, 48 55 Q46 40, 50 25" stroke="#16a34a" strokeWidth="2" fill="none" />
+      {/* Side branches */}
+      {stage !== 'seed' && (
+        <>
+          <path d="M48 70 Q35 65, 30 55" stroke="#22c55e" strokeWidth="1.5" fill="none" />
+          <path d="M50 50 Q65 45, 70 35" stroke="#22c55e" strokeWidth="1.5" fill="none" />
+        </>
+      )}
+      {/* Small oval leaves */}
+      {stage !== 'seed' && (
+        <>
+          <ellipse cx="42" cy="80" rx="6" ry="4" fill="#22c55e" transform="rotate(-20 42 80)" />
+          <ellipse cx="56" cy="65" rx="6" ry="4" fill="#22c55e" transform="rotate(15 56 65)" />
+          <ellipse cx="44" cy="45" rx="5" ry="3" fill="#22c55e" transform="rotate(-10 44 45)" />
+        </>
+      )}
+      {/* Star-shaped white flowers */}
+      {(stage === 'blooming' || stage === 'full') && (
+        <>
+          {/* Flower cluster 1 */}
+          <g transform="translate(50, 22)">
+            {[...Array(5)].map((_, i) => (
+              <ellipse
+                key={i}
+                cx="0"
+                cy="-6"
+                rx="2"
+                ry="5"
+                fill="white"
+                transform={`rotate(${i * 72})`}
+                className="mg-plant-bloom"
+              />
+            ))}
+            <circle cx="0" cy="0" r="3" fill="#fef9c3" />
+          </g>
+          {/* Flower cluster 2 */}
+          <g transform="translate(30, 52)">
+            {[...Array(5)].map((_, i) => (
+              <ellipse
+                key={i}
+                cx="0"
+                cy="-5"
+                rx="1.5"
+                ry="4"
+                fill="white"
+                transform={`rotate(${i * 72})`}
+                className="mg-plant-bloom"
+              />
+            ))}
+            <circle cx="0" cy="0" r="2" fill="#fef9c3" />
+          </g>
+          {/* Flower cluster 3 */}
+          {stage === 'full' && (
+            <g transform="translate(70, 32)">
+              {[...Array(5)].map((_, i) => (
+                <ellipse
+                  key={i}
+                  cx="0"
+                  cy="-5"
+                  rx="1.5"
+                  ry="4"
+                  fill="white"
+                  transform={`rotate(${i * 72})`}
+                  className="mg-plant-bloom"
+                />
+              ))}
+              <circle cx="0" cy="0" r="2" fill="#fef9c3" />
+            </g>
+          )}
+          {/* Fragrance indicator - subtle glow */}
+          <circle cx="50" cy="22" r="15" fill="white" opacity="0.1" className="mg-fragrance" />
+        </>
+      )}
+      {/* Buds */}
+      {stage === 'growing' && (
+        <>
+          <ellipse cx="50" cy="25" rx="3" ry="5" fill="#f0fdf4" />
+          <ellipse cx="32" cy="55" rx="2" ry="4" fill="#f0fdf4" />
+        </>
+      )}
+    </svg>
+  ),
+
+  /**
+   * Mature Tree - Deep Meditation
+   * A full, majestic tree that grows slowly over multiple sessions
+   */
+  'mature-tree': ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant">
+      {/* Trunk */}
+      <path 
+        d="M45 100 L45 60 Q45 55, 40 50 M55 100 L55 60 Q55 55, 60 50 M50 65 L50 45" 
+        stroke="#78350f" 
+        strokeWidth="6" 
+        fill="none" 
+        strokeLinecap="round"
+      />
+      {/* Roots */}
+      <path d="M40 100 Q35 95, 25 98" stroke="#92400e" strokeWidth="3" fill="none" />
+      <path d="M60 100 Q65 95, 75 98" stroke="#92400e" strokeWidth="3" fill="none" />
+      {/* Crown layers based on growth */}
+      {stage === 'seed' && (
+        <ellipse cx="50" cy="90" rx="8" ry="5" fill="#92400e" />
+      )}
+      {stage === 'sprout' && (
+        <>
+          <rect x="48" y="70" width="4" height="30" fill="#78350f" />
+          <ellipse cx="50" cy="65" rx="10" ry="12" fill="#22c55e" />
+        </>
+      )}
+      {stage === 'growing' && (
+        <>
+          <ellipse cx="50" cy="40" rx="25" ry="20" fill="#22c55e" />
+          <ellipse cx="35" cy="45" rx="15" ry="12" fill="#16a34a" />
+          <ellipse cx="65" cy="45" rx="15" ry="12" fill="#16a34a" />
+        </>
+      )}
+      {(stage === 'blooming' || stage === 'full') && (
+        <g>
+          {/* Main crown */}
+          <ellipse cx="50" cy="35" rx="35" ry="28" fill="#22c55e" />
+          <ellipse cx="30" cy="40" rx="20" ry="18" fill="#16a34a" />
+          <ellipse cx="70" cy="40" rx="20" ry="18" fill="#16a34a" />
+          <ellipse cx="50" cy="25" rx="25" ry="20" fill="#15803d" />
+          {/* Highlight */}
+          <ellipse cx="45" cy="20" rx="12" ry="10" fill="#22c55e" opacity="0.5" />
+          {/* Birds (for full stage) */}
+          {stage === 'full' && (
+            <>
+              <path d="M25 30 Q28 27, 31 30 Q34 27, 37 30" stroke="#374151" strokeWidth="1" fill="none" />
+              <path d="M65 25 Q67 23, 69 25" stroke="#374151" strokeWidth="0.8" fill="none" />
+            </>
+          )}
+          {/* Subtle glow for meditation */}
+          <ellipse cx="50" cy="35" rx="40" ry="32" fill="white" opacity="0.05" />
+        </g>
+      )}
     </svg>
   ),
 };
