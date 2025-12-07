@@ -848,26 +848,24 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   const startAudio = useCallback(
     async (sourceLabel: string, overrideSoundType?: SoundType) => {
       // Prioritize overrideSoundType (from event), then eventSoundType (from state), then soundType prop
-      // But if soundType prop is 'none', only use overrideSoundType or eventSoundType
       const currentSoundType = overrideSoundType || eventSoundType || (soundType !== 'none' ? soundType : null);
-      console.log('🎵 startAudio called with:', { sourceLabel, currentSoundType, overrideSoundType, eventSoundType, soundType, enabled, needsInteraction });
+      console.log('🎵 startAudio called with:', { sourceLabel, currentSoundType, overrideSoundType, eventSoundType, soundType, enabled });
+      
       if (!enabled || !currentSoundType || currentSoundType === 'none') {
-        console.warn('⚠️ Cannot start audio:', { enabled, currentSoundType, overrideSoundType, eventSoundType, soundType });
-        stopAudio();
+        console.warn('⚠️ Cannot start audio:', { enabled, currentSoundType });
         return;
       }
 
-      // Try to unlock audio context if needed
-      if (needsInteraction) {
-        try {
-          const context = ensureAudioContext();
-          if (context && context.state === 'suspended') {
-            await context.resume();
-            console.log('✅ Audio context resumed');
-          }
-        } catch (unlockError) {
-          console.warn('⚠️ Could not unlock audio context:', unlockError);
+      // Always try to unlock audio context first
+      try {
+        const context = ensureAudioContext();
+        if (context && context.state === 'suspended') {
+          await context.resume();
+          console.log('✅ Audio context resumed');
+          setNeedsInteraction(false);
         }
+      } catch (unlockError) {
+        console.warn('⚠️ Could not unlock audio context:', unlockError);
       }
 
       try {
@@ -878,15 +876,14 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
           await startFallbackAudio(currentSoundType);
         } catch (fallbackError: any) {
           console.error('❌ Unable to start ambient sound', fallbackError);
-          // Only set needsInteraction if it's actually a user interaction error
-          if (fallbackError.message?.includes('play()') || fallbackError.message?.includes('interaction') || fallbackError.name === 'NotAllowedError') {
+          if (fallbackError.name === 'NotAllowedError') {
             setNeedsInteraction(true);
             console.log('ℹ️ Audio requires user interaction');
           }
         }
       }
     },
-    [enabled, eventSoundType, soundType, startWebAudio, startFallbackAudio, stopAudio, needsInteraction, ensureAudioContext]
+    [enabled, eventSoundType, soundType, startWebAudio, startFallbackAudio, ensureAudioContext]
   );
 
   const toggleMute = useCallback(() => {
@@ -931,14 +928,12 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       return;
     }
 
-    const playHandler = (e: Event) => {
+    const playHandler = async (e: Event) => {
       const customEvent = e as CustomEvent<{ source?: string; roomId?: string; soundType?: SoundType }>;
       const eventSoundTypeValue = customEvent.detail?.soundType;
       console.log('🎵 ambient-sound-play event received', { 
         eventSoundType: eventSoundTypeValue, 
-        currentSoundType: soundType,
-        currentEventSoundType: eventSoundType,
-        detail: customEvent.detail 
+        source: customEvent.detail?.source
       });
       
       if (!enabled) {
@@ -946,53 +941,36 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         return;
       }
       
-      // CRITICAL: Use event's soundType if provided, otherwise fall back to prop
-      // But if prop is 'none', only use event's soundType
       const soundToPlay = eventSoundTypeValue || (soundType !== 'none' ? soundType : null);
       
       if (!soundToPlay || soundToPlay === 'none') {
-        console.warn('⚠️ No valid soundType provided:', { eventSoundTypeValue, soundType, enabled });
+        console.warn('⚠️ No valid soundType provided');
         return;
       }
       
-      // Update event soundType state immediately
+      // Update event soundType state
       if (eventSoundTypeValue) {
         setEventSoundType(eventSoundTypeValue);
       }
       
-      // Gracefully fade out any currently playing audio first, then start new sound
-      stopAudio(true).then(() => {
-        // Longer delay to ensure fade out and cleanup fully completes
-        setTimeout(async () => {
-          console.log('🎵 Starting audio with soundType:', soundToPlay);
-          
-          // If audio needs user interaction, try to unlock it first
-          if (needsInteraction) {
-            console.log('🎵 Audio needs interaction, attempting to unlock...');
-            try {
-              const context = ensureAudioContext();
-              if (context) {
-                await unlockAudioContext(context);
-                setNeedsInteraction(false);
-              }
-            } catch (unlockError) {
-              console.warn('⚠️ Could not unlock audio context:', unlockError);
-            }
-          }
-          
-          // Pass the soundType directly to startAudio to ensure it's used
-          try {
-            await startAudio('event-dispatch', soundToPlay);
-          } catch (startError: any) {
-            console.error('❌ Failed to start audio:', startError);
-            // If it fails due to user interaction, set the flag so user can click to play
-            if (startError.message?.includes('interaction') || startError.message?.includes('play()')) {
-              setNeedsInteraction(true);
-              console.log('ℹ️ Audio requires user interaction - user can click play button to start');
-            }
-          }
-        }, 400); // Increased delay for smoother transition
-      });
+      // Stop any current audio immediately (no fade for faster response)
+      cleanupSource();
+      cleanupFallback();
+      setIsPlaying(false);
+      
+      // Small delay to ensure cleanup completes
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Start new audio
+      console.log('🎵 Starting audio with soundType:', soundToPlay);
+      try {
+        await startAudio('event-dispatch', soundToPlay);
+      } catch (startError: any) {
+        console.error('❌ Failed to start audio:', startError);
+        if (startError.name === 'NotAllowedError') {
+          setNeedsInteraction(true);
+        }
+      }
     };
 
     const stopHandler = (e: Event) => {

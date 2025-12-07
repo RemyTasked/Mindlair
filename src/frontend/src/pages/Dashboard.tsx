@@ -53,29 +53,12 @@ interface Stats {
   totalFocusSessions: number;
 }
 
-interface PresleyFlow {
-  available: boolean;
-  meetingCount?: number;
-  presleyFlowUrl?: string;
-  date?: string;
-  flowType?: 'morning' | 'evening';
-}
-
-interface WindingDown {
-  available: boolean;
-  windingDownUrl?: string;
-  reason?: string;
-  completed?: boolean;
-}
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [presleyFlow, setPresleyFlow] = useState<PresleyFlow | null>(null);
-  const [windingDown, setWindingDown] = useState<WindingDown | null>(null);
   const [loading, setLoading] = useState(true);
   const [eveningFlowTime, setEveningFlowTime] = useState<string>('18:00'); // Default 6 PM
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -125,13 +108,12 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Refresh data when navigating back to dashboard (e.g., after completing a flow)
+  // Refresh data when navigating back to dashboard
   useEffect(() => {
     // Only refresh if we have user data loaded and we're on the dashboard route
     if (location.pathname === '/dashboard' && user?.id && !loading) {
-      console.log('🔄 Dashboard focused - refreshing meetings and flows...');
+      console.log('🔄 Dashboard focused - refreshing meetings...');
       refreshMeetings();
-      refreshFlows();
     }
   }, [location.pathname, user?.id, loading]);
 
@@ -190,7 +172,7 @@ export default function Dashboard() {
       // Fetch meetings for next 2 days
       const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
 
-      // OPTIMIZED: Load user + meetings first, then flows in parallel
+      // Load user + meetings in parallel
       const [userResponse, meetingsResponse] = await Promise.all([
         api.get('/api/user/profile'),
         api.get('/api/meetings', {
@@ -201,26 +183,9 @@ export default function Dashboard() {
         }),
       ]);
 
-      // Now load flows in parallel using the userId from userResponse
-      const [presleyResponse, windingDownResponse] = await Promise.all([
-        api.get(`/api/presley-flow/check/${userResponse.data.user.id}`).catch(err => {
-          console.warn('⚠️ Presley Flow check failed (non-critical):', err.message);
-          return { data: { available: false } };
-        }),
-        api.get(`/api/winding-down/available/${userResponse.data.user.id}`).catch(err => {
-          console.warn('⚠️ Winding Down check failed (non-critical):', err.message);
-          return { data: { available: false } };
-        }),
-      ]);
-
-      const presleyData = presleyResponse.data;
-      const windingDownData = windingDownResponse.data;
-
       console.log('✅ Critical data loaded', {
         userEmail: userResponse.data.user?.email,
         meetingsCount: meetingsResponse.data.meetings?.length,
-        presleyFlowAvailable: presleyData.available,
-        windingDownAvailable: windingDownData.available,
       });
 
       // Detect and update user's timezone if it has changed
@@ -245,8 +210,6 @@ export default function Dashboard() {
       // Set critical data immediately (fast render)
       setUser(userResponse.data.user);
       setMeetings(meetingsResponse.data.meetings);
-      setPresleyFlow(presleyData);
-      setWindingDown(windingDownData);
       
       // Detect active meetings
       const activeMeeting = getActiveMeeting(meetingsResponse.data.meetings);
@@ -347,38 +310,6 @@ export default function Dashboard() {
       // Don't show error to user - this is a background operation
     }
   };
-
-  // Refresh Presley Flow and Winding Down status
-  const refreshFlows = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const [presleyResponse, windingDownResponse] = await Promise.all([
-        api.get(`/api/presley-flow/check/${user.id}`).catch(err => {
-          console.warn('⚠️ Presley Flow check failed (non-critical):', err.message);
-          return { data: { available: false } };
-        }),
-        api.get(`/api/winding-down/available/${user.id}`).catch(err => {
-          console.warn('⚠️ Winding Down check failed (non-critical):', err.message);
-          return { data: { available: false } };
-        }),
-      ]);
-
-      const presleyData = presleyResponse.data;
-      const windingDownData = windingDownResponse.data;
-
-      setPresleyFlow(presleyData);
-      setWindingDown(windingDownData);
-      
-      console.log('✅ Flows refreshed', {
-        presleyFlowAvailable: presleyData.available,
-        windingDownAvailable: windingDownData.available,
-      });
-    } catch (error: any) {
-      console.warn('⚠️ Flow refresh failed:', error.message);
-    }
-  };
-
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -558,72 +489,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Focus Rooms - Now available as separate tab in navigation */}
-
-        {/* Presley Flow Card - Compact on Mobile */}
-        {presleyFlow?.available && (
-          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-teal-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="text-2xl sm:text-4xl">🌙</div>
-              <div className="flex-1">
-                <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
-                  Rehearsal Flow
-                </h3>
-                <p className="text-xs sm:text-sm text-teal-600 font-medium">
-                  {presleyFlow.meetingCount} meeting{presleyFlow.meetingCount !== 1 ? 's' : ''} tomorrow
-                </p>
-              </div>
-            </div>
-            <a
-              href={presleyFlow.presleyFlowUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                localStorage.setItem('meetcute_autoplay_sound', 'true');
-                window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-                  detail: { source: 'dashboard', flow: 'presley-flow' }
-                }));
-              }}
-              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
-            >
-              🎬 Start Flow
-            </a>
-          </div>
-        )}
-
-        {/* Winding Down Card */}
-        {windingDown?.available && !windingDown?.completed && (
-          <div className="bg-gradient-to-br from-slate-50 to-sky-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-slate-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="text-2xl sm:text-4xl">🌙</div>
-              <div className="flex-1">
-                <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
-                  Winding Down
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                  Time to relax and prepare for rest
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                localStorage.setItem('meetcute_autoplay_sound', 'true');
-                window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-                  detail: { source: 'dashboard', flow: 'winding-down' }
-                }));
-                // Navigate in same tab to avoid glitches
-                if (windingDown.windingDownUrl) {
-                  const path = windingDown.windingDownUrl.replace(window.location.origin, '');
-                  navigate(path);
-                }
-              }}
-              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-slate-600 to-sky-600 text-white rounded-lg font-semibold hover:from-slate-700 hover:to-sky-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
-            >
-              🌙 Start Winding Down
-            </button>
-          </div>
-        )}
-
         {/* Ongoing Meetings */}
         {activeMeetings.length > 0 && (
           <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border-2 border-red-200 mb-6">
@@ -733,10 +598,10 @@ export default function Dashboard() {
                     <div className="p-6 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-lg border-2 border-teal-200 text-center">
                       <div className="text-4xl mb-3">🌙</div>
                       <p className="text-gray-700 font-medium mb-2">
-                        Tomorrow's meetings are hidden until evening flow
+                        Tomorrow's meetings are hidden until evening
                       </p>
                       <p className="text-sm text-gray-600">
-                        Focus on today! Tomorrow's schedule unlocks at {formatEveningTime(eveningFlowTime)} for your rehearsal flow.
+                        Focus on today! Tomorrow's schedule unlocks at {formatEveningTime(eveningFlowTime)}.
                       </p>
                     </div>
                   ) : (

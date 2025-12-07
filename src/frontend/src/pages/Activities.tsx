@@ -126,7 +126,7 @@ const ACTIVITIES: Activity[] = [
     serenityPoints: '+3 per sort',
     available: true,
   },
-  // Creative (Coming Soon)
+  // Creative Activities
   {
     id: 'mandala-garden',
     name: 'Mandala Garden',
@@ -136,20 +136,20 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-rose-500/20 to-pink-500/20',
     category: 'creative',
     duration: '10-20 min',
-    available: false,
-    comingSoon: true,
+    serenityPoints: '+3 per section',
+    available: true,
   },
   {
     id: 'sound-bowls',
-    name: 'Sound Bowl Garden',
-    description: 'Interactive singing bowls and chimes. Create layered soundscapes for deep calm.',
+    name: 'Sound Bowl Sanctuary',
+    description: 'Interactive singing bowls. Create layered soundscapes for deep calm and meditation.',
     icon: '🔔',
-    color: 'text-teal-400',
-    gradient: 'from-teal-500/20 to-cyan-500/20',
+    color: 'text-purple-400',
+    gradient: 'from-purple-500/20 to-pink-500/20',
     category: 'creative',
     duration: '5-15 min',
-    available: false,
-    comingSoon: true,
+    serenityPoints: '+2 per strike',
+    available: true,
   },
 ];
 
@@ -192,6 +192,12 @@ export default function Activities() {
         break;
       case 'thought-sorter':
         navigate('/games', { state: { openGame: 'thought-sorter' } });
+        break;
+      case 'mandala-garden':
+        navigate('/games', { state: { openGame: 'mandala' } });
+        break;
+      case 'sound-bowls':
+        navigate('/games', { state: { openGame: 'sound-bowl' } });
         break;
       default:
         break;

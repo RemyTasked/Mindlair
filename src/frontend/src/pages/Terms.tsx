@@ -41,16 +41,15 @@ export default function Terms() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">2. Description of Service</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Meet Cute is an AI-enhanced meeting preparation platform that provides:
+                Mind Garden is a mental wellness platform that provides:
               </p>
               <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-                <li>Evening mental rehearsal sessions (Presley Flow)</li>
-                <li>Morning confidence messages</li>
-                <li>Pre-meeting focus cues</li>
-                <li>Guided meditation and breathing exercises</li>
-                <li>Post-meeting reflection and ratings</li>
+                <li>Guided micro-flows for focus and calm</li>
+                <li>Interactive serenity games and activities</li>
+                <li>Focus rooms with ambient soundscapes</li>
+                <li>Gratitude journaling and mindfulness tools</li>
                 <li>Calendar integration with Google Calendar and Microsoft Outlook</li>
-                <li>Email and SMS notification delivery</li>
+                <li>Browser extension for contextual micro-interventions</li>
               </ul>
             </section>
 

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward, Settings as SettingsIcon } from 'lucide-react';
-import Logo from '../components/Logo';
+import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward } from 'lucide-react';
+import DashboardLayout from '../components/Garden/DashboardLayout';
 import AmbientSound from '../components/AmbientSound';
 import SceneLibrary from '../components/SceneLibrary';
 import api from '../lib/axios';
@@ -26,8 +26,8 @@ const FOCUS_ROOMS: FocusRoom[] = [
     icon: <Headphones className="w-8 h-8" />,
     gradient: 'from-sky-600 to-cyan-600',
     bgGradient: 'from-sky-50 to-cyan-50',
-    spotifyPlaylistId: 'deep-focus-lofi', // Will be replaced with actual playlist ID
-    meetCuteSoundType: 'lofi-deep-focus', // Custom lo-fi for deep focus
+    spotifyPlaylistId: 'deep-focus-lofi',
+    meetCuteSoundType: 'lofi-deep-focus',
   },
   {
     id: 'soft-composure',
@@ -37,7 +37,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-teal-600 to-cyan-600',
     bgGradient: 'from-teal-50 to-cyan-50',
     spotifyPlaylistId: 'soft-composure-lofi',
-    meetCuteSoundType: 'lofi-soft-composure', // Custom lo-fi for composure
+    meetCuteSoundType: 'lofi-soft-composure',
   },
   {
     id: 'warm-connection',
@@ -47,7 +47,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-pink-600 to-rose-600',
     bgGradient: 'from-pink-50 to-rose-50',
     spotifyPlaylistId: 'warm-connection-lofi',
-    meetCuteSoundType: 'lofi-warm-connection', // Custom lo-fi for connection
+    meetCuteSoundType: 'lofi-warm-connection',
   },
   {
     id: 'pitch-pulse',
@@ -57,7 +57,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-yellow-600 to-orange-600',
     bgGradient: 'from-yellow-50 to-orange-50',
     spotifyPlaylistId: 'pitch-pulse-lofi',
-    meetCuteSoundType: 'lofi-pitch-pulse', // Custom lo-fi for confidence
+    meetCuteSoundType: 'lofi-pitch-pulse',
   },
   {
     id: 'recovery-lounge',
@@ -67,7 +67,7 @@ const FOCUS_ROOMS: FocusRoom[] = [
     gradient: 'from-slate-600 to-slate-700',
     bgGradient: 'from-slate-50 to-gray-50',
     spotifyPlaylistId: 'recovery-lounge-lofi',
-    meetCuteSoundType: 'lofi-recovery-lounge', // Custom lo-fi for recovery
+    meetCuteSoundType: 'lofi-recovery-lounge',
   },
 ];
 
@@ -101,9 +101,6 @@ export default function FocusRooms() {
         setHasSpotify(spotifyResponse.data.connected || false);
         setHasAppleMusic(appleMusicResponse.data.connected || false);
         setTotalCredits(statsResponse.data.totalCredits || 0);
-        
-        // Set default audio provider - default to Meet-Cute even if Spotify/Apple Music connected
-        // User can toggle to Spotify/Apple Music if they want
         setAudioProvider('meetcute');
       } catch (error) {
         console.error('Error loading data:', error);
@@ -111,7 +108,6 @@ export default function FocusRooms() {
     };
     loadData();
 
-    // Check if returning from OAuth
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('spotify_connected') === 'true' || urlParams.get('apple_music_connected') === 'true') {
       loadData();
@@ -123,7 +119,6 @@ export default function FocusRooms() {
   useEffect(() => {
     if (timeRemaining === null || !isPlaying) return;
     
-    // Don't start countdown if timeRemaining is already 0 or negative
     if (timeRemaining <= 0) {
       handleTimerEnd();
       return;
@@ -133,7 +128,6 @@ export default function FocusRooms() {
       setTimeRemaining((prev) => {
         if (prev === null) return null;
         if (prev <= 1) {
-          // Will trigger handleTimerEnd on next render
           return 0;
         }
         return prev - 1;
@@ -143,7 +137,6 @@ export default function FocusRooms() {
     return () => clearInterval(interval);
   }, [timeRemaining, isPlaying]);
   
-  // Separate effect to handle timer end
   useEffect(() => {
     if (timeRemaining === 0 && isPlaying) {
       handleTimerEnd();
@@ -153,17 +146,15 @@ export default function FocusRooms() {
   const handleTimerEnd = async () => {
     setIsPlaying(false);
     
-    // Fade out audio gradually, then stop
     if (hasSpotify) {
       try {
-        // Fade out Spotify volume over 3 seconds
         const fadeSteps = 10;
         const fadeInterval = 3000 / fadeSteps;
         let currentVolume = volume * 100;
         
         for (let i = 0; i < fadeSteps; i++) {
           await new Promise(resolve => setTimeout(resolve, fadeInterval));
-          currentVolume = currentVolume * 0.9; // Reduce by 10% each step
+          currentVolume = currentVolume * 0.9;
           try {
             await api.post('/api/spotify/volume', {
               volumePercent: Math.max(0, Math.round(currentVolume)),
@@ -173,11 +164,9 @@ export default function FocusRooms() {
           }
         }
         
-        // Pause after fade
         await api.post('/api/spotify/pause');
       } catch (error) {
         console.error('Error fading out Spotify:', error);
-        // Try to pause anyway
         try {
           await api.post('/api/spotify/pause');
         } catch (pauseError) {
@@ -185,13 +174,11 @@ export default function FocusRooms() {
         }
       }
     } else {
-      // Fade out Meet-Cute audio
       window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
         detail: { source: 'focus-rooms', fadeOut: true }
       }));
     }
     
-    // Complete session
     if (currentSessionId && sessionStartTime) {
       const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
       try {
@@ -213,13 +200,11 @@ export default function FocusRooms() {
   };
 
   const handleRoomSelect = async (room: FocusRoom) => {
-    // ALWAYS stop ALL audio first (from any source or tab) - CRITICAL
-    console.log('🛑 handleRoomSelect - Stopping ALL audio first');
+    // Stop all audio first
     window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-      detail: { source: 'focus-rooms-select', fadeOut: false } // Immediate stop, no fade
+      detail: { source: 'focus-rooms-select', fadeOut: false }
     }));
     
-    // Stop Spotify/Apple Music if active
     if (audioProvider === 'spotify') {
       try {
         await api.post('/api/spotify/pause').catch(() => {});
@@ -237,14 +222,13 @@ export default function FocusRooms() {
     }
     
     if (activeRoom === room.id) {
-      // Toggle off - pause and complete current session
       if (currentSessionId && sessionStartTime) {
         const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
         try {
           const response = await api.post('/api/focus-rooms/sessions/complete', {
             sessionId: currentSessionId,
             duration,
-            completed: false, // User manually stopped
+            completed: false,
           });
           setTotalCredits(response.data.totalCredits);
         } catch (error) {
@@ -257,9 +241,8 @@ export default function FocusRooms() {
       setTimeRemaining(null);
       setCurrentSessionId(null);
       setSessionStartTime(null);
-      return; // Exit - don't start new session
+      return;
     } else {
-      // Start new session
       try {
         const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
           roomId: room.id,
@@ -274,19 +257,14 @@ export default function FocusRooms() {
         console.error('Error starting session:', error);
       }
       
-      // Select new room (but DON'T auto-play - user must click play button)
       setActiveRoom(room.id);
-      setIsPlaying(false); // Don't auto-play - require explicit play button click
+      setIsPlaying(false);
       
-      // Set timer
       if (timer === '∞') {
         setTimeRemaining(null);
       } else {
         setTimeRemaining(timer * 60);
       }
-
-      // Start session tracking (but don't start audio yet)
-      // Audio will start when user clicks play button
     }
   };
 
@@ -294,41 +272,19 @@ export default function FocusRooms() {
     if (room.meetCuteSoundType) {
       console.log('🎵 Starting Meet-Cute audio for room:', { roomId: room.id, soundType: room.meetCuteSoundType });
       
-      // Stop ALL audio sources first (including from other tabs)
-      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-        detail: { source: 'focus-rooms-meetcute-start', fadeOut: true }
-      }));
-      
-      // Stop Spotify/Apple Music if active
-      if (audioProvider === 'spotify') {
-        api.post('/api/spotify/pause').catch(() => {});
-      } else if (audioProvider === 'apple-music') {
-        if (typeof window !== 'undefined' && (window as any).MusicKit) {
-          (window as any).MusicKit.getInstance().stop().catch(() => {});
+      localStorage.setItem('meetcute_autoplay_sound', 'true');
+      window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+        detail: { 
+          source: 'focus-rooms-meetcute', 
+          soundType: room.meetCuteSoundType
         }
-      }
-      
-      // Wait for fade out to complete, then start Meet-Cute audio
-      setTimeout(() => {
-        console.log('🎵 Dispatching ambient-sound-play event with soundType:', room.meetCuteSoundType);
-        localStorage.setItem('meetcute_autoplay_sound', 'true');
-        window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-          detail: { 
-            source: 'focus-rooms-meetcute', 
-            soundType: room.meetCuteSoundType
-          }
-        }));
-        console.log('✅ Dispatched ambient-sound-play event:', { soundType: room.meetCuteSoundType });
-      }, 600); // Wait for fade out to complete
-    } else {
-      console.warn('⚠️ No meetCuteSoundType for room:', room.id);
+      }));
     }
   };
 
 
   const handleConnectSpotify = async () => {
     try {
-      // Check if user is authenticated first
       const token = localStorage.getItem('meetcute_token');
       if (!token) {
         alert('Please log in first to connect Spotify.');
@@ -337,16 +293,13 @@ export default function FocusRooms() {
       }
 
       const response = await api.get('/api/auth/spotify/url');
-      // Open in same window to avoid popup blockers and ensure proper redirect
       window.location.href = response.data.authUrl;
     } catch (error: any) {
       console.error('Error connecting Spotify:', error);
       
-      // Handle 401 specifically
       if (error.response?.status === 401) {
         const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Authentication required';
         alert(`Authentication error: ${errorMessage}\n\nPlease log in again.`);
-        // Clear token and redirect to login
         localStorage.removeItem('meetcute_token');
         localStorage.removeItem('meetcute_profile_cache');
         navigate('/');
@@ -357,15 +310,12 @@ export default function FocusRooms() {
   };
 
   const handleConnectAppleMusic = async () => {
-    // Apple Music uses MusicKit JS on the frontend
-    // Check if MusicKit is available
     if (typeof window !== 'undefined' && (window as any).MusicKit) {
       try {
         const musicKit = (window as any).MusicKit.getInstance();
         const userToken = await musicKit.authorize();
         const userInfo = await musicKit.api.music('/v1/me');
         
-        // Send token to backend
         await api.post('/api/auth/apple-music/connect', {
           userToken,
           appleMusicId: userInfo.data[0].id,
@@ -389,897 +339,522 @@ export default function FocusRooms() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const selectedRoom = FOCUS_ROOMS.find(r => r.id === activeRoom);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            {/* Logo and Navigation Section */}
-            <div className="flex items-center gap-6">
-              <Logo size="md" />
-              <nav className="hidden sm:flex items-center gap-1">
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    window.location.pathname === '/dashboard'
-                      ? 'bg-teal-50 text-teal-700'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => navigate('/focus-rooms')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
-                    window.location.pathname === '/focus-rooms'
-                      ? 'bg-teal-50 text-teal-700'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Headphones className="w-4 h-4" />
-                  Focus Rooms
-                </button>
-                <button
-                  onClick={() => navigate('/games')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
-                    window.location.pathname === '/games'
-                      ? 'bg-teal-50 text-teal-700'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Games
-                </button>
-              </nav>
-            </div>
-            
-            {/* Settings and Sign Out */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate('/settings')}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Settings"
-              >
-                <SettingsIcon className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.removeItem('meetcute_token');
-                  localStorage.removeItem('meetcute_profile_cache');
-                  localStorage.removeItem('meetcute_session_active');
-                  navigate('/');
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-          
-          {/* Mobile Navigation */}
-          <nav className="sm:hidden flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                window.location.pathname === '/dashboard'
-                  ? 'bg-teal-50 text-teal-700'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => navigate('/focus-rooms')}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                window.location.pathname === '/focus-rooms'
-                  ? 'bg-teal-50 text-teal-700'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Headphones className="w-4 h-4" />
-              Focus Rooms
-            </button>
-            <button
-              onClick={() => navigate('/games')}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                window.location.pathname === '/games'
-                  ? 'bg-teal-50 text-teal-700'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              Games
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <DashboardLayout activeSection="spotify">
+      <div className="p-4 md:p-8 pb-32 max-w-6xl mx-auto">
         {/* Header Section */}
-        <div className="text-center mb-8 sm:mb-12">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent"
-          >
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-[var(--mg-text-primary)] mb-2">
             Focus Rooms
-          </motion.h1>
-          {totalCredits > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="inline-block px-4 py-2 bg-teal-100 text-teal-800 rounded-full text-sm font-semibold"
-            >
-              🎯 {totalCredits} Credits Earned
-            </motion.div>
-          )}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto"
-          >
+          </h1>
+          <p className="text-[var(--mg-text-secondary)]">
             Audio is the "stage lighting" for performance. Calm + clarity become a ritual, not a struggle.
-          </motion.p>
+          </p>
+          {totalCredits > 0 && (
+            <div className="inline-block mt-2 px-3 py-1 bg-[var(--mg-accent)]/20 text-[var(--mg-accent-light)] rounded-full text-sm font-semibold">
+              🎯 {totalCredits} Credits Earned
+            </div>
+          )}
         </div>
 
         {/* Music Service Connection Status */}
         {(hasSpotify || hasAppleMusic) && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-8 bg-gradient-to-r from-teal-50 to-green-50 rounded-xl shadow-lg p-6 sm:p-8 border-2 border-teal-200"
-          >
-            <div className="text-center">
-              <Music className="w-12 h-12 text-teal-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Music Services Connected</h3>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                {hasSpotify && (
-                  <div className="flex items-center gap-3 px-4 py-2 bg-green-100 rounded-lg">
-                    <span className="text-green-800 font-semibold">Spotify Connected</span>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await api.post('/api/spotify/disconnect');
-                          setHasSpotify(false);
-                          if (audioProvider === 'spotify') {
-                            setAudioProvider('meetcute');
-                            if (isPlaying) {
-                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                detail: { source: 'focus-rooms' }
-                              }));
-                              setIsPlaying(false);
-                            }
+          <div className="mb-6 mg-card p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <Music className="w-5 h-5 text-[var(--mg-accent)]" />
+              <span className="text-[var(--mg-text-primary)] font-medium">Music Services:</span>
+              {hasSpotify && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 rounded-lg">
+                  <span className="text-green-400 text-sm font-medium">Spotify Connected</span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.post('/api/spotify/disconnect');
+                        setHasSpotify(false);
+                        if (audioProvider === 'spotify') {
+                          setAudioProvider('meetcute');
+                          if (isPlaying) {
+                            window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                              detail: { source: 'focus-rooms' }
+                            }));
+                            setIsPlaying(false);
                           }
-                          alert('Spotify disconnected successfully');
-                        } catch (error: any) {
-                          console.error('Error disconnecting Spotify:', error);
-                          alert('Failed to disconnect Spotify. Please try again.');
                         }
-                      }}
-                      className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
-                    >
-                      Disconnect
-                    </button>
-                  </div>
-                )}
-                {hasAppleMusic && (
-                  <div className="flex items-center gap-3 px-4 py-2 bg-pink-100 rounded-lg">
-                    <span className="text-pink-800 font-semibold">Apple Music Connected</span>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await api.post('/api/apple-music/disconnect');
-                          setHasAppleMusic(false);
-                          if (audioProvider === 'apple-music') {
-                            setAudioProvider('meetcute');
-                            if (isPlaying) {
-                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                detail: { source: 'focus-rooms' }
-                              }));
-                              setIsPlaying(false);
-                            }
+                      } catch (error: any) {
+                        console.error('Error disconnecting Spotify:', error);
+                      }
+                    }}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
+              {hasAppleMusic && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-pink-500/20 rounded-lg">
+                  <span className="text-pink-400 text-sm font-medium">Apple Music Connected</span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.post('/api/apple-music/disconnect');
+                        setHasAppleMusic(false);
+                        if (audioProvider === 'apple-music') {
+                          setAudioProvider('meetcute');
+                          if (isPlaying) {
+                            window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                              detail: { source: 'focus-rooms' }
+                            }));
+                            setIsPlaying(false);
                           }
-                          alert('Apple Music disconnected successfully');
-                        } catch (error: any) {
-                          console.error('Error disconnecting Apple Music:', error);
-                          alert('Failed to disconnect Apple Music. Please try again.');
                         }
-                      }}
-                      className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
-                    >
-                      Disconnect
-                    </button>
-                  </div>
-                )}
-              </div>
+                      } catch (error: any) {
+                        console.error('Error disconnecting Apple Music:', error);
+                      }
+                    }}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* Music Service Connection Prompt - Optional enhancement */}
+        {/* Music Service Connection Prompt */}
         {!hasSpotify && !hasAppleMusic && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-8 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl shadow-lg p-6 sm:p-8 border-2 border-green-200"
-          >
+          <div className="mb-6 mg-card p-5">
             <div className="text-center">
-              <Music className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Enhance with Music</h3>
-              <p className="text-gray-700 mb-4 max-w-md mx-auto">
+              <Music className="w-10 h-10 text-[var(--mg-accent)] mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-[var(--mg-text-primary)] mb-2">Enhance with Music</h3>
+              <p className="text-[var(--mg-text-muted)] mb-4 text-sm max-w-md mx-auto">
                 Connect Spotify or Apple Music for curated playlists. Rooms work great with our built-in soundscapes too!
               </p>
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm text-amber-800">
-                  <span className="font-semibold">⚠️ Spotify Premium Required:</span> Spotify playback requires a Premium subscription. Meet-Cute audio works for everyone!
+              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                <p className="text-sm text-amber-400">
+                  <span className="font-semibold">⚠️ Spotify Premium Required:</span> Spotify playback requires a Premium subscription.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={handleConnectSpotify}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all flex items-center gap-2 justify-center"
                 >
-                  <Music className="w-5 h-5" />
+                  <Music className="w-4 h-4" />
                   Connect Spotify
                 </button>
                 <button
                   onClick={handleConnectAppleMusic}
-                  className="px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  className="px-5 py-2.5 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-all flex items-center gap-2 justify-center"
                 >
-                  <Music className="w-5 h-5" />
+                  <Music className="w-4 h-4" />
                   Connect Apple Music
                 </button>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* Horizontal Tabs Navigation */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <div className="bg-white rounded-xl shadow-lg border-2 border-teal-200 overflow-hidden">
-            {/* Tab Buttons */}
-            <div className="flex border-b border-gray-200">
-              <button
-                onClick={() => {
-                  // Stop ALL audio from any tab when switching
-                  window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                    detail: { source: 'focus-rooms-tab-switch', fadeOut: true }
-                  }));
-                  
-                  if (activeRoom) {
-                    if (audioProvider === 'spotify') {
-                      api.post('/api/spotify/pause').catch(() => {});
-                    } else if (audioProvider === 'apple-music') {
-                      if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                        (window as any).MusicKit.getInstance().stop().catch(() => {});
-                      }
+        {/* Tabs */}
+        <div className="mg-card overflow-hidden mb-6">
+          <div className="flex border-b border-[var(--mg-border)]">
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                  detail: { source: 'focus-rooms-tab-switch', fadeOut: true }
+                }));
+                
+                if (activeRoom) {
+                  if (audioProvider === 'spotify') {
+                    api.post('/api/spotify/pause').catch(() => {});
+                  } else if (audioProvider === 'apple-music') {
+                    if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                      (window as any).MusicKit.getInstance().stop().catch(() => {});
                     }
-                    setActiveRoom(null);
-                    setIsPlaying(false);
                   }
-                  
-                  setActiveTab('focus-rooms');
-                }}
-                className={`flex-1 px-6 py-4 text-center font-semibold transition-all ${
-                  activeTab === 'focus-rooms'
-                    ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white border-b-2 border-sky-600'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Headphones className="w-5 h-5" />
-                  <span>Focus Rooms</span>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  // Stop ALL audio from any tab when switching
-                  window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                    detail: { source: 'ambient-library-tab-switch', fadeOut: true }
-                  }));
-                  
-                  if (activeRoom) {
-                    if (audioProvider === 'spotify') {
-                      api.post('/api/spotify/pause').catch(() => {});
-                    } else if (audioProvider === 'apple-music') {
-                      if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                        (window as any).MusicKit.getInstance().stop().catch(() => {});
-                      }
-                    }
-                    setActiveRoom(null);
-                    setIsPlaying(false);
-                  }
-                  
-                  setActiveTab('ambient-library');
-                }}
-                className={`flex-1 px-6 py-4 text-center font-semibold transition-all ${
-                  activeTab === 'ambient-library'
-                    ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white border-b-2 border-teal-600'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  <span>Ambient Library</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Tab Content */}
-            <div className="p-6 bg-gray-50 min-h-[400px]">
-              <AnimatePresence mode="wait">
-                {activeTab === 'focus-rooms' && (
-                  <motion.div
-                    key="focus-rooms"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {FOCUS_ROOMS.map((room, index) => (
-            <motion.div
-              key={room.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * index }}
-              onClick={() => handleRoomSelect(room)}
-              className={`
-                relative bg-gradient-to-br ${room.bgGradient} rounded-xl sm:rounded-2xl shadow-lg p-6 cursor-pointer
-                transition-all hover:shadow-xl hover:scale-105
-                ${activeRoom === room.id ? 'ring-4 ring-teal-400 ring-offset-2' : ''}
-              `}
+                  setActiveRoom(null);
+                  setIsPlaying(false);
+                }
+                
+                setActiveTab('focus-rooms');
+              }}
+              className={`flex-1 px-4 py-3 text-center font-medium transition-all flex items-center justify-center gap-2 ${
+                activeTab === 'focus-rooms'
+                  ? 'bg-[var(--mg-accent)] text-white'
+                  : 'text-[var(--mg-text-muted)] hover:bg-[var(--mg-bg-primary)]'
+              }`}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`text-${room.gradient.split(' ')[0].split('-')[1]}-600`}>
-                  {room.icon}
-                </div>
-                {activeRoom === room.id && isPlaying && (
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                )}
-                {audioProvider === 'meetcute' && (
-                  <div className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
-                    Meet-Cute Audio
-                  </div>
-                )}
-                {audioProvider === 'spotify' && (
-                  <div className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                    Spotify
-                  </div>
-                )}
-                {audioProvider === 'apple-music' && (
-                  <div className="px-2 py-1 bg-pink-100 text-pink-800 text-xs font-semibold rounded-full">
-                    Apple Music
-                  </div>
-                )}
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                {room.name}
-              </h3>
-              <p className="text-gray-700 text-sm sm:text-base mb-4">
-                {room.description}
-              </p>
-              
-              {/* Audio Provider Toggle - Show when room is active and Spotify/Apple Music connected */}
-              {activeRoom === room.id && (hasSpotify || hasAppleMusic) && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-4 pt-4 border-t border-gray-300"
-                >
-                  <div className="mb-4">
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Audio Source</label>
-                    <div className="flex gap-2 flex-wrap">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (audioProvider !== 'meetcute') {
-                            // Stop current audio
-                            if (audioProvider === 'spotify') {
-                              api.post('/api/spotify/pause').catch(() => {});
-                            } else if (audioProvider === 'apple-music') {
-                              if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                                (window as any).MusicKit.getInstance().stop().catch(() => {});
-                              }
-                            }
-                            setAudioProvider('meetcute');
-                            // Start Meet-Cute audio
-                            if (isPlaying) {
-                              console.log('🎵 Switching to Meet-Cute audio for room:', room.id);
-                              startMeetCuteAudio(room);
-                            }
-                          }
-                        }}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                          audioProvider === 'meetcute'
-                            ? 'bg-teal-600 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        Meet-Cute Audio
-                      </button>
-                      {hasSpotify && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (audioProvider !== 'spotify') {
-                              // Stop Meet-Cute audio
-                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                detail: { source: 'focus-rooms' }
-                              }));
-                              setAudioProvider('spotify');
-                              // Start Spotify if playing
-                              if (isPlaying) {
-                                api.post('/api/spotify/play', { roomId: room.id }).catch((error) => {
-                                  console.error('Error starting Spotify:', error);
-                                  alert('Spotify playback failed. Make sure you have Premium and Spotify is open on one of your devices.');
-                                  // Fallback to Meet-Cute
-                                  setAudioProvider('meetcute');
-                                  startMeetCuteAudio(room);
-                                });
-                              }
-                            }
-                          }}
-                          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                            audioProvider === 'spotify'
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                        >
-                          Spotify <span className="text-xs">(Premium)</span>
-                        </button>
-                      )}
-                      {hasAppleMusic && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (audioProvider !== 'apple-music') {
-                              // Stop Meet-Cute audio
-                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                detail: { source: 'focus-rooms' }
-                              }));
-                              setAudioProvider('apple-music');
-                              // Start Apple Music if playing
-                              if (isPlaying) {
-                                api.post('/api/apple-music/play', { roomId: room.id })
-                                  .then(async (response) => {
-                                    if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                                      const musicKit = (window as any).MusicKit.getInstance();
-                                      await musicKit.setQueue({ playlist: response.data.playlistId });
-                                      await musicKit.play();
-                                    }
-                                  })
-                                  .catch((error) => {
-                                    console.error('Error starting Apple Music:', error);
-                                    // Fallback to Meet-Cute
-                                    setAudioProvider('meetcute');
-                                    startMeetCuteAudio(room);
-                                  });
-                              }
-                            }
-                          }}
-                          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                            audioProvider === 'apple-music'
-                              ? 'bg-pink-600 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                        >
-                          Apple Music
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+              <Headphones className="w-4 h-4" />
+              <span>Focus Rooms</span>
+            </button>
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                  detail: { source: 'ambient-library-tab-switch', fadeOut: true }
+                }));
+                
+                if (activeRoom) {
+                  if (audioProvider === 'spotify') {
+                    api.post('/api/spotify/pause').catch(() => {});
+                  } else if (audioProvider === 'apple-music') {
+                    if (typeof window !== 'undefined' && (window as any).MusicKit) {
+                      (window as any).MusicKit.getInstance().stop().catch(() => {});
+                    }
+                  }
+                  setActiveRoom(null);
+                  setIsPlaying(false);
+                }
+                
+                setActiveTab('ambient-library');
+              }}
+              className={`flex-1 px-4 py-3 text-center font-medium transition-all flex items-center justify-center gap-2 ${
+                activeTab === 'ambient-library'
+                  ? 'bg-[var(--mg-accent)] text-white'
+                  : 'text-[var(--mg-text-muted)] hover:bg-[var(--mg-bg-primary)]'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Ambient Library</span>
+            </button>
+          </div>
 
-              {/* Timer and Volume Controls - Show when this room is active */}
-              {activeRoom === room.id && (
+          {/* Tab Content */}
+          <div className="p-4 md:p-6 min-h-[400px]">
+            <AnimatePresence mode="wait">
+              {activeTab === 'focus-rooms' && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-4 pt-4 border-t border-gray-300 space-y-4"
+                  key="focus-rooms"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  {/* Timer Display and Controls */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-teal-600" />
-                        <span className="text-sm font-semibold text-gray-700">Timer</span>
-                      </div>
-                      {timeRemaining !== null && (
-                        <span className="text-lg font-bold text-teal-600">
-                          {formatTime(timeRemaining)}
-                        </span>
-                      )}
-                      {timeRemaining === null && (
-                        <span className="text-lg font-bold text-teal-600">∞</span>
-                      )}
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
-                        <button
-                          key={option}
-                          onClick={async (e) => {
-                            e.stopPropagation(); // Prevent room selection
-                            const oldTimer = timer;
-                            setTimer(option);
-                            
-                            if (isPlaying) {
-                              if (option === '∞') {
-                                setTimeRemaining(null);
-                              } else {
-                                setTimeRemaining(option * 60);
-                              }
-                              
-                              // If switching from finite to infinite or vice versa, restart session
-                              if ((oldTimer !== '∞' && option === '∞') || (oldTimer === '∞' && option !== '∞')) {
-                                if (selectedRoom && currentSessionId) {
-                                  if (sessionStartTime) {
-                                    const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
-                                    try {
-                                      await api.post('/api/focus-rooms/sessions/complete', {
-                                        sessionId: currentSessionId,
-                                        duration,
-                                        completed: false,
-                                      });
-                                    } catch (error) {
-                                      console.error('Error completing session:', error);
-                                    }
-                                  }
-                                  
-                                  try {
-                                    const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
-                                      roomId: selectedRoom.id,
-                                      roomName: selectedRoom.name,
-                                      timerOption: option.toString(),
-                                      audioSource: audioProvider,
-                                    });
-                                    setCurrentSessionId(sessionResponse.data.sessionId);
-                                    setSessionStartTime(Date.now());
-                                  } catch (error) {
-                                    console.error('Error restarting session:', error);
-                                  }
-                                }
-                              }
-                            } else {
-                              if (option === '∞') {
-                                setTimeRemaining(null);
-                              } else {
-                                setTimeRemaining(option * 60);
-                              }
-                            }
-                          }}
-                          className={`
-                            px-3 py-1.5 rounded-lg font-semibold transition-all text-xs
-                            ${timer === option
-                              ? 'bg-teal-600 text-white shadow-md'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }
-                          `}
-                        >
-                          {option === '∞' ? '∞' : `${option}m`}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Play/Pause and Volume Control */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Volume2 className="w-4 h-4 text-teal-600" />
-                        <span className="text-sm font-semibold text-gray-700">Volume</span>
-                        <span className="text-sm font-semibold text-teal-600">
-                          {Math.round((isMuted ? 0 : volume) * 100)}%
-                        </span>
-                      </div>
-                      {/* Play/Pause and Skip Buttons */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            
-                            // ALWAYS stop ALL audio first before starting/stopping
-                            window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                              detail: { source: 'focus-rooms-play-pause', fadeOut: false } // Immediate stop
-                            }));
-                            
-                            if (isPlaying) {
-                              // Pause audio - stop ALL sources
-                              console.log('⏸️ Pausing audio');
-                              
-                              if (audioProvider === 'spotify') {
-                                try {
-                                  await api.post('/api/spotify/pause');
-                                } catch (error) {
-                                  console.error('Error pausing Spotify:', error);
-                                }
-                              } else if (audioProvider === 'apple-music') {
-                                if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                                  try {
-                                    const musicKit = (window as any).MusicKit.getInstance();
-                                    await musicKit.pause();
-                                  } catch (error) {
-                                    console.error('Error pausing Apple Music:', error);
-                                  }
-                                }
-                              }
-                              
-                              setIsPlaying(false);
-                            } else {
-                              // Start audio - wait a moment for all stops to complete
-                              console.log('▶️ Starting audio', { audioProvider, roomId: room.id, roomName: room.name, meetCuteSoundType: room.meetCuteSoundType });
-                              
-                              setTimeout(async () => {
-                                if (audioProvider === 'spotify') {
-                                  try {
-                                    const response = await api.post('/api/spotify/play', {
-                                      roomId: room.id,
-                                    });
-                                    console.log('✅ Spotify playback started:', response.data);
-                                    setIsPlaying(true);
-                                  } catch (error: any) {
-                                    console.error('❌ Error starting Spotify:', error);
-                                    const errorMessage = error.response?.data?.message || error.message || 'Failed to start Spotify playback';
-                                    
-                                    // Check if it's a "no device" error and provide helpful guidance
-                                    const isNoDeviceError = errorMessage.toLowerCase().includes('no spotify device') || 
-                                                           errorMessage.toLowerCase().includes('no active device') ||
-                                                           error.response?.status === 404;
-                                    
-                                    if (isNoDeviceError) {
-                                      // More helpful message for device requirement
-                                      const userMessage = `Spotify needs to be open on at least one device to play music.\n\n` +
-                                        `Quick fix:\n` +
-                                        `1. Open Spotify web player (open.spotify.com) in a new tab\n` +
-                                        `2. Or open Spotify desktop/mobile app\n` +
-                                        `3. Then try playing again\n\n` +
-                                        `Would you like to use Meet-Cute audio instead?`;
-                                      
-                                      if (confirm(userMessage)) {
-                                        // Fallback to Meet-Cute audio
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {FOCUS_ROOMS.map((room, index) => (
+                      <motion.div
+                        key={room.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * index }}
+                        onClick={() => handleRoomSelect(room)}
+                        className={`
+                          relative bg-gradient-to-br ${room.bgGradient} rounded-xl p-5 cursor-pointer
+                          transition-all hover:shadow-lg hover:scale-[1.02]
+                          ${activeRoom === room.id ? 'ring-2 ring-[var(--mg-accent)] ring-offset-2 ring-offset-[var(--mg-bg-primary)]' : ''}
+                        `}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className={`text-${room.gradient.split(' ')[0].split('-')[1]}-600`}>
+                            {room.icon}
+                          </div>
+                          {activeRoom === room.id && isPlaying && (
+                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">
+                          {room.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-3">
+                          {room.description}
+                        </p>
+                        
+                        {/* Audio Provider Badge */}
+                        <div className="flex items-center gap-2">
+                          {audioProvider === 'meetcute' && (
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                              Meet-Cute Audio
+                            </span>
+                          )}
+                          {audioProvider === 'spotify' && (
+                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                              Spotify
+                            </span>
+                          )}
+                          {audioProvider === 'apple-music' && (
+                            <span className="px-2 py-0.5 bg-pink-100 text-pink-700 text-xs font-medium rounded-full">
+                              Apple Music
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Controls when active */}
+                        {activeRoom === room.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="mt-4 pt-4 border-t border-gray-300 space-y-4"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Audio Source Toggle */}
+                            {(hasSpotify || hasAppleMusic) && (
+                              <div className="mb-3">
+                                <label className="text-xs font-medium text-gray-600 mb-2 block">Audio Source</label>
+                                <div className="flex gap-2 flex-wrap">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (audioProvider !== 'meetcute') {
+                                        if (audioProvider === 'spotify') {
+                                          api.post('/api/spotify/pause').catch(() => {});
+                                        }
                                         setAudioProvider('meetcute');
-                                        if (room.meetCuteSoundType) {
+                                        if (isPlaying) {
+                                          startMeetCuteAudio(room);
+                                        }
+                                      }
+                                    }}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                      audioProvider === 'meetcute'
+                                        ? 'bg-teal-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    }`}
+                                  >
+                                    Meet-Cute
+                                  </button>
+                                  {hasSpotify && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (audioProvider !== 'spotify') {
+                                          window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                                            detail: { source: 'focus-rooms' }
+                                          }));
+                                          setAudioProvider('spotify');
+                                          if (isPlaying) {
+                                            api.post('/api/spotify/play', { roomId: room.id }).catch(() => {
+                                              setAudioProvider('meetcute');
+                                              startMeetCuteAudio(room);
+                                            });
+                                          }
+                                        }
+                                      }}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                        audioProvider === 'spotify'
+                                          ? 'bg-green-600 text-white'
+                                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                      }`}
+                                    >
+                                      Spotify
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Timer */}
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-gray-500" />
+                                  <span className="text-xs font-medium text-gray-600">Timer</span>
+                                </div>
+                                {timeRemaining !== null && (
+                                  <span className="text-sm font-bold text-gray-900">
+                                    {formatTime(timeRemaining)}
+                                  </span>
+                                )}
+                                {timeRemaining === null && (
+                                  <span className="text-sm font-bold text-gray-900">∞</span>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
+                                  <button
+                                    key={option}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setTimer(option);
+                                      if (option === '∞') {
+                                        setTimeRemaining(null);
+                                      } else {
+                                        setTimeRemaining(option * 60);
+                                      }
+                                    }}
+                                    className={`
+                                      px-3 py-1.5 rounded-lg font-medium transition-all text-xs
+                                      ${timer === option
+                                        ? 'bg-teal-600 text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                      }
+                                    `}
+                                  >
+                                    {option === '∞' ? '∞' : `${option}m`}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            {/* Play/Pause and Volume */}
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Volume2 className="w-4 h-4 text-gray-500" />
+                                  <span className="text-xs font-medium text-gray-600">Volume</span>
+                                  <span className="text-xs font-medium text-gray-900">
+                                    {Math.round((isMuted ? 0 : volume) * 100)}%
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      
+                                      if (isPlaying) {
+                                        // Pause
+                                        window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+                                          detail: { source: 'focus-rooms-play-pause', fadeOut: false }
+                                        }));
+                                        
+                                        if (audioProvider === 'spotify') {
+                                          try {
+                                            await api.post('/api/spotify/pause');
+                                          } catch (error) {
+                                            console.error('Error pausing Spotify:', error);
+                                          }
+                                        }
+                                        
+                                        setIsPlaying(false);
+                                      } else {
+                                        // Play
+                                        if (audioProvider === 'spotify') {
+                                          try {
+                                            await api.post('/api/spotify/play', { roomId: room.id });
+                                            setIsPlaying(true);
+                                          } catch (error: any) {
+                                            console.error('Error starting Spotify:', error);
+                                            const isNoDeviceError = error.response?.status === 404;
+                                            
+                                            if (isNoDeviceError) {
+                                              if (confirm('Spotify needs to be open. Use Meet-Cute audio instead?')) {
+                                                setAudioProvider('meetcute');
+                                                startMeetCuteAudio(room);
+                                                setIsPlaying(true);
+                                              }
+                                            } else {
+                                              setAudioProvider('meetcute');
+                                              startMeetCuteAudio(room);
+                                              setIsPlaying(true);
+                                            }
+                                          }
+                                        } else {
                                           startMeetCuteAudio(room);
                                           setIsPlaying(true);
-                                        } else {
-                                          console.error('❌ Cannot fallback to Meet-Cute audio: no meetCuteSoundType for room', room.id);
-                                          setIsPlaying(false);
                                         }
-                                      } else {
-                                        setIsPlaying(false);
                                       }
-                                    } else {
-                                      // Other errors - show standard message
-                                      alert(`Spotify playback failed: ${errorMessage}\n\nFalling back to Meet-Cute audio.`);
-                                      
-                                      // Fallback to Meet-Cute audio
-                                      setAudioProvider('meetcute');
-                                      if (room.meetCuteSoundType) {
-                                        startMeetCuteAudio(room);
-                                        setIsPlaying(true);
-                                      } else {
-                                        console.error('❌ Cannot fallback to Meet-Cute audio: no meetCuteSoundType for room', room.id);
-                                        setIsPlaying(false);
-                                      }
-                                    }
-                                  }
-                                } else if (audioProvider === 'apple-music') {
-                                  try {
-                                    const response = await api.post('/api/apple-music/play', {
-                                      roomId: room.id,
-                                    });
+                                    }}
+                                    className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md"
+                                  >
+                                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                                  </button>
+                                  
+                                  {(audioProvider === 'spotify' || audioProvider === 'apple-music') && isPlaying && (
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (audioProvider === 'spotify') {
+                                          try {
+                                            await api.post('/api/spotify/next');
+                                          } catch (error) {
+                                            console.error('Error skipping track:', error);
+                                          }
+                                        }
+                                      }}
+                                      className="w-10 h-10 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all shadow-md flex items-center justify-center"
+                                    >
+                                      <SkipForward className="w-5 h-5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const newMuted = !isMuted;
+                                    setIsMuted(newMuted);
                                     
-                                    // Use MusicKit JS to play the playlist
-                                    if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                                      const musicKit = (window as any).MusicKit.getInstance();
-                                      await musicKit.setQueue({ playlist: response.data.playlistId });
-                                      await musicKit.play();
+                                    if (audioProvider === 'meetcute') {
+                                      window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
+                                        detail: { volume: newMuted ? 0 : volume }
+                                      }));
+                                    } else if (audioProvider === 'spotify' && isPlaying) {
+                                      api.post('/api/spotify/volume', {
+                                        volumePercent: newMuted ? 0 : Math.round(volume * 100),
+                                      }).catch(() => {});
                                     }
-                                    setIsPlaying(true);
-                                  } catch (error: any) {
-                                    console.error('Error starting Apple Music:', error);
-                                    // Fallback to Meet-Cute
-                                    setAudioProvider('meetcute');
-                                    if (room.meetCuteSoundType) {
-                                      startMeetCuteAudio(room);
-                                      setIsPlaying(true);
-                                    } else {
-                                      console.error('❌ Cannot fallback to Meet-Cute audio: no meetCuteSoundType for room', room.id);
-                                      setIsPlaying(false);
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all"
+                                >
+                                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                                </button>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="1"
+                                  step="0.01"
+                                  value={isMuted ? 0 : volume}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    const newVolume = parseFloat(e.target.value);
+                                    setVolume(newVolume);
+                                    setIsMuted(newVolume === 0);
+                                    
+                                    if (audioProvider === 'meetcute') {
+                                      window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
+                                        detail: { volume: newVolume }
+                                      }));
+                                    } else if (audioProvider === 'spotify' && isPlaying) {
+                                      api.post('/api/spotify/volume', {
+                                        volumePercent: Math.round(newVolume * 100),
+                                      }).catch(() => {});
                                     }
-                                  }
-                                } else {
-                                  // Meet-Cute audio
-                                  if (room.meetCuteSoundType) {
-                                    startMeetCuteAudio(room);
-                                    setIsPlaying(true);
-                                  } else {
-                                    console.error('❌ Cannot start Meet-Cute audio: no meetCuteSoundType for room', room.id);
-                                    setIsPlaying(false);
-                                  }
-                                }
-                              }, 300); // Wait for all stops to complete
-                            }
-                          }}
-                          className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md flex-shrink-0"
-                          title={isPlaying ? 'Pause' : 'Play'}
-                        >
-                          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                        </button>
-                        
-                        {/* Skip Track Button - Only show for Spotify/Apple Music when playing */}
-                        {(audioProvider === 'spotify' || audioProvider === 'apple-music') && isPlaying && (
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              if (audioProvider === 'spotify') {
-                                try {
-                                  await api.post('/api/spotify/next');
-                                } catch (error) {
-                                  console.error('Error skipping track:', error);
-                                }
-                              } else if (audioProvider === 'apple-music') {
-                                if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                                  try {
-                                    const musicKit = (window as any).MusicKit.getInstance();
-                                    await musicKit.skipToNextItem();
-                                  } catch (error) {
-                                    console.error('Error skipping Apple Music track:', error);
-                                  }
-                                }
-                              }
-                            }}
-                            className="w-10 h-10 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all shadow-md flex items-center justify-center flex-shrink-0"
-                            title="Skip to next track"
-                          >
-                            <SkipForward className="w-5 h-5" />
-                          </button>
+                                  }}
+                                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
                         )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const newMuted = !isMuted;
-                          setIsMuted(newMuted);
-                          setVolume(newMuted ? 0 : volume || 0.7);
-                          
-                          if (audioProvider === 'spotify' && isPlaying) {
-                            try {
-                              await api.post('/api/spotify/volume', {
-                                volumePercent: newMuted ? 0 : Math.round(volume * 100),
-                              });
-                            } catch (error) {
-                              console.error('Error muting Spotify:', error);
-                            }
-                          } else if (audioProvider === 'apple-music' && isPlaying) {
-                            if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                              try {
-                                const musicKit = (window as any).MusicKit.getInstance();
-                                musicKit.volume = newMuted ? 0 : volume;
-                              } catch (error) {
-                                console.error('Error setting Apple Music volume:', error);
-                              }
-                            }
-                          } else if (audioProvider === 'meetcute') {
-                            window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                              detail: { volume: newMuted ? 0 : volume }
-                            }));
-                          }
-                        }}
-                        className="w-8 h-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all flex-shrink-0"
-                        title={isMuted ? 'Unmute' : 'Mute'}
-                      >
-                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                      </button>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={isMuted ? 0 : volume}
-                        onChange={async (e) => {
-                          e.stopPropagation();
-                          const newVolume = parseFloat(e.target.value);
-                          setVolume(newVolume);
-                          setIsMuted(newVolume === 0);
-                          
-                          if (audioProvider === 'spotify' && isPlaying) {
-                            try {
-                              await api.post('/api/spotify/volume', {
-                                volumePercent: Math.round(newVolume * 100),
-                              });
-                            } catch (error) {
-                              console.error('Error setting Spotify volume:', error);
-                            }
-                          } else if (audioProvider === 'apple-music' && isPlaying) {
-                            if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                              try {
-                                const musicKit = (window as any).MusicKit.getInstance();
-                                musicKit.volume = newVolume;
-                              } catch (error) {
-                                console.error('Error setting Apple Music volume:', error);
-                              }
-                            }
-                          } else if (audioProvider === 'meetcute') {
-                            window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                              detail: { volume: newVolume }
-                            }));
-                          }
-                        }}
-                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
-                      />
-                    </div>
+                      </motion.div>
+                    ))}
                   </div>
                 </motion.div>
               )}
-            </motion.div>
-          ))}
-                    </div>
-                  </motion.div>
-                )}
 
-                {activeTab === 'ambient-library' && (
-                  <motion.div
-                    key="ambient-library"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <SceneLibrary
-                      timeOfDay={new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}
-                      onSoundTypeChange={() => {
-                        // Stop any Focus Room audio when using Scene Library
-                        if (activeRoom) {
-                          if (audioProvider === 'spotify') {
-                            api.post('/api/spotify/pause').catch(() => {});
-                          } else if (audioProvider === 'apple-music') {
-                            if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                              (window as any).MusicKit.getInstance().stop().catch(() => {});
-                            }
-                          } else {
-                            window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                              detail: { source: 'focus-rooms' }
-                            }));
-                          }
-                          setActiveRoom(null);
-                          setIsPlaying(false);
+              {activeTab === 'ambient-library' && (
+                <motion.div
+                  key="ambient-library"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <SceneLibrary
+                    timeOfDay={new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}
+                    onSoundTypeChange={() => {
+                      if (activeRoom) {
+                        if (audioProvider === 'spotify') {
+                          api.post('/api/spotify/pause').catch(() => {});
                         }
-                        // SceneLibrary component will dispatch the ambient-sound-play event itself
-                      }}
-                    />
-                  </motion.div>
-                )}
-
-              </AnimatePresence>
-            </div>
+                        setActiveRoom(null);
+                        setIsPlaying(false);
+                      }
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </motion.div>
-
-      </main>
+        </div>
+      </div>
       
-      {/* Global Ambient Sound - For Meet-Cute audio */}
+      {/* Global Ambient Sound */}
       <AmbientSound
         soundType="none"
         enabled={true}
         stopOnNavigation={false}
       />
-    </div>
+    </DashboardLayout>
   );
 }
-
