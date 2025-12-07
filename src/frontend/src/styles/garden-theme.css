@@ -370,6 +370,121 @@
   animation: mg-rain-fall 1.5s linear infinite;
 }
 
+/* Snowflake Animation (Dormant State - Winter) */
+@keyframes mg-snowflake-fall {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh) translateX(30px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.mg-snowflake {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, white 0%, rgba(255, 255, 255, 0.5) 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  animation: mg-snowflake-fall 5s linear infinite;
+}
+
+/* Alternative snowflake using emoji */
+.mg-snowflake::before {
+  content: '❄';
+  position: absolute;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  top: -4px;
+  left: -1px;
+}
+
+/* Mist Animation (Dormant State - Non-Winter) */
+@keyframes mg-mist-drift {
+  0%, 100% {
+    transform: translateX(-10%) translateY(0);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateX(10%) translateY(-10px);
+    opacity: 0.4;
+  }
+}
+
+.mg-mist-layer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(241, 245, 249, 0.3) 40%,
+    rgba(226, 232, 240, 0.4) 60%,
+    rgba(241, 245, 249, 0.3) 100%
+  );
+  animation: mg-mist-drift 8s ease-in-out infinite;
+}
+
+/* Fragrance/Glow Effect (Night Jasmine, Moonflower) */
+@keyframes mg-fragrance {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.2);
+  }
+}
+
+.mg-fragrance {
+  animation: mg-fragrance 4s ease-in-out infinite;
+}
+
+/* Weather Layer Base Styles */
+.mg-weather-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: all 1s ease;
+}
+
+.mg-weather-sunny {
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 251, 235, 0.1) 100%);
+}
+
+.mg-weather-partly-cloudy {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.1) 0%, transparent 100%);
+}
+
+.mg-weather-cloudy {
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.2) 0%, rgba(226, 232, 240, 0.1) 100%);
+}
+
+.mg-weather-golden-hour {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(249, 115, 22, 0.1) 50%, rgba(236, 72, 153, 0.05) 100%);
+}
+
+.mg-weather-mist {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.3) 0%, rgba(241, 245, 249, 0.2) 50%, transparent 100%);
+}
+
+.mg-weather-gentle-rain {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.2) 0%, rgba(100, 116, 139, 0.1) 100%);
+}
+
+.mg-weather-soft-snow {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.4) 0%, rgba(241, 245, 249, 0.3) 50%, rgba(226, 232, 240, 0.2) 100%);
+}
+
 /* ========================================
    Sidebar Styles
    ======================================== */

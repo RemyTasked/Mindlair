@@ -1,7 +1,11 @@
 /**
  * Mind Garden - Garden State API
  * 
- * Endpoints for garden visualization and state management
+ * Advanced garden mechanics with:
+ * - Point-based growth system (non-punitive)
+ * - 5 visual states: Thriving, Growing, Stable, Idle, Dormant
+ * - Plant unlock system based on practice types
+ * - Seasonal and milestone plants
  */
 
 import express from 'express';
@@ -13,18 +17,46 @@ import { logger } from '../utils/logger';
 
 const router = express.Router();
 
-// Plant types that can be grown (aligned with spec)
+// ============================================
+// TYPE DEFINITIONS
+// ============================================
+
+// All possible plant types
 type PlantType = 
-  | 'sunflower' | 'moonflower' | 'lavender' | 'chamomile' | 'daisy'
-  | 'rose' | 'lotus' | 'bamboo' | 'fern' | 'cherry-tree' | 'oak-sapling'
-  | 'golden-flower' | 'ivy' | 'succulent'
-  // New plants from spec
-  | 'evening-primrose'  // Post-Meeting Decompress
-  | 'morning-glory'     // Morning Intention Flow
-  | 'night-jasmine'     // Evening Wind-Down Flow
-  | 'mature-tree';      // Deep Meditation
+  // Starter plants (available immediately)
+  | 'daisy'           // Pre-Meeting Focus
+  | 'chamomile'       // Quick Reset
+  | 'marigold'        // End-of-Day Transition
+  | 'morning-glory'   // Morning Intention
+  | 'lavender'        // Post-Meeting Decompress
+  // Unlockable plants
+  | 'sunflower'       // 10 morning flows
+  | 'evening-primrose'// 10 evening flows
+  | 'rose'            // 25 extended flows
+  | 'lotus'           // 10 deep meditations
+  | 'poppy'           // 15 presentation preps
+  | 'violet'          // 20 difficult conversation preps
+  | 'fern'            // 30 gratitude entries
+  | 'bamboo'          // 20 breathing practices
+  | 'succulent'       // 15 thought reframes
+  | 'herb'            // 25 mindful moments
+  | 'ivy'             // 14-day streak
+  | 'moonflower'      // Evening flows
+  | 'night-jasmine'   // Evening wind-down
+  | 'golden-flower'   // Gratitude
+  // Milestone trees
+  | 'cherry-tree'     // 30 days consistent
+  | 'oak-sapling'     // 90 days consistent
+  | 'willow'          // 180 days consistent
+  | 'mature-tree';    // 365 days consistent
 
 type GrowthStage = 'seed' | 'sprout' | 'growing' | 'blooming' | 'full';
+
+type GardenState = 'thriving' | 'growing' | 'stable' | 'idle' | 'dormant';
+
+type Season = 'spring' | 'summer' | 'fall' | 'winter';
+
+type WeatherType = 'sunny' | 'partly-cloudy' | 'cloudy' | 'golden-hour' | 'mist' | 'gentle-rain' | 'soft-snow';
 
 interface Plant {
   id: string;
@@ -38,76 +70,341 @@ interface Plant {
   associatedWith?: string;
 }
 
+// Activity tracking for unlocks
+interface ActivityCounts {
+  morningFlows: number;
+  eveningFlows: number;
+  extendedFlows: number;
+  deepMeditations: number;
+  presentationPreps: number;
+  difficultConversationPreps: number;
+  gratitudeEntries: number;
+  breathingPractices: number;
+  thoughtReframes: number;
+  mindfulMoments: number;
+  quickResets: number;
+  preMeetingFocus: number;
+}
+
+// Plant unlock requirements
+interface UnlockRequirement {
+  type: PlantType;
+  name: string;
+  description: string;
+  requirement: (counts: ActivityCounts, streak: number, totalDays: number) => boolean;
+}
+
 interface GardenData {
-  health: number;
+  // Core metrics
+  growthPoints: number;
+  totalPoints: number;
   plants: Plant[];
-  weather: 'sunny' | 'cloudy' | 'rain';
+  gridSize: number;
+  
+  // Activity tracking
+  activityCounts: ActivityCounts;
+  activitiesThisWeek: number;
+  
+  // Streaks and timing
   streak: number;
-  lastFlowDate: string | null;
+  longestStreak: number;
+  lastActiveDate: string | null;
+  daysSinceActive: number;
+  totalActiveDays: number;
+  
+  // Unlocks
+  unlockedPlants: PlantType[];
+  
+  // Visual state
+  visualState: GardenState;
+  weather: WeatherType;
+  season: Season;
+  theme: string;
+  
+  // Decorations and extras
+  decorations: Array<{ id: string; type: string; x: number; y: number }>;
+  milestones: string[];
+  
+  // Legacy compatibility
+  health: number;
   totalFlows: number;
   flowsToday: number;
   growth: number;
-  gridSize: number;
-  theme: string;
-  decorations: Array<{ id: string; type: string; x: number; y: number }>;
-  [key: string]: unknown; // Index signature for Prisma JSON compatibility
+  
+  [key: string]: unknown;
 }
 
-// Map flow types to plant types (aligned with Mind Garden spec)
+// ============================================
+// CONSTANTS
+// ============================================
+
+// Point values for activities
+const ACTIVITY_POINTS: Record<string, number> = {
+  // Micro-flows (2-3 min)
+  'micro-flow': 10,
+  'pre-meeting-focus': 10,
+  'pre-presentation-power': 10,
+  'difficult-conversation-prep': 10,
+  'quick-reset': 10,
+  'post-meeting-decompress': 10,
+  'end-of-day-transition': 10,
+  // Extended flows (10-15 min)
+  'extended-flow': 30,
+  'morning-intention': 30,
+  'evening-wind-down': 30,
+  'weekend-wellness': 30,
+  // Deep meditation (30 min)
+  'deep-meditation': 50,
+  'body-scan': 30,
+  // Activities
+  'gratitude-entry': 10,
+  'thought-reframe': 15,
+  'breathing-practice': 10,
+  'game': 15,
+  'journal': 10,
+};
+
+// Growth thresholds
+const THRESHOLDS = {
+  BLOOM_ANIMATION: 10,      // Small bloom on existing plant
+  NEW_PLANT: 30,            // New flower planted
+  BONUS_GROWTH: 50,         // Bonus growth (daily max)
+  GRID_EXPANSION_1: 500,    // 5x5 -> 7x7
+  GRID_EXPANSION_2: 1000,   // 7x7 -> 10x10
+  GRID_EXPANSION_3: 2000,   // 10x10 -> 12x12
+  GRID_EXPANSION_4: 5000,   // 12x12 -> 15x15
+};
+
+// Map flow types to activity categories
+const FLOW_TO_ACTIVITY: Record<string, keyof ActivityCounts> = {
+  'morning-intention': 'morningFlows',
+  'evening-wind-down': 'eveningFlows',
+  'weekend-wellness': 'extendedFlows',
+  'deep-meditation': 'deepMeditations',
+  'body-scan': 'extendedFlows',
+  'pre-presentation-power': 'presentationPreps',
+  'difficult-conversation-prep': 'difficultConversationPreps',
+  'gratitude': 'gratitudeEntries',
+  'breathing': 'breathingPractices',
+  'quick-reset': 'quickResets',
+  'pre-meeting-focus': 'preMeetingFocus',
+  'post-meeting-decompress': 'eveningFlows',
+  'end-of-day-transition': 'eveningFlows',
+};
+
+// Map flow types to plant types
 const FLOW_TO_PLANT: Record<string, PlantType> = {
-  // Micro-flows (Calendar Plugin)
-  'pre-meeting-focus': 'daisy',              // Small daisy
-  'pre-presentation-power': 'sunflower',     // Bold sunflower
-  'difficult-conversation-prep': 'lavender', // Resilient lavender
-  'quick-reset': 'chamomile',                // Quick-blooming chamomile
-  'post-meeting-decompress': 'evening-primrose', // Calming evening primrose
-  'end-of-day-transition': 'moonflower',     // Twilight moonflower
-  // Extended flows (Web Dashboard)
-  'morning-intention': 'morning-glory',      // Morning glory vine
-  'evening-wind-down': 'night-jasmine',      // Serene night jasmine
-  'weekend-wellness': 'lotus',               // Contemplative lotus
-  'deep-meditation': 'mature-tree',          // Mature tree (grows slowly)
-  // Other flows
+  'pre-meeting-focus': 'daisy',
+  'pre-presentation-power': 'poppy',
+  'difficult-conversation-prep': 'violet',
+  'quick-reset': 'chamomile',
+  'post-meeting-decompress': 'evening-primrose',
+  'end-of-day-transition': 'marigold',
+  'morning-intention': 'morning-glory',
+  'evening-wind-down': 'night-jasmine',
+  'weekend-wellness': 'lotus',
+  'deep-meditation': 'mature-tree',
   'breathing': 'bamboo',
   'body-scan': 'lotus',
   'gratitude': 'golden-flower',
 };
 
-// Calculate grid size based on progress
-function calculateGridSize(totalFlows: number): number {
-  if (totalFlows >= 200) return 15;
-  if (totalFlows >= 100) return 12;
-  if (totalFlows >= 50) return 10;
-  if (totalFlows >= 20) return 7;
+// Plant unlock requirements
+const PLANT_UNLOCKS: UnlockRequirement[] = [
+  // Starter plants (always unlocked)
+  { type: 'daisy', name: 'Daisy', description: 'Pre-Meeting Focus', requirement: () => true },
+  { type: 'chamomile', name: 'Chamomile', description: 'Quick Reset', requirement: () => true },
+  { type: 'marigold', name: 'Marigold', description: 'End-of-Day Transition', requirement: () => true },
+  { type: 'morning-glory', name: 'Morning Glory', description: 'Morning Intention', requirement: () => true },
+  { type: 'lavender', name: 'Lavender', description: 'Post-Meeting Decompress', requirement: () => true },
+  
+  // Unlockable by practice type
+  { type: 'sunflower', name: 'Sunflower', description: '10 morning flows', requirement: (c) => c.morningFlows >= 10 },
+  { type: 'evening-primrose', name: 'Evening Primrose', description: '10 evening flows', requirement: (c) => c.eveningFlows >= 10 },
+  { type: 'rose', name: 'Rose', description: '25 extended flows', requirement: (c) => c.extendedFlows >= 25 },
+  { type: 'lotus', name: 'Lotus', description: '10 deep meditations', requirement: (c) => c.deepMeditations >= 10 },
+  { type: 'poppy', name: 'Poppy', description: '15 presentation preps', requirement: (c) => c.presentationPreps >= 15 },
+  { type: 'violet', name: 'Violet', description: '20 difficult conversation preps', requirement: (c) => c.difficultConversationPreps >= 20 },
+  { type: 'fern', name: 'Fern', description: '30 gratitude entries', requirement: (c) => c.gratitudeEntries >= 30 },
+  { type: 'bamboo', name: 'Bamboo', description: '20 breathing practices', requirement: (c) => c.breathingPractices >= 20 },
+  { type: 'succulent', name: 'Succulent', description: '15 thought reframes', requirement: (c) => c.thoughtReframes >= 15 },
+  { type: 'herb', name: 'Herb Garden', description: '25 mindful moments', requirement: (c) => c.mindfulMoments >= 25 },
+  { type: 'moonflower', name: 'Moonflower', description: '15 evening flows', requirement: (c) => c.eveningFlows >= 15 },
+  { type: 'night-jasmine', name: 'Night Jasmine', description: '20 evening wind-downs', requirement: (c) => c.eveningFlows >= 20 },
+  { type: 'golden-flower', name: 'Golden Flower', description: '25 gratitude entries', requirement: (c) => c.gratitudeEntries >= 25 },
+  
+  // Streak-based
+  { type: 'ivy', name: 'Ivy', description: '14-day streak', requirement: (_, s) => s >= 14 },
+  
+  // Milestone trees (by total days)
+  { type: 'cherry-tree', name: 'Cherry Blossom', description: '30 days consistent', requirement: (_, __, d) => d >= 30 },
+  { type: 'oak-sapling', name: 'Oak Sapling', description: '90 days consistent', requirement: (_, __, d) => d >= 90 },
+  { type: 'willow', name: 'Willow', description: '180 days consistent', requirement: (_, __, d) => d >= 180 },
+  { type: 'mature-tree', name: 'Ancient Tree', description: '365 days consistent', requirement: (_, __, d) => d >= 365 },
+];
+
+// State messages (non-punitive, encouraging)
+const STATE_MESSAGES: Record<GardenState, { title: string; message: string }> = {
+  thriving: {
+    title: 'Your garden is thriving!',
+    message: 'Keep nurturing your practice. The butterflies are visiting!',
+  },
+  growing: {
+    title: 'Your garden is growing steadily.',
+    message: "You're doing great. Each moment counts.",
+  },
+  stable: {
+    title: 'Your garden is stable and peaceful.',
+    message: 'Practice when you\'re ready. No pressure.',
+  },
+  idle: {
+    title: 'Your garden is resting.',
+    message: 'It\'s waiting for you. Come back when you\'re ready.',
+  },
+  dormant: {
+    title: 'Your garden rested while you were away.',
+    message: 'Welcome back! Ready to grow again?',
+  },
+};
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+// Get current season based on date
+function getCurrentSeason(): Season {
+  const month = new Date().getMonth();
+  if (month >= 2 && month <= 4) return 'spring';
+  if (month >= 5 && month <= 7) return 'summer';
+  if (month >= 8 && month <= 10) return 'fall';
+  return 'winter';
+}
+
+// Calculate grid size based on total points
+function calculateGridSize(totalPoints: number): number {
+  if (totalPoints >= THRESHOLDS.GRID_EXPANSION_4) return 15;
+  if (totalPoints >= THRESHOLDS.GRID_EXPANSION_3) return 12;
+  if (totalPoints >= THRESHOLDS.GRID_EXPANSION_2) return 10;
+  if (totalPoints >= THRESHOLDS.GRID_EXPANSION_1) return 7;
   return 5;
 }
 
-// Find empty position in grid
+// Calculate garden state based on weekly activity (NON-PUNITIVE)
+function calculateGardenState(activitiesThisWeek: number, daysSinceActive: number): GardenState {
+  // Dormant: 14+ days since last activity (but still beautiful)
+  if (daysSinceActive >= 14) return 'dormant';
+  
+  // Idle: 0 activities this week (peaceful, not dead)
+  if (activitiesThisWeek === 0) return 'idle';
+  
+  // Active states based on weekly activity
+  if (activitiesThisWeek >= 5) return 'thriving';
+  if (activitiesThisWeek >= 3) return 'growing';
+  return 'stable';
+}
+
+// Get weather based on garden state (all weather is positive/beautiful)
+function getWeatherForState(state: GardenState, season: Season): WeatherType {
+  switch (state) {
+    case 'thriving':
+      return 'sunny';
+    case 'growing':
+      return 'partly-cloudy';
+    case 'stable':
+      return 'cloudy'; // Soft, contemplative
+    case 'idle':
+      return 'golden-hour'; // Beautiful sunset/dusk
+    case 'dormant':
+      return season === 'winter' ? 'soft-snow' : 'mist'; // Peaceful rest
+    default:
+      return 'sunny';
+  }
+}
+
+// Calculate days since last active
+function calculateDaysSinceActive(lastActiveDate: string | null): number {
+  if (!lastActiveDate) return 999; // Never active
+  const last = new Date(lastActiveDate);
+  const now = new Date();
+  const diffTime = now.getTime() - last.getTime();
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+}
+
+// Check which plants are unlocked
+function getUnlockedPlants(counts: ActivityCounts, streak: number, totalDays: number): PlantType[] {
+  return PLANT_UNLOCKS
+    .filter(unlock => unlock.requirement(counts, streak, totalDays))
+    .map(unlock => unlock.type);
+}
+
+// Find empty position in grid (center-out spiral)
 function findEmptyPosition(plants: Plant[], gridSize: number): { x: number; y: number } | null {
   const occupied = new Set(plants.map(p => `${p.x},${p.y}`));
-  
-  // Try to find position near center first, then expand
   const center = Math.floor(gridSize / 2);
+  
   for (let radius = 0; radius <= center; radius++) {
     for (let dx = -radius; dx <= radius; dx++) {
       for (let dy = -radius; dy <= radius; dy++) {
         const x = center + dx;
         const y = center + dy;
-        if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
-          if (!occupied.has(`${x},${y}`)) {
-            return { x, y };
-          }
+        if (x >= 0 && x < gridSize && y >= 0 && y < gridSize && !occupied.has(`${x},${y}`)) {
+          return { x, y };
         }
       }
     }
   }
-  
   return null;
 }
 
+// Create default garden data
+function createDefaultGardenData(): GardenData {
+  return {
+    growthPoints: 0,
+    totalPoints: 0,
+    plants: [],
+    gridSize: 5,
+    activityCounts: {
+      morningFlows: 0,
+      eveningFlows: 0,
+      extendedFlows: 0,
+      deepMeditations: 0,
+      presentationPreps: 0,
+      difficultConversationPreps: 0,
+      gratitudeEntries: 0,
+      breathingPractices: 0,
+      thoughtReframes: 0,
+      mindfulMoments: 0,
+      quickResets: 0,
+      preMeetingFocus: 0,
+    },
+    activitiesThisWeek: 0,
+    streak: 0,
+    longestStreak: 0,
+    lastActiveDate: null,
+    daysSinceActive: 999,
+    totalActiveDays: 0,
+    unlockedPlants: ['daisy', 'chamomile', 'marigold', 'morning-glory', 'lavender'],
+    visualState: 'stable',
+    weather: 'sunny',
+    season: getCurrentSeason(),
+    theme: 'cottage',
+    decorations: [],
+    milestones: [],
+    // Legacy
+    health: 50,
+    totalFlows: 0,
+    flowsToday: 0,
+    growth: 0,
+  };
+}
+
+// ============================================
+// ROUTES
+// ============================================
+
 /**
  * GET /api/garden/state
- * Get user's garden state for visualization
+ * Get user's complete garden state
  */
 router.get(
   '/state',
@@ -115,124 +412,545 @@ router.get(
   asyncHandler(async (req, res) => {
     const userId = req.userId!;
     
-    // Get garden state
-    let gardenState = await prisma.emotionGardenState.findUnique({
+    // Get stored garden state
+    const gardenState = await prisma.emotionGardenState.findUnique({
       where: { userId },
     });
     
-    // Get today's flow count
+    // Get activity data
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    // Count flows today
     const todaysFlows = await prisma.wellnessCheckIn.count({
-      where: {
-        userId,
-        type: { startsWith: 'flow-' },
-        createdAt: { gte: today },
-      },
+      where: { userId, type: { startsWith: 'flow-' }, createdAt: { gte: today } },
     });
     
-    // Get total flows
-    const totalFlows = await prisma.wellnessCheckIn.count({
-      where: {
-        userId,
-        type: { startsWith: 'flow-' },
-      },
+    // Count flows this week
+    const weeklyFlows = await prisma.wellnessCheckIn.count({
+      where: { userId, type: { startsWith: 'flow-' }, createdAt: { gte: weekAgo } },
+    });
+    
+    // Get most recent flow date
+    const lastFlow = await prisma.wellnessCheckIn.findFirst({
+      where: { userId, type: { startsWith: 'flow-' } },
+      orderBy: { createdAt: 'desc' },
     });
     
     // Calculate streak
     const recentCheckIns = await prisma.wellnessCheckIn.findMany({
       where: { userId, type: { startsWith: 'flow-' } },
       orderBy: { createdAt: 'desc' },
-      take: 30,
+      take: 365,
     });
     
     let streak = 0;
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
+    let checkDate = new Date();
+    checkDate.setHours(0, 0, 0, 0);
     
-    for (let i = 0; i < 30; i++) {
-      const hasFlowOnDate = recentCheckIns.some(ci => {
+    for (let i = 0; i < 365; i++) {
+      const hasActivity = recentCheckIns.some(ci => {
         const ciDate = new Date(ci.createdAt);
         ciDate.setHours(0, 0, 0, 0);
-        return ciDate.getTime() === currentDate.getTime();
+        return ciDate.getTime() === checkDate.getTime();
       });
       
-      if (hasFlowOnDate) {
+      if (hasActivity) {
         streak++;
-        currentDate.setDate(currentDate.getDate() - 1);
+        checkDate.setDate(checkDate.getDate() - 1);
       } else if (i === 0) {
-        // Allow today to be skipped if checking during the day
-        currentDate.setDate(currentDate.getDate() - 1);
+        // Allow today to not count yet
+        checkDate.setDate(checkDate.getDate() - 1);
       } else {
         break;
       }
     }
     
-    const gridSize = calculateGridSize(totalFlows);
+    // Load or create garden data
+    let gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
     
-    // Default garden data
-    const defaultData: GardenData = {
-      health: 50 + Math.min(streak * 5, 30) + Math.min(todaysFlows * 5, 20),
-      plants: [],
-      weather: 'sunny',
+    // Update calculated fields
+    const lastActiveDate = lastFlow?.createdAt?.toISOString() || gardenData.lastActiveDate;
+    const daysSinceActive = calculateDaysSinceActive(lastActiveDate);
+    const season = getCurrentSeason();
+    const visualState = calculateGardenState(weeklyFlows, daysSinceActive);
+    const weather = getWeatherForState(visualState, season);
+    const gridSize = calculateGridSize(gardenData.totalPoints);
+    
+    // Update unlocked plants
+    const unlockedPlants = getUnlockedPlants(
+      gardenData.activityCounts,
       streak,
-      lastFlowDate: recentCheckIns[0]?.createdAt?.toISOString() || null,
-      totalFlows,
-      flowsToday: todaysFlows,
-      growth: 0,
-      gridSize,
-      theme: 'cottage',
-      decorations: [],
-    };
+      gardenData.totalActiveDays
+    );
     
-    let gardenData = gardenState?.gardenData as GardenData || defaultData;
+    // Calculate health (legacy compatibility) - always positive
+    const health = Math.min(100, Math.max(20, 
+      50 + (streak * 3) + (weeklyFlows * 5)
+    ));
     
-    // Ensure gardenData has all required fields
+    // Merge updated data
     gardenData = {
-      ...defaultData,
       ...gardenData,
-      flowsToday: todaysFlows,
-      totalFlows,
       streak,
+      longestStreak: Math.max(gardenData.longestStreak, streak),
+      lastActiveDate,
+      daysSinceActive,
+      activitiesThisWeek: weeklyFlows,
+      visualState,
+      weather,
+      season,
       gridSize,
-      health: Math.min(100, Math.max(0, 50 + streak * 5 + todaysFlows * 5)),
+      unlockedPlants,
+      health,
+      totalFlows: recentCheckIns.length,
+      flowsToday: todaysFlows,
     };
     
-    // Determine visual state based on health and activity
-    let visualState: 'thriving' | 'growing' | 'stable' | 'idle' | 'dormant' = 'stable';
-    if (gardenData.health >= 80 && streak >= 3) {
-      visualState = 'thriving';
-    } else if (gardenData.health >= 60 || todaysFlows > 0) {
-      visualState = 'growing';
-    } else if (gardenData.health >= 40) {
-      visualState = 'stable';
-    } else if (gardenData.health >= 20) {
-      visualState = 'idle';
-    } else {
-      visualState = 'dormant';
-    }
-    
-    // Determine weather based on recent activity
-    let weather: 'sunny' | 'cloudy' | 'rain' = 'sunny';
-    if (gardenData.health < 40) {
-      weather = 'rain'; // Nourishing rain for struggling gardens
-    } else if (gardenData.health < 70) {
-      weather = 'cloudy';
-    }
+    // Get state message
+    const stateInfo = STATE_MESSAGES[visualState];
     
     res.json({
       ...gardenData,
-      weather,
-      visualState,
+      stateTitle: stateInfo.title,
+      stateMessage: stateInfo.message,
       lastUpdated: gardenState?.lastUpdated || new Date(),
     });
   })
 );
 
 /**
+ * POST /api/garden/activity
+ * Record an activity and award points (main growth endpoint)
+ */
+router.post(
+  '/activity',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { activityType, flowType, duration } = req.body;
+    
+    // Get current garden state
+    let gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    let gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
+    
+    // Calculate points based on activity
+    let points = ACTIVITY_POINTS[flowType] || ACTIVITY_POINTS[activityType] || 10;
+    
+    // Bonus for longer sessions
+    if (duration && duration > 20) {
+      points = Math.floor(points * 1.5);
+    }
+    
+    // Update activity counts
+    const activityKey = FLOW_TO_ACTIVITY[flowType];
+    if (activityKey && gardenData.activityCounts[activityKey] !== undefined) {
+      gardenData.activityCounts[activityKey]++;
+    }
+    
+    // Award points
+    gardenData.growthPoints += points;
+    gardenData.totalPoints += points;
+    
+    // Track as active today
+    const today = new Date().toISOString().split('T')[0];
+    if (gardenData.lastActiveDate?.split('T')[0] !== today) {
+      gardenData.totalActiveDays++;
+    }
+    gardenData.lastActiveDate = new Date().toISOString();
+    
+    // Check for new plant threshold
+    let newPlant: Plant | null = null;
+    let growthFeedback = 'bloom'; // Default: existing plant blooms
+    
+    if (gardenData.growthPoints >= THRESHOLDS.NEW_PLANT) {
+      // Plant a new flower!
+      gardenData.growthPoints -= THRESHOLDS.NEW_PLANT;
+      
+      const plantType = FLOW_TO_PLANT[flowType] || 'daisy';
+      const position = findEmptyPosition(gardenData.plants, gardenData.gridSize);
+      
+      if (position) {
+        newPlant = {
+          id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: plantType,
+          x: position.x,
+          y: position.y,
+          growthStage: 'sprout',
+          plantedAt: new Date().toISOString(),
+          bloomCount: 0,
+          associatedWith: flowType,
+        };
+        
+        gardenData.plants.push(newPlant);
+        gardenData.growth++;
+        growthFeedback = 'new-plant';
+      }
+    } else if (gardenData.growthPoints >= THRESHOLDS.BLOOM_ANIMATION && gardenData.plants.length > 0) {
+      // Bloom animation on existing plant
+      const randomPlant = gardenData.plants[Math.floor(Math.random() * gardenData.plants.length)];
+      if (randomPlant) {
+        randomPlant.bloomCount++;
+        growthFeedback = 'bloom';
+      }
+    }
+    
+    // Update grid size if points threshold reached
+    gardenData.gridSize = calculateGridSize(gardenData.totalPoints);
+    
+    // Check for new unlocks
+    const newUnlocks = getUnlockedPlants(
+      gardenData.activityCounts,
+      gardenData.streak,
+      gardenData.totalActiveDays
+    ).filter(p => !gardenData.unlockedPlants.includes(p));
+    
+    if (newUnlocks.length > 0) {
+      gardenData.unlockedPlants.push(...newUnlocks);
+    }
+    
+    // Check for milestone achievements
+    const milestones: string[] = [];
+    if (gardenData.totalActiveDays === 7) milestones.push('first-week');
+    if (gardenData.totalActiveDays === 30) milestones.push('first-month');
+    if (gardenData.streak === 7) milestones.push('week-streak');
+    if (gardenData.streak === 21) milestones.push('21-day-habit');
+    if (gardenData.totalPoints >= 100) milestones.push('100-points');
+    if (gardenData.totalPoints >= 500) milestones.push('500-points');
+    if (gardenData.plants.length === 10) milestones.push('10-plants');
+    
+    // Save garden state
+    if (gardenState) {
+      await prisma.emotionGardenState.update({
+        where: { userId },
+        data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+      });
+    } else {
+      await prisma.emotionGardenState.create({
+        data: { userId, gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+      });
+    }
+    
+    // Record the wellness check-in
+    await prisma.wellnessCheckIn.create({
+      data: {
+        userId,
+        type: `flow-${flowType}`,
+        completed: true,
+        mindState: 'flow-completed',
+        notes: `Earned ${points} points`,
+      },
+    });
+    
+    logger.info('Garden activity recorded', { userId, flowType, points, growthFeedback });
+    
+    res.json({
+      success: true,
+      pointsEarned: points,
+      totalPoints: gardenData.totalPoints,
+      growthFeedback,
+      newPlant,
+      newUnlocks,
+      milestones,
+      gardenState: {
+        visualState: gardenData.visualState,
+        gridSize: gardenData.gridSize,
+        plantCount: gardenData.plants.length,
+      },
+    });
+  })
+);
+
+/**
+ * POST /api/garden/plant
+ * Plant a specific flower (legacy endpoint, calls /activity internally)
+ */
+router.post(
+  '/plant',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { flowType, flowName } = req.body;
+    
+    // Delegate to activity endpoint logic
+    let gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    let gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
+    
+    const plantType = FLOW_TO_PLANT[flowType] || 'daisy';
+    const position = findEmptyPosition(gardenData.plants, gardenData.gridSize);
+    
+    if (!position) {
+      return res.json({
+        success: false,
+        message: 'Garden is full! Complete more flows to expand.',
+        gardenHealth: gardenData.health,
+      });
+    }
+    
+    const newPlant: Plant = {
+      id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: plantType,
+      x: position.x,
+      y: position.y,
+      growthStage: 'sprout',
+      plantedAt: new Date().toISOString(),
+      bloomCount: 0,
+      associatedWith: flowName || flowType,
+    };
+    
+    gardenData.plants.push(newPlant);
+    gardenData.growth++;
+    gardenData.totalPoints += 30;
+    gardenData.gridSize = calculateGridSize(gardenData.totalPoints);
+    
+    if (gardenState) {
+      await prisma.emotionGardenState.update({
+        where: { userId },
+        data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+      });
+    } else {
+      await prisma.emotionGardenState.create({
+        data: { userId, gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+      });
+    }
+    
+    logger.info('Plant added to garden', { userId, plantType, position });
+    
+    return res.json({
+      success: true,
+      plant: newPlant,
+      gardenHealth: gardenData.health,
+    });
+  })
+);
+
+/**
+ * GET /api/garden/unlocks
+ * Get list of all plants and their unlock status
+ */
+router.get(
+  '/unlocks',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    const gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
+    
+    const unlocks = PLANT_UNLOCKS.map(unlock => ({
+      type: unlock.type,
+      name: unlock.name,
+      description: unlock.description,
+      unlocked: gardenData.unlockedPlants.includes(unlock.type),
+    }));
+    
+    res.json({
+      unlockedCount: gardenData.unlockedPlants.length,
+      totalPlants: PLANT_UNLOCKS.length,
+      unlocks,
+      activityCounts: gardenData.activityCounts,
+    });
+  })
+);
+
+/**
+ * POST /api/garden/water
+ * Water the garden (cosmetic engagement)
+ */
+router.post(
+  '/water',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      return res.status(404).json({ error: 'Garden not found' });
+    }
+    
+    const gardenData = { ...createDefaultGardenData(), ...(gardenState.gardenData as object) } as GardenData;
+    
+    // Water all plants
+    gardenData.plants = gardenData.plants.map(plant => ({
+      ...plant,
+      lastWatered: new Date().toISOString(),
+    }));
+    
+    // Small point bonus for engagement
+    gardenData.totalPoints += 2;
+    
+    await prisma.emotionGardenState.update({
+      where: { userId },
+      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+    });
+    
+    logger.info('Garden watered', { userId });
+    
+    return res.json({
+      success: true,
+      message: 'Garden watered! ✨',
+      pointsEarned: 2,
+    });
+  })
+);
+
+/**
+ * POST /api/garden/grow
+ * Progress a specific plant's growth
+ */
+router.post(
+  '/grow',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { plantId } = req.body;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      return res.status(404).json({ error: 'Garden not found' });
+    }
+    
+    const gardenData = { ...createDefaultGardenData(), ...(gardenState.gardenData as object) } as GardenData;
+    const growthOrder: GrowthStage[] = ['seed', 'sprout', 'growing', 'blooming', 'full'];
+    
+    let updatedPlant: Plant | null = null;
+    
+    gardenData.plants = gardenData.plants.map(plant => {
+      if (plant.id === plantId) {
+        const currentIndex = growthOrder.indexOf(plant.growthStage);
+        if (currentIndex < growthOrder.length - 1) {
+          updatedPlant = {
+            ...plant,
+            growthStage: growthOrder[currentIndex + 1],
+            bloomCount: plant.growthStage === 'growing' ? plant.bloomCount + 1 : plant.bloomCount,
+          };
+          return updatedPlant;
+        }
+      }
+      return plant;
+    });
+    
+    await prisma.emotionGardenState.update({
+      where: { userId },
+      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+    });
+    
+    return res.json({
+      success: true,
+      plant: updatedPlant,
+    });
+  })
+);
+
+/**
+ * GET /api/garden/insights
+ * Get insights and recommendations
+ */
+router.get(
+  '/insights',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    // Get recent activity
+    const recentFlows = await prisma.wellnessCheckIn.findMany({
+      where: { userId, type: { startsWith: 'flow-' }, createdAt: { gte: weekAgo } },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    const gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
+    
+    // Generate insights
+    const insights: string[] = [];
+    const recommendations: string[] = [];
+    
+    // Activity-based insights
+    if (recentFlows.length >= 7) {
+      insights.push('🌟 Great consistency! You completed flows every day this week.');
+    } else if (recentFlows.length >= 3) {
+      insights.push('📈 Good progress! Keep building your flow habit.');
+    } else if (recentFlows.length > 0) {
+      insights.push('🌱 You started your practice this week. Each moment counts.');
+    } else {
+      insights.push('🧘 Your garden is ready when you are. No pressure.');
+    }
+    
+    // Streak insights
+    if (gardenData.streak >= 21) {
+      insights.push(`🔥 ${gardenData.streak}-day streak! You've built a solid habit.`);
+    } else if (gardenData.streak >= 7) {
+      insights.push(`✨ ${gardenData.streak}-day streak! Keep it going!`);
+    }
+    
+    // Recommendations based on patterns
+    if (gardenData.activityCounts.morningFlows < 5) {
+      recommendations.push('Try a Morning Intention Flow to start your day with clarity.');
+    }
+    if (gardenData.activityCounts.eveningFlows < 5) {
+      recommendations.push('Evening Wind-Down flows can improve your sleep quality.');
+    }
+    if (gardenData.activityCounts.breathingPractices < 10) {
+      recommendations.push('Breathing exercises are quick and effective for stress relief.');
+    }
+    
+    // Unlock progress
+    const nextUnlocks = PLANT_UNLOCKS
+      .filter(u => !gardenData.unlockedPlants.includes(u.type))
+      .slice(0, 3)
+      .map(u => ({ type: u.type, name: u.name, requirement: u.description }));
+    
+    res.json({
+      period: '7 days',
+      totalFlows: recentFlows.length,
+      streak: gardenData.streak,
+      longestStreak: gardenData.longestStreak,
+      totalPoints: gardenData.totalPoints,
+      insights,
+      recommendations,
+      nextUnlocks,
+      stateInfo: STATE_MESSAGES[gardenData.visualState],
+    });
+  })
+);
+
+/**
  * POST /api/garden/checkin
- * Record an emotion check-in and update garden
+ * Record an emotion check-in (legacy support)
  */
 router.post(
   '/checkin',
@@ -253,332 +971,11 @@ router.post(
     
     logger.info('Emotion check-in recorded', { userId, emotion, intensity });
     
-    // Update garden based on emotion
-    const gardenState = await updateGardenFromEmotion(userId, emotion, intensity);
-    
     res.json({
       success: true,
       checkIn,
-      gardenState,
     });
   })
 );
-
-/**
- * POST /api/garden/plant
- * Plant a new flower in the garden after completing a flow
- */
-router.post(
-  '/plant',
-  authenticate,
-  asyncHandler(async (req, res) => {
-    const userId = req.userId!;
-    const { flowType, flowName } = req.body;
-    
-    // Get current garden state
-    let gardenState = await prisma.emotionGardenState.findUnique({
-      where: { userId },
-    });
-    
-    const totalFlows = await prisma.wellnessCheckIn.count({
-      where: { userId, type: { startsWith: 'flow-' } },
-    });
-    
-    const gridSize = calculateGridSize(totalFlows);
-    
-    const defaultData: GardenData = {
-      health: 50,
-      plants: [],
-      weather: 'sunny',
-      streak: 0,
-      lastFlowDate: null,
-      totalFlows: 0,
-      flowsToday: 0,
-      growth: 0,
-      gridSize,
-      theme: 'cottage',
-      decorations: [],
-    };
-    
-    let gardenData = (gardenState?.gardenData as unknown as GardenData) || defaultData;
-    
-    // Determine plant type
-    const plantType: PlantType = FLOW_TO_PLANT[flowType] || 'daisy';
-    
-    // Find empty position
-    const position = findEmptyPosition(gardenData.plants, gridSize);
-    
-    if (position) {
-      const newPlant: Plant = {
-        id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        type: plantType,
-        x: position.x,
-        y: position.y,
-        growthStage: 'sprout',
-        plantedAt: new Date().toISOString(),
-        bloomCount: 0,
-        associatedWith: flowName || flowType,
-      };
-      
-      gardenData.plants.push(newPlant);
-      gardenData.growth++;
-      gardenData.health = Math.min(100, gardenData.health + 5);
-      gardenData.gridSize = gridSize;
-      
-      // Save garden state
-      if (gardenState) {
-        await prisma.emotionGardenState.update({
-          where: { userId },
-          data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
-        });
-      } else {
-        await prisma.emotionGardenState.create({
-          data: { userId, gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
-        });
-      }
-      
-      logger.info('Plant added to garden', { userId, plantType, position });
-      
-      res.json({
-        success: true,
-        plant: newPlant,
-        gardenHealth: gardenData.health,
-      });
-    } else {
-      // Garden is full - need to expand
-      res.json({
-        success: false,
-        message: 'Garden is full! Complete more flows to expand.',
-        gardenHealth: gardenData.health,
-      });
-    }
-  })
-);
-
-/**
- * POST /api/garden/water
- * Water the garden (cosmetic effect)
- */
-router.post(
-  '/water',
-  authenticate,
-  asyncHandler(async (req, res) => {
-    const userId = req.userId!;
-    
-    const gardenState = await prisma.emotionGardenState.findUnique({
-      where: { userId },
-    });
-    
-    if (!gardenState) {
-      return res.status(404).json({ error: 'Garden not found' });
-    }
-    
-    const gardenData = JSON.parse(JSON.stringify(gardenState.gardenData)) as GardenData;
-    
-    // Update last watered time on all plants
-    gardenData.plants = gardenData.plants.map(plant => ({
-      ...plant,
-      lastWatered: new Date().toISOString(),
-    }));
-    
-    // Small health boost
-    gardenData.health = Math.min(100, gardenData.health + 2);
-    
-    await prisma.emotionGardenState.update({
-      where: { userId },
-      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
-    });
-    
-    logger.info('Garden watered', { userId });
-    
-    return res.json({
-      success: true,
-      message: 'Garden watered! ✨',
-      gardenHealth: gardenData.health,
-    });
-  })
-);
-
-/**
- * POST /api/garden/grow
- * Progress plant growth stages
- */
-router.post(
-  '/grow',
-  authenticate,
-  asyncHandler(async (req, res) => {
-    const userId = req.userId!;
-    const { plantId } = req.body;
-    
-    const gardenState = await prisma.emotionGardenState.findUnique({
-      where: { userId },
-    });
-    
-    if (!gardenState) {
-      return res.status(404).json({ error: 'Garden not found' });
-    }
-    
-    const gardenData = JSON.parse(JSON.stringify(gardenState.gardenData)) as GardenData;
-    const growthOrder: GrowthStage[] = ['seed', 'sprout', 'growing', 'blooming', 'full'];
-    
-    gardenData.plants = gardenData.plants.map(plant => {
-      if (plant.id === plantId) {
-        const currentIndex = growthOrder.indexOf(plant.growthStage);
-        if (currentIndex < growthOrder.length - 1) {
-          return {
-            ...plant,
-            growthStage: growthOrder[currentIndex + 1],
-            bloomCount: plant.growthStage === 'growing' ? plant.bloomCount + 1 : plant.bloomCount,
-          };
-        }
-      }
-      return plant;
-    });
-    
-    await prisma.emotionGardenState.update({
-      where: { userId },
-      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
-    });
-    
-    const updatedPlant = gardenData.plants.find(p => p.id === plantId);
-    
-    return res.json({
-      success: true,
-      plant: updatedPlant,
-    });
-  })
-);
-
-/**
- * GET /api/garden/insights
- * Get insights about user's garden and patterns
- */
-router.get(
-  '/insights',
-  authenticate,
-  asyncHandler(async (req, res) => {
-    const userId = req.userId!;
-    
-    // Get recent check-ins (last 7 days)
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    
-    const recentCheckIns = await prisma.emotionCheckIn.findMany({
-      where: {
-        userId,
-        createdAt: { gte: weekAgo },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    
-    // Get recent flows
-    const recentFlows = await prisma.wellnessCheckIn.findMany({
-      where: {
-        userId,
-        type: { startsWith: 'flow-' },
-        createdAt: { gte: weekAgo },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    
-    // Calculate emotion distribution
-    const emotionCounts: Record<string, number> = {};
-    recentCheckIns.forEach(ci => {
-      emotionCounts[ci.emotion] = (emotionCounts[ci.emotion] || 0) + 1;
-    });
-    
-    // Find most common emotion
-    const dominantEmotion = Object.entries(emotionCounts)
-      .sort(([, a], [, b]) => b - a)[0]?.[0] || 'neutral';
-    
-    // Calculate average intensity
-    const avgIntensity = recentCheckIns.length > 0
-      ? recentCheckIns.reduce((sum, ci) => sum + ci.intensity, 0) / recentCheckIns.length
-      : 5;
-    
-    // Generate insights
-    const insights: string[] = [];
-    
-    if (recentFlows.length >= 7) {
-      insights.push('Great consistency! You completed flows every day this week.');
-    } else if (recentFlows.length >= 3) {
-      insights.push('Good progress! Keep building your flow habit.');
-    } else {
-      insights.push('Try adding more flows to your routine for better results.');
-    }
-    
-    if (avgIntensity > 7) {
-      insights.push('Your emotions have been intense lately. Consider more calming flows.');
-    } else if (avgIntensity < 4) {
-      insights.push('You seem balanced. Energizing flows might boost your day.');
-    }
-    
-    res.json({
-      period: '7 days',
-      totalCheckIns: recentCheckIns.length,
-      totalFlows: recentFlows.length,
-      dominantEmotion,
-      averageIntensity: Math.round(avgIntensity * 10) / 10,
-      emotionDistribution: emotionCounts,
-      insights,
-    });
-  })
-);
-
-/**
- * Update garden state based on emotion
- */
-async function updateGardenFromEmotion(userId: string, emotion: string, intensity: number) {
-  let gardenState = await prisma.emotionGardenState.findUnique({
-    where: { userId },
-  });
-  
-  const defaultData = {
-    health: 50,
-    plants: [],
-    weather: 'sunny',
-    streak: 0,
-    lastFlowDate: null,
-    totalFlows: 0,
-    flowsToday: 0,
-    growth: 0,
-  };
-  
-  let gardenData = (gardenState?.gardenData as unknown as GardenData) || defaultData;
-  
-  // Positive emotions boost health
-  const positiveEmotions = ['calm', 'joy', 'gratitude', 'confidence', 'peace'];
-  const negativeEmotions = ['anxiety', 'anger', 'overwhelm', 'frustration', 'sadness'];
-  
-  if (positiveEmotions.includes(emotion)) {
-    gardenData.health = Math.min(100, gardenData.health + Math.round(intensity / 2));
-  } else if (negativeEmotions.includes(emotion)) {
-    // Don't punish for negative emotions - garden just doesn't grow
-    // But acknowledge that user checked in
-    gardenData.health = Math.max(10, gardenData.health - 1);
-  }
-  
-  // Update weather based on recent emotions
-  if (positiveEmotions.includes(emotion) && intensity >= 7) {
-    gardenData.weather = 'sunny';
-  } else if (negativeEmotions.includes(emotion) && intensity >= 7) {
-    gardenData.weather = 'cloudy';
-  }
-  
-  // Save garden state
-  if (gardenState) {
-    gardenState = await prisma.emotionGardenState.update({
-      where: { userId },
-      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
-    });
-  } else {
-    gardenState = await prisma.emotionGardenState.create({
-      data: { userId, gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
-    });
-  }
-  
-  return gardenData;
-}
 
 export default router;
-

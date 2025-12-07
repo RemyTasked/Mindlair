@@ -89,6 +89,9 @@ async function showDashboard(user) {
                         forecast.color === 'yellow' ? '#f59e0b' : '#f97316';
 
   const gardenEmoji = getGardenEmoji(dailyFlowCount || 0);
+  
+  // Time-based reminders (spec aligned)
+  const timeReminder = getTimeBasedReminder();
 
   mainContent.innerHTML = `
     <div class="dashboard-view">
@@ -103,6 +106,19 @@ async function showDashboard(user) {
         <button class="logout-btn" id="logout-btn">Sign Out</button>
       </div>
 
+      ${timeReminder.show ? `
+      <div class="reminder-card" id="time-reminder">
+        <div class="reminder-icon">${timeReminder.icon}</div>
+        <div class="reminder-content">
+          <div class="reminder-title">${timeReminder.title}</div>
+          <div class="reminder-message">${timeReminder.message}</div>
+        </div>
+        <button class="reminder-action" data-flow="${timeReminder.action}">
+          ${timeReminder.actionLabel}
+        </button>
+      </div>
+      ` : ''}
+
       <div class="garden-card" id="garden-card">
         <div class="garden-visual">${gardenEmoji}</div>
         <div class="garden-stats">
@@ -115,6 +131,7 @@ async function showDashboard(user) {
             <div class="stat-label">Day Streak</div>
           </div>
         </div>
+        <div class="garden-link">View full garden on dashboard →</div>
       </div>
 
       <div class="forecast-card" style="border-left-color: ${forecastColor}">
@@ -157,8 +174,17 @@ async function showDashboard(user) {
   });
 
   document.getElementById('garden-card').addEventListener('click', () => {
-    chrome.tabs.create({ url: 'http://localhost:5173/dashboard' });
+    chrome.tabs.create({ url: 'http://localhost:5173/garden' });
   });
+
+  // Time-based reminder action
+  const reminderAction = document.querySelector('.reminder-action');
+  if (reminderAction) {
+    reminderAction.addEventListener('click', () => {
+      const flowType = reminderAction.dataset.flow;
+      chrome.tabs.create({ url: `http://localhost:5173/flow/${flowType}` });
+    });
+  }
 
   document.querySelectorAll('.action-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -173,6 +199,61 @@ function getGardenEmoji(flowCount) {
   if (flowCount >= 3) return '🌿';
   if (flowCount >= 1) return '🌱';
   return '🌰';
+}
+
+/**
+ * Get time-based reminder (aligned with spec)
+ * - Morning: "Start your day with intention on the dashboard"
+ * - End of day: "Unwind with an evening flow"
+ */
+function getTimeBasedReminder() {
+  const hour = new Date().getHours();
+  
+  // Morning (6am - 10am)
+  if (hour >= 6 && hour < 10) {
+    return {
+      show: true,
+      icon: '☀️',
+      title: 'Start your day with intention',
+      message: 'A morning flow can set you up for a focused, productive day.',
+      action: 'morning-intention',
+      actionLabel: 'Morning Flow',
+    };
+  }
+  
+  // Mid-day (10am - 5pm)
+  if (hour >= 10 && hour < 17) {
+    return {
+      show: false,
+      icon: '🎯',
+      title: '',
+      message: '',
+      action: '',
+      actionLabel: '',
+    };
+  }
+  
+  // End of day / Evening (5pm - 9pm)
+  if (hour >= 17 && hour < 21) {
+    return {
+      show: true,
+      icon: '🌅',
+      title: 'Time to transition',
+      message: 'Create a boundary between work and home with an evening flow.',
+      action: 'end-of-day-transition',
+      actionLabel: 'End of Day',
+    };
+  }
+  
+  // Night (9pm - 6am)
+  return {
+    show: true,
+    icon: '🌙',
+    title: 'Unwind with an evening flow',
+    message: 'Prepare for restful sleep with our Evening Wind-Down.',
+    action: 'evening-wind-down',
+    actionLabel: 'Wind Down',
+  };
 }
 
 function showError(message) {

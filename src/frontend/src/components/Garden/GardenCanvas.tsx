@@ -15,28 +15,44 @@ import { ZoomIn, ZoomOut, RotateCcw, Droplet, Scissors, Eye } from 'lucide-react
 
 // Plant Types (aligned with Mind Garden spec)
 export type PlantType = 
-  | 'sunflower'        // Pre-Presentation Power (bold)
-  | 'moonflower'       // End-of-Day Transition (twilight)
-  | 'lavender'         // Difficult Conversation Prep (resilient)
-  | 'chamomile'        // Quick Reset (quick-blooming)
-  | 'daisy'            // Pre-Meeting Focus (small)
-  | 'rose'             // Unlockable
-  | 'lotus'            // Weekend Wellness (contemplative)
-  | 'bamboo'           // Breathing practice
-  | 'fern'             // Reflection
-  | 'cherry-tree'      // Long meditation (grows over time)
-  | 'oak-sapling'      // Long meditation (grows over time)
-  | 'golden-flower'    // Gratitude journaling
-  | 'ivy'              // Streak connector
-  | 'succulent'        // Games/activities
-  // New plants from spec
-  | 'evening-primrose' // Post-Meeting Decompress (calming)
-  | 'morning-glory'    // Morning Intention Flow (vine)
-  | 'night-jasmine'    // Evening Wind-Down (serene)
-  | 'mature-tree';     // Deep Meditation (grows slowly)
+  // Starter plants
+  | 'daisy'            // Pre-Meeting Focus
+  | 'chamomile'        // Quick Reset
+  | 'marigold'         // End-of-Day Transition (sunset colors)
+  | 'morning-glory'    // Morning Intention (climbs, opens with sun)
+  | 'lavender'         // Post-Meeting Decompress
+  // Unlockable by practice type
+  | 'sunflower'        // 10 morning flows
+  | 'evening-primrose' // 10 evening flows
+  | 'rose'             // 25 extended flows
+  | 'lotus'            // 10 deep meditations
+  | 'poppy'            // 15 presentation preps
+  | 'violet'           // 20 difficult conversation preps
+  | 'fern'             // 30 gratitude entries
+  | 'bamboo'           // 20 breathing practices
+  | 'succulent'        // 15 thought reframes
+  | 'herb'             // 25 mindful moments
+  | 'moonflower'       // 15 evening flows
+  | 'night-jasmine'    // 20 evening wind-downs
+  | 'golden-flower'    // 25 gratitude entries
+  | 'ivy'              // 14-day streak
+  // Milestone trees
+  | 'cherry-tree'      // 30 days consistent
+  | 'oak-sapling'      // 90 days consistent
+  | 'willow'           // 180 days consistent
+  | 'mature-tree';     // 365 days consistent
 
 // Growth stages
 export type GrowthStage = 'seed' | 'sprout' | 'growing' | 'blooming' | 'full';
+
+// Garden visual states (non-punitive)
+export type GardenState = 'thriving' | 'growing' | 'stable' | 'idle' | 'dormant';
+
+// Weather types (all beautiful)
+export type WeatherType = 'sunny' | 'partly-cloudy' | 'cloudy' | 'golden-hour' | 'mist' | 'gentle-rain' | 'soft-snow';
+
+// Season type
+export type Season = 'spring' | 'summer' | 'fall' | 'winter';
 
 // Plant data structure
 export interface Plant {
@@ -48,17 +64,25 @@ export interface Plant {
   plantedAt: string;
   lastWatered?: string;
   bloomCount: number;
-  associatedWith?: string; // e.g., "Pre-Meeting Focus", "Morning Flow"
+  associatedWith?: string;
 }
 
-// Garden state
+// Garden state (aligned with backend)
 export interface GardenData {
   plants: Plant[];
-  gridSize: number; // 5, 7, 10, 12, or 15
-  weather: 'sunny' | 'cloudy' | 'rain';
+  gridSize: number;
+  visualState: GardenState;
+  weather: WeatherType;
+  season: Season;
   health: number;
   decorations: Decoration[];
   theme: 'cottage' | 'zen' | 'meadow' | 'botanical';
+  // Additional metrics from backend
+  streak?: number;
+  totalPoints?: number;
+  activitiesThisWeek?: number;
+  stateTitle?: string;
+  stateMessage?: string;
 }
 
 // Decorations
@@ -79,6 +103,7 @@ interface GardenCanvasProps {
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
   interactive?: boolean;
 }
+
 
 // Plant SVG components
 const PlantSVG: Record<PlantType, (props: { stage: GrowthStage; size: number }) => JSX.Element> = {
@@ -722,6 +747,250 @@ const PlantSVG: Record<PlantType, (props: { stage: GrowthStage; size: number }) 
       )}
     </svg>
   ),
+
+  // ============================================
+  // ADDITIONAL PLANTS (New for Advanced Mechanics)
+  // ============================================
+
+  /**
+   * Marigold - End-of-Day Transition (starter)
+   * Warm sunset colors, represents work-life boundary
+   */
+  marigold: ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant mg-plant-sway">
+      <path d="M50 100 Q50 80, 50 55" stroke="#16a34a" strokeWidth="2" fill="none" />
+      {stage !== 'seed' && (
+        <>
+          <path d="M50 85 Q38 80, 35 88 Q43 86, 50 85" fill="#22c55e" />
+          <path d="M50 70 Q62 65, 65 73 Q57 71, 50 70" fill="#22c55e" />
+        </>
+      )}
+      {(stage === 'blooming' || stage === 'full') && (
+        <g transform="translate(50, 48)">
+          {/* Outer petals - orange */}
+          {[...Array(12)].map((_, i) => (
+            <ellipse
+              key={i}
+              cx="0"
+              cy="-12"
+              rx="4"
+              ry="10"
+              fill="#f97316"
+              transform={`rotate(${i * 30})`}
+              className="mg-plant-bloom"
+            />
+          ))}
+          {/* Inner petals - yellow */}
+          {[...Array(8)].map((_, i) => (
+            <ellipse
+              key={i}
+              cx="0"
+              cy="-8"
+              rx="3"
+              ry="7"
+              fill="#fbbf24"
+              transform={`rotate(${i * 45 + 22.5})`}
+            />
+          ))}
+          <circle cx="0" cy="0" r="5" fill="#ea580c" />
+        </g>
+      )}
+      {stage === 'growing' && (
+        <ellipse cx="50" cy="50" rx="6" ry="10" fill="#fdba74" />
+      )}
+    </svg>
+  ),
+
+  /**
+   * Poppy - Presentation Preps
+   * Bold red/orange, represents confidence
+   */
+  poppy: ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant mg-plant-sway">
+      <path d="M50 100 Q48 75, 50 45" stroke="#16a34a" strokeWidth="2" fill="none" />
+      {stage !== 'seed' && (
+        <path d="M50 80 Q35 75, 33 85 Q42 82, 50 80" fill="#22c55e" />
+      )}
+      {(stage === 'blooming' || stage === 'full') && (
+        <g transform="translate(50, 38)">
+          {/* Delicate petals - crinkled effect */}
+          {[...Array(4)].map((_, i) => (
+            <ellipse
+              key={i}
+              cx="0"
+              cy="-12"
+              rx="12"
+              ry="16"
+              fill={i % 2 === 0 ? '#ef4444' : '#dc2626'}
+              transform={`rotate(${i * 90 + 45})`}
+              className="mg-plant-bloom"
+            />
+          ))}
+          {/* Black center */}
+          <circle cx="0" cy="0" r="6" fill="#1f2937" />
+          {/* Stamens */}
+          {[...Array(8)].map((_, i) => (
+            <circle
+              key={i}
+              cx={Math.cos(i * 45 * Math.PI / 180) * 4}
+              cy={Math.sin(i * 45 * Math.PI / 180) * 4}
+              r="1"
+              fill="#fbbf24"
+            />
+          ))}
+        </g>
+      )}
+      {stage === 'growing' && (
+        <ellipse cx="50" cy="42" rx="5" ry="8" fill="#86efac" />
+      )}
+    </svg>
+  ),
+
+  /**
+   * Violet - Difficult Conversation Preps
+   * Delicate strength, purple tones
+   */
+  violet: ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant mg-plant-sway">
+      {/* Low growing, clustered */}
+      <path d="M50 100 Q50 90, 50 75" stroke="#16a34a" strokeWidth="1.5" fill="none" />
+      {/* Heart-shaped leaves */}
+      {stage !== 'seed' && (
+        <>
+          <path d="M50 95 Q35 88, 30 95 Q40 100, 50 95" fill="#22c55e" />
+          <path d="M50 95 Q65 88, 70 95 Q60 100, 50 95" fill="#22c55e" />
+          <path d="M45 85 Q30 78, 28 88 Q38 90, 45 85" fill="#16a34a" />
+        </>
+      )}
+      {(stage === 'blooming' || stage === 'full') && (
+        <>
+          {/* Flower 1 */}
+          <g transform="translate(50, 65)">
+            {[...Array(5)].map((_, i) => (
+              <ellipse
+                key={i}
+                cx="0"
+                cy="-8"
+                rx="5"
+                ry="8"
+                fill={i < 2 ? '#8b5cf6' : '#a78bfa'}
+                transform={`rotate(${i * 72})`}
+                className="mg-plant-bloom"
+              />
+            ))}
+            <circle cx="0" cy="0" r="3" fill="#fef9c3" />
+          </g>
+          {/* Flower 2 */}
+          {stage === 'full' && (
+            <g transform="translate(35, 72)">
+              {[...Array(5)].map((_, i) => (
+                <ellipse
+                  key={i}
+                  cx="0"
+                  cy="-6"
+                  rx="4"
+                  ry="6"
+                  fill="#7c3aed"
+                  transform={`rotate(${i * 72})`}
+                />
+              ))}
+              <circle cx="0" cy="0" r="2" fill="#fef9c3" />
+            </g>
+          )}
+        </>
+      )}
+      {stage === 'growing' && (
+        <ellipse cx="50" cy="68" rx="4" ry="6" fill="#c4b5fd" />
+      )}
+    </svg>
+  ),
+
+  /**
+   * Herb Garden - Mindful Moments
+   * Practical, aromatic collection (basil, mint, sage)
+   */
+  herb: ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant">
+      {/* Pot/base */}
+      <rect x="30" y="85" width="40" height="15" rx="3" fill="#92400e" />
+      <rect x="25" y="82" width="50" height="5" rx="2" fill="#78350f" />
+      
+      {stage !== 'seed' && (
+        <>
+          {/* Basil (left) */}
+          <path d="M38 85 Q38 70, 35 55" stroke="#16a34a" strokeWidth="1.5" fill="none" />
+          <ellipse cx="32" cy="55" rx="6" ry="4" fill="#22c55e" transform="rotate(-30 32 55)" />
+          <ellipse cx="38" cy="50" rx="5" ry="3.5" fill="#22c55e" transform="rotate(15 38 50)" />
+          <ellipse cx="30" cy="48" rx="5" ry="3.5" fill="#16a34a" transform="rotate(-20 30 48)" />
+          
+          {/* Mint (center) */}
+          <path d="M50 85 Q50 65, 50 45" stroke="#16a34a" strokeWidth="1.5" fill="none" />
+          <ellipse cx="45" cy="50" rx="5" ry="4" fill="#4ade80" transform="rotate(-15 45 50)" />
+          <ellipse cx="55" cy="48" rx="5" ry="4" fill="#4ade80" transform="rotate(15 55 48)" />
+          <ellipse cx="48" cy="42" rx="4" ry="3" fill="#22c55e" transform="rotate(-10 48 42)" />
+          
+          {/* Sage (right) */}
+          <path d="M62 85 Q62 70, 65 55" stroke="#16a34a" strokeWidth="1.5" fill="none" />
+          <ellipse cx="68" cy="58" rx="7" ry="4" fill="#6b7280" transform="rotate(20 68 58)" />
+          <ellipse cx="62" cy="52" rx="6" ry="3.5" fill="#9ca3af" transform="rotate(-10 62 52)" />
+          <ellipse cx="70" cy="50" rx="5" ry="3" fill="#6b7280" transform="rotate(25 70 50)" />
+        </>
+      )}
+      
+      {(stage === 'blooming' || stage === 'full') && (
+        <>
+          {/* Small flowers on mint */}
+          {[...Array(3)].map((_, i) => (
+            <circle key={i} cx={48 + i * 4} cy={38 - i * 2} r="2" fill="#e9d5ff" />
+          ))}
+        </>
+      )}
+    </svg>
+  ),
+
+  /**
+   * Willow - 180 Days Consistent
+   * Graceful, flowing, contemplative milestone tree
+   */
+  willow: ({ stage, size }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant">
+      {/* Trunk */}
+      <path d="M50 100 L50 55" stroke="#78350f" strokeWidth="5" fill="none" />
+      {/* Main branches */}
+      {stage !== 'seed' && (
+        <>
+          <path d="M50 60 Q35 50, 25 55" stroke="#78350f" strokeWidth="2" fill="none" />
+          <path d="M50 60 Q65 50, 75 55" stroke="#78350f" strokeWidth="2" fill="none" />
+          <path d="M50 55 Q40 45, 30 50" stroke="#92400e" strokeWidth="1.5" fill="none" />
+          <path d="M50 55 Q60 45, 70 50" stroke="#92400e" strokeWidth="1.5" fill="none" />
+        </>
+      )}
+      {/* Weeping branches */}
+      {(stage === 'growing' || stage === 'blooming' || stage === 'full') && (
+        <>
+          {/* Left weeping branches */}
+          <path d="M25 55 Q20 65, 15 85" stroke="#22c55e" strokeWidth="1" fill="none" className="mg-plant-sway" />
+          <path d="M30 52 Q25 65, 20 82" stroke="#22c55e" strokeWidth="1" fill="none" className="mg-plant-sway" />
+          <path d="M35 50 Q30 65, 28 80" stroke="#16a34a" strokeWidth="1" fill="none" className="mg-plant-sway" />
+          {/* Right weeping branches */}
+          <path d="M75 55 Q80 65, 85 85" stroke="#22c55e" strokeWidth="1" fill="none" className="mg-plant-sway" />
+          <path d="M70 52 Q75 65, 80 82" stroke="#22c55e" strokeWidth="1" fill="none" className="mg-plant-sway" />
+          <path d="M65 50 Q70 65, 72 80" stroke="#16a34a" strokeWidth="1" fill="none" className="mg-plant-sway" />
+          {/* Center weeping */}
+          <path d="M45 48 Q40 60, 38 75" stroke="#22c55e" strokeWidth="1" fill="none" className="mg-plant-sway" />
+          <path d="M55 48 Q60 60, 62 75" stroke="#22c55e" strokeWidth="1" fill="none" className="mg-plant-sway" />
+        </>
+      )}
+      {/* Crown foliage */}
+      {(stage === 'blooming' || stage === 'full') && (
+        <g>
+          <ellipse cx="50" cy="45" rx="25" ry="15" fill="#22c55e" opacity="0.8" />
+          <ellipse cx="35" cy="48" rx="15" ry="10" fill="#16a34a" opacity="0.7" />
+          <ellipse cx="65" cy="48" rx="15" ry="10" fill="#16a34a" opacity="0.7" />
+        </g>
+      )}
+    </svg>
+  ),
 };
 
 export default function GardenCanvas({
@@ -741,10 +1010,13 @@ export default function GardenCanvas({
   // Calculate cell size based on grid
   const cellSize = Math.min(80, 600 / data.gridSize);
 
-  // Get weather class
-  const weatherClass = `mg-weather-${data.weather}`;
+  // Get visual state (default to stable if not provided)
+  const visualState = data.visualState || 'stable';
 
-  // Get time of day lighting
+  // Get weather class (handle new weather types)
+  const weatherClass = `mg-weather-${data.weather || 'sunny'}`;
+
+  // Get time of day lighting (overlays on top of state background)
   const getLighting = () => {
     switch (timeOfDay) {
       case 'morning':
@@ -755,6 +1027,24 @@ export default function GardenCanvas({
         return 'bg-gradient-to-b from-orange-200/30 to-purple-200/10';
       case 'night':
         return 'bg-gradient-to-b from-indigo-900/40 to-transparent';
+    }
+  };
+
+  // Get state-based background gradient
+  const getStateBackground = () => {
+    switch (visualState) {
+      case 'thriving':
+        return 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #ccfbf1 100%)';
+      case 'growing':
+        return 'linear-gradient(135deg, #f0fdf4 0%, #d1fae5 50%, #f0fdf4 100%)';
+      case 'stable':
+        return 'linear-gradient(135deg, #f8fafc 0%, #f0fdf4 50%, #ecfdf5 100%)';
+      case 'idle':
+        return 'linear-gradient(135deg, #fffbeb 0%, #fed7aa 50%, #fce7f3 100%)';
+      case 'dormant':
+        return 'linear-gradient(135deg, #f1f5f9 0%, #f5f3ff 50%, #eef2ff 100%)';
+      default:
+        return 'linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%)';
     }
   };
 
@@ -818,26 +1108,57 @@ export default function GardenCanvas({
     return cells;
   };
 
-  // Render weather effects
+  // Render weather effects (all weather is beautiful)
   const renderWeatherEffects = () => {
-    if (data.weather === 'rain') {
-      return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(30)].map((_, i) => (
-            <div
-              key={i}
-              className="mg-rain-drop"
-              style={{
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${1 + Math.random() * 0.5}s`,
-              }}
-            />
-          ))}
-        </div>
-      );
+    switch (data.weather) {
+      case 'gentle-rain':
+        return (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[...Array(30)].map((_, i) => (
+              <div
+                key={i}
+                className="mg-rain-drop"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationDuration: `${1 + Math.random() * 0.5}s`,
+                }}
+              />
+            ))}
+          </div>
+        );
+      case 'soft-snow':
+        return (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className="mg-snowflake"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 4}s`,
+                  animationDuration: `${4 + Math.random() * 2}s`,
+                  opacity: 0.6 + Math.random() * 0.4,
+                }}
+              />
+            ))}
+          </div>
+        );
+      case 'mist':
+        return (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-t from-white/30 via-slate-100/20 to-transparent animate-pulse" />
+          </div>
+        );
+      case 'golden-hour':
+        return (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-200/20 via-transparent to-orange-200/10" />
+          </div>
+        );
+      default:
+        return null;
     }
-    return null;
   };
 
   return (
@@ -860,11 +1181,12 @@ export default function GardenCanvas({
       {/* Lighting Overlay */}
       <div className={`absolute inset-0 pointer-events-none ${getLighting()}`} />
 
-      {/* Garden Ground */}
+      {/* Garden Ground - State-based background */}
       <div 
         className="absolute bottom-0 left-0 right-0 h-1/2"
         style={{
-          background: 'linear-gradient(180deg, transparent 0%, rgba(34, 197, 94, 0.2) 30%, rgba(22, 163, 74, 0.4) 100%)',
+          background: getStateBackground(),
+          opacity: 0.8,
         }}
       />
 

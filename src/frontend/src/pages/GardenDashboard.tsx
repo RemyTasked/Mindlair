@@ -95,6 +95,46 @@ interface Meeting {
   endTime: string;
 }
 
+interface GardenInsights {
+  stateTitle: string;
+  stateMessage: string;
+  recommendations: string[];
+  nextUnlocks: Array<{ type: string; name: string; requirement: string }>;
+}
+
+// Check if calendar plugin is installed (via localStorage flag)
+function isCalendarPluginInstalled(): boolean {
+  return localStorage.getItem('mindgarden_plugin_installed') === 'true';
+}
+
+// Time-based reminder messages
+const TIME_REMINDERS = {
+  morning: {
+    title: 'Start your day with intention',
+    message: 'A Morning Intention Flow can set you up for a focused, productive day.',
+    action: 'morning-intention',
+    actionLabel: 'Start Morning Flow',
+  },
+  afternoon: {
+    title: 'Need a quick reset?',
+    message: 'Between meetings is a perfect time for a 90-second reset.',
+    action: 'quick-reset',
+    actionLabel: 'Quick Reset',
+  },
+  evening: {
+    title: 'Time to transition',
+    message: 'Create a boundary between work and personal time with an evening flow.',
+    action: 'end-of-day-transition',
+    actionLabel: 'End of Day Flow',
+  },
+  night: {
+    title: 'Unwind with an evening flow',
+    message: 'Prepare for restful sleep with our Evening Wind-Down.',
+    action: 'evening-wind-down',
+    actionLabel: 'Wind Down',
+  },
+};
+
 export default function GardenDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -110,13 +150,23 @@ export default function GardenDashboard() {
   const [gardenData, setGardenData] = useState<GardenData>({
     plants: [],
     gridSize: 5,
+    visualState: 'stable',
     weather: 'sunny',
+    season: getCurrentSeason(),
     health: 50,
     decorations: [],
     theme: 'cottage',
   });
   const [upcomingMeetings, setUpcomingMeetings] = useState<Meeting[]>([]);
   const [timeOfDay, setTimeOfDay] = useState(getTimeOfDay());
+  const [insights, setInsights] = useState<GardenInsights>({
+    stateTitle: 'Your garden is growing',
+    stateMessage: 'Keep nurturing your practice.',
+    recommendations: [],
+    nextUnlocks: [],
+  });
+  const [showPluginPrompt, setShowPluginPrompt] = useState(!isCalendarPluginInstalled());
+  const timeReminder = TIME_REMINDERS[timeOfDay];
 
   // Load data
   useEffect(() => {
@@ -164,20 +214,34 @@ export default function GardenDashboard() {
         }));
         
         // Map garden state to GardenData format
+        const visualState = gardenState.visualState || getVisualStateFromActivity(
+          gardenState.activitiesThisWeek || 0,
+          gardenState.daysSinceActive || 0
+        );
+        
         setGardenData({
           plants: gardenState.plants || generateDemoPlants(),
-          gridSize: calculateGridSize(gardenState.totalFlows || 0),
-          weather: getWeatherFromHealth(gardenState.health || 50),
+          gridSize: gardenState.gridSize || calculateGridSize(gardenState.totalFlows || 0),
+          visualState,
+          weather: gardenState.weather || getWeatherFromState(visualState),
+          season: gardenState.season || getCurrentSeason(),
           health: gardenState.health || 50,
-          decorations: [],
-          theme: 'cottage',
+          decorations: gardenState.decorations || [],
+          theme: gardenState.theme || 'cottage',
+          streak: gardenState.streak,
+          totalPoints: gardenState.totalPoints,
+          activitiesThisWeek: gardenState.activitiesThisWeek,
+          stateTitle: gardenState.stateTitle,
+          stateMessage: gardenState.stateMessage,
         });
       } catch (gardenError) {
         console.warn('Garden state not available, using defaults');
         setGardenData({
           plants: generateDemoPlants(),
           gridSize: 5,
+          visualState: 'stable',
           weather: 'sunny',
+          season: getCurrentSeason(),
           health: 50,
           decorations: [],
           theme: 'cottage',
@@ -196,6 +260,19 @@ export default function GardenDashboard() {
         setUpcomingMeetings(meetingsResponse.data.meetings?.slice(0, 3) || []);
       } catch (meetingError) {
         console.warn('Meetings not available');
+      }
+      
+      // Load garden insights
+      try {
+        const insightsResponse = await api.get('/api/garden/insights');
+        setInsights({
+          stateTitle: insightsResponse.data.stateInfo?.title || 'Your garden is growing',
+          stateMessage: insightsResponse.data.stateInfo?.message || 'Keep nurturing your practice.',
+          recommendations: insightsResponse.data.recommendations || [],
+          nextUnlocks: insightsResponse.data.nextUnlocks || [],
+        });
+      } catch (insightsError) {
+        console.warn('Insights not available');
       }
       
     } catch (error: any) {
@@ -339,6 +416,95 @@ export default function GardenDashboard() {
           </motion.div>
         </div>
 
+        {/* Garden State Message */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mg-card bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-700/30"
+        >
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-emerald-500/20">
+              <Sparkles className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-emerald-300 mb-1">{insights.stateTitle}</h3>
+              <p className="text-emerald-100/70 text-sm">{insights.stateMessage}</p>
+            </div>
+            <button
+              onClick={() => navigate(`/flow/${timeReminder.action}`)}
+              className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-sm font-medium transition-colors"
+            >
+              {timeReminder.actionLabel}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Calendar Plugin Prompt (Onboarding) */}
+        {showPluginPrompt && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mg-card bg-gradient-to-r from-sky-900/30 to-indigo-900/30 border border-sky-700/30"
+          >
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-sky-500/20">
+                <Calendar className="w-6 h-6 text-sky-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-sky-300 mb-1">Get meeting prep reminders</h3>
+                <p className="text-sky-100/70 text-sm mb-3">
+                  Install our calendar plugin to get mindfulness prompts before stressful meetings. 
+                  Never enter a meeting unprepared.
+                </p>
+                <div className="flex gap-3">
+                  <a
+                    href="https://chrome.google.com/webstore"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium transition-colors inline-flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0zM1.931 5.47A11.943 11.943 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-3.952 6.848a12.014 12.014 0 0 0 9.296-9.701H15.27z"/>
+                    </svg>
+                    Install for Chrome
+                  </a>
+                  <button
+                    onClick={() => setShowPluginPrompt(false)}
+                    className="px-4 py-2 text-sky-400/70 hover:text-sky-300 text-sm transition-colors"
+                  >
+                    Maybe later
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Time-Based Recommendation */}
+        {!showPluginPrompt && insights.recommendations.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mg-card"
+          >
+            <h3 className="mg-card-title flex items-center gap-2 mb-3">
+              <Target className="w-5 h-5 text-amber-400" />
+              Recommendations
+            </h3>
+            <div className="space-y-2">
+              {insights.recommendations.slice(0, 2).map((rec, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm text-[var(--mg-text-secondary)]">
+                  <span className="text-amber-400">💡</span>
+                  <span>{rec}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Garden Canvas (takes 2 columns on large screens) */}
@@ -472,10 +638,40 @@ function calculateGridSize(totalFlows: number): number {
   return 5;
 }
 
-function getWeatherFromHealth(health: number): 'sunny' | 'cloudy' | 'rain' {
-  if (health >= 70) return 'sunny';
-  if (health >= 40) return 'cloudy';
-  return 'rain';
+// Get weather type based on garden state (all weather is beautiful)
+function getWeatherFromState(visualState?: string): 'sunny' | 'partly-cloudy' | 'cloudy' | 'golden-hour' | 'mist' | 'gentle-rain' | 'soft-snow' {
+  switch (visualState) {
+    case 'thriving':
+      return 'sunny';
+    case 'growing':
+      return 'partly-cloudy';
+    case 'stable':
+      return 'cloudy';
+    case 'idle':
+      return 'golden-hour'; // Beautiful sunset
+    case 'dormant':
+      return getCurrentSeason() === 'winter' ? 'soft-snow' : 'mist';
+    default:
+      return 'sunny';
+  }
+}
+
+// Get current season based on date
+function getCurrentSeason(): 'spring' | 'summer' | 'fall' | 'winter' {
+  const month = new Date().getMonth();
+  if (month >= 2 && month <= 4) return 'spring';
+  if (month >= 5 && month <= 7) return 'summer';
+  if (month >= 8 && month <= 10) return 'fall';
+  return 'winter';
+}
+
+// Get visual state from activity (non-punitive)
+function getVisualStateFromActivity(activitiesThisWeek: number, daysSinceActive: number): 'thriving' | 'growing' | 'stable' | 'idle' | 'dormant' {
+  if (daysSinceActive >= 14) return 'dormant';
+  if (activitiesThisWeek === 0) return 'idle';
+  if (activitiesThisWeek >= 5) return 'thriving';
+  if (activitiesThisWeek >= 3) return 'growing';
+  return 'stable';
 }
 
 function generateDemoPlants(): Plant[] {
