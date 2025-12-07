@@ -169,43 +169,31 @@ export default function Activities() {
     : ACTIVITIES;
 
   const handleActivityClick = (activity: Activity) => {
-    console.log('[Activities] Clicked:', activity.id, 'Available:', activity.available);
-    if (!activity.available) {
-      console.log('[Activities] Activity not available, ignoring');
-      return;
-    }
+    if (!activity.available) return;
     
     switch (activity.id) {
       case 'gratitude-garden':
-        console.log('[Activities] Navigating to /activities/gratitude');
         navigate('/activities/gratitude');
         break;
       case 'thought-reframing':
-        console.log('[Activities] Navigating to /games (thought-sorter)');
         navigate('/games', { state: { openGame: 'thought-sorter' } });
         break;
       case 'breathing-garden':
-        console.log('[Activities] Navigating to /flow/breathing');
         navigate('/flow/breathing');
         break;
       case 'mindful-moments':
-        console.log('[Activities] Navigating to /flows');
         navigate('/flows');
         break;
       case 'thought-popper':
-        console.log('[Activities] Navigating to /games (thought-popper)');
         navigate('/games', { state: { openGame: 'thought-popper' } });
         break;
       case 'zen-match':
-        console.log('[Activities] Navigating to /games (zen-match)');
         navigate('/games', { state: { openGame: 'zen-match' } });
         break;
       case 'thought-sorter':
-        console.log('[Activities] Navigating to /games (thought-sorter)');
         navigate('/games', { state: { openGame: 'thought-sorter' } });
         break;
       default:
-        console.log('[Activities] No handler for:', activity.id);
         break;
     }
   };
