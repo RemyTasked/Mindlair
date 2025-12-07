@@ -100,8 +100,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       title: 'Focus',
       subtitle: 'Deep work mode',
       description: 'White noise to block distractions',
-      gradient: 'from-indigo-500 to-purple-500',
-      bgGradient: 'from-indigo-50 to-purple-50',
+      gradient: 'from-teal-500 to-emerald-500',
+      bgGradient: 'from-teal-50 to-emerald-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
@@ -221,7 +221,7 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
   }
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 via-teal-50 to-pink-50 rounded-2xl shadow-lg p-6 sm:p-8 border-2 border-teal-200">
+    <div className="bg-gradient-to-br from-teal-50 via-teal-50 to-pink-50 rounded-2xl shadow-lg p-6 sm:p-8 border-2 border-teal-200">
       <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm mb-4">
           <Sparkles className="w-4 h-4 text-teal-600" />

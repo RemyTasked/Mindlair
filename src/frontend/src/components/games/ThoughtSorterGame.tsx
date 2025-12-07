@@ -168,21 +168,21 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   // Onboarding
   if (showOnboarding) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-100 to-purple-200 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
         >
-          <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <LayoutGrid className="w-10 h-10 text-indigo-600" />
+          <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <LayoutGrid className="w-10 h-10 text-teal-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Thought Sorter</h2>
           <p className="text-gray-600 mb-6">
             Categorization Tool
           </p>
           
-          <div className="bg-indigo-50 rounded-2xl p-5 mb-6 text-left">
+          <div className="bg-teal-50 rounded-2xl p-5 mb-6 text-left">
             <h3 className="font-semibold text-gray-800 mb-3">How to Play:</h3>
             <ul className="space-y-3 text-gray-600 text-sm">
               <li className="flex items-start gap-3">
@@ -213,15 +213,15 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
                 </div>
               </li>
             </ul>
-            <div className="mt-4 pt-3 border-t border-indigo-100">
-              <span className="text-indigo-600 font-medium">+{POINTS_PER_SORT}</span>
+            <div className="mt-4 pt-3 border-t border-teal-100">
+              <span className="text-teal-600 font-medium">+{POINTS_PER_SORT}</span>
               <span className="text-gray-500 text-sm"> Serenity per sort</span>
             </div>
           </div>
           
           <button
             onClick={() => setShowOnboarding(false)}
-            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold text-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-teal-600 hover:to-emerald-700 transition-all shadow-lg"
           >
             Start Sorting
           </button>
@@ -242,10 +242,10 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   // Loading
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-100 to-purple-200">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-indigo-700">Loading your thoughts...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-teal-700">Loading your thoughts...</p>
         </div>
       </div>
     );
@@ -257,7 +257,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
     const credits = totalSorted * POINTS_PER_SORT;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-100 to-purple-200 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -300,7 +300,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-indigo-600 mb-6">
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-teal-600 mb-6">
             <Sparkles className="w-6 h-6" />
             <span>+{credits} Serenity</span>
           </div>
@@ -313,7 +313,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
 
   // Main Game
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-100 to-purple-200 p-4 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-teal-100 to-emerald-100 p-4 flex flex-col">
       {/* Header */}
       <div className="max-w-2xl mx-auto w-full mb-6">
         <div className="flex items-center justify-between">
@@ -343,7 +343,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${((currentIndex) / totalThoughts) * 100}%` }}
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full"
+            className="bg-gradient-to-r from-teal-500 to-emerald-500 h-2 rounded-full"
           />
         </div>
       </div>
@@ -409,7 +409,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           <motion.button
             onClick={() => handleSort('letGo')}
             disabled={!!animatingTo}
-            className="bg-gradient-to-br from-blue-400 to-indigo-500 text-white rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 transition-all shadow-lg disabled:opacity-50"
+            className="bg-gradient-to-br from-sky-400 to-teal-500 text-white rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 transition-all shadow-lg disabled:opacity-50"
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
           >

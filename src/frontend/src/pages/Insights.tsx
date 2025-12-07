@@ -371,7 +371,7 @@ export default function Insights() {
                 {insights.flowsByType.map((type, i) => {
                   const maxCount = Math.max(...insights.flowsByType.map(t => t.count));
                   const percentage = (type.count / maxCount) * 100;
-                  const colors = ['bg-indigo-500', 'bg-sky-500', 'bg-amber-500', 'bg-rose-500'];
+                  const colors = ['bg-teal-500', 'bg-sky-500', 'bg-amber-500', 'bg-rose-500'];
                   
                   return (
                     <div key={type.type}>
@@ -408,7 +408,7 @@ export default function Insights() {
             className="mg-card mb-8"
           >
             <h3 className="font-semibold text-[var(--mg-text-primary)] flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-indigo-400" />
+              <TrendingUp className="w-5 h-5 text-teal-400" />
               Meeting Patterns
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -445,7 +445,7 @@ export default function Insights() {
             className="mg-card mb-8"
           >
             <h3 className="font-semibold text-[var(--mg-text-primary)] flex items-center gap-2 mb-4">
-              <Music className="w-5 h-5 text-purple-400" />
+              <Music className="w-5 h-5 text-cyan-400" />
               Audio & Soundscape
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -146,7 +146,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading questions...</p>
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
           <p className="text-xl text-gray-600 mb-4">
             Score: {score} / {questions.length}
           </p>
-          <div className="flex items-center justify-center gap-2 text-indigo-600 mb-6">
+          <div className="flex items-center justify-center gap-2 text-teal-600 mb-6">
             <Sparkles className="w-5 h-5" />
             <span className="text-lg font-semibold">+{creditsEarned} Credits</span>
           </div>
@@ -193,15 +193,15 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
           className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full"
         >
           <div className="text-center mb-6">
-            <Sparkles className="w-16 h-16 text-indigo-600 mx-auto mb-4" />
+            <Sparkles className="w-16 h-16 text-teal-600 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Scene Sense</h2>
             <p className="text-gray-600">Build your mental performance skills through quick questions</p>
           </div>
           
           <div className="space-y-4 mb-6">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-indigo-600 font-bold">1</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">1</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Answer Questions</h3>
@@ -210,8 +210,8 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-indigo-600 font-bold">2</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">2</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Get Immediate Feedback</h3>
@@ -220,8 +220,8 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-indigo-600 font-bold">3</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">3</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Learn Micro-Teaching</h3>
@@ -230,8 +230,8 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-indigo-600 font-bold">4</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">4</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Earn Credits</h3>
@@ -245,7 +245,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
               localStorage.setItem('scene-sense-onboarding-seen', 'true');
               setShowOnboarding(false);
             }}
-            className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 transition-all font-semibold"
+            className="w-full px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-lg hover:from-teal-700 hover:to-teal-700 transition-all font-semibold"
           >
             Let's Play!
           </button>
@@ -268,7 +268,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
               // Try to reload questions
               loadQuestions();
             }}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 mr-2"
+            className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 mr-2"
           >
             Retry
           </button>
@@ -322,7 +322,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-              className="bg-gradient-to-r from-indigo-600 to-teal-600 h-2 rounded-full"
+              className="bg-gradient-to-r from-teal-600 to-teal-600 h-2 rounded-full"
             />
           </div>
         </div>
@@ -336,7 +336,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
           className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 mb-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
               {currentIndex + 1}
             </div>
             <div>
@@ -369,8 +369,8 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
                         ? 'border-red-500 bg-red-50'
                         : 'border-gray-200 bg-gray-50'
                       : isSelected
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 active:bg-indigo-100'
+                      ? 'border-teal-500 bg-teal-50'
+                      : 'border-gray-200 hover:border-teal-300 hover:bg-teal-50 active:bg-teal-100'
                   } ${showFeedback ? 'cursor-default' : 'cursor-pointer'}`}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
@@ -404,7 +404,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-gradient-to-r from-indigo-50 to-teal-50 rounded-2xl p-6 sm:p-8 mb-6 border-l-4 border-indigo-500"
+              className="bg-gradient-to-r from-teal-50 to-teal-50 rounded-2xl p-6 sm:p-8 mb-6 border-l-4 border-teal-500"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-3">💡 Micro-Teaching</h3>
               <p className="text-gray-700 leading-relaxed italic">
@@ -420,7 +420,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={handleNext}
-            className="w-full sm:w-auto px-8 py-4 sm:py-5 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 active:from-indigo-800 active:to-teal-800 transition-all shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg flex items-center justify-center gap-3 mx-auto touch-manipulation"
+            className="w-full sm:w-auto px-8 py-4 sm:py-5 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-lg hover:from-teal-700 hover:to-teal-700 active:from-teal-800 active:to-teal-800 transition-all shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg flex items-center justify-center gap-3 mx-auto touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             {currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Game'}

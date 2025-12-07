@@ -66,7 +66,7 @@ const BREATHING_FLOWS: Record<MindState, BreathingPhase[]> = {
   calm: [
     { action: 'Breathe In', duration: 5, instruction: '', color: 'from-blue-400 to-cyan-400' },
     { action: 'Hold', duration: 5, instruction: '', color: 'from-teal-400 to-blue-400' },
-    { action: 'Breathe Out', duration: 7, instruction: '', color: 'from-indigo-400 to-teal-400' },
+    { action: 'Breathe Out', duration: 7, instruction: '', color: 'from-teal-400 to-teal-400' },
   ],
   stressed: [
     { action: 'Breathe In', duration: 5, instruction: '', color: 'from-green-400 to-emerald-400' },

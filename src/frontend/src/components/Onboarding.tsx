@@ -132,8 +132,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         transition={{ delay: 0.3, duration: 1 }}
         className="relative"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-teal-600/20 to-indigo-600/20 blur-3xl rounded-full"></div>
-        <Film className="w-24 h-24 mx-auto text-indigo-600 relative z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-teal-600/20 to-teal-600/20 blur-3xl rounded-full"></div>
+        <Film className="w-24 h-24 mx-auto text-teal-600 relative z-10" />
       </motion.div>
       
       <motion.div
@@ -142,7 +142,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         transition={{ delay: 0.6 }}
         className="space-y-4"
       >
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-teal-600 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-teal-600 bg-clip-text text-transparent">
           Scene Opens
         </h1>
         <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
@@ -163,7 +163,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Clock className="w-16 h-16 mx-auto text-indigo-600" />
+        <Clock className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">The Basics</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           When does your workday typically begin and end? This helps us deliver pre-meeting prep and nightly reflections at the right moments.
@@ -179,7 +179,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             type="time"
             value={data.workStart}
             onChange={(e) => setData({ ...data, workStart: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
         </div>
 
@@ -191,7 +191,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             type="time"
             value={data.workEnd}
             onChange={(e) => setData({ ...data, workEnd: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
         </div>
 
@@ -219,7 +219,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Target className="w-16 h-16 mx-auto text-indigo-600" />
+        <Target className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Focus & Intention</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           What do you most want to improve during meetings? Select all that apply.
@@ -233,8 +233,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             onClick={() => toggleGoal(goal)}
             className={`p-4 rounded-xl border-2 transition-all ${
               data.focusGoals.includes(goal)
-                ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                : 'border-gray-200 hover:border-indigo-300'
+                ? 'border-teal-600 bg-teal-50 text-teal-700'
+                : 'border-gray-200 hover:border-teal-300'
             }`}
           >
             <span className="font-semibold">{goal}</span>
@@ -250,7 +250,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           value={data.customGoal}
           onChange={(e) => setData({ ...data, customGoal: e.target.value })}
           placeholder="I want to leave meetings feeling..."
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
           rows={3}
         />
       </div>
@@ -265,7 +265,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Heart className="w-16 h-16 mx-auto text-indigo-600" />
+        <Heart className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Self-Awareness Snapshot</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           How do you typically feel about meetings?
@@ -311,7 +311,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Calendar className="w-16 h-16 mx-auto text-indigo-600" />
+        <Calendar className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Experience Calibration</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           How many meetings do you typically have per day?
@@ -329,8 +329,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             onClick={() => setData({ ...data, meetingsPerDay: option.value })}
             className={`p-6 rounded-xl border-2 transition-all text-left ${
               data.meetingsPerDay === option.value
-                ? 'border-indigo-600 bg-indigo-50'
-                : 'border-gray-200 hover:border-indigo-300'
+                ? 'border-teal-600 bg-teal-50'
+                : 'border-gray-200 hover:border-teal-300'
             }`}
           >
             <div className="font-semibold text-lg">{option.label}</div>
@@ -349,7 +349,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Sparkles className="w-16 h-16 mx-auto text-indigo-600" />
+        <Sparkles className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Your Director's Note</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           Set a phrase or mindset you want to carry through the week. This will resurface during your nightly reflections.
@@ -361,7 +361,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           value={data.directorsNote}
           onChange={(e) => setData({ ...data, directorsNote: e.target.value })}
           placeholder="Example: Lead with calm authority"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-lg"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none text-lg"
           rows={3}
         />
         <p className="text-xs text-gray-500 mt-2">
@@ -383,7 +383,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <Sparkles className="w-16 h-16 mx-auto text-indigo-600" />
+          <Sparkles className="w-16 h-16 mx-auto text-teal-600" />
         </motion.div>
         <h2 className="text-3xl font-bold text-gray-900">Setting the Stage</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
@@ -400,15 +400,15 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             type="time"
             value={data.presleyFlowTime}
             onChange={(e) => setData({ ...data, presleyFlowTime: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
           <p className="text-xs text-gray-500 mt-2">
             We'll suggest adjustments based on your usage patterns
           </p>
         </div>
 
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-          <p className="text-sm text-indigo-900">
+        <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+          <p className="text-sm text-teal-900">
             <strong>Your baseline profile is ready.</strong> Meet-Cute will now generate personalized cues, adjust tone suggestions, and refine timing based on your preferences.
           </p>
         </div>
@@ -417,7 +417,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-indigo-50/30 to-teal-50/30 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-teal-50/30 to-teal-50/30 z-50 overflow-y-auto">
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
           {/* Progress Bar */}
@@ -432,7 +432,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-indigo-600 to-teal-600"
+                className="h-full bg-gradient-to-r from-teal-600 to-teal-600"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentScene + 1) / totalScenes) * 100}%` }}
                 transition={{ duration: 0.5 }}
@@ -461,7 +461,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
               <button
                 onClick={nextScene}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl"
+                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl"
               >
                 {currentScene === totalScenes - 1 ? 'Begin Your Journey' : 'Continue'}
                 <ChevronRight className="w-5 h-5" />

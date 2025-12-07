@@ -12,7 +12,7 @@ export default function Terms() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors mb-4"
+            className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to Home
@@ -29,7 +29,7 @@ export default function Terms() {
           <h1 className="text-4xl font-bold mb-4 text-gray-900">Terms of Use</h1>
           <p className="text-gray-600 mb-8">Last Updated: November 1, 2025</p>
 
-          <div className="prose prose-indigo max-w-none">
+          <div className="prose prose-teal max-w-none">
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">1. Acceptance of Terms</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
@@ -186,8 +186,8 @@ export default function Terms() {
                 If you have any questions about these Terms, please contact us:
               </p>
               <p className="text-gray-700 leading-relaxed">
-                Email: <a href="mailto:support@meetcuteai.com" className="text-indigo-600 hover:text-indigo-700">support@meetcuteai.com</a><br />
-                Website: <a href="https://www.meetcuteai.com" className="text-indigo-600 hover:text-indigo-700">www.meetcuteai.com</a>
+                Email: <a href="mailto:support@meetcuteai.com" className="text-teal-600 hover:text-teal-700">support@meetcuteai.com</a><br />
+                Website: <a href="https://www.meetcuteai.com" className="text-teal-600 hover:text-teal-700">www.meetcuteai.com</a>
               </p>
             </section>
           </div>
@@ -197,11 +197,11 @@ export default function Terms() {
       {/* Footer */}
       <footer className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-600">
         <div className="flex justify-center gap-6 mb-4 text-sm">
-          <a href="/" className="hover:text-indigo-600 transition-colors">Home</a>
+          <a href="/" className="hover:text-teal-600 transition-colors">Home</a>
           <span>·</span>
-          <a href="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
+          <a href="/privacy" className="hover:text-teal-600 transition-colors">Privacy Policy</a>
           <span>·</span>
-          <a href="mailto:support@meetcuteai.com" className="hover:text-indigo-600 transition-colors">Contact</a>
+          <a href="mailto:support@meetcuteai.com" className="hover:text-teal-600 transition-colors">Contact</a>
         </div>
         <p className="text-sm">© 2025 Meet Cute. All rights reserved.</p>
       </footer>

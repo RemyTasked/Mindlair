@@ -30,10 +30,10 @@ interface Card {
 const ALL_ICON_CONFIGS = [
   // Weather & Sky
   { type: 'sun', icon: Sun, color: 'text-amber-500', bg: 'bg-amber-50' },
-  { type: 'moon', icon: Moon, color: 'text-indigo-400', bg: 'bg-indigo-50' },
+  { type: 'moon', icon: Moon, color: 'text-slate-400', bg: 'bg-slate-50' },
   { type: 'star', icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-50' },
   { type: 'cloud', icon: Cloud, color: 'text-sky-400', bg: 'bg-sky-50' },
-  { type: 'rain', icon: CloudRain, color: 'text-indigo-400', bg: 'bg-indigo-50' },
+  { type: 'rain', icon: CloudRain, color: 'text-sky-400', bg: 'bg-sky-50' },
   { type: 'snow', icon: Snowflake, color: 'text-cyan-400', bg: 'bg-cyan-50' },
   { type: 'wind', icon: Wind, color: 'text-teal-400', bg: 'bg-teal-50' },
   // Nature Elements

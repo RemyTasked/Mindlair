@@ -138,7 +138,7 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
   // Onboarding
   if (showOnboarding) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-100 to-indigo-200 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-100 to-teal-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -176,7 +176,7 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
           
           <button
             onClick={startGame}
-            className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-sky-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-sky-600 hover:to-teal-700 transition-all shadow-lg"
           >
             Start Popping
           </button>
@@ -197,7 +197,7 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
   // Game Complete
   if (gameComplete) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-100 to-indigo-200 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-100 to-teal-100 p-4">
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -231,7 +231,7 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
 
   // Main Game
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-indigo-200 p-4">
+    <div className="min-h-screen bg-gradient-to-b from-sky-100 to-teal-100 p-4">
       {/* Header */}
       <div className="max-w-4xl mx-auto mb-4">
         <div className="flex items-center justify-between">
@@ -293,14 +293,14 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-blue-200/60 to-transparent pointer-events-none" />
         
         {/* Top gradient (where bubbles escape) */}
-        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-indigo-200/40 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-teal-200/40 to-transparent pointer-events-none" />
       </div>
 
       {/* Progress Bar */}
       <div className="max-w-4xl mx-auto mt-4">
         <div className="bg-white/50 rounded-full h-3 overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-blue-500 to-indigo-500"
+            className="h-full bg-gradient-to-r from-sky-500 to-teal-500"
             initial={{ width: 0 }}
             animate={{ width: `${(score / GOAL) * 100}%` }}
             transition={{ duration: 0.3 }}

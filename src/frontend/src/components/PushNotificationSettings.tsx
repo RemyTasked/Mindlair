@@ -204,7 +204,7 @@ export default function PushNotificationSettings() {
                 <button
                   onClick={subscribeToPush}
                   disabled={isLoading || permission === 'denied'}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   {isLoading ? 'Enabling...' : '🔔 Enable Notifications'}
                 </button>

@@ -784,7 +784,7 @@ export default function EmotionGarden({ onExit }: EmotionGardenProps) {
               <div className="text-xs sm:text-sm text-gray-600">Weather</div>
             </div>
             <div className="bg-white/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 text-center border border-white/80">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-600">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-teal-600">
                 {gardenState.plants.filter(p => p.type === 'flower').length}
               </div>
               <div className="text-xs sm:text-sm text-gray-600">Flowers</div>

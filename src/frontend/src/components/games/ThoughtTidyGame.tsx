@@ -212,7 +212,7 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-900 via-emerald-900 to-pink-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white">Loading your thoughts...</p>
@@ -223,7 +223,7 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
 
   if (showSummary) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-900 via-emerald-900 to-pink-900 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -247,7 +247,7 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
               <span className="font-semibold text-yellow-300">Parked:</span> {buckets.park.length} {buckets.park.length === 1 ? 'thing' : 'things'} you'll handle tomorrow
             </p>
             <p className="text-lg">
-              <span className="font-semibold text-purple-300">Released:</span> {buckets.release.length} {buckets.release.length === 1 ? 'thing' : 'things'} that don't get tonight
+              <span className="font-semibold text-emerald-300">Released:</span> {buckets.release.length} {buckets.release.length === 1 ? 'thing' : 'things'} that don't get tonight
             </p>
           </div>
 
@@ -267,7 +267,7 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
   const allSorted = cards.length === 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-teal-900 via-emerald-900 to-pink-900 p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Exit Button - Always show */}
         <div className="mb-6 flex justify-end">
@@ -416,16 +416,16 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDrop('release', e)}
-            className={`bg-purple-500/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 border-2 border-dashed ${
-              draggedCard ? 'border-purple-400' : 'border-purple-500/50'
+            className={`bg-emerald-500/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 border-2 border-dashed ${
+              draggedCard ? 'border-emerald-400' : 'border-emerald-500/50'
             } min-h-[180px] sm:min-h-[200px]`}
           >
             <div className="flex items-center gap-2 mb-4">
-              <X className="w-5 h-5 text-purple-300" />
-              <h3 className="text-purple-300 font-semibold text-lg">Release</h3>
-              <span className="text-purple-300/80 text-sm">({buckets.release.length})</span>
+              <X className="w-5 h-5 text-emerald-300" />
+              <h3 className="text-emerald-300 font-semibold text-lg">Release</h3>
+              <span className="text-emerald-300/80 text-sm">({buckets.release.length})</span>
             </div>
-            <p className="text-purple-200/80 text-xs mb-4">Doesn't deserve more mental energy</p>
+            <p className="text-emerald-200/80 text-xs mb-4">Doesn't deserve more mental energy</p>
             <div className="space-y-2">
               {buckets.release.map((card) => (
                 <motion.div
@@ -454,7 +454,7 @@ export default function ThoughtTidyGame({ onComplete, onExit }: ThoughtTidyGameP
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={handleComplete}
-            className="w-full sm:w-auto mx-auto block px-8 py-4 sm:py-5 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 active:from-indigo-800 active:to-teal-800 transition-all shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg touch-manipulation"
+            className="w-full sm:w-auto mx-auto block px-8 py-4 sm:py-5 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-lg hover:from-teal-700 hover:to-teal-700 active:from-teal-800 active:to-teal-800 transition-all shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             Complete Thought Tidy

@@ -152,7 +152,7 @@ export default function VoiceNarrator({
         }}
         className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all shadow-lg ${
           enabled
-            ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+            ? 'bg-teal-600 hover:bg-teal-700 text-white'
             : 'bg-gray-600 hover:bg-gray-700 text-white'
         }`}
         title={enabled ? 'Voice narration enabled (click to disable)' : 'Voice narration disabled (click to enable)'}

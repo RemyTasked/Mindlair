@@ -91,7 +91,7 @@ export default function CalDAVModal({ isOpen, onClose, onSuccess }: CalDAVModalP
             className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-teal-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-600 px-6 py-4 flex items-center justify-between">
               <h3 className="text-xl font-bold text-white">Connect Calendar</h3>
               <button
                 onClick={handleClose}
@@ -197,7 +197,7 @@ export default function CalDAVModal({ isOpen, onClose, onSuccess }: CalDAVModalP
                     <button
                       type="submit"
                       disabled={loading || !email || !password}
-                      className="w-full py-3 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-gradient-to-r from-teal-600 to-teal-600 hover:from-teal-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {loading ? (
                         <>

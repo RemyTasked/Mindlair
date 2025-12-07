@@ -74,7 +74,7 @@ export default function BreathingCircle({ onComplete, duration = 60 }: Breathing
             duration: phase === 'hold' ? 4 : 4,
             ease: phase === 'hold' ? 'linear' : 'easeInOut',
           }}
-          className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-400 to-indigo-500 opacity-80 flex items-center justify-center"
+          className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-400 to-teal-500 opacity-80 flex items-center justify-center"
         >
           <div className="text-white text-2xl font-semibold">
             {phaseText[phase]}

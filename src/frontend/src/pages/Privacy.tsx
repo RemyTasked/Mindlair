@@ -28,9 +28,9 @@ export default function Privacy() {
 
       <main className="container mx-auto px-6 py-12 max-w-4xl">
         {/* Hero Section */}
-        <div className="bg-gradient-to-br from-indigo-50 to-teal-50 rounded-2xl p-8 mb-12 border border-indigo-200">
+        <div className="bg-gradient-to-br from-teal-50 to-teal-50 rounded-2xl p-8 mb-12 border border-teal-200">
           <div className="flex items-start gap-4">
-            <Shield className="w-12 h-12 text-indigo-600 flex-shrink-0" />
+            <Shield className="w-12 h-12 text-teal-600 flex-shrink-0" />
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 Your Privacy is Our Priority
@@ -67,7 +67,7 @@ export default function Privacy() {
           />
 
           <SecurityFeature
-            icon={<Database className="w-8 h-8 text-indigo-600" />}
+            icon={<Database className="w-8 h-8 text-teal-600" />}
             title="Minimal Data Storage"
             description="We only store meeting titles, times, and attendee counts—nothing sensitive. No meeting notes, attachments, or private details are ever stored."
           />
@@ -160,11 +160,11 @@ export default function Privacy() {
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-start gap-2">
               <span className="font-semibold min-w-[120px]">Google:</span>
-              <span>Visit <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">myaccount.google.com/permissions</a> → Find "Meet Cute" → Remove Access</span>
+              <span>Visit <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">myaccount.google.com/permissions</a> → Find "Meet Cute" → Remove Access</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold min-w-[120px]">Microsoft:</span>
-              <span>Visit <a href="https://account.microsoft.com/privacy/app-access" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">account.microsoft.com/privacy</a> → Apps & Services → Remove Meet Cute</span>
+              <span>Visit <a href="https://account.microsoft.com/privacy/app-access" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">account.microsoft.com/privacy</a> → Apps & Services → Remove Meet Cute</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold min-w-[120px]">Meet Cute:</span>
@@ -218,9 +218,9 @@ export default function Privacy() {
             <div className="bg-red-50 p-5 rounded-lg border-2 border-red-300">
               <p className="font-bold text-red-900 mb-3">🆘 Crisis Resources:</p>
               <ul className="space-y-2 text-gray-800">
-                <li>🇺🇸 <strong>National Suicide Prevention Lifeline:</strong> <a href="tel:988" className="text-indigo-600 hover:underline font-semibold">988</a></li>
-                <li>🇺🇸 <strong>Crisis Text Line:</strong> Text HOME to <a href="sms:741741" className="text-indigo-600 hover:underline font-semibold">741741</a></li>
-                <li>🌍 <strong>International:</strong> <a href="https://findahelpline.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline font-semibold">findahelpline.com</a></li>
+                <li>🇺🇸 <strong>National Suicide Prevention Lifeline:</strong> <a href="tel:988" className="text-teal-600 hover:underline font-semibold">988</a></li>
+                <li>🇺🇸 <strong>Crisis Text Line:</strong> Text HOME to <a href="sms:741741" className="text-teal-600 hover:underline font-semibold">741741</a></li>
+                <li>🌍 <strong>International:</strong> <a href="https://findahelpline.com" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline font-semibold">findahelpline.com</a></li>
               </ul>
             </div>
 
@@ -241,10 +241,10 @@ export default function Privacy() {
           </p>
           <div className="space-y-2">
             <p className="text-gray-700">
-              <strong>Email:</strong> <a href="mailto:privacy@meetcuteai.com" className="text-indigo-600 hover:underline">privacy@meetcuteai.com</a>
+              <strong>Email:</strong> <a href="mailto:privacy@meetcuteai.com" className="text-teal-600 hover:underline">privacy@meetcuteai.com</a>
             </p>
             <p className="text-gray-700">
-              <strong>Security Issues:</strong> <a href="mailto:security@meetcuteai.com" className="text-indigo-600 hover:underline">security@meetcuteai.com</a>
+              <strong>Security Issues:</strong> <a href="mailto:security@meetcuteai.com" className="text-teal-600 hover:underline">security@meetcuteai.com</a>
             </p>
           </div>
           <p className="text-sm text-gray-500 mt-6">

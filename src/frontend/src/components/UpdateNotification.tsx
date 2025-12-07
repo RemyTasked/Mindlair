@@ -14,7 +14,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up">
-      <div className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-xl shadow-2xl p-4 border border-indigo-400 animate-pulse">
+      <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl shadow-2xl p-4 border border-teal-400 animate-pulse">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-1">
             <RefreshCw className={`w-6 h-6 text-white ${isUpdating ? 'animate-spin' : ''}`} />
@@ -23,14 +23,14 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
             {isUpdating ? (
               <>
                 <h3 className="font-semibold text-lg mb-1">Updating... ✨</h3>
-                <p className="text-sm text-indigo-100">
+                <p className="text-sm text-teal-100">
                   Refreshing to the latest version. This will only take a moment!
                 </p>
               </>
             ) : (
               <>
                 <h3 className="font-semibold text-lg mb-1">🚀 Update Ready!</h3>
-                <p className="text-sm text-indigo-100 mb-3">
+                <p className="text-sm text-teal-100 mb-3">
                   A fresh version of Meet Cute is waiting! Get the latest features and improvements.
                 </p>
                 <div className="flex gap-2">
@@ -42,7 +42,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
                         onUpdate();
                       }, 500);
                     }}
-                    className="flex-1 px-4 py-2 bg-white text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors font-medium text-sm shadow-md"
+                    className="flex-1 px-4 py-2 bg-white text-teal-600 rounded-lg hover:bg-teal-50 transition-colors font-medium text-sm shadow-md"
                   >
                     Update Now
                   </button>
@@ -54,12 +54,12 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
                         onDismiss();
                       }, 300);
                     }}
-                    className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 rounded-lg transition-colors font-medium text-sm"
+                    className="px-4 py-2 bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors font-medium text-sm"
                   >
                     Maybe Later
                   </button>
                 </div>
-                <p className="text-xs text-indigo-200 mt-2">
+                <p className="text-xs text-teal-200 mt-2">
                   💡 Tip: Update during a break to avoid interrupting your workflow
                 </p>
               </>
@@ -71,7 +71,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate
                 setIsVisible(false);
                 onDismiss();
               }}
-              className="flex-shrink-0 text-white hover:text-indigo-200 transition-colors"
+              className="flex-shrink-0 text-white hover:text-teal-200 transition-colors"
               aria-label="Dismiss"
             >
               <X className="w-5 h-5" />

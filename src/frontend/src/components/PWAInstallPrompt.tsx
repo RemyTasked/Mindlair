@@ -85,14 +85,14 @@ export default function PWAInstallPrompt() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 animate-slide-up">
-      <div className="max-w-2xl mx-auto bg-gradient-to-r from-indigo-600 to-teal-600 rounded-2xl shadow-2xl p-6 text-white">
+      <div className="max-w-2xl mx-auto bg-gradient-to-r from-teal-600 to-teal-600 rounded-2xl shadow-2xl p-6 text-white">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
               <Logo size="md" />
               <div>
                 <h3 className="text-lg font-bold">Install Meet Cute</h3>
-                <p className="text-sm text-indigo-100">
+                <p className="text-sm text-teal-100">
                   Get the full experience with our app
                 </p>
               </div>
@@ -100,7 +100,7 @@ export default function PWAInstallPrompt() {
 
             {isIOS ? (
               // iOS-specific instructions
-              <div className="text-sm text-indigo-100 space-y-2 bg-white/10 rounded-lg p-4">
+              <div className="text-sm text-teal-100 space-y-2 bg-white/10 rounded-lg p-4">
                 <p className="font-semibold">To install on iPhone:</p>
                 <ol className="list-decimal list-inside space-y-1">
                   <li>Tap the <strong>Share</strong> button (square with arrow) below</li>
@@ -110,7 +110,7 @@ export default function PWAInstallPrompt() {
               </div>
             ) : (
               // Android/Chrome
-              <div className="text-sm text-indigo-100 mb-4">
+              <div className="text-sm text-teal-100 mb-4">
                 <p>✨ Instant access from your home screen</p>
                 <p>⚡ Faster loading and offline support</p>
                 <p>🔔 Get meeting reminders (coming soon)</p>
@@ -132,7 +132,7 @@ export default function PWAInstallPrompt() {
         {!isIOS && (
           <button
             onClick={handleInstallClick}
-            className="mt-4 w-full bg-white text-indigo-600 font-bold py-3 px-6 rounded-lg hover:bg-indigo-50 transition-colors"
+            className="mt-4 w-full bg-white text-teal-600 font-bold py-3 px-6 rounded-lg hover:bg-teal-50 transition-colors"
           >
             Install Now
           </button>

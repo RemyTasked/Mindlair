@@ -24,8 +24,8 @@ const FOCUS_ROOMS: FocusRoom[] = [
     name: 'Deep Focus Room',
     description: 'Clarity & momentum',
     icon: <Headphones className="w-8 h-8" />,
-    gradient: 'from-indigo-600 to-blue-600',
-    bgGradient: 'from-indigo-50 to-blue-50',
+    gradient: 'from-sky-600 to-cyan-600',
+    bgGradient: 'from-sky-50 to-cyan-50',
     spotifyPlaylistId: 'deep-focus-lofi', // Will be replaced with actual playlist ID
     meetCuteSoundType: 'lofi-deep-focus', // Custom lo-fi for deep focus
   },
@@ -64,8 +64,8 @@ const FOCUS_ROOMS: FocusRoom[] = [
     name: 'Recovery Lounge',
     description: 'Decompress after tough scenes',
     icon: <Moon className="w-8 h-8" />,
-    gradient: 'from-purple-600 to-indigo-600',
-    bgGradient: 'from-purple-50 to-indigo-50',
+    gradient: 'from-slate-600 to-slate-700',
+    bgGradient: 'from-slate-50 to-gray-50',
     spotifyPlaylistId: 'recovery-lounge-lofi',
     meetCuteSoundType: 'lofi-recovery-lounge', // Custom lo-fi for recovery
   },
@@ -392,7 +392,7 @@ export default function FocusRooms() {
   const selectedRoom = FOCUS_ROOMS.find(r => r.id === activeRoom);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -503,7 +503,7 @@ export default function FocusRooms() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-600 via-teal-600 to-pink-600 bg-clip-text text-transparent"
+            className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent"
           >
             Focus Rooms
           </motion.h1>
@@ -674,7 +674,7 @@ export default function FocusRooms() {
                 }}
                 className={`flex-1 px-6 py-4 text-center font-semibold transition-all ${
                   activeTab === 'focus-rooms'
-                    ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white border-b-2 border-indigo-600'
+                    ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white border-b-2 border-sky-600'
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -738,7 +738,7 @@ export default function FocusRooms() {
                 }}
                 className={`flex-1 px-6 py-4 text-center font-semibold transition-all ${
                   activeTab === 'lofi-soundscape'
-                    ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white border-b-2 border-pink-600'
+                    ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white border-b-2 border-rose-600'
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -1146,7 +1146,7 @@ export default function FocusRooms() {
                               }, 300); // Wait for all stops to complete
                             }
                           }}
-                          className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-indigo-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-indigo-700 transition-all shadow-md flex-shrink-0"
+                          className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md flex-shrink-0"
                           title={isPlaying ? 'Pause' : 'Play'}
                         >
                           {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
@@ -1314,9 +1314,9 @@ export default function FocusRooms() {
                       {[
                         { id: 'lofi-focus', name: 'Lofi Focus', description: 'For clarity & clear thinking', icon: '🧠', gradient: 'from-blue-500 to-cyan-500', bgGradient: 'from-blue-50 to-cyan-50' },
                         { id: 'lofi-morning', name: 'Lofi Morning', description: 'Uplifting energy for confidence', icon: '☀️', gradient: 'from-yellow-500 to-orange-500', bgGradient: 'from-yellow-50 to-orange-50' },
-                        { id: 'lofi-calm', name: 'Lofi Calm', description: 'Calm ambient for empathy', icon: '💙', gradient: 'from-indigo-500 to-purple-500', bgGradient: 'from-indigo-50 to-purple-50' },
+                        { id: 'lofi-calm', name: 'Lofi Calm', description: 'Calm ambient for empathy', icon: '💙', gradient: 'from-sky-500 to-cyan-500', bgGradient: 'from-sky-50 to-cyan-50' },
                         { id: 'lofi-chill', name: 'Lofi Chill', description: 'Energizing beats for momentum', icon: '🎵', gradient: 'from-pink-500 to-rose-500', bgGradient: 'from-pink-50 to-rose-50' },
-                        { id: 'lofi-evening', name: 'Lofi Evening', description: 'Mellow & introspective', icon: '🌙', gradient: 'from-purple-500 to-indigo-500', bgGradient: 'from-purple-50 to-indigo-50' },
+                        { id: 'lofi-evening', name: 'Lofi Evening', description: 'Mellow & introspective', icon: '🌙', gradient: 'from-emerald-500 to-teal-500', bgGradient: 'from-emerald-50 to-teal-50' },
                       ].map((sound, index) => {
                         const isActive = activeRoom === sound.id && isPlaying;
                         return (
@@ -1411,7 +1411,7 @@ export default function FocusRooms() {
                                         setIsPlaying(true);
                                       }
                                     }}
-                                    className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-indigo-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-indigo-700 transition-all shadow-md flex-shrink-0"
+                                    className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md flex-shrink-0"
                                     title={isPlaying ? 'Pause' : 'Play'}
                                   >
                                     {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}

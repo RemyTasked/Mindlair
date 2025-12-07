@@ -102,7 +102,7 @@ export default function GamesHub() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 flex items-center justify-center">
         <div className="text-center">
           <Logo size="lg" />
           <p className="mt-4 text-gray-600">Loading Games Hub...</p>
@@ -226,7 +226,7 @@ export default function GamesHub() {
 
   if (gameStarted && gameType) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50">
         {gameType === 'thought-popper' && (
           <ThoughtPopperGame 
             onComplete={handleGameComplete} 
@@ -250,7 +250,7 @@ export default function GamesHub() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50">
       {renderHeader()}
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-5xl">
@@ -299,7 +299,7 @@ export default function GamesHub() {
               className="bg-white rounded-xl p-4 shadow-md"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Trophy className="w-5 h-5 text-purple-500" />
+                <Trophy className="w-5 h-5 text-amber-500" />
                 <span className="text-sm text-gray-600">Best Streak</span>
               </div>
               <p className="text-2xl font-bold text-gray-900">{progress.longestStreak}</p>
@@ -312,7 +312,7 @@ export default function GamesHub() {
               className="bg-white rounded-xl p-4 shadow-md"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-5 h-5 text-indigo-500" />
+                <Sparkles className="w-5 h-5 text-teal-500" />
                 <span className="text-sm text-gray-600">Badges</span>
               </div>
               <p className="text-2xl font-bold text-gray-900">{progress.badges.length}</p>
@@ -382,21 +382,21 @@ export default function GamesHub() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             whileHover={{ y: -5 }}
-            className="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-indigo-500 cursor-pointer transition-all"
+            className="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-teal-500 cursor-pointer transition-all"
             onClick={() => {
               setGameType('thought-sorter');
               setGameStarted(true);
             }}
           >
-            <div className="bg-indigo-100 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-              <LayoutGrid className="w-7 h-7 text-indigo-600" />
+            <div className="bg-teal-100 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
+              <LayoutGrid className="w-7 h-7 text-teal-600" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Thought Sorter</h3>
             <p className="text-gray-600 text-sm mb-4">
               Categorization Tool. Sort your mental inputs—worries, tasks, or reflections—into actionable buckets.
             </p>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-full">
                 +3 Serenity / Sort
               </span>
               <span className="text-xs text-gray-500">5-10 min</span>

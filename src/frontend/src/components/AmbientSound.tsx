@@ -1165,7 +1165,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     return (
       <button
         onClick={handlePlayClick}
-        className="fixed bottom-6 right-6 z-50 p-4 bg-indigo-600 hover:bg-indigo-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white animate-pulse"
+        className="fixed bottom-6 right-6 z-50 p-4 bg-teal-600 hover:bg-teal-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white animate-pulse"
         title="Play ambient sound"
       >
         <Volume2 className="w-6 h-6 text-white" />
@@ -1183,7 +1183,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         {isMuted ? (
           <VolumeX className="w-5 h-5 text-gray-600" />
         ) : (
-          <Volume2 className="w-5 h-5 text-indigo-600" />
+          <Volume2 className="w-5 h-5 text-teal-600" />
         )}
       </button>
     );

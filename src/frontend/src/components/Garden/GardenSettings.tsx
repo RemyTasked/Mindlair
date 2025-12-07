@@ -36,8 +36,8 @@ const TIME_OPTIONS: { value: TimeOfDaySetting; label: string; icon: JSX.Element;
   { value: 'morning', label: 'Morning', icon: <Sun className="w-4 h-4 text-amber-400" />, description: '6 AM light' },
   { value: 'afternoon', label: 'Afternoon', icon: <Sun className="w-4 h-4 text-yellow-400" />, description: '2 PM full sun' },
   { value: 'evening', label: 'Evening', icon: <Sun className="w-4 h-4 text-orange-400" />, description: '7 PM golden hour' },
-  { value: 'night', label: 'Night', icon: <Moon className="w-4 h-4 text-indigo-400" />, description: '9 PM moonlight' },
-  { value: 'dynamic', label: 'Dynamic', icon: <Sparkles className="w-4 h-4 text-purple-400" />, description: 'Cycles through 24h' },
+  { value: 'night', label: 'Night', icon: <Moon className="w-4 h-4 text-slate-400" />, description: '9 PM moonlight' },
+  { value: 'dynamic', label: 'Dynamic', icon: <Sparkles className="w-4 h-4 text-amber-400" />, description: 'Cycles through 24h' },
 ];
 
 // Weather options with icons

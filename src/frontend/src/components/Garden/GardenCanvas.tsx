@@ -558,7 +558,7 @@ const PlantSVG: Record<PlantType, (props: { stage: GrowthStage; size: number }) 
 
   /**
    * Morning Glory - Morning Intention Flow
-   * Trumpet-shaped purple/blue flowers on climbing vine
+   * Trumpet-shaped emerald/blue flowers on climbing vine
    */
   'morning-glory': ({ stage, size }) => (
     <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant mg-plant-sway">
@@ -873,7 +873,7 @@ const PlantSVG: Record<PlantType, (props: { stage: GrowthStage; size: number }) 
 
   /**
    * Violet - Difficult Conversation Preps
-   * Delicate strength, purple tones
+   * Delicate strength, emerald tones
    */
   violet: ({ stage, size }) => (
     <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant mg-plant-sway">
@@ -1049,9 +1049,9 @@ export default function GardenCanvas({
       case 'afternoon':
         return 'bg-gradient-to-b from-white/10 to-transparent';
       case 'evening':
-        return 'bg-gradient-to-b from-orange-200/30 to-purple-200/10';
+        return 'bg-gradient-to-b from-orange-200/30 to-slate-200/10';
       case 'night':
-        return 'bg-gradient-to-b from-indigo-900/40 to-transparent';
+        return 'bg-gradient-to-b from-slate-900/40 to-transparent';
     }
   };
 

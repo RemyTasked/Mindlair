@@ -126,7 +126,7 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
     
     if (isIOS && !isStandalone) {
       return (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-4">
+        <div className="bg-gradient-to-r from-blue-50 to-teal-50 border-2 border-blue-300 rounded-lg p-4">
           <p className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
             📱 Install App for Push Notifications
           </p>
@@ -185,7 +185,7 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
               checked={enabled}
               onChange={handleToggle}
               disabled={isLoading}
-              className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 disabled:opacity-50"
+              className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500 disabled:opacity-50"
             />
             <div>
               <span className="text-sm font-medium text-gray-900">
@@ -200,20 +200,20 @@ export const PushNotificationManager: React.FC<PushNotificationManagerProps> = (
       </div>
 
       {enabled && isSubscribed && (
-        <div className="ml-8 mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+        <div className="ml-8 mt-4 p-4 bg-teal-50 border border-teal-200 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-indigo-900 mb-1">
+              <p className="text-sm font-medium text-teal-900 mb-1">
                 ✅ Push Notifications Enabled
               </p>
-              <p className="text-xs text-indigo-700">
+              <p className="text-xs text-teal-700">
                 Test your notifications to make sure they're working
               </p>
             </div>
             <button
               onClick={handleTestNotification}
               disabled={isLoading}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-sm shadow-sm hover:shadow-md"
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-sm shadow-sm hover:shadow-md"
             >
               {isLoading ? 'Sending...' : '🧪 Send Test'}
             </button>

@@ -55,7 +55,7 @@ function TimeIcon() {
     case 'morning': return <Sunrise className="w-5 h-5 text-amber-400" />;
     case 'afternoon': return <Sun className="w-5 h-5 text-yellow-400" />;
     case 'evening': return <Sunset className="w-5 h-5 text-orange-400" />;
-    case 'night': return <Moon className="w-5 h-5 text-indigo-400" />;
+    case 'night': return <Moon className="w-5 h-5 text-slate-400" />;
   }
 }
 
@@ -446,7 +446,7 @@ export default function GardenDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="mg-card bg-gradient-to-r from-sky-900/30 to-indigo-900/30 border border-sky-700/30"
+            className="mg-card bg-gradient-to-r from-sky-900/30 to-slate-900/30 border border-sky-700/30"
           >
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-sky-500/20">

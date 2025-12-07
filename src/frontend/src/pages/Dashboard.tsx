@@ -511,7 +511,7 @@ export default function Dashboard() {
         {/* Compact Stats Row - Mobile Optimized */}
         <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-6 sm:mb-8">
           <StatCard
-            icon={<Calendar className="w-5 h-5 sm:w-8 sm:h-8 text-indigo-600" />}
+            icon={<Calendar className="w-5 h-5 sm:w-8 sm:h-8 text-teal-600" />}
             label="Upcoming"
             value={meetings.length}
           />
@@ -550,7 +550,7 @@ export default function Dashboard() {
               href="https://chrome.google.com/webstore/detail/mind-garden" 
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center gap-2"
             >
               <Chrome className="w-4 h-4" />
               Get Extension
@@ -562,7 +562,7 @@ export default function Dashboard() {
 
         {/* Presley Flow Card - Compact on Mobile */}
         {presleyFlow?.available && (
-          <div className="bg-gradient-to-br from-teal-50 to-indigo-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-teal-200">
+          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-teal-200">
             <div className="flex items-center gap-3 mb-3">
               <div className="text-2xl sm:text-4xl">🌙</div>
               <div className="flex-1">
@@ -584,7 +584,7 @@ export default function Dashboard() {
                   detail: { source: 'dashboard', flow: 'presley-flow' }
                 }));
               }}
-              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-teal-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               🎬 Start Flow
             </a>
@@ -593,14 +593,14 @@ export default function Dashboard() {
 
         {/* Winding Down Card */}
         {windingDown?.available && !windingDown?.completed && (
-          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-indigo-200">
+          <div className="bg-gradient-to-br from-slate-50 to-sky-50 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-slate-200">
             <div className="flex items-center gap-3 mb-3">
               <div className="text-2xl sm:text-4xl">🌙</div>
               <div className="flex-1">
                 <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
                   Winding Down
                 </h3>
-                <p className="text-xs sm:text-sm text-indigo-600 font-medium">
+                <p className="text-xs sm:text-sm text-slate-600 font-medium">
                   Time to relax and prepare for rest
                 </p>
               </div>
@@ -617,7 +617,7 @@ export default function Dashboard() {
                   navigate(path);
                 }
               }}
-              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+              className="inline-flex items-center justify-center w-full gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-slate-600 to-sky-600 text-white rounded-lg font-semibold hover:from-slate-700 hover:to-sky-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               🌙 Start Winding Down
             </button>
@@ -700,7 +700,7 @@ export default function Dashboard() {
                 }
               }}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50"
               title="Refresh meetings from calendar"
             >
               <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -730,7 +730,7 @@ export default function Dashboard() {
                     )}
                   </h3>
                   {isLocked ? (
-                    <div className="p-6 bg-gradient-to-br from-teal-50 to-indigo-50 rounded-lg border-2 border-teal-200 text-center">
+                    <div className="p-6 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-lg border-2 border-teal-200 text-center">
                       <div className="text-4xl mb-3">🌙</div>
                       <p className="text-gray-700 font-medium mb-2">
                         Tomorrow's meetings are hidden until evening flow
@@ -913,10 +913,10 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
     : undefined;
   const badgeClass = meeting.calendarColor
     ? 'px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm'
-    : 'px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700';
+    : 'px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700';
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors gap-3 sm:gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-teal-300 transition-colors gap-3 sm:gap-4">
       <div className="flex-1 min-w-0">
         {meeting.calendarLabel && (
           <div className="mb-1">
@@ -932,7 +932,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
             <span className="text-xs sm:text-sm text-gray-500">• {timeUntilText}</span>
           </div>
           {canStartFocusSession && (
-            <div className="text-xs sm:text-sm text-indigo-600 font-medium animate-pulse">
+            <div className="text-xs sm:text-sm text-teal-600 font-medium animate-pulse">
               🎬 Focus Session Available Now!
             </div>
           )}
@@ -957,7 +957,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                     detail: { source: 'dashboard', flow: 'focus-session', meetingId: meeting.id }
                   }));
                 }}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-indigo-700 hover:to-teal-700 transition-all shadow-md hover:shadow-lg text-center whitespace-nowrap"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg text-center whitespace-nowrap"
               >
                 🎬 Start Focus Session
               </a>

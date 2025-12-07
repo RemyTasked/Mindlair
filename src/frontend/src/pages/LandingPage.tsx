@@ -251,8 +251,8 @@ export default function LandingPage() {
                 <p className="text-sm text-gray-500">2-5 min resets</p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center">
-                  <Moon className="w-8 h-8 text-indigo-600" />
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center">
+                  <Moon className="w-8 h-8 text-slate-600" />
                 </div>
                 <p className="font-medium text-gray-800">Evening Wind-Down</p>
                 <p className="text-sm text-gray-500">Rest and reflect</p>
@@ -358,7 +358,7 @@ export default function LandingPage() {
             description="Breathing exercises and micro-meditations tailored to your day"
           />
           <FeatureCard
-            icon={<Calendar className="w-7 h-7 text-indigo-500" />}
+            icon={<Calendar className="w-7 h-7 text-teal-500" />}
             title="Calendar Smart"
             description="Contextual wellness based on your schedule and stress patterns"
           />
@@ -368,7 +368,7 @@ export default function LandingPage() {
             description="Playful activities that reduce anxiety and build focus"
           />
           <FeatureCard
-            icon={<Music className="w-7 h-7 text-purple-500" />}
+            icon={<Music className="w-7 h-7 text-cyan-500" />}
             title="Spotify Integration"
             description="Calming playlists that complement your wellness practice"
           />

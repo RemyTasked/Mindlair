@@ -73,7 +73,7 @@ const ALL_FLOWS: Flow[] = [
     category: 'focus',
     bestFor: ['Standard meetings', 'Check-ins', 'One-on-ones'],
     icon: '🎯',
-    color: 'from-indigo-500 to-violet-500',
+    color: 'from-sky-500 to-teal-500',
     popular: true,
   },
   {
@@ -142,7 +142,7 @@ const ALL_FLOWS: Flow[] = [
     category: 'transition',
     bestFor: ['Evening routine', 'Before sleep', 'Day reflection'],
     icon: '🌙',
-    color: 'from-indigo-500 to-purple-600',
+    color: 'from-slate-500 to-slate-600',
     new: true,
   },
   {
@@ -178,13 +178,13 @@ const ALL_FLOWS: Flow[] = [
     category: 'deep',
     bestFor: ['Physical tension', 'Awareness', 'Relaxation'],
     icon: '✨',
-    color: 'from-violet-500 to-purple-500',
+    color: 'from-rose-500 to-pink-500',
   },
 ];
 
 // Category metadata
 const CATEGORIES = {
-  focus: { label: 'Focus', icon: Target, color: 'text-indigo-400' },
+  focus: { label: 'Focus', icon: Target, color: 'text-sky-400' },
   calm: { label: 'Calm', icon: Wind, color: 'text-sky-400' },
   energy: { label: 'Energy', icon: Zap, color: 'text-amber-400' },
   transition: { label: 'Transition', icon: Sunrise, color: 'text-orange-400' },
