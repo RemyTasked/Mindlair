@@ -1592,7 +1592,7 @@ export default function GardenCanvas({
         <div className="absolute bottom-4 left-4 flex gap-2">
           <button
             onClick={onWater}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/20 border border-sky-500/30 hover:bg-sky-500/30 transition-colors text-sky-300"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600/80 hover:bg-sky-500 transition-colors text-white shadow-lg"
             title="Water garden"
           >
             <Droplet className="w-5 h-5" />
@@ -1600,7 +1600,7 @@ export default function GardenCanvas({
           </button>
           <button
             onClick={onPrune}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 transition-colors text-amber-300"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600/80 hover:bg-amber-500 transition-colors text-white shadow-lg"
             title="Prune garden"
           >
             <Scissors className="w-5 h-5" />
@@ -1608,7 +1608,7 @@ export default function GardenCanvas({
           </button>
           <button
             onClick={() => setShowTimeLapse(!showTimeLapse)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500/20 border border-violet-500/30 hover:bg-violet-500/30 transition-colors text-violet-300"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600/80 hover:bg-teal-500 transition-colors text-white shadow-lg"
             title="View time-lapse"
           >
             <Eye className="w-5 h-5" />
