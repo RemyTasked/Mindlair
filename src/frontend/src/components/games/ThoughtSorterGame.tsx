@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Clock, Wind,
-  LayoutGrid, Sparkles, Heart
+  LayoutGrid, Sparkles, Heart, Plus
 } from 'lucide-react';
 import api from '../../lib/axios';
 
@@ -22,6 +22,7 @@ interface ThoughtSorterGameProps {
 interface Thought {
   id: string;
   text: string;
+  isCustom?: boolean;
 }
 
 // Extended pool of thoughts for variety
@@ -35,47 +36,87 @@ const ALL_THOUGHTS: Thought[] = [
   { id: '6', text: "I need to follow up with that client" },
   { id: '7', text: "The project scope keeps changing" },
   { id: '8', text: "I should ask for that raise" },
+  { id: '9', text: "My inbox is out of control" },
+  { id: '10', text: "I need to update my resume" },
   // Positive self-talk
-  { id: '9', text: "Today was a good day" },
-  { id: '10', text: "I am capable" },
-  { id: '11', text: "I handled that well" },
-  { id: '12', text: "I'm making progress" },
-  { id: '13', text: "I'm proud of what I accomplished" },
-  { id: '14', text: "I've grown so much this year" },
-  // Worries
-  { id: '15', text: "What if I fail?" },
-  { id: '16', text: "Did I lock the door?" },
-  { id: '17', text: "Too much noise in my head" },
-  { id: '18', text: "What will people think?" },
-  { id: '19', text: "I'm not good enough" },
-  { id: '20', text: "Everything feels overwhelming" },
+  { id: '11', text: "Today was a good day" },
+  { id: '12', text: "I am capable" },
+  { id: '13', text: "I handled that well" },
+  { id: '14', text: "I'm making progress" },
+  { id: '15', text: "I'm proud of what I accomplished" },
+  { id: '16', text: "I've grown so much this year" },
+  { id: '17', text: "Small steps still count" },
+  { id: '18', text: "I showed up for myself today" },
+  // Worries & Anxiety
+  { id: '19', text: "What if I fail?" },
+  { id: '20', text: "Did I lock the door?" },
+  { id: '21', text: "Too much noise in my head" },
+  { id: '22', text: "What will people think?" },
+  { id: '23', text: "I'm not good enough" },
+  { id: '24', text: "Everything feels overwhelming" },
+  { id: '25', text: "I can't stop worrying about money" },
+  { id: '26', text: "Am I making the right decisions?" },
+  { id: '27', text: "I feel like I'm falling behind" },
   // Tasks & Reminders
-  { id: '21', text: "Call mom tomorrow" },
-  { id: '22', text: "I should exercise more" },
-  { id: '23', text: "Need to schedule that appointment" },
-  { id: '24', text: "The house is a mess" },
-  { id: '25', text: "I forgot to reply to that message" },
-  { id: '26', text: "Groceries are running low" },
+  { id: '28', text: "Call mom tomorrow" },
+  { id: '29', text: "I should exercise more" },
+  { id: '30', text: "Need to schedule that appointment" },
+  { id: '31', text: "The house is a mess" },
+  { id: '32', text: "I forgot to reply to that message" },
+  { id: '33', text: "Groceries are running low" },
+  { id: '34', text: "I need to pay that bill" },
+  { id: '35', text: "Should I meal prep this weekend?" },
   // Relationships
-  { id: '27', text: "I miss my old friends" },
-  { id: '28', text: "That conversation was awkward" },
-  { id: '29', text: "I should reach out more often" },
-  { id: '30', text: "They probably don't like me" },
-  { id: '31', text: "I'm grateful for my support system" },
-  // Self-care
-  { id: '32', text: "I need more sleep" },
-  { id: '33', text: "I should drink more water" },
-  { id: '34', text: "When did I last take a real break?" },
-  { id: '35', text: "I deserve some quiet time" },
-  // Future
-  { id: '36', text: "Where will I be in 5 years?" },
-  { id: '37', text: "I'm excited about new possibilities" },
-  { id: '38', text: "Change can be good" },
-  { id: '39', text: "I'm ready for the next chapter" },
-  // Past
-  { id: '40', text: "I wish I'd done things differently" },
-  { id: '41', text: "That was a great memory" },
-  { id: '42', text: "I learned from that mistake" },
+  { id: '36', text: "I miss my old friends" },
+  { id: '37', text: "That conversation was awkward" },
+  { id: '38', text: "I should reach out more often" },
+  { id: '39', text: "They probably don't like me" },
+  { id: '40', text: "I'm grateful for my support system" },
+  { id: '41', text: "Did I say the wrong thing?" },
+  { id: '42', text: "I wish I had more time for family" },
+  { id: '43', text: "That text came across wrong" },
+  // Self-care & Health
+  { id: '44', text: "I need more sleep" },
+  { id: '45', text: "I should drink more water" },
+  { id: '46', text: "When did I last take a real break?" },
+  { id: '47', text: "I deserve some quiet time" },
+  { id: '48', text: "I should schedule that checkup" },
+  { id: '49', text: "My back has been hurting lately" },
+  { id: '50', text: "I need to be kinder to myself" },
+  // Future & Goals
+  { id: '51', text: "Where will I be in 5 years?" },
+  { id: '52', text: "I'm excited about new possibilities" },
+  { id: '53', text: "Change can be good" },
+  { id: '54', text: "I'm ready for the next chapter" },
+  { id: '55', text: "What do I actually want in life?" },
+  { id: '56', text: "I want to learn something new" },
+  // Past & Regrets
+  { id: '57', text: "I wish I'd done things differently" },
+  { id: '58', text: "That was a great memory" },
+  { id: '59', text: "I learned from that mistake" },
+  { id: '60', text: "Why did I say that?" },
+  // Financial
+  { id: '61', text: "I need to check my bank balance" },
+  { id: '62', text: "Should I start saving more?" },
+  { id: '63', text: "That purchase wasn't necessary" },
+  { id: '64', text: "I'm doing okay financially" },
+  // Creative & Hobbies
+  { id: '65', text: "I want to start painting again" },
+  { id: '66', text: "I miss playing music" },
+  { id: '67', text: "I should read more books" },
+  { id: '68', text: "When did I last do something creative?" },
+  // Gratitude
+  { id: '69', text: "I'm lucky to have good friends" },
+  { id: '70', text: "The weather was beautiful today" },
+  { id: '71', text: "That meal was really delicious" },
+  { id: '72', text: "I appreciate the small moments" },
+  // Random daily thoughts
+  { id: '73', text: "I wonder what's for dinner" },
+  { id: '74', text: "Traffic was terrible today" },
+  { id: '75', text: "I need a vacation" },
+  { id: '76', text: "Why is everything so expensive?" },
+  { id: '77', text: "That song has been stuck in my head" },
+  { id: '78', text: "I should clean out my closet" },
 ];
 
 // Select random thoughts for each session
@@ -96,6 +137,8 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [loading, setLoading] = useState(true);
   const [animatingTo, setAnimatingTo] = useState<BucketType | null>(null);
+  const [customThoughtInput, setCustomThoughtInput] = useState('');
+  const [showAddThought, setShowAddThought] = useState(false);
 
   // Load thoughts
   useEffect(() => {
@@ -120,6 +163,24 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
       setThoughts(selectRandomThoughts(10));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const addCustomThought = () => {
+    if (customThoughtInput.trim()) {
+      const newThought: Thought = {
+        id: `custom-${Date.now()}`,
+        text: customThoughtInput.trim(),
+        isCustom: true,
+      };
+      // Insert custom thought at current position (so it appears next)
+      setThoughts(prev => [
+        ...prev.slice(0, currentIndex + 1),
+        newThought,
+        ...prev.slice(currentIndex + 1),
+      ]);
+      setCustomThoughtInput('');
+      setShowAddThought(false);
     }
   };
 
@@ -337,6 +398,56 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
         </div>
       </div>
 
+      {/* Add Custom Thought */}
+      <div className="max-w-2xl mx-auto w-full mb-4">
+        <AnimatePresence>
+          {showAddThought ? (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-white/90 rounded-2xl p-4 shadow-lg"
+            >
+              <p className="text-gray-700 text-sm font-medium mb-2">Add your own thought to sort:</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customThoughtInput}
+                  onChange={(e) => setCustomThoughtInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addCustomThought()}
+                  placeholder="What's on your mind?"
+                  className="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-200 text-gray-800"
+                  autoFocus
+                />
+                <button
+                  onClick={addCustomThought}
+                  disabled={!customThoughtInput.trim()}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-xl font-medium hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => { setShowAddThought(false); setCustomThoughtInput(''); }}
+                  className="px-3 py-2 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => setShowAddThought(true)}
+              className="flex items-center gap-2 text-teal-700 hover:text-teal-800 font-medium text-sm transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add your own thought
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Progress */}
       <div className="max-w-2xl mx-auto w-full mb-8">
         <div className="bg-white/50 rounded-full h-2 overflow-hidden">
@@ -367,9 +478,16 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
                 transition={{ duration: 0.3 }}
                 className="absolute inset-0 bg-white rounded-3xl shadow-2xl flex items-center justify-center p-8"
               >
-                <p className="text-xl sm:text-2xl font-medium text-gray-800 text-center leading-relaxed">
-                  {currentThought.text}
-                </p>
+                <div className="text-center">
+                  {currentThought.isCustom && (
+                    <span className="inline-block mb-2 px-2 py-1 text-xs bg-teal-100 text-teal-700 rounded-full">
+                      Your thought
+                    </span>
+                  )}
+                  <p className="text-xl sm:text-2xl font-medium text-gray-800 leading-relaxed">
+                    {currentThought.text}
+                  </p>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

@@ -19,6 +19,7 @@ import DashboardLayout from '../components/Garden/DashboardLayout';
 import ThoughtPopperGame from '../components/games/ThoughtPopperGame';
 import ZenMatchGame from '../components/games/ZenMatchGame';
 import ThoughtSorterGame from '../components/games/ThoughtSorterGame';
+import ThoughtReframingLab from '../components/games/ThoughtReframingLab';
 import MandalaGame from '../components/games/MandalaGame';
 import SoundBowlGame from '../components/games/SoundBowlGame';
 
@@ -29,7 +30,7 @@ interface GameProgress {
   badges: string[];
 }
 
-type GameType = 'thought-popper' | 'zen-match' | 'thought-sorter' | 'mandala' | 'sound-bowl' | null;
+type GameType = 'thought-popper' | 'zen-match' | 'thought-sorter' | 'thought-reframing' | 'mandala' | 'sound-bowl' | null;
 
 export default function GamesHub() {
   const navigate = useNavigate();
@@ -118,6 +119,12 @@ export default function GamesHub() {
         )}
         {gameType === 'thought-sorter' && (
           <ThoughtSorterGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+        {gameType === 'thought-reframing' && (
+          <ThoughtReframingLab 
             onComplete={handleGameComplete} 
             onExit={() => setGameStarted(false)} 
           />
@@ -287,6 +294,41 @@ export default function GamesHub() {
                 +3 Serenity / Sort
               </span>
               <span className="text-xs text-[var(--mg-text-muted)]">5-10 min</span>
+            </div>
+          </motion.button>
+        </div>
+
+        {/* Cognitive Tools */}
+        <h2 className="text-xl font-bold text-[var(--mg-text-primary)] mb-4">Cognitive Tools</h2>
+        <div className="grid md:grid-cols-2 gap-4 mb-8">
+          {/* Thought Reframing Lab */}
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            whileHover={{ y: -5 }}
+            className="mg-card p-5 text-left cursor-pointer border-b-4 border-indigo-500 hover:border-indigo-400 transition-all"
+            onClick={() => {
+              setGameType('thought-reframing');
+              setGameStarted(true);
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="bg-indigo-500/20 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Target className="w-6 h-6 text-indigo-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-[var(--mg-text-primary)] mb-1">Thought Reframing Lab</h3>
+                <p className="text-[var(--mg-text-muted)] text-sm mb-3">
+                  CBT-based cognitive restructuring. Identify distortions and practice balanced thinking.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-400 bg-indigo-500/20 px-3 py-1 rounded-full">
+                    +5 Serenity / Reframe
+                  </span>
+                  <span className="text-xs text-[var(--mg-text-muted)]">5-10 min</span>
+                </div>
+              </div>
             </div>
           </motion.button>
         </div>

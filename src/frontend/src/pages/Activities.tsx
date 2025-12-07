@@ -176,7 +176,7 @@ export default function Activities() {
         navigate('/activities/gratitude');
         break;
       case 'thought-reframing':
-        navigate('/games', { state: { openGame: 'thought-sorter' } });
+        navigate('/games', { state: { openGame: 'thought-reframing' } });
         break;
       case 'breathing-garden':
         navigate('/flow/breathing');

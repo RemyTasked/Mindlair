@@ -88,6 +88,7 @@ export default function FocusRooms() {
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [totalCredits, setTotalCredits] = useState(0);
   const [activeTab, setActiveTab] = useState<'focus-rooms' | 'ambient-library'>('focus-rooms');
+  const [notification, setNotification] = useState<string | null>(null);
 
   // Stop any ambient sound from Scene Library when entering Focus Rooms page
   useEffect(() => {
@@ -218,7 +219,7 @@ export default function FocusRooms() {
       const resp = await api.get('/api/spotify/devices');
       const devices = resp.data?.devices || [];
       if (devices.length === 0) {
-        alert('Open Spotify on your phone or computer, start any track briefly, then try again.');
+        // Return null - caller will handle fallback
         return null;
       }
       const active = devices.find((d: any) => d.isActive);
@@ -378,6 +379,26 @@ export default function FocusRooms() {
   return (
     <DashboardLayout activeSection="spotify">
       <div className="p-4 md:p-8 pb-32 max-w-6xl mx-auto">
+        {/* Notification Toast */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-[var(--mg-bg-card)] border border-[var(--mg-border)] rounded-xl shadow-lg px-4 py-3 max-w-sm"
+            >
+              <p className="text-sm text-[var(--mg-text-primary)]">{notification}</p>
+              <button 
+                onClick={() => setNotification(null)}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--mg-bg-elevated)] rounded-full flex items-center justify-center text-[var(--mg-text-muted)] hover:text-[var(--mg-text-primary)]"
+              >
+                ×
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Header Section */}
         <div className="mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-[var(--mg-text-primary)] mb-2">
@@ -466,9 +487,12 @@ export default function FocusRooms() {
               <p className="text-[var(--mg-text-muted)] mb-4 text-sm max-w-md mx-auto">
                 Connect Spotify or Apple Music for curated playlists. Rooms work great with our built-in soundscapes too!
               </p>
-              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                <p className="text-sm text-amber-400">
+              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-left">
+                <p className="text-sm text-amber-400 mb-2">
                   <span className="font-semibold">⚠️ Spotify Premium Required:</span> Spotify playback requires a Premium subscription.
+                </p>
+                <p className="text-xs text-amber-400/80">
+                  <span className="font-medium">📱 Mobile tip:</span> Start playing any song in Spotify first, then return here. Mobile devices must be actively playing to be controlled.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -777,25 +801,24 @@ export default function FocusRooms() {
                                             const status = error.response?.status;
                                             const errorMessage = error.response?.data?.error || error.message || '';
                                             
-                                            // Handle specific error types
+                                            // Handle specific error types - auto-fallback with brief notification
+                                            let toastMessage = '';
                                             if (errorMessage === 'no_device' || status === 404 || errorMessage.includes('no active device')) {
-                                              if (confirm('No active Spotify device found. Use Mind Garden audio instead?')) {
-                                                setAudioProvider('meetcute');
-                                                startMeetCuteAudio(room);
-                                                setIsPlaying(true);
-                                              }
+                                              toastMessage = '📱 No Spotify device found. On mobile, start playing a song in Spotify first. Using Mind Garden audio.';
                                             } else if (status === 403 || errorMessage.includes('PREMIUM_REQUIRED')) {
-                                              alert('Spotify Premium is required for playback. Switching to Mind Garden audio.');
-                                              setAudioProvider('meetcute');
-                                              startMeetCuteAudio(room);
-                                              setIsPlaying(true);
+                                              toastMessage = '⚠️ Spotify Premium required. Using Mind Garden audio instead.';
                                             } else {
-                                              // Generic fallback
-                                              console.log('Spotify playback failed, falling back to Mind Garden audio');
-                                              setAudioProvider('meetcute');
-                                              startMeetCuteAudio(room);
-                                              setIsPlaying(true);
+                                              toastMessage = '🎵 Spotify unavailable. Using Mind Garden audio.';
                                             }
+                                            
+                                            // Show brief notification
+                                            setNotification(toastMessage);
+                                            setTimeout(() => setNotification(null), 5000);
+                                            
+                                            // Auto-fallback to Mind Garden audio
+                                            setAudioProvider('meetcute');
+                                            startMeetCuteAudio(room);
+                                            setIsPlaying(true);
                                           }
                                         } else {
                                           stopAmbientIfAny();
