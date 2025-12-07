@@ -113,18 +113,18 @@ router.get(
   })
 );
 
-// Points for each flow type
+// Points for each flow type (increased to ensure visible plant growth)
 const FLOW_POINTS: Record<string, number> = {
-  'pre-meeting-focus': 10,
-  'pre-presentation-power': 15,
-  'difficult-conversation-prep': 15,
-  'quick-reset': 5,
-  'post-meeting-decompress': 10,
-  'end-of-day-transition': 15,
-  'morning-intention': 20,
-  'evening-wind-down': 25,
-  'weekend-wellness': 30,
-  'deep-meditation': 40,
+  'pre-meeting-focus': 20,
+  'pre-presentation-power': 25,
+  'difficult-conversation-prep': 25,
+  'quick-reset': 15,
+  'post-meeting-decompress': 20,
+  'end-of-day-transition': 25,
+  'morning-intention': 30,
+  'evening-wind-down': 35,
+  'weekend-wellness': 40,
+  'deep-meditation': 50,
   'breathing': 5,
   'body-scan': 20,
 };
@@ -374,12 +374,22 @@ async function updateGardenWithPlants(userId: string, flowType: string, duration
   }
   gardenData.lastActiveDate = new Date().toISOString();
   
-  // Check for new plant (every 30 points)
+  // Check for new plant (every 20 points, or always for first plant)
   let newPlant: Plant | null = null;
-  const NEW_PLANT_THRESHOLD = 30;
+  const NEW_PLANT_THRESHOLD = 20;
   
-  if (gardenData.growthPoints >= NEW_PLANT_THRESHOLD) {
-    gardenData.growthPoints -= NEW_PLANT_THRESHOLD;
+  // Ensure plants array exists
+  if (!Array.isArray(gardenData.plants)) {
+    gardenData.plants = [];
+  }
+  
+  // Always give first plant on first activity, or when threshold reached
+  const shouldAddPlant = gardenData.plants.length === 0 || gardenData.growthPoints >= NEW_PLANT_THRESHOLD;
+  
+  if (shouldAddPlant) {
+    if (gardenData.growthPoints >= NEW_PLANT_THRESHOLD) {
+      gardenData.growthPoints -= NEW_PLANT_THRESHOLD;
+    }
     
     const plantType = FLOW_TO_PLANT[flowType] || 'daisy';
     const position = findEmptyPosition(gardenData.plants, gardenData.gridSize);
@@ -390,7 +400,7 @@ async function updateGardenWithPlants(userId: string, flowType: string, duration
         type: plantType,
         x: position.x,
         y: position.y,
-        growthStage: 'sprout',
+        growthStage: gardenData.plants.length === 0 ? 'growing' : 'sprout', // First plant starts bigger
         plantedAt: new Date().toISOString(),
         bloomCount: 0,
         associatedWith: flowType,
@@ -399,7 +409,7 @@ async function updateGardenWithPlants(userId: string, flowType: string, duration
       gardenData.plants.push(newPlant);
       gardenData.growth++;
       
-      logger.info('New plant added to garden', { userId, plantType, position });
+      logger.info('New plant added to garden', { userId, plantType, position, isFirstPlant: gardenData.plants.length === 1 });
     }
   } else if (gardenData.plants.length > 0) {
     // Bloom existing plant

@@ -633,6 +633,54 @@ router.get(
 );
 
 /**
+ * GET /api/spotify/my-playlists
+ * Get user's own playlists (their library)
+ */
+router.get(
+  '/my-playlists',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { limit = 50, offset = 0 } = req.query;
+    
+    const accessToken = await getValidAccessToken(userId);
+    if (!accessToken) {
+      return res.status(401).json({ error: 'Spotify not connected' });
+    }
+    
+    const response = await fetch(
+      `https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${offset}`,
+      { headers: { 'Authorization': `Bearer ${accessToken}` } }
+    );
+    
+    if (!response.ok) {
+      const errData = await response.json() as SpotifyErrorResponse;
+      return res.status(response.status).json({ error: errData.error?.message || 'Playlists error' });
+    }
+    
+    const data = await response.json() as {
+      items: SpotifyPlaylistItem[];
+      total: number;
+      next: string | null;
+    };
+    
+    return res.json({
+      playlists: data.items.map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        image: p.images?.[0]?.url,
+        uri: p.uri,
+        trackCount: p.tracks?.total,
+        owner: p.owner?.display_name,
+      })),
+      total: data.total,
+      hasMore: !!data.next,
+    });
+  })
+);
+
+/**
  * PUT /api/spotify/player/transfer
  * Transfer playback to a different device
  */

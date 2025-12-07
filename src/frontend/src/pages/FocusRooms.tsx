@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Clock, Music, Headphones, Sparkles, Heart, Zap, Moon, SkipForward, X } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
 import AmbientSound from '../components/AmbientSound';
 import SceneLibrary from '../components/SceneLibrary';
@@ -89,6 +89,10 @@ export default function FocusRooms() {
   const [totalCredits, setTotalCredits] = useState(0);
   const [activeTab, setActiveTab] = useState<'focus-rooms' | 'ambient-library'>('focus-rooms');
   const [notification, setNotification] = useState<string | null>(null);
+  const [userPlaylists, setUserPlaylists] = useState<Array<{id: string; name: string; image?: string; uri: string; trackCount?: number}>>([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<{id: string; name: string; uri: string} | null>(null);
+  const [showPlaylistPicker, setShowPlaylistPicker] = useState(false);
+  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
 
   // Stop any ambient sound from Scene Library when entering Focus Rooms page
   useEffect(() => {
@@ -106,10 +110,16 @@ export default function FocusRooms() {
           api.get('/api/apple-music/status').catch(() => ({ data: { connected: false } })),
           api.get('/api/focus-rooms/stats').catch(() => ({ data: { totalCredits: 0 } })),
         ]);
-        setHasSpotify(spotifyResponse.data.connected || false);
+        const spotifyConnected = spotifyResponse.data.connected || false;
+        setHasSpotify(spotifyConnected);
         setHasAppleMusic(appleMusicResponse.data.connected || false);
         setTotalCredits(statsResponse.data.totalCredits || 0);
         setAudioProvider('meetcute');
+        
+        // Load user playlists if Spotify is connected
+        if (spotifyConnected) {
+          loadUserPlaylists();
+        }
       } catch (error) {
         console.error('Error loading data:', error);
       }
@@ -122,6 +132,19 @@ export default function FocusRooms() {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
+
+  // Load user's Spotify playlists
+  const loadUserPlaylists = async () => {
+    setLoadingPlaylists(true);
+    try {
+      const response = await api.get('/api/spotify/my-playlists');
+      setUserPlaylists(response.data.playlists || []);
+    } catch (error) {
+      console.error('Error loading playlists:', error);
+    } finally {
+      setLoadingPlaylists(false);
+    }
+  };
 
   // Timer countdown
   useEffect(() => {
@@ -478,6 +501,154 @@ export default function FocusRooms() {
           </div>
         )}
 
+        {/* Spotify Playlist Selector */}
+        {hasSpotify && (
+          <div className="mb-6 mg-card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Music className="w-5 h-5 text-green-400" />
+                <span className="text-[var(--mg-text-primary)] font-medium">Your Spotify Music</span>
+              </div>
+              {selectedPlaylist && (
+                <button
+                  onClick={() => setSelectedPlaylist(null)}
+                  className="text-xs text-[var(--mg-text-muted)] hover:text-[var(--mg-text-secondary)]"
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+            
+            {selectedPlaylist ? (
+              <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-xl border border-green-500/30">
+                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <Music className="w-6 h-6 text-green-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[var(--mg-text-primary)] font-medium truncate">{selectedPlaylist.name}</p>
+                  <p className="text-xs text-green-400">Selected for playback</p>
+                </div>
+                <button
+                  onClick={() => setShowPlaylistPicker(true)}
+                  className="px-3 py-1.5 text-sm bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                >
+                  Change
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowPlaylistPicker(true)}
+                className="w-full p-4 border-2 border-dashed border-[var(--mg-border)] rounded-xl hover:border-green-500/50 transition-colors text-center"
+              >
+                <Music className="w-8 h-8 text-[var(--mg-text-muted)] mx-auto mb-2" />
+                <p className="text-[var(--mg-text-secondary)] font-medium">Choose a playlist from your library</p>
+                <p className="text-xs text-[var(--mg-text-muted)] mt-1">Select your favorite focus music</p>
+              </button>
+            )}
+            
+            <p className="text-xs text-[var(--mg-text-muted)] mt-3">
+              📱 <span className="font-medium">Mobile:</span> Start any song in Spotify first, then your selected playlist will auto-play when you hit play here.
+            </p>
+          </div>
+        )}
+
+        {/* Playlist Picker Modal */}
+        <AnimatePresence>
+          {showPlaylistPicker && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+              onClick={() => setShowPlaylistPicker(false)}
+            >
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[var(--mg-bg-card)] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[80vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-[var(--mg-border)] flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-[var(--mg-text-primary)]">Choose a Playlist</h3>
+                  <button
+                    onClick={() => setShowPlaylistPicker(false)}
+                    className="p-2 rounded-full hover:bg-[var(--mg-bg-elevated)] text-[var(--mg-text-muted)]"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="overflow-y-auto max-h-[60vh] p-2">
+                  {loadingPlaylists ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                    </div>
+                  ) : userPlaylists.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Music className="w-12 h-12 text-[var(--mg-text-muted)] mx-auto mb-3" />
+                      <p className="text-[var(--mg-text-secondary)]">No playlists found</p>
+                      <p className="text-xs text-[var(--mg-text-muted)] mt-1">Create some playlists in Spotify first</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {userPlaylists.map((playlist) => (
+                        <button
+                          key={playlist.id}
+                          onClick={() => {
+                            setSelectedPlaylist({ id: playlist.id, name: playlist.name, uri: playlist.uri });
+                            setShowPlaylistPicker(false);
+                            setNotification(`✓ Selected: ${playlist.name}`);
+                            setTimeout(() => setNotification(null), 3000);
+                          }}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                            selectedPlaylist?.id === playlist.id
+                              ? 'bg-green-500/20 border border-green-500/50'
+                              : 'hover:bg-[var(--mg-bg-elevated)]'
+                          }`}
+                        >
+                          {playlist.image ? (
+                            <img 
+                              src={playlist.image} 
+                              alt={playlist.name}
+                              className="w-12 h-12 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-[var(--mg-bg-elevated)] rounded-lg flex items-center justify-center">
+                              <Music className="w-6 h-6 text-[var(--mg-text-muted)]" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0 text-left">
+                            <p className="text-[var(--mg-text-primary)] font-medium truncate">{playlist.name}</p>
+                            <p className="text-xs text-[var(--mg-text-muted)]">
+                              {playlist.trackCount ? `${playlist.trackCount} tracks` : 'Playlist'}
+                            </p>
+                          </div>
+                          {selectedPlaylist?.id === playlist.id && (
+                            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">✓</span>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-4 border-t border-[var(--mg-border)]">
+                  <button
+                    onClick={loadUserPlaylists}
+                    disabled={loadingPlaylists}
+                    className="w-full py-2 text-sm text-[var(--mg-text-secondary)] hover:text-[var(--mg-text-primary)] transition-colors disabled:opacity-50"
+                  >
+                    {loadingPlaylists ? 'Loading...' : 'Refresh playlists'}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Music Service Connection Prompt */}
         {!hasSpotify && !hasAppleMusic && (
           <div className="mb-6 mg-card p-5">
@@ -682,7 +853,10 @@ export default function FocusRooms() {
                                           setAudioProvider('spotify');
                                           if (isPlaying) {
                                             try {
-                                              await api.post('/api/spotify/play', { roomId: room.id });
+                                              await api.post('/api/spotify/play', { 
+                                                roomId: room.id,
+                                                contextUri: selectedPlaylist?.uri 
+                                              });
                                             } catch (error: any) {
                                               const status = error.response?.status;
                                               if (status === 403) {
@@ -790,8 +964,12 @@ export default function FocusRooms() {
                                             if (!device) {
                                               throw new Error('no_device');
                                             }
-                                            // Try to play via Spotify API
-                                            const response = await api.post('/api/spotify/play', { roomId: room.id, deviceId: device });
+                                            // Try to play via Spotify API - use selected playlist if available
+                                            const response = await api.post('/api/spotify/play', { 
+                                              roomId: room.id, 
+                                              deviceId: device,
+                                              contextUri: selectedPlaylist?.uri
+                                            });
                                             if (response.data?.success === false) {
                                               throw new Error(response.data?.error || 'Playback failed');
                                             }

@@ -235,8 +235,19 @@ export default function GardenDashboard() {
           gardenState.daysSinceActive || 0
         );
         
+        // Ensure plants array exists and has content
+        let plants = gardenState.plants;
+        if (!plants || !Array.isArray(plants) || plants.length === 0) {
+          // Generate starter plants if user has done any flows
+          if (gardenState.totalFlows > 0 || gardenState.flowsToday > 0) {
+            plants = generateStarterPlants(gardenState.totalFlows || 1);
+          } else {
+            plants = generateDemoPlants();
+          }
+        }
+        
         setGardenData({
-          plants: gardenState.plants || generateDemoPlants(),
+          plants,
           gridSize: gardenState.gridSize || calculateGridSize(gardenState.totalFlows || 0),
           visualState,
           weather: gardenState.weather || getWeatherFromState(visualState),
@@ -703,16 +714,13 @@ function getVisualStateFromActivity(activitiesThisWeek: number, daysSinceActive:
 }
 
 function generateDemoPlants(): Plant[] {
-  // Generate some demo plants for new users
-  const plantTypes: Array<Plant['type']> = ['lavender', 'daisy', 'chamomile', 'fern', 'succulent'];
+  // Generate some demo plants for new users who haven't done any flows
+  const plantTypes: Array<Plant['type']> = ['lavender', 'daisy', 'chamomile'];
   const plants: Plant[] = [];
   
-  // Scatter a few plants
+  // Start with just a few plants to show the concept
   const positions = [
-    { x: 1, y: 2 },
-    { x: 2, y: 1 },
-    { x: 3, y: 3 },
-    { x: 2, y: 3 },
+    { x: 2, y: 2 },
   ];
   
   positions.forEach((pos, i) => {
@@ -721,12 +729,65 @@ function generateDemoPlants(): Plant[] {
       type: plantTypes[i % plantTypes.length],
       x: pos.x,
       y: pos.y,
-      growthStage: 'blooming',
-      plantedAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-      bloomCount: Math.floor(Math.random() * 5) + 1,
-      associatedWith: 'Demo Plant',
+      growthStage: 'sprout',
+      plantedAt: new Date().toISOString(),
+      bloomCount: 0,
+      associatedWith: 'Welcome Plant',
     });
   });
+  
+  return plants;
+}
+
+function generateStarterPlants(flowCount: number): Plant[] {
+  // Generate plants based on how many flows user has completed
+  const plantTypes: Array<Plant['type']> = ['daisy', 'lavender', 'chamomile', 'fern', 'succulent', 'marigold'];
+  const plants: Plant[] = [];
+  
+  // Calculate how many plants to show (at least 1, scale with flows)
+  const plantCount = Math.max(1, Math.min(Math.floor(flowCount / 2) + 1, 8));
+  
+  // Generate positions in a nice pattern
+  const gridSize = 5;
+  const usedPositions = new Set<string>();
+  
+  for (let i = 0; i < plantCount; i++) {
+    // Try to find a position
+    let x = 1 + (i % 3);
+    let y = 1 + Math.floor(i / 3);
+    
+    // Ensure within grid
+    x = Math.min(x, gridSize - 1);
+    y = Math.min(y, gridSize - 1);
+    
+    // Skip if position used
+    const posKey = `${x},${y}`;
+    if (usedPositions.has(posKey)) {
+      // Find next available
+      for (let px = 0; px < gridSize; px++) {
+        for (let py = 0; py < gridSize; py++) {
+          const key = `${px},${py}`;
+          if (!usedPositions.has(key)) {
+            x = px;
+            y = py;
+            break;
+          }
+        }
+      }
+    }
+    usedPositions.add(`${x},${y}`);
+    
+    plants.push({
+      id: `starter-${i}`,
+      type: plantTypes[i % plantTypes.length],
+      x,
+      y,
+      growthStage: i === 0 ? 'blooming' : i < 3 ? 'growing' : 'sprout',
+      plantedAt: new Date(Date.now() - i * 12 * 60 * 60 * 1000).toISOString(),
+      bloomCount: Math.max(0, 3 - i),
+      associatedWith: 'Your practice',
+    });
+  }
   
   return plants;
 }
