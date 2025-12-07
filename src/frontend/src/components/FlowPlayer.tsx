@@ -123,8 +123,6 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
-  const [ambientPlaying, setAmbientPlaying] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const currentStep = flow.steps[currentStepIndex];
   const totalSteps = flow.steps.length;
@@ -155,7 +153,6 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     });
     
     ambientAudioRef.current = audio;
-    setAmbientPlaying(true);
   }, [flow.id, getAmbientSoundType]);
 
   // Stop ambient sound
@@ -171,7 +168,6 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
           audio.pause();
           audio.currentTime = 0;
           ambientAudioRef.current = null;
-          setAmbientPlaying(false);
         }
       }, 50);
     }
@@ -206,7 +202,6 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     
     // Duck ambient sound while speaking
     duckAmbientVolume(true);
-    setIsSpeaking(true);
     
     // Add natural pauses - more generous spacing for meditative feel
     // Split into sentences and speak with pauses between
@@ -219,7 +214,6 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
         // Done speaking - restore ambient volume after a pause
         setTimeout(() => {
           duckAmbientVolume(false);
-          setIsSpeaking(false);
         }, 800);
         return;
       }
