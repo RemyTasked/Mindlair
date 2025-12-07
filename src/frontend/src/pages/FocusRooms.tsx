@@ -89,6 +89,13 @@ export default function FocusRooms() {
   const [totalCredits, setTotalCredits] = useState(0);
   const [activeTab, setActiveTab] = useState<'focus-rooms' | 'ambient-library'>('focus-rooms');
 
+  // Stop any ambient sound from Scene Library when entering Focus Rooms page
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+      detail: { source: 'focus-rooms-mount', fadeOut: true },
+    }));
+  }, []);
+
   // Check if Spotify/Apple Music is connected and load credits
   useEffect(() => {
     const loadData = async () => {
@@ -199,11 +206,32 @@ export default function FocusRooms() {
     setSessionStartTime(null);
   };
 
+  // Ensure ambient sounds are stopped before starting Mind Garden audio
+  const stopAmbientIfAny = () => {
+    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+      detail: { source: 'focus-rooms-start', fadeOut: true },
+    }));
+  };
+
+  const ensureSpotifyDevice = async (): Promise<string | null> => {
+    try {
+      const resp = await api.get('/api/spotify/devices');
+      const devices = resp.data?.devices || [];
+      if (devices.length === 0) {
+        alert('Open Spotify on your phone or computer, start any track briefly, then try again.');
+        return null;
+      }
+      const active = devices.find((d: any) => d.isActive);
+      return active?.id || devices[0]?.id || null;
+    } catch (error) {
+      console.error('Error fetching Spotify devices', error);
+      return null;
+    }
+  };
+
   const handleRoomSelect = async (room: FocusRoom) => {
     // Stop all audio first
-    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-      detail: { source: 'focus-rooms-select', fadeOut: false }
-    }));
+    stopAmbientIfAny();
     
     if (audioProvider === 'spotify') {
       try {
@@ -734,8 +762,12 @@ export default function FocusRooms() {
                                         // Play
                                         if (audioProvider === 'spotify') {
                                           try {
+                                            const device = await ensureSpotifyDevice();
+                                            if (!device) {
+                                              throw new Error('no_device');
+                                            }
                                             // Try to play via Spotify API
-                                            const response = await api.post('/api/spotify/play', { roomId: room.id });
+                                            const response = await api.post('/api/spotify/play', { roomId: room.id, deviceId: device });
                                             if (response.data?.success === false) {
                                               throw new Error(response.data?.error || 'Playback failed');
                                             }
@@ -746,7 +778,7 @@ export default function FocusRooms() {
                                             const errorMessage = error.response?.data?.error || error.message || '';
                                             
                                             // Handle specific error types
-                                            if (status === 404 || errorMessage.includes('no active device')) {
+                                            if (errorMessage === 'no_device' || status === 404 || errorMessage.includes('no active device')) {
                                               if (confirm('No active Spotify device found. Use Mind Garden audio instead?')) {
                                                 setAudioProvider('meetcute');
                                                 startMeetCuteAudio(room);
@@ -766,6 +798,7 @@ export default function FocusRooms() {
                                             }
                                           }
                                         } else {
+                                          stopAmbientIfAny();
                                           startMeetCuteAudio(room);
                                           setIsPlaying(true);
                                         }

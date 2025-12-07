@@ -191,9 +191,30 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
     const scene = allScenes.find(s => s.id === activeScene);
     if (!scene) return null;
 
+    const closeScene = () => {
+      // Stop ambient sound when closing
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', { detail: { source: 'scene-library-close' } }));
+      setActiveScene(null);
+    };
+
+    // Prevent background scroll while modal is open
+    useEffect(() => {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }, []);
+
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4"
+        onClick={closeScene}
+      >
+        <div
+          className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header - sticky with high z-index for mobile */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between rounded-t-2xl z-10">
             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -210,7 +231,7 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setActiveScene(null);
+                closeScene();
               }}
               className="p-3 sm:p-2 -mr-2 sm:mr-0 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
               aria-label="Close"
@@ -219,7 +240,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
             </button>
           </div>
 
-          <div className="p-4 sm:p-6 pb-8 sm:pb-6">
+          {/* Content - scrollable inside modal, safe bottom padding */}
+          <div className="p-4 sm:p-6 pb-10 sm:pb-6 overflow-y-auto flex-1">
             {scene.content}
           </div>
         </div>
@@ -252,6 +274,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                // Stop any existing ambient sound first
+                window.dispatchEvent(new CustomEvent('ambient-sound-stop', { detail: { source: 'scene-library-switch' } }));
                 // Immediately play the sound
                 if (activeScene === scene.id) {
                   // If already active, toggle off
@@ -273,6 +297,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
             {/* Card Content - Clickable to open modal */}
             <button
               onClick={() => {
+                // Stop any existing ambient sound first
+                window.dispatchEvent(new CustomEvent('ambient-sound-stop', { detail: { source: 'scene-library-open' } }));
                 // Open modal for more details
                 if (activeScene && activeScene !== scene.id) {
                   setActiveScene(null);
