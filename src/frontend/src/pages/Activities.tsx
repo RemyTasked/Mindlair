@@ -176,18 +176,25 @@ export default function Activities() {
         navigate('/activities/gratitude');
         break;
       case 'thought-reframing':
-        navigate('/activities/reframing');
+        // Redirect to Thought Sorter game which has similar CBT concepts
+        navigate('/games', { state: { openGame: 'thought-sorter' } });
         break;
       case 'breathing-garden':
-        navigate('/activities/breathing');
+        // Redirect to breathing flow
+        navigate('/flow/breathing');
         break;
       case 'mindful-moments':
-        navigate('/activities/mindful-moments');
+        // Redirect to flows library for mindful activities
+        navigate('/flows');
         break;
       case 'thought-popper':
+        navigate('/games', { state: { openGame: 'thought-popper' } });
+        break;
       case 'zen-match':
+        navigate('/games', { state: { openGame: 'zen-match' } });
+        break;
       case 'thought-sorter':
-        navigate('/games');
+        navigate('/games', { state: { openGame: 'thought-sorter' } });
         break;
       default:
         break;

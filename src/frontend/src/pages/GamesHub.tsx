@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Trophy, Zap, Target, Sparkles, Settings as SettingsIcon, 
@@ -32,6 +32,7 @@ type GameType = 'thought-popper' | 'zen-match' | 'thought-sorter' | null;
 
 export default function GamesHub() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [gameType, setGameType] = useState<GameType>(null);
   const [showEmotionGarden, setShowEmotionGarden] = useState(false);
   const [progress, setProgress] = useState<GameProgress | null>(null);
@@ -42,7 +43,16 @@ export default function GamesHub() {
   useEffect(() => {
     loadUser();
     loadProgress();
-  }, []);
+    
+    // Check if we should auto-open a game from navigation state
+    const state = location.state as { openGame?: GameType } | null;
+    if (state?.openGame) {
+      setGameType(state.openGame);
+      setGameStarted(true);
+      // Clear the state to prevent re-opening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const loadUser = async () => {
     try {
