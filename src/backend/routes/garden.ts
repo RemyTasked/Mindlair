@@ -486,18 +486,19 @@ function calculateGardenState(activitiesThisWeek: number, daysSinceActive: numbe
 }
 
 // Get weather based on garden state (all weather is positive/beautiful)
-function getWeatherForState(state: GardenState, season: Season): WeatherType {
+// Note: We avoid snow by default as it can feel cold/unwelcoming
+function getWeatherForState(state: GardenState, _season: Season): WeatherType {
   switch (state) {
     case 'thriving':
       return 'sunny';
     case 'growing':
       return 'partly-cloudy';
     case 'stable':
-      return 'cloudy'; // Soft, contemplative
+      return 'partly-cloudy'; // Soft, pleasant (changed from cloudy)
     case 'idle':
       return 'golden-hour'; // Beautiful sunset/dusk
     case 'dormant':
-      return season === 'winter' ? 'soft-snow' : 'mist'; // Peaceful rest
+      return 'golden-hour'; // Always welcoming, never snow/mist (changed from winter check)
     default:
       return 'sunny';
   }

@@ -737,7 +737,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     ) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: 'Ambient Sound',
-        artist: 'Meet Cute',
+        artist: 'Mind Garden',
         album: 'Focus Session',
       });
     }
@@ -818,7 +818,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       ) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: 'Ambient Sound',
-          artist: 'Meet Cute',
+          artist: 'Mind Garden',
           album: 'Focus Session',
         });
       }

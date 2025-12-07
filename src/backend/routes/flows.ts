@@ -432,13 +432,13 @@ async function updateGardenWithPlants(userId: string, flowType: string, duration
   // Update visual state
   gardenData.visualState = calculateVisualState(activitiesThisWeek);
   
-  // Update weather based on streak
-  if (gardenData.streak >= 7) {
+  // Update weather based on visual state (always positive)
+  if (gardenData.visualState === 'thriving') {
     gardenData.weather = 'sunny';
-  } else if (gardenData.streak >= 3) {
+  } else if (gardenData.visualState === 'growing' || gardenData.streak >= 3) {
     gardenData.weather = 'partly-cloudy';
   } else {
-    gardenData.weather = 'gentle-rain';
+    gardenData.weather = 'golden-hour'; // Warm, welcoming default
   }
   
   // Save garden state (cast to Prisma-compatible JSON type)

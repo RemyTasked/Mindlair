@@ -270,15 +270,23 @@ export default function FocusRooms() {
 
   const startMeetCuteAudio = (room: FocusRoom) => {
     if (room.meetCuteSoundType) {
-      console.log('🎵 Starting Meet-Cute audio for room:', { roomId: room.id, soundType: room.meetCuteSoundType });
+      console.log('🎵 Starting Mind Garden audio for room:', { roomId: room.id, soundType: room.meetCuteSoundType });
       
-      localStorage.setItem('meetcute_autoplay_sound', 'true');
-      window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-        detail: { 
-          source: 'focus-rooms-meetcute', 
-          soundType: room.meetCuteSoundType
-        }
+      // First stop any currently playing audio to prevent overlap
+      window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
+        detail: { source: 'focus-rooms-before-start', fadeOut: false }
       }));
+      
+      // Small delay then start the new sound
+      setTimeout(() => {
+        localStorage.setItem('meetcute_autoplay_sound', 'true');
+        window.dispatchEvent(new CustomEvent('ambient-sound-play', {
+          detail: { 
+            source: 'focus-rooms-mindgarden', 
+            soundType: room.meetCuteSoundType
+          }
+        }));
+      }, 150);
     }
   };
 
@@ -561,8 +569,8 @@ export default function FocusRooms() {
                         {/* Audio Provider Badge */}
                         <div className="flex items-center gap-2">
                           {audioProvider === 'meetcute' && (
-                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                              Meet-Cute Audio
+                            <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-medium rounded-full">
+                              Mind Garden Audio
                             </span>
                           )}
                           {audioProvider === 'spotify' && (
@@ -609,11 +617,11 @@ export default function FocusRooms() {
                                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                                   >
-                                    Meet-Cute
+                                    Mind Garden
                                   </button>
                                   {hasSpotify && (
                                     <button
-                                      onClick={(e) => {
+                                      onClick={async (e) => {
                                         e.stopPropagation();
                                         if (audioProvider !== 'spotify') {
                                           window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
@@ -621,10 +629,18 @@ export default function FocusRooms() {
                                           }));
                                           setAudioProvider('spotify');
                                           if (isPlaying) {
-                                            api.post('/api/spotify/play', { roomId: room.id }).catch(() => {
+                                            try {
+                                              await api.post('/api/spotify/play', { roomId: room.id });
+                                            } catch (error: any) {
+                                              const status = error.response?.status;
+                                              if (status === 403) {
+                                                alert('Spotify Premium is required for playback.');
+                                              } else if (status === 404) {
+                                                alert('No active Spotify device. Please open Spotify first.');
+                                              }
                                               setAudioProvider('meetcute');
                                               startMeetCuteAudio(room);
-                                            });
+                                            }
                                           }
                                         }
                                       }}
@@ -718,19 +734,32 @@ export default function FocusRooms() {
                                         // Play
                                         if (audioProvider === 'spotify') {
                                           try {
-                                            await api.post('/api/spotify/play', { roomId: room.id });
+                                            // Try to play via Spotify API
+                                            const response = await api.post('/api/spotify/play', { roomId: room.id });
+                                            if (response.data?.success === false) {
+                                              throw new Error(response.data?.error || 'Playback failed');
+                                            }
                                             setIsPlaying(true);
                                           } catch (error: any) {
                                             console.error('Error starting Spotify:', error);
-                                            const isNoDeviceError = error.response?.status === 404;
+                                            const status = error.response?.status;
+                                            const errorMessage = error.response?.data?.error || error.message || '';
                                             
-                                            if (isNoDeviceError) {
-                                              if (confirm('Spotify needs to be open. Use Meet-Cute audio instead?')) {
+                                            // Handle specific error types
+                                            if (status === 404 || errorMessage.includes('no active device')) {
+                                              if (confirm('No active Spotify device found. Use Mind Garden audio instead?')) {
                                                 setAudioProvider('meetcute');
                                                 startMeetCuteAudio(room);
                                                 setIsPlaying(true);
                                               }
+                                            } else if (status === 403 || errorMessage.includes('PREMIUM_REQUIRED')) {
+                                              alert('Spotify Premium is required for playback. Switching to Mind Garden audio.');
+                                              setAudioProvider('meetcute');
+                                              startMeetCuteAudio(room);
+                                              setIsPlaying(true);
                                             } else {
+                                              // Generic fallback
+                                              console.log('Spotify playback failed, falling back to Mind Garden audio');
                                               setAudioProvider('meetcute');
                                               startMeetCuteAudio(room);
                                               setIsPlaying(true);

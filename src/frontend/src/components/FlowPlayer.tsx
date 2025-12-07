@@ -2,8 +2,8 @@
  * Mind Garden - Flow Player Component
  * 
  * A beautiful, immersive flow player for guided micro-interventions.
- * Features animated breathing indicators, step progress, Spotify integration,
- * and garden growth rewards with cross-promotion prompts.
+ * Features animated breathing indicators, step progress, ambient sounds with fade,
+ * Spotify integration, and garden growth rewards with cross-promotion prompts.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -11,6 +11,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { X, Pause, Play, SkipForward, Volume2, VolumeX, RotateCcw, Music, Leaf, Sparkles } from 'lucide-react';
 import spotify from '../services/spotify';
+
+// Ambient sound URLs for flow background
+const AMBIENT_SOUNDS: Record<string, string> = {
+  calm: 'https://cdn.freesound.org/previews/531/531947_6183164-lq.mp3', // Gentle rain
+  focus: 'https://cdn.freesound.org/previews/463/463903_9497060-lq.mp3', // Soft ambient
+  energize: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3', // Uplifting tone
+};
 
 // Types from shared (simplified for frontend)
 interface FlowStep {
@@ -115,6 +122,9 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
   const animationFrameRef = useRef<number>();
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [ambientPlaying, setAmbientPlaying] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const currentStep = flow.steps[currentStepIndex];
   const totalSteps = flow.steps.length;
@@ -124,66 +134,153 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
   // Calculate total breath cycle duration
   const breathCycleDuration = breathTiming.inhale + breathTiming.holdIn + breathTiming.exhale + breathTiming.holdOut;
 
-  // Speak guidance text - optimized for calm, natural delivery
+  // Get ambient sound type based on flow
+  const getAmbientSoundType = useCallback((flowId: string): keyof typeof AMBIENT_SOUNDS => {
+    if (flowId.includes('morning') || flowId.includes('energiz') || flowId.includes('presentation')) return 'energize';
+    if (flowId.includes('focus') || flowId.includes('meeting') || flowId.includes('reset')) return 'focus';
+    return 'calm';
+  }, []);
+
+  // Start ambient background sound
+  const startAmbientSound = useCallback(() => {
+    if (ambientAudioRef.current) return; // Already playing
+    
+    const soundType = getAmbientSoundType(flow.id);
+    const audio = new Audio(AMBIENT_SOUNDS[soundType]);
+    audio.loop = true;
+    audio.volume = 0.3; // Quiet background level
+    
+    audio.play().catch(err => {
+      console.warn('Ambient audio blocked:', err);
+    });
+    
+    ambientAudioRef.current = audio;
+    setAmbientPlaying(true);
+  }, [flow.id, getAmbientSoundType]);
+
+  // Stop ambient sound
+  const stopAmbientSound = useCallback(() => {
+    if (ambientAudioRef.current) {
+      // Fade out over 1 second
+      const audio = ambientAudioRef.current;
+      const fadeOut = setInterval(() => {
+        if (audio.volume > 0.02) {
+          audio.volume = Math.max(0, audio.volume - 0.02);
+        } else {
+          clearInterval(fadeOut);
+          audio.pause();
+          audio.currentTime = 0;
+          ambientAudioRef.current = null;
+          setAmbientPlaying(false);
+        }
+      }, 50);
+    }
+  }, []);
+
+  // Duck ambient volume when speaking
+  const duckAmbientVolume = useCallback((duck: boolean) => {
+    if (ambientAudioRef.current) {
+      const targetVolume = duck ? 0.08 : 0.3; // Very quiet during speech, louder after
+      const audio = ambientAudioRef.current;
+      const step = duck ? -0.02 : 0.02;
+      const fadeDuration = duck ? 300 : 800; // Faster fade down, slower fade up
+      const stepTime = fadeDuration / Math.abs((targetVolume - audio.volume) / 0.02);
+      
+      const fadeInterval = setInterval(() => {
+        const newVolume = audio.volume + step;
+        if ((duck && newVolume <= targetVolume) || (!duck && newVolume >= targetVolume)) {
+          audio.volume = targetVolume;
+          clearInterval(fadeInterval);
+        } else {
+          audio.volume = newVolume;
+        }
+      }, stepTime);
+    }
+  }, []);
+
+  // Speak guidance text - optimized for calm, natural delivery with MUCH slower pacing
   const speakGuidance = useCallback((text: string) => {
     if (isMuted || !('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel();
     
-    // Add natural pauses by replacing punctuation with longer pauses
-    // SSML-like pauses using ellipsis which most TTS engines interpret as pauses
-    const textWithPauses = text
-      .replace(/\.\.\./g, ',   ')  // Triple dots become longer pause
-      .replace(/\./g, '.   ')      // Periods get extra pause
-      .replace(/,/g, ',  ');        // Commas get slight pause
+    // Duck ambient sound while speaking
+    duckAmbientVolume(true);
+    setIsSpeaking(true);
     
-    const utterance = new SpeechSynthesisUtterance(textWithPauses);
+    // Add natural pauses - more generous spacing for meditative feel
+    // Split into sentences and speak with pauses between
+    const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim());
     
-    // More natural, meditative settings
-    utterance.rate = 0.75;      // Slower for calm effect
-    utterance.pitch = 0.95;     // Slightly lower pitch sounds warmer
-    utterance.volume = 0.75;    // Slightly softer
+    let sentenceIndex = 0;
     
-    // Try to find the best available voice for meditation/wellness
-    const voices = window.speechSynthesis.getVoices();
-    
-    // Priority order of preferred voices (tested to sound most natural)
-    const voicePreferences = [
-      // macOS voices (high quality)
-      'Samantha',           // macOS - female, warm
-      'Karen',              // macOS - Australian, calm
-      'Moira',              // macOS - Irish, soothing
-      'Daniel',             // macOS - British, calm
-      // Windows voices
-      'Microsoft Zira',     // Windows - female, neutral
-      'Microsoft David',    // Windows - male, calm
-      // Google voices
-      'Google UK English Female',
-      'Google UK English Male',
-      // Generic fallbacks
-      'Female',
-      'en-US',
-      'en-GB',
-    ];
-    
-    let selectedVoice = voices[0];
-    for (const pref of voicePreferences) {
-      const match = voices.find(v => 
-        v.name.toLowerCase().includes(pref.toLowerCase())
-      );
-      if (match) {
-        selectedVoice = match;
-        break;
+    const speakNextSentence = () => {
+      if (sentenceIndex >= sentences.length) {
+        // Done speaking - restore ambient volume after a pause
+        setTimeout(() => {
+          duckAmbientVolume(false);
+          setIsSpeaking(false);
+        }, 800);
+        return;
       }
-    }
+      
+      const sentence = sentences[sentenceIndex];
+      const utterance = new SpeechSynthesisUtterance(sentence);
+      
+      // Very slow, meditative settings
+      utterance.rate = 0.65;      // Much slower for calm, deliberate delivery
+      utterance.pitch = 0.9;      // Lower pitch sounds warmer and calmer
+      utterance.volume = 0.8;     // Clear but not overwhelming
+      
+      // Try to find the best available voice for meditation/wellness
+      const voices = window.speechSynthesis.getVoices();
+      
+      // Priority order of preferred voices (tested to sound most natural)
+      const voicePreferences = [
+        // macOS voices (high quality)
+        'Samantha',           // macOS - female, warm
+        'Karen',              // macOS - Australian, calm
+        'Moira',              // macOS - Irish, soothing
+        'Daniel',             // macOS - British, calm
+        // Windows voices
+        'Microsoft Zira',     // Windows - female, neutral
+        'Microsoft David',    // Windows - male, calm
+        // Google voices
+        'Google UK English Female',
+        'Google UK English Male',
+        // Generic fallbacks
+        'Female',
+        'en-US',
+        'en-GB',
+      ];
+      
+      let selectedVoice = voices[0];
+      for (const pref of voicePreferences) {
+        const match = voices.find(v => 
+          v.name.toLowerCase().includes(pref.toLowerCase())
+        );
+        if (match) {
+          selectedVoice = match;
+          break;
+        }
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      
+      utterance.onend = () => {
+        sentenceIndex++;
+        // Long pause between sentences for meditative feel (1.5 seconds)
+        setTimeout(speakNextSentence, 1500);
+      };
+      
+      speechSynthRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    };
     
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
-    
-    speechSynthRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-  }, [isMuted]);
+    speakNextSentence();
+  }, [isMuted, duckAmbientVolume]);
 
   // Handle step progression
   const nextStep = useCallback(() => {
@@ -194,6 +291,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     } else {
       // Flow complete
       setIsPlaying(false);
+      stopAmbientSound(); // Stop ambient on completion
       
       // Increment flow count and check if we should show cross-promotion
       const newCount = incrementFlowCount();
@@ -203,7 +301,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
       
       setShowCompletion(true);
     }
-  }, [currentStepIndex, totalSteps]);
+  }, [currentStepIndex, totalSteps, stopAmbientSound]);
 
   // Skip to next step
   const skipStep = useCallback(() => {
@@ -222,7 +320,11 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     setIsPlaying(true);
     stepStartTimeRef.current = Date.now();
     startTimeRef.current = Date.now();
-  }, []);
+    // Restart ambient sound
+    if (!ambientAudioRef.current) {
+      startAmbientSound();
+    }
+  }, [startAmbientSound]);
 
   // Toggle play/pause
   const togglePlayPause = useCallback(() => {
@@ -299,13 +401,29 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     }
   }, [currentStepIndex, isPlaying, showCompletion, speakGuidance, currentStep?.guidance]);
 
-  // Cleanup speech synthesis and fallback audio on unmount
+  // Start ambient sound when flow begins
+  useEffect(() => {
+    // Start ambient sound after a short delay to allow user gesture
+    const timer = setTimeout(() => {
+      if (isPlaying && !showCompletion) {
+        startAmbientSound();
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [isPlaying, showCompletion, startAmbientSound]);
+
+  // Cleanup speech synthesis, fallback audio, and ambient audio on unmount
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
       if (fallbackAudioRef.current) {
         fallbackAudioRef.current.pause();
         fallbackAudioRef.current = null;
+      }
+      if (ambientAudioRef.current) {
+        ambientAudioRef.current.pause();
+        ambientAudioRef.current = null;
       }
     };
   }, []);
@@ -492,6 +610,9 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
 
   // Handle completion submit
   const handleComplete = () => {
+    // Stop ambient sound
+    stopAmbientSound();
+    
     // Stop music (Spotify or fallback)
     if (spotifyPlaying) {
       if (useFallbackAudio) {
