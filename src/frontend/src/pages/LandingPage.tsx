@@ -300,35 +300,35 @@ export default function LandingPage() {
             </button>
           </div>
 
-          {/* More Calendar Options */}
-          <div className="mb-8 animate-fade-in animation-delay-500">
+          {/* More Calendar Options - Visible on mobile */}
+          <div className="mb-6">
             <button
               onClick={() => setShowMoreCalendars(!showMoreCalendars)}
-              className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1 mx-auto"
+              className="px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-all flex items-center gap-2 mx-auto font-medium text-sm"
             >
-              More calendar options
+              More sign-in options
               <ChevronDown className={`w-4 h-4 transition-transform ${showMoreCalendars ? 'rotate-180' : ''}`} />
             </button>
 
             {showMoreCalendars && (
-              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4 animate-fade-in">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
                 <button
                   onClick={handleWebexAuth}
                   disabled={loading}
-                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50 text-sm"
+                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                     <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#00BCF2"/>
                     <path d="M2 17L12 22L22 17L12 12L2 17Z" fill="#00BCF2"/>
                     <path d="M2 12L12 17L22 12" stroke="#00BCF2" strokeWidth="2"/>
                   </svg>
-                  Webex
+                  Continue with Webex
                 </button>
 
                 <button
                   onClick={() => setShowCalDAVModal(true)}
                   disabled={loading}
-                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50 text-sm"
+                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                     <rect x="3" y="4" width="18" height="18" rx="2" stroke="#6B7280" strokeWidth="2"/>
@@ -336,7 +336,7 @@ export default function LandingPage() {
                     <path d="M8 2V6" stroke="#6B7280" strokeWidth="2" strokeLinecap="round"/>
                     <path d="M16 2V6" stroke="#6B7280" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  iCloud / Yahoo
+                  iCloud / Yahoo / Other
                 </button>
               </div>
             )}
