@@ -53,7 +53,7 @@ const NAV_ITEMS = [
   { id: 'flows', label: 'Flows', icon: Sparkles, path: '/flows' },
   { id: 'activities', label: 'Activities', icon: Gamepad2, path: '/activities' },
   { id: 'insights', label: 'Insights', icon: BarChart3, path: '/insights' },
-  { id: 'spotify', label: 'Music', icon: Music, path: '/music' },
+  { id: 'spotify', label: 'Music', icon: Music, path: '/focus-rooms' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
 ] as const;
 

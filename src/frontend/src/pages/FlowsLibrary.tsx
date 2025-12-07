@@ -5,7 +5,7 @@
  * Organized by category and duration.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -20,8 +20,24 @@ import {
   Wind,
   Sunrise,
   Moon,
+  CheckCircle,
 } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
+
+// Check if a flow was completed today (for once-per-day flows)
+const ONCE_PER_DAY_FLOWS = ['evening-wind-down', 'end-of-day-transition', 'morning-intention'];
+
+function isCompletedToday(flowId: string): boolean {
+  if (!ONCE_PER_DAY_FLOWS.includes(flowId)) return false;
+  try {
+    const completedFlows = JSON.parse(localStorage.getItem('mindgarden_daily_flows') || '{}');
+    const completedDate = completedFlows[flowId];
+    if (!completedDate) return false;
+    return completedDate === new Date().toDateString();
+  } catch {
+    return false;
+  }
+}
 
 // Flow definitions
 interface Flow {
@@ -206,6 +222,25 @@ export default function FlowsLibrary() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [completedToday, setCompletedToday] = useState<Set<string>>(new Set());
+
+  // Check completed flows on mount and when returning to page
+  useEffect(() => {
+    const checkCompletedFlows = () => {
+      const completed = new Set<string>();
+      ONCE_PER_DAY_FLOWS.forEach(flowId => {
+        if (isCompletedToday(flowId)) {
+          completed.add(flowId);
+        }
+      });
+      setCompletedToday(completed);
+    };
+    
+    checkCompletedFlows();
+    // Also check when window regains focus (user returns from flow)
+    window.addEventListener('focus', checkCompletedFlows);
+    return () => window.removeEventListener('focus', checkCompletedFlows);
+  }, []);
 
   // Filter flows
   const filteredFlows = useMemo(() => {
@@ -439,6 +474,8 @@ export default function FlowsLibrary() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredFlows.map((flow, i) => {
                 const CategoryIcon = CATEGORIES[flow.category].icon;
+                const isCompleted = completedToday.has(flow.id);
+                const isOncePerDay = ONCE_PER_DAY_FLOWS.includes(flow.id);
                 
                 return (
                   <motion.button
@@ -446,14 +483,32 @@ export default function FlowsLibrary() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    onClick={() => navigate(`/flow/${flow.id}`)}
-                    className="mg-card hover:border-[var(--mg-accent)] transition-colors text-left group"
+                    onClick={() => !isCompleted && navigate(`/flow/${flow.id}`)}
+                    disabled={isCompleted}
+                    className={`mg-card transition-colors text-left group ${
+                      isCompleted 
+                        ? 'opacity-60 cursor-not-allowed border-emerald-500/30' 
+                        : 'hover:border-[var(--mg-accent)]'
+                    }`}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <span className="text-2xl">{flow.icon}</span>
-                      <div className={`flex items-center gap-1 ${CATEGORIES[flow.category].color}`}>
-                        <CategoryIcon className="w-4 h-4" />
-                        <span className="text-xs">{CATEGORIES[flow.category].label}</span>
+                      <div className="flex items-center gap-2">
+                        {isCompleted && (
+                          <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium">
+                            <CheckCircle className="w-4 h-4" />
+                            Done
+                          </div>
+                        )}
+                        {isOncePerDay && !isCompleted && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs">
+                            1x/day
+                          </span>
+                        )}
+                        <div className={`flex items-center gap-1 ${CATEGORIES[flow.category].color}`}>
+                          <CategoryIcon className="w-4 h-4" />
+                          <span className="text-xs">{CATEGORIES[flow.category].label}</span>
+                        </div>
                       </div>
                     </div>
                     <h3 className="font-semibold text-[var(--mg-text-primary)]">{flow.name}</h3>
@@ -465,9 +520,15 @@ export default function FlowsLibrary() {
                         <Clock className="w-4 h-4" />
                         <span>{formatDuration(flow.duration)}</span>
                       </div>
-                      <div className="p-2 rounded-full bg-[var(--mg-bg-primary)] group-hover:bg-[var(--mg-accent)]/20 transition-colors">
-                        <Play className="w-4 h-4 text-[var(--mg-accent)]" />
-                      </div>
+                      {isCompleted ? (
+                        <div className="p-2 rounded-full bg-emerald-500/20">
+                          <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded-full bg-[var(--mg-bg-primary)] group-hover:bg-[var(--mg-accent)]/20 transition-colors">
+                          <Play className="w-4 h-4 text-[var(--mg-accent)]" />
+                        </div>
+                      )}
                     </div>
                   </motion.button>
                 );

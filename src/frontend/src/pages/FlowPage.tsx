@@ -161,16 +161,24 @@ export default function FlowPage() {
     try {
       // Log flow completion to backend
       await api.post('/api/flows/complete', {
-        flowId,
-        durationSeconds: flow?.duration || 0,
+        flowType: flowId,
+        duration: flow?.duration || 0,
         rating,
         notes,
       });
+      
+      // Track daily completion for once-per-day flows
+      if (flowId && ['evening-wind-down', 'end-of-day-transition', 'morning-intention'].includes(flowId)) {
+        const today = new Date().toDateString();
+        const completedFlows = JSON.parse(localStorage.getItem('mindgarden_daily_flows') || '{}');
+        completedFlows[flowId] = today;
+        localStorage.setItem('mindgarden_daily_flows', JSON.stringify(completedFlows));
+      }
     } catch (error) {
       console.warn('Failed to log flow completion:', error);
     }
 
-    navigate('/dashboard');
+    navigate('/garden');
   };
 
   const handleClose = () => {
