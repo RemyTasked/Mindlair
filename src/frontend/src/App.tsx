@@ -8,17 +8,11 @@ import { UpdateNotificationManager } from './components/UpdateNotification';
 // Import garden theme CSS
 import './styles/garden-theme.css';
 
-// Lazy load heavy routes
+// Lazy load routes
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const GardenDashboard = lazy(() => import('./pages/GardenDashboard'));
 const FocusRooms = lazy(() => import('./pages/FocusRooms'));
 const Settings = lazy(() => import('./pages/Settings'));
-const FocusScene = lazy(() => import('./pages/FocusScene'));
-const FocusSceneDemo = lazy(() => import('./pages/FocusSceneDemo'));
-const PresleyFlow = lazy(() => import('./pages/PresleyFlow'));
-const WindingDown = lazy(() => import('./pages/WindingDown'));
-const WeekendFlow = lazy(() => import('./pages/WeekendFlow'));
-const MeetingRating = lazy(() => import('./pages/MeetingRating'));
 const GamesHub = lazy(() => import('./pages/GamesHub'));
 const FlowPage = lazy(() => import('./pages/FlowPage'));
 const FlowsLibrary = lazy(() => import('./pages/FlowsLibrary'));
@@ -30,12 +24,12 @@ const Privacy = lazy(() => import('./pages/Privacy'));
 
 // Loading component
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-teal-50">
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-50">
     <div className="text-center">
       <div className="mx-auto mb-4">
         <Logo size="lg" />
       </div>
-      <h2 className="text-2xl font-semibold text-gray-800">Loading...</h2>
+      <p className="text-emerald-700">Loading...</p>
     </div>
   </div>
 );
@@ -45,26 +39,23 @@ function App() {
     <>
       <Suspense fallback={<PageLoader />}>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/focus/demo" element={<FocusSceneDemo />} />
-          <Route path="/focus/:userId/:meetingId" element={<FocusScene />} />
-          <Route path="/rate/:userId/:meetingId" element={<MeetingRating />} />
-          <Route path="/presley-flow/:userId/:date" element={<PresleyFlow />} />
-          <Route path="/winding-down/:userId" element={<WindingDown />} />
-          <Route path="/weekend-flow/:userId" element={<WeekendFlow />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          
+          {/* Main app routes */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/garden" element={<GardenDashboard />} />
           <Route path="/flows" element={<FlowsLibrary />} />
+          <Route path="/flow/:flowId" element={<FlowPage />} />
           <Route path="/activities" element={<Activities />} />
           <Route path="/activities/gratitude" element={<GratitudeGarden />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/focus-rooms" element={<FocusRooms />} />
           <Route path="/games" element={<GamesHub />} />
-          <Route path="/flow/:flowId" element={<FlowPage />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
         </Routes>
       </Suspense>
       
@@ -75,4 +66,3 @@ function App() {
 }
 
 export default App;
-

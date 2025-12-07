@@ -2,10 +2,7 @@ import { useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
-import { Calendar, Settings as SettingsIcon, TrendingUp, Headphones, Gamepad2 } from 'lucide-react';
-// SceneLibrary removed - now in Focus Rooms tab
-import { DirectorsInsights } from '../components/DirectorsInsights';
-import { PostMeetingReflection, ReflectionData } from '../components/PostMeetingReflection';
+import { Calendar, Settings as SettingsIcon, TrendingUp, Headphones, Gamepad2, Flower2, Chrome } from 'lucide-react';
 import AmbientSound from '../components/AmbientSound';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
@@ -81,12 +78,8 @@ export default function Dashboard() {
   const [windingDown, setWindingDown] = useState<WindingDown | null>(null);
   const [loading, setLoading] = useState(true);
   const [eveningFlowTime, setEveningFlowTime] = useState<string>('18:00'); // Default 6 PM
-  const [reflectionInsights, setReflectionInsights] = useState<any>(null);
-  const [showReflectionModal, setShowReflectionModal] = useState(false);
-  const [reflectionMeeting, setReflectionMeeting] = useState<Meeting | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingWelcome, setShowOnboardingWelcome] = useState(false);
-  const [userMetadata, setUserMetadata] = useState<any>(null);
   
   // Compute active meetings (currently in progress) from meetings list
   const activeMeetings = meetings.filter(meeting => {
@@ -280,28 +273,20 @@ export default function Dashboard() {
       const userEveningFlowTime = userResponse.data.user?.preferences?.eveningFlowTime || '18:00';
       setEveningFlowTime(userEveningFlowTime);
       
-      // Check for recently ended meetings that need reflection
-      checkForRecentlyEndedMeetings(meetingsResponse.data.meetings);
       
       // Show UI now - load non-critical data in background
       setLoading(false);
 
-      // DEFERRED: Load stats, reflection insights, and user metadata in background (non-blocking)
-      Promise.all([
-        api.get('/api/user/stats', {
-          params: {
-            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        }).catch(() => ({ data: { stats: null } })),
-        api.get('/api/reflections/insights').catch(() => ({ data: { hasData: false, stats: null } })),
-        api.get('/api/user/metadata').catch(() => ({ data: { metadata: null } })),
-      ]).then(([statsResponse, reflectionInsightsResponse, metadataResponse]) => {
-        console.log('✅ Background data loaded');
+      // DEFERRED: Load stats in background (non-blocking)
+      api.get('/api/user/stats', {
+        params: {
+          startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      }).then(statsResponse => {
+        console.log('✅ Background stats loaded');
         setStats(statsResponse.data.stats);
-        setReflectionInsights(reflectionInsightsResponse.data);
-        setUserMetadata(metadataResponse.data.metadata);
       }).catch(err => {
-        console.warn('⚠️ Background data load failed (non-critical):', err);
+        console.warn('⚠️ Background stats load failed (non-critical):', err);
       });
     } catch (error: any) {
       console.error('❌ Error loading user data:', error);
@@ -354,9 +339,6 @@ export default function Dashboard() {
           newCount: newMeetings.length,
         });
         setMeetings(newMeetings);
-        
-        // Check for recently ended meetings that need reflection
-        checkForRecentlyEndedMeetings(newMeetings);
       } else {
         console.log('✅ No meeting changes detected');
       }
@@ -397,48 +379,6 @@ export default function Dashboard() {
     }
   };
 
-  // Check for recently ended meetings that need reflection
-  const checkForRecentlyEndedMeetings = (allMeetings: Meeting[]) => {
-    const now = new Date();
-    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-    
-    // Find meetings that ended in the last 5 minutes
-    const recentlyEnded = allMeetings.find(meeting => {
-      const endTime = new Date(meeting.endTime);
-      return endTime > fiveMinutesAgo && endTime < now;
-    });
-
-    if (recentlyEnded) {
-      // Check if reflection already captured
-      const reflectionKey = `reflection_captured_${recentlyEnded.id}`;
-      const alreadyCaptured = localStorage.getItem(reflectionKey);
-      
-      if (!alreadyCaptured) {
-        setReflectionMeeting(recentlyEnded);
-        setShowReflectionModal(true);
-      }
-    }
-  };
-
-  const handleSubmitReflection = async (reflection: ReflectionData) => {
-    if (!reflectionMeeting) return;
-
-    try {
-      await api.post(`/api/reflections/${reflectionMeeting.id}`, reflection);
-      
-      // Mark as captured in localStorage
-      localStorage.setItem(`reflection_captured_${reflectionMeeting.id}`, 'true');
-      
-      // Reload insights
-      const insightsResponse = await api.get('/api/reflections/insights');
-      setReflectionInsights(insightsResponse.data);
-      
-      console.log('✅ Reflection submitted successfully');
-    } catch (error) {
-      console.error('❌ Failed to submit reflection:', error);
-      throw error;
-    }
-  };
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -587,21 +527,35 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Director's Insights - Always show (base insights for new users, AI insights when data available) */}
-        <div className="mb-6 sm:mb-8">
-          <DirectorsInsights 
-            hasReflectionData={reflectionInsights?.hasData || false}
-            recentReflections={reflectionInsights?.recentReflections || []}
-            privateMode={reflectionInsights?.privateMode || false}
-            meetingStats={reflectionInsights?.stats || undefined}
-            todaysMeetingCount={meetings.filter(m => {
-              const meetingDate = new Date(m.startTime);
-              const today = new Date();
-              return meetingDate.toDateString() === today.toDateString();
-            }).length}
-            upcomingMeetings={meetings.filter(m => new Date(m.startTime) > new Date())}
-            userMetadata={userMetadata}
-          />
+        {/* Quick Links to Mind Garden Features */}
+        <div className="mb-6 sm:mb-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-6 border border-emerald-200">
+          <div className="flex items-center gap-3 mb-3">
+            <Flower2 className="w-6 h-6 text-emerald-600" />
+            <h3 className="text-lg font-bold text-gray-900">Your Mind Garden</h3>
+          </div>
+          <p className="text-gray-600 text-sm mb-4">
+            Nurture your mental wellness with flows, games, and activities.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <a href="/garden" className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+              🌱 View Garden
+            </a>
+            <a href="/flows" className="px-4 py-2 bg-white text-emerald-700 border border-emerald-300 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors">
+              🧘 Browse Flows
+            </a>
+            <a href="/insights" className="px-4 py-2 bg-white text-emerald-700 border border-emerald-300 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors">
+              📊 Insights
+            </a>
+            <a 
+              href="https://chrome.google.com/webstore/detail/mind-garden" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            >
+              <Chrome className="w-4 h-4" />
+              Get Extension
+            </a>
+          </div>
         </div>
 
         {/* Focus Rooms - Now available as separate tab in navigation */}
@@ -822,16 +776,6 @@ export default function Dashboard() {
           </a>
         </div>
       </main>
-
-      {/* Post-Meeting Reflection Modal */}
-      {showReflectionModal && reflectionMeeting && (
-        <PostMeetingReflection
-          meetingId={reflectionMeeting.id}
-          meetingTitle={reflectionMeeting.title}
-          onClose={() => setShowReflectionModal(false)}
-          onSubmit={handleSubmitReflection}
-        />
-      )}
 
       {/* Global Ambient Sound - Disabled on dashboard to prevent interference */}
       <AmbientSound

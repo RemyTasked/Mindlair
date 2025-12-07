@@ -7,6 +7,7 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
+import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
@@ -247,21 +248,144 @@ router.get(
   asyncHandler(async (req, res) => {
     const userId = req.userId!;
     
-    // This would analyze historical meeting data
-    // For now, return placeholder
+    // Get meetings from last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const meetings = await prisma.meeting.findMany({
+      where: {
+        userId,
+        startTime: { gte: thirtyDaysAgo },
+      },
+      orderBy: { startTime: 'asc' },
+    });
+    
+    if (meetings.length === 0) {
+      return res.json({
+        userId,
+        patterns: null,
+        message: 'Not enough meeting data yet. Keep using Mind Garden!',
+        recommendations: ['Connect your calendar to start tracking meeting patterns.'],
+      });
+    }
+    
+    // Analyze day of week patterns
+    const dayOfWeekCounts: Record<string, number> = {
+      Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0,
+    };
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    // Analyze time of day patterns
+    const timeOfDayCounts = { morning: 0, afternoon: 0, evening: 0 };
+    
+    // Track back-to-back and high-stakes
+    let backToBackCount = 0;
+    let highStakesCount = 0;
+    
+    meetings.forEach((meeting, index) => {
+      const startTime = new Date(meeting.startTime);
+      const dayName = daysOfWeek[startTime.getDay()];
+      dayOfWeekCounts[dayName]++;
+      
+      const hour = startTime.getHours();
+      if (hour < 12) timeOfDayCounts.morning++;
+      else if (hour < 17) timeOfDayCounts.afternoon++;
+      else timeOfDayCounts.evening++;
+      
+      // Check back-to-back
+      if (index > 0) {
+        const prevEnd = new Date(meetings[index - 1].endTime).getTime();
+        const gap = (startTime.getTime() - prevEnd) / (1000 * 60);
+        if (gap < 15) backToBackCount++;
+      }
+      
+      // Check high-stakes (by title keywords)
+      const title = meeting.title.toLowerCase();
+      const highStakesKeywords = ['presentation', 'pitch', 'demo', 'interview', 'review', 'client', 'exec', 'board'];
+      if (highStakesKeywords.some(kw => title.includes(kw))) {
+        highStakesCount++;
+      }
+    });
+    
+    // Find busiest day
+    const busiestDay = Object.entries(dayOfWeekCounts)
+      .sort(([, a], [, b]) => b - a)[0][0];
+    
+    // Find busiest time
+    const busiestTime = Object.entries(timeOfDayCounts)
+      .sort(([, a], [, b]) => b - a)[0][0];
+    
+    // Calculate averages
+    const uniqueDays = new Set(
+      meetings.map(m => new Date(m.startTime).toDateString())
+    ).size;
+    const avgMeetingsPerDay = uniqueDays > 0 ? (meetings.length / uniqueDays) : 0;
+    const avgBackToBack = uniqueDays > 0 ? (backToBackCount / uniqueDays) : 0;
+    const weeksInPeriod = Math.max(1, Math.ceil(uniqueDays / 7));
+    const highStakesMeetingsPerWeek = highStakesCount / weeksInPeriod;
+    
+    // Generate recommendations
+    const recommendations: string[] = [];
+    
+    if (dayOfWeekCounts[busiestDay] > meetings.length / 5) {
+      recommendations.push(`Your ${busiestDay}s are meeting-heavy. Consider blocking focus time.`);
+    }
+    
+    if (avgBackToBack > 1) {
+      recommendations.push('You have frequent back-to-back meetings. Try to add 5-minute buffers.');
+    }
+    
+    if (timeOfDayCounts.afternoon > meetings.length / 2) {
+      recommendations.push('Most meetings cluster in the afternoon. Plan breaks after lunch.');
+    }
+    
+    if (timeOfDayCounts.morning > meetings.length / 2) {
+      recommendations.push('Heavy morning schedule. A Morning Intention flow could help you start strong.');
+    }
+    
+    if (highStakesMeetingsPerWeek >= 2) {
+      recommendations.push('You have several high-stakes meetings weekly. Use Pre-Presentation Power flows to prepare.');
+    }
+    
+    if (recommendations.length === 0) {
+      recommendations.push('Your meeting schedule looks balanced. Keep it up!');
+    }
+    
+    return res.json({
+      userId,
+      period: '30 days',
+      totalMeetings: meetings.length,
+      patterns: {
+        busiestDay,
+        busiestTime,
+        avgMeetingsPerDay: Number(avgMeetingsPerDay.toFixed(1)),
+        avgBackToBack: Number(avgBackToBack.toFixed(1)),
+        highStakesMeetingsPerWeek: Number(highStakesMeetingsPerWeek.toFixed(1)),
+        dayBreakdown: dayOfWeekCounts,
+        timeBreakdown: timeOfDayCounts,
+      },
+      recommendations,
+    });
+  })
+);
+
+/**
+ * GET /api/analysis/stress-patterns
+ * Get user's stress patterns from mind state data
+ */
+router.get(
+  '/stress-patterns',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    // Import and use the mind state analyzer
+    const { analyzeMindStatePatterns } = await import('../services/ai/mindStateAnalyzer');
+    const patterns = await analyzeMindStatePatterns(userId);
+    
     res.json({
       userId,
-      patterns: {
-        busiestDay: 'Tuesday',
-        busiestTime: 'afternoon',
-        avgMeetingsPerDay: 4.2,
-        avgBackToBack: 1.5,
-        highStakesMeetingsPerWeek: 2,
-      },
-      recommendations: [
-        'Your Tuesdays are consistently meeting-heavy. Consider blocking focus time.',
-        'Afternoon meetings tend to cluster - plan breaks after lunch.',
-      ],
+      stressPatterns: patterns,
     });
   })
 );

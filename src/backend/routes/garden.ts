@@ -1115,7 +1115,7 @@ router.post(
 
 /**
  * GET /api/garden/insights
- * Get insights and recommendations
+ * Get comprehensive insights for the Insights dashboard
  */
 router.get(
   '/insights',
@@ -1125,11 +1125,22 @@ router.get(
     
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
+    const monthAgo = new Date();
+    monthAgo.setDate(monthAgo.getDate() - 30);
     
-    // Get recent activity
-    const recentFlows = await prisma.wellnessCheckIn.findMany({
-      where: { userId, type: { startsWith: 'flow-' }, createdAt: { gte: weekAgo } },
+    // Get all wellness check-ins (flows, gratitude, games, etc.)
+    const allCheckIns = await prisma.wellnessCheckIn.findMany({
+      where: { userId },
       orderBy: { createdAt: 'desc' },
+    });
+    
+    const recentCheckIns = allCheckIns.filter(c => new Date(c.createdAt) >= weekAgo);
+    const monthCheckIns = allCheckIns.filter(c => new Date(c.createdAt) >= monthAgo);
+    
+    // Get focus sessions for additional tracking
+    const focusSessions = await prisma.focusSession.findMany({
+      where: { userId },
+      orderBy: { startedAt: 'desc' },
     });
     
     const gardenState = await prisma.emotionGardenState.findUnique({
@@ -1140,16 +1151,82 @@ router.get(
       ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
       : createDefaultGardenData();
     
+    // Calculate garden health (0-100) based on activity
+    const activitiesThisWeek = recentCheckIns.length;
+    let gardenHealth: number;
+    if (activitiesThisWeek >= 7) {
+      gardenHealth = Math.min(100, 70 + (activitiesThisWeek * 2) + (gardenData.streak * 1.5));
+    } else if (activitiesThisWeek >= 5) {
+      gardenHealth = 60 + (activitiesThisWeek * 2);
+    } else if (activitiesThisWeek >= 3) {
+      gardenHealth = 40 + (activitiesThisWeek * 3);
+    } else if (activitiesThisWeek >= 1) {
+      gardenHealth = 25 + (activitiesThisWeek * 5);
+    } else {
+      // Decay based on inactivity but never below 10
+      gardenHealth = Math.max(10, 30 - (gardenData.daysSinceActive * 2));
+    }
+    gardenHealth = Math.round(Math.min(100, Math.max(0, gardenHealth)));
+    
+    // Calculate total time from focus sessions
+    const totalMinutes = focusSessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60;
+    
+    // Calculate flows by day of week
+    const flowsByDay = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(dayLabel => {
+      const dayNum = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(dayLabel);
+      const jsDay = dayNum === 6 ? 0 : dayNum + 1; // Convert to JS day (0 = Sunday)
+      const count = recentCheckIns.filter(c => {
+        const d = new Date(c.createdAt);
+        return d.getDay() === jsDay;
+      }).length;
+      return { day: dayLabel, count };
+    });
+    
+    // Calculate flows by type
+    const flowTypeMap: Record<string, number> = {};
+    monthCheckIns.forEach(c => {
+      // Extract type from 'flow-pre-meeting-focus' -> 'Focus'
+      let type = 'Other';
+      if (c.type.includes('focus')) type = 'Focus';
+      else if (c.type.includes('reset') || c.type.includes('calm')) type = 'Calm';
+      else if (c.type.includes('transition') || c.type.includes('decompress')) type = 'Reset';
+      else if (c.type.includes('morning') || c.type.includes('evening')) type = 'Transition';
+      else if (c.type.includes('gratitude')) type = 'Gratitude';
+      else if (c.type.includes('breathing')) type = 'Breathing';
+      else if (c.type.includes('game') || c.type.includes('thought')) type = 'Games';
+      
+      flowTypeMap[type] = (flowTypeMap[type] || 0) + 1;
+    });
+    
+    const flowsByType = Object.entries(flowTypeMap)
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 4);
+    
+    // Determine favorite flow
+    const favoriteFlow = flowsByType.length > 0 ? flowsByType[0].type : 'None yet';
+    
+    // Get recent achievements (badges earned)
+    const recentAchievements = gardenData.badges
+      .slice(-5)
+      .reverse()
+      .map(b => ({
+        id: b.type,
+        name: b.name,
+        icon: b.emoji,
+        date: b.earnedAt,
+      }));
+    
     // Generate insights
     const insights: string[] = [];
     const recommendations: string[] = [];
     
     // Activity-based insights
-    if (recentFlows.length >= 7) {
+    if (activitiesThisWeek >= 7) {
       insights.push('🌟 Great consistency! You completed flows every day this week.');
-    } else if (recentFlows.length >= 3) {
+    } else if (activitiesThisWeek >= 3) {
       insights.push('📈 Good progress! Keep building your flow habit.');
-    } else if (recentFlows.length > 0) {
+    } else if (activitiesThisWeek > 0) {
       insights.push('🌱 You started your practice this week. Each moment counts.');
     } else {
       insights.push('🧘 Your garden is ready when you are. No pressure.');
@@ -1160,6 +1237,12 @@ router.get(
       insights.push(`🔥 ${gardenData.streak}-day streak! You've built a solid habit.`);
     } else if (gardenData.streak >= 7) {
       insights.push(`✨ ${gardenData.streak}-day streak! Keep it going!`);
+    }
+    
+    // Pattern insights
+    const lowDays = flowsByDay.filter(d => d.count === 0).map(d => d.day);
+    if (lowDays.length > 0 && lowDays.length < 7) {
+      insights.push(`💡 You tend to skip flows on ${lowDays.slice(0, 2).join(' and ')}. Try setting a reminder.`);
     }
     
     // Recommendations based on patterns
@@ -1180,15 +1263,33 @@ router.get(
       .map(u => ({ type: u.type, name: u.name, requirement: u.description }));
     
     res.json({
-      period: '7 days',
-      totalFlows: recentFlows.length,
-      streak: gardenData.streak,
+      // Core stats
+      gardenHealth,
+      weeklyFlows: activitiesThisWeek,
+      totalFlows: allCheckIns.length + focusSessions.filter(s => s.breathingExerciseCompleted).length,
+      currentStreak: gardenData.streak,
       longestStreak: gardenData.longestStreak,
-      totalPoints: gardenData.totalPoints,
+      plantsGrown: gardenData.plants.length,
+      favoriteFlow,
+      totalMinutes: Math.round(totalMinutes),
+      
+      // Charts data
+      flowsByDay,
+      flowsByType,
+      
+      // Achievements
+      recentAchievements,
+      totalBadges: gardenData.badges.length,
+      
+      // Text insights
       insights,
       recommendations,
       nextUnlocks,
+      
+      // Garden state
+      visualState: gardenData.visualState,
       stateInfo: STATE_MESSAGES[gardenData.visualState],
+      totalPoints: gardenData.totalPoints,
     });
   })
 );

@@ -1,12 +1,24 @@
+/**
+ * Mind Garden - Games Hub
+ * 
+ * Interactive Serenity Builders
+ * Gamified activities and cognitive tools to help manage focus, anxiety, and stress.
+ * Each successful interaction contributes to your garden's Serenity Score.
+ */
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Target, Sparkles, Play, Settings as SettingsIcon, Headphones, Gamepad2 } from 'lucide-react';
+import { 
+  Trophy, Zap, Target, Sparkles, Settings as SettingsIcon, 
+  Headphones, Gamepad2, Wind, Leaf, LayoutGrid,
+  Palette, Music
+} from 'lucide-react';
 import Logo from '../components/Logo';
 import api from '../lib/axios';
-import SceneSenseGame from '../components/games/SceneSenseGame';
-import MindMatchGame from '../components/games/MindMatchGame';
-import ThoughtTidyGame from '../components/games/ThoughtTidyGame';
+import ThoughtPopperGame from '../components/games/ThoughtPopperGame';
+import ZenMatchGame from '../components/games/ZenMatchGame';
+import ThoughtSorterGame from '../components/games/ThoughtSorterGame';
 import EmotionGarden from '../components/EmotionGarden';
 
 interface GameProgress {
@@ -16,9 +28,11 @@ interface GameProgress {
   badges: string[];
 }
 
+type GameType = 'thought-popper' | 'zen-match' | 'thought-sorter' | null;
+
 export default function GamesHub() {
   const navigate = useNavigate();
-  const [gameType, setGameType] = useState<'scene-sense' | 'mind-match' | 'thought-tidy' | null>(null);
+  const [gameType, setGameType] = useState<GameType>(null);
   const [showEmotionGarden, setShowEmotionGarden] = useState(false);
   const [progress, setProgress] = useState<GameProgress | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +41,7 @@ export default function GamesHub() {
 
   useEffect(() => {
     loadUser();
-    loadDailyGame();
+    loadProgress();
   }, []);
 
   const loadUser = async () => {
@@ -51,83 +65,38 @@ export default function GamesHub() {
     }
   };
 
-  const loadDailyGame = async () => {
+  const loadProgress = async () => {
     try {
       setLoading(true);
-      // First check if games are seeded
-      let seedStatus;
-      try {
-        seedStatus = await api.get('/api/games/seed-status');
-      } catch (statusError) {
-        console.warn('⚠️ Could not check seed status, attempting to seed anyway');
-        seedStatus = { data: { seeded: false } };
-      }
-
-      // Check if games are seeded - if not, force seeding
-      if (!seedStatus.data.seeded || seedStatus.data.questionCount === 0 || seedStatus.data.pairCount === 0) {
-        console.log('🌱 Games not seeded, attempting to seed...');
-        try {
-          const seedResponse = await api.post('/api/games/seed');
-          console.log('✅ Games seeded successfully:', seedResponse.data);
-          // Wait longer for database to update
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        } catch (seedError: any) {
-          console.error('❌ Error seeding games:', seedError);
-          // Don't return - try to load anyway in case some data exists
-        }
-      }
-
-      const response = await api.get('/api/games/daily');
-      if (response.data.gameType) {
-        setGameType(response.data.gameType);
-        setProgress(response.data.progress);
-        console.log('✅ Daily game loaded:', response.data.gameType);
-      } else {
-        console.warn('⚠️ No game type returned, but no error');
-        // Set a default game type so user can still play
-        setGameType('scene-sense');
-      }
-    } catch (error: any) {
-      console.error('❌ Error loading daily game:', error);
-      
-      // If games aren't seeded, try to seed them
-      if (error.response?.status === 500 || error.message?.includes('seed') || error.message?.includes('No game') || error.message?.includes('not available')) {
-        try {
-          console.log('🌱 Attempting to seed games database...');
-          const seedResponse = await api.post('/api/games/seed');
-          console.log('✅ Games seeded successfully:', seedResponse.data);
-          // Wait longer for database to update
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          // Reload after seeding
-          const retryResponse = await api.get('/api/games/daily');
-          if (retryResponse.data.gameType) {
-            setGameType(retryResponse.data.gameType);
-            setProgress(retryResponse.data.progress);
-          } else {
-            // Set default so user can still play
-            setGameType('scene-sense');
-          }
-        } catch (seedError: any) {
-          console.error('❌ Error seeding games:', seedError);
-          // Set default game type so user can still access games
-          setGameType('scene-sense');
-        }
-      } else if (error.response?.status === 401) {
-        // Not authenticated - redirect to login
-        navigate('/');
-      } else {
-        // For other errors, set a default game type so user can still play
-        setGameType('scene-sense');
-      }
+      const response = await api.get('/api/games/progress').catch(() => ({ 
+        data: { totalCredits: 0, currentStreak: 0, longestStreak: 0, badges: [] } 
+      }));
+      setProgress(response.data);
+    } catch (error) {
+      console.error('Error loading progress:', error);
+      setProgress({ totalCredits: 0, currentStreak: 0, longestStreak: 0, badges: [] });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGameComplete = async () => {
+  const handleGameComplete = async (credits: number, streak: number) => {
     // Refresh progress after game completion
-    const response = await api.get('/api/games/progress');
-    setProgress(response.data);
+    try {
+      await api.post('/api/games/progress', { credits });
+      const response = await api.get('/api/games/progress');
+      setProgress(response.data);
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      // Update local progress anyway
+      if (progress) {
+        setProgress({
+          ...progress,
+          totalCredits: progress.totalCredits + credits,
+          currentStreak: streak > 0 ? progress.currentStreak + 1 : 0,
+        });
+      }
+    }
     setGameStarted(false);
   };
 
@@ -258,13 +227,23 @@ export default function GamesHub() {
   if (gameStarted && gameType) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-teal-50 to-purple-50">
-        {renderHeader()}
-        {gameType === 'scene-sense' ? (
-          <SceneSenseGame onComplete={handleGameComplete} onExit={() => setGameStarted(false)} />
-        ) : gameType === 'mind-match' ? (
-          <MindMatchGame onComplete={handleGameComplete} onExit={() => setGameStarted(false)} />
-        ) : (
-          <ThoughtTidyGame onComplete={handleGameComplete} onExit={() => setGameStarted(false)} />
+        {gameType === 'thought-popper' && (
+          <ThoughtPopperGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+        {gameType === 'zen-match' && (
+          <ZenMatchGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+        {gameType === 'thought-sorter' && (
+          <ThoughtSorterGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
         )}
       </div>
     );
@@ -275,6 +254,16 @@ export default function GamesHub() {
       {renderHeader()}
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-5xl">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            Interactive Serenity Builders
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Gamified activities to help you manage focus, anxiety, and stress
+          </p>
+        </div>
+
         {/* Progress Stats */}
         {progress && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
@@ -285,7 +274,7 @@ export default function GamesHub() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="w-5 h-5 text-yellow-500" />
-                <span className="text-sm text-gray-600">Credits</span>
+                <span className="text-sm text-gray-600">Serenity Score</span>
               </div>
               <p className="text-2xl font-bold text-gray-900">{progress.totalCredits}</p>
             </motion.div>
@@ -331,157 +320,137 @@ export default function GamesHub() {
           </div>
         )}
 
-        {/* Daily Game Card */}
-        {gameType && (
+        {/* Games Grid */}
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Serenity Games</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {/* Thought Popper */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8"
+            whileHover={{ y: -5 }}
+            className="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-blue-500 cursor-pointer transition-all"
+            onClick={() => {
+              setGameType('thought-popper');
+              setGameStarted(true);
+            }}
           >
-            <div className={`p-8 ${
-              gameType === 'scene-sense'
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
-                : 'bg-gradient-to-r from-purple-500 to-pink-600'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold text-white mb-2">
-                    {gameType === 'scene-sense' ? 'Scene Sense' : 'Mind Match'}
-                  </h2>
-                  <p className="text-blue-100 text-lg">
-                    {gameType === 'scene-sense'
-                      ? 'Mental Prep Trivia — Train your mind for any scene'
-                      : 'Cognitive Pairing — Pair the moves that shift the moment'}
-                  </p>
-                </div>
-                <div className="text-6xl">
-                  {gameType === 'scene-sense' ? '🧠' : '🎯'}
-                </div>
-              </div>
+            <div className="bg-blue-100 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
+              <Wind className="w-7 h-7 text-blue-600" />
             </div>
-
-            <div className="p-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Today's Challenge</h3>
-                <p className="text-gray-600">
-                  {gameType === 'scene-sense'
-                    ? 'Answer 3-5 questions to build implicit mental performance skills through micro-learning.'
-                    : 'Match 3 pairs of cards to reinforce strategy patterns for emotional + cognitive readiness.'}
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  console.log('Starting game:', gameType);
-                  setGameStarted(true);
-                }}
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:from-indigo-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!gameType}
-              >
-                <Play className="w-6 h-6" />
-                Start Game
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {!gameType && !loading && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8"
-          >
-            <h3 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Game Not Available</h3>
-            <p className="text-yellow-800">
-              Unable to load today's game. Please refresh the page or try again later.
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Thought Popper</h3>
+            <p className="text-gray-600 text-sm mb-4">
+              Focus and Mental Clearing Game. Visualize and quickly dismiss intrusive thoughts by popping floating bubbles.
             </p>
-          </motion.div>
-        )}
-
-        {/* All Games Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white rounded-xl p-6 shadow-md"
-          >
-            <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <span className="text-2xl">🧠</span>
-              Scene Sense
-            </h3>
-            <ul className="space-y-2 text-gray-600 mb-4">
-              <li>• 3-5 questions per session</li>
-              <li>• Multiple choice format</li>
-              <li>• Immediate feedback</li>
-              <li>• Short cinematic micro-teaching</li>
-              <li>• Build mental performance skills</li>
-            </ul>
-            <button
-              onClick={() => {
-                console.log('🎮 Starting Scene Sense game');
-                setGameType('scene-sense');
-                setGameStarted(true);
-              }}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Play Now
-            </button>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                +2 Serenity / Pop
+              </span>
+              <span className="text-xs text-gray-500">1-2 min</span>
+            </div>
           </motion.div>
 
+          {/* Zen Match */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl p-6 shadow-md"
+            transition={{ delay: 0.1 }}
+            whileHover={{ y: -5 }}
+            className="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-green-500 cursor-pointer transition-all"
+            onClick={() => {
+              setGameType('zen-match');
+              setGameStarted(true);
+            }}
           >
-            <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <span className="text-2xl">🎯</span>
-              Mind Match
-            </h3>
-            <ul className="space-y-2 text-gray-600 mb-4">
-              <li>• 6 face-down cards (3 pairs)</li>
-              <li>• Flip 2 cards to match</li>
-              <li>• Unlock teaching on match</li>
-              <li>• Short cinematic micro-reveal</li>
-              <li>• Learn winning skill combinations</li>
-            </ul>
-            <button
-              onClick={() => {
-                console.log('🎯 Starting Mind Match game');
-                setGameType('mind-match');
-                setGameStarted(true);
-              }}
-              className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              Play Now
-            </button>
+            <div className="bg-green-100 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
+              <Leaf className="w-7 h-7 text-green-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Zen Match</h3>
+            <p className="text-gray-600 text-sm mb-4">
+              Cognitive Concentration Game. Classic memory game with nature-themed icons to sharpen focus and recall.
+            </p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                +5 Serenity / Match
+              </span>
+              <span className="text-xs text-gray-500">3-5 min</span>
+            </div>
           </motion.div>
 
+          {/* Thought Sorter */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white rounded-xl p-6 shadow-md"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            whileHover={{ y: -5 }}
+            className="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-indigo-500 cursor-pointer transition-all"
+            onClick={() => {
+              setGameType('thought-sorter');
+              setGameStarted(true);
+            }}
           >
-            <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <span className="text-2xl">🎬</span>
-              Thought Tidy
-            </h3>
-            <ul className="space-y-2 text-gray-600 mb-4">
-              <li>• End-of-day brain declutter</li>
-              <li>• Sort thoughts into 3 buckets</li>
-              <li>• Keep, Park, or Release</li>
-              <li>• Reduce rumination</li>
-              <li>• Better sleep preparation</li>
-            </ul>
-            <button
-              onClick={() => {
-                console.log('🎬 Starting Thought Tidy game');
-                setGameType('thought-tidy');
-                setGameStarted(true);
-              }}
-              className="w-full px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors"
-            >
-              Start Tidy
-            </button>
+            <div className="bg-indigo-100 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
+              <LayoutGrid className="w-7 h-7 text-indigo-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Thought Sorter</h3>
+            <p className="text-gray-600 text-sm mb-4">
+              Categorization Tool. Sort your mental inputs—worries, tasks, or reflections—into actionable buckets.
+            </p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                +3 Serenity / Sort
+              </span>
+              <span className="text-xs text-gray-500">5-10 min</span>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Coming Soon Section */}
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Coming Soon</h2>
+        <div className="grid md:grid-cols-2 gap-6 mb-12">
+          {/* Mandala Garden */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-200 opacity-80"
+          >
+            <div className="flex items-start gap-4">
+              <div className="bg-rose-100 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Palette className="w-6 h-6 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-500 mb-1">Mandala Garden</h3>
+                <p className="text-gray-400 text-sm">
+                  Digital coloring for meditative relaxation. Create beautiful patterns while calming your mind.
+                </p>
+                <span className="inline-block mt-3 text-xs font-medium text-rose-400 bg-rose-50 px-3 py-1 rounded-full">
+                  Coming Soon
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Sound Bowl Garden */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-200 opacity-80"
+          >
+            <div className="flex items-start gap-4">
+              <div className="bg-teal-100 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Music className="w-6 h-6 text-teal-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-500 mb-1">Sound Bowl Garden</h3>
+                <p className="text-gray-400 text-sm">
+                  Interactive audio mixer with singing bowls and chimes. Create soothing soundscapes for deep calm.
+                </p>
+                <span className="inline-block mt-3 text-xs font-medium text-teal-400 bg-teal-50 px-3 py-1 rounded-full">
+                  Coming Soon
+                </span>
+              </div>
+            </div>
           </motion.div>
         </div>
 
@@ -489,6 +458,7 @@ export default function GamesHub() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
           className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-4 sm:p-6 shadow-md border-2 border-green-200"
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -497,7 +467,9 @@ export default function GamesHub() {
                 <span className="text-2xl sm:text-3xl">🌱</span>
                 Emotion Garden
               </h3>
-              <p className="text-gray-700 mb-2 text-sm sm:text-base">Your inner world, rendered as a living scene</p>
+              <p className="text-gray-700 mb-2 text-sm sm:text-base">
+                Your inner world, rendered as a living scene
+              </p>
               <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
                 <li>• Visual representation of your emotional patterns</li>
                 <li>• Grows with check-ins and activities</li>
@@ -508,10 +480,7 @@ export default function GamesHub() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                // Optimize: Pre-load garden state immediately
-                setShowEmotionGarden(true);
-              }}
+              onClick={() => setShowEmotionGarden(true)}
               className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base touch-manipulation"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
@@ -523,4 +492,3 @@ export default function GamesHub() {
     </div>
   );
 }
-

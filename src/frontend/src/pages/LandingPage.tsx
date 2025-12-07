@@ -1,42 +1,41 @@
+/**
+ * Mind Garden - Landing Page
+ * 
+ * A calm, nature-inspired landing page focused on mental wellness.
+ * Features the garden growing metaphor and calendar-integrated wellness.
+ */
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Logo from '../components/Logo';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
-import { Calendar, Sparkles, Music, Brain, Headphones, Zap } from 'lucide-react';
+import { Leaf, Sparkles, Calendar, Music, Heart, Wind, Sun, Moon, ChevronDown, Chrome, Globe } from 'lucide-react';
 import CalDAVModal from '../components/CalDAVModal';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [showMoreCalendars, setShowMoreCalendars] = useState(false);
   const [showCalDAVModal, setShowCalDAVModal] = useState(false);
 
-  // Check if user is already logged in (PWA persistence)
   useEffect(() => {
     const checkExistingAuth = async () => {
       try {
-        // Check localStorage first
         let token = localStorage.getItem('meetcute_token');
         
-        // If not in localStorage, check IndexedDB (PWA persistence)
         if (!token) {
-          console.log('🔍 Checking IndexedDB for auth token...');
           token = await getToken();
         }
         
         if (token) {
-          console.log('✅ Found existing auth token - redirecting to dashboard');
           localStorage.setItem('meetcute_token', token);
-          localStorage.setItem('meetcute_session_active', 'true');
           navigate('/dashboard', { replace: true });
           return;
         }
-        
-        console.log('ℹ️ No existing auth token found - showing landing page');
       } catch (error) {
-        console.error('⚠️ Error checking auth:', error);
+        console.error('Error checking auth:', error);
       } finally {
         setCheckingAuth(false);
       }
@@ -45,15 +44,18 @@ export default function LandingPage() {
     checkExistingAuth();
   }, [navigate]);
 
-  // Show loading state while checking auth
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-teal-50 to-pink-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-100">
         <div className="text-center">
-          <div className="mx-auto mb-4">
-            <Logo size="lg" />
-          </div>
-          <h2 className="text-2xl font-semibold text-gray-800">Loading...</h2>
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-6xl mb-4"
+          >
+            🌱
+          </motion.div>
+          <p className="text-emerald-700">Loading...</p>
         </div>
       </div>
     );
@@ -92,142 +94,240 @@ export default function LandingPage() {
     }
   };
 
-  const handleCalDAVAuth = () => {
-    setShowCalDAVModal(true);
-  };
-
   const handleCalDAVSuccess = () => {
-    // Redirect to dashboard after successful connection
     navigate('/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-teal-50 to-pink-100 relative overflow-hidden">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50 to-cyan-50 relative overflow-hidden">
+      {/* Ambient Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 90, 0],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-indigo-400/30 to-teal-400/30 rounded-full blur-3xl"
-        />
+          animate={{ y: [0, -20, 0], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-20 left-10 text-6xl"
+        >
+          🌿
+        </motion.div>
         <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            rotate: [0, -90, 0],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-pink-400/30 to-teal-400/30 rounded-full blur-3xl"
-        />
+          animate={{ y: [0, 15, 0], opacity: [0.2, 0.4, 0.2] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-40 right-20 text-5xl"
+        >
+          🌸
+        </motion.div>
         <motion.div
-          animate={{
-            y: [0, -50, 0],
-            x: [0, 30, 0],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/3 right-1/4 w-96 h-96 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl"
-        />
+          animate={{ y: [0, -10, 0], opacity: [0.2, 0.3, 0.2] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-40 left-1/4 text-4xl"
+        >
+          🦋
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white/20" />
       </div>
 
       {/* Header */}
-      <header className="container mx-auto px-6 py-6 relative z-10">
+      <header className="container mx-auto px-6 py-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex justify-center items-center"
+          className="flex justify-center items-center gap-3"
         >
-          <motion.div
-            animate={{ rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-          >
-            <Logo size="lg" />
-          </motion.div>
+          <span className="text-4xl">🌱</span>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            Mind Garden
+          </h1>
         </motion.div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-6 py-12 sm:py-16 md:py-20 text-center relative z-10">
-        <div className="max-w-4xl mx-auto">
+      <section className="container mx-auto px-6 py-12 text-center relative z-10">
+        <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-indigo-200/80 to-teal-200/80 rounded-full backdrop-blur-sm"
+            transition={{ duration: 0.6 }}
+            className="mb-6"
           >
-            <span className="text-sm font-semibold bg-gradient-to-r from-indigo-700 to-teal-700 bg-clip-text text-transparent">
-              🎬 5-minute pre-meeting preparation
+            <span className="inline-block px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
+              Grow your mental wellness, one moment at a time
             </span>
           </motion.div>
-          <motion.h1
+
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-teal-600 to-pink-600 bg-clip-text text-transparent leading-tight"
+            transition={{ delay: 0.2 }}
+            className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-tight"
           >
-            The Human-Performance Layer for Meetings
-          </motion.h1>
+            Cultivate Calm.
+            <br />
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+              Watch Your Garden Grow.
+            </span>
+          </motion.h2>
+
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-xl sm:text-2xl text-gray-700 mb-8 leading-relaxed max-w-3xl mx-auto"
+            transition={{ delay: 0.3 }}
+            className="text-xl text-gray-600 mb-10 leading-relaxed"
           >
-            Show up confidently, calmly, and connected. 5-minute prep before every meeting.
+            Micro-moments of mindfulness throughout your day. 
+            Each breath, each flow, each moment of calm plants a seed in your personal garden.
           </motion.p>
-          
-          {/* Visual Preview */}
+
+          {/* Browser Extension Feature */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mb-12 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-12"
           >
-            <div className="bg-gradient-to-br from-indigo-200/80 to-teal-200/80 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm border border-white/50">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <Logo size="lg" className="sm:hidden" />
-                <Logo size="xl" className="hidden sm:block" />
-                <div className="text-center sm:text-left">
-                  <div className="text-xl sm:text-2xl font-bold text-indigo-900">Your Focus Scene</div>
-                  <div className="text-sm sm:text-base text-indigo-700">5 minutes • Before every meeting</div>
-                </div>
+            <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
+              {/* Subtle background animation */}
+              <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500 rounded-full blur-3xl mix-blend-overlay animate-pulse"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500 rounded-full blur-3xl mix-blend-overlay animate-pulse"></div>
               </div>
-              <div className="grid sm:grid-cols-3 gap-4 text-center">
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-3xl mb-2">🎯</div>
-                  <div className="font-semibold text-gray-800 text-sm mb-1">5-Min Prep</div>
-                  <div className="text-gray-600 text-xs">Breathe, center, prepare</div>
+
+              <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+                <div className="text-center md:text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 backdrop-blur-sm rounded-full text-emerald-100 text-xs font-medium mb-4 border border-emerald-400/20">
+                    <Sparkles className="w-3 h-3 text-amber-300" />
+                    Most Popular
+                  </div>
+                  
+                  <h3 className="text-2xl sm:text-3xl font-bold mb-6 leading-tight">
+                    Wellness Right in<br/>Your Calendar
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-8">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
+                      <Calendar className="w-5 h-5 text-emerald-300" />
+                      <span className="text-xs font-medium text-emerald-50">Smart Nudges</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
+                      <Wind className="w-5 h-5 text-emerald-300" />
+                      <span className="text-xs font-medium text-emerald-50">2-Min Resets</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
+                      <Leaf className="w-5 h-5 text-emerald-300" />
+                      <span className="text-xs font-medium text-emerald-50">Grow Daily</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
+                      <Music className="w-5 h-5 text-emerald-300" />
+                      <span className="text-xs font-medium text-emerald-50">Focus Audio</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                    <a
+                      href="https://chrome.google.com/webstore/detail/mind-garden"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-emerald-900 rounded-xl font-bold hover:bg-emerald-50 transition-all shadow-lg text-sm"
+                    >
+                      <Chrome className="w-4 h-4" />
+                      Add to Chrome
+                    </a>
+                    <a
+                      href="https://addons.mozilla.org/firefox/addon/mind-garden"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-800/50 text-white border border-emerald-400/30 rounded-xl font-medium hover:bg-emerald-800/70 transition-all backdrop-blur-sm text-sm"
+                    >
+                      <Globe className="w-4 h-4" />
+                      Firefox
+                    </a>
+                  </div>
                 </div>
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-3xl mb-2">💡</div>
-                  <div className="font-semibold text-gray-800 text-sm mb-1">Real-Time Cues</div>
-                  <div className="text-gray-600 text-xs">Stay calm & focused</div>
-                </div>
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-3xl mb-2">🎵</div>
-                  <div className="font-semibold text-gray-800 text-sm mb-1">Focus Rooms</div>
-                  <div className="text-gray-600 text-xs">Cinematic audio spaces</div>
+
+                {/* Right: Mockup (Compact) */}
+                <div className="hidden md:block relative transform hover:scale-[1.02] transition-transform duration-500">
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-2xl w-full max-w-[320px] mx-auto">
+                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-lg shadow-lg">🌱</div>
+                        <div>
+                          <div className="text-white font-semibold text-sm">Mind Garden</div>
+                          <div className="text-emerald-200 text-[10px]">Thriving · 12 day streak</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="bg-amber-500/20 border border-amber-500/30 rounded-lg p-2.5">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse"></div>
+                          <span className="text-amber-100 text-[10px] font-medium uppercase tracking-wider">Up Next</span>
+                        </div>
+                        <div className="text-white font-medium text-sm">Team Sync</div>
+                        <div className="text-white/60 text-[10px]">Starts in 5 min</div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg p-2.5 shadow-lg flex items-center justify-between cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <Wind className="w-3.5 h-3.5 text-white" />
+                          <span className="text-white font-bold text-xs">Quick Focus</span>
+                        </div>
+                        <span className="text-white/80 text-[10px] bg-white/20 px-1.5 py-0.5 rounded">2 min</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </motion.div>
 
+          {/* Garden Preview */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12"
+            transition={{ delay: 0.4 }}
+            className="mb-12 bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-emerald-100"
+          >
+            <div className="grid grid-cols-3 gap-6 mb-6">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center">
+                  <Sun className="w-8 h-8 text-amber-600" />
+                </div>
+                <p className="font-medium text-gray-800">Morning Flow</p>
+                <p className="text-sm text-gray-500">Start with intention</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-emerald-100 to-teal-200 rounded-2xl flex items-center justify-center">
+                  <Leaf className="w-8 h-8 text-emerald-600" />
+                </div>
+                <p className="font-medium text-gray-800">Micro-Flows</p>
+                <p className="text-sm text-gray-500">2-5 min resets</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center">
+                  <Moon className="w-8 h-8 text-indigo-600" />
+                </div>
+                <p className="font-medium text-gray-800">Evening Wind-Down</p>
+                <p className="text-sm text-gray-500">Rest and reflect</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-center gap-2 text-emerald-600">
+              <Sparkles className="w-5 h-5" />
+              <span className="font-medium">Your garden grows with every moment of mindfulness</span>
+            </div>
+          </motion.div>
+
+          {/* Auth Buttons - Primary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-4"
           >
             <button
               onClick={handleGoogleAuth}
               disabled={loading}
-              aria-label="Sign in with Google Calendar"
-              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-semibold disabled:opacity-50"
+              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
             >
               <svg className="w-6 h-6" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -241,8 +341,7 @@ export default function LandingPage() {
             <button
               onClick={handleMicrosoftAuth}
               disabled={loading}
-              aria-label="Sign in with Microsoft Outlook"
-              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-semibold disabled:opacity-50"
+              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
             >
               <svg className="w-6 h-6" viewBox="0 0 23 23">
                 <path fill="#f3f3f3" d="M0 0h23v23H0z"/>
@@ -253,248 +352,189 @@ export default function LandingPage() {
               </svg>
               Continue with Outlook
             </button>
-
-            <button
-              onClick={handleWebexAuth}
-              disabled={loading}
-              aria-label="Sign in with Cisco Webex"
-              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-semibold disabled:opacity-50"
-            >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#00BCF2"/>
-                <path d="M2 17L12 22L22 17L12 12L2 17Z" fill="#00BCF2"/>
-                <path d="M2 12L12 17L22 12" stroke="#00BCF2" strokeWidth="2"/>
-              </svg>
-              Continue with Webex
-            </button>
-
-            <button
-              onClick={handleCalDAVAuth}
-              disabled={loading}
-              aria-label="Sign in with Yahoo or iCloud Calendar"
-              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-semibold disabled:opacity-50"
-            >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#6001D2"/>
-                <path d="M13 11h-2v6h2v-6zm0-4h-2v2h2V7z" fill="white"/>
-              </svg>
-              Continue with Yahoo / iCloud
-            </button>
           </motion.div>
 
-          {/* CalDAV Modal */}
-          <CalDAVModal
-            isOpen={showCalDAVModal}
-            onClose={() => setShowCalDAVModal(false)}
-            onSuccess={handleCalDAVSuccess}
-          />
-
+          {/* More Calendar Options */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-            className="flex flex-col items-center gap-3"
+            transition={{ delay: 0.6 }}
+            className="mb-8"
           >
-            <p className="text-sm text-gray-500">
-              No app download required • Works with your existing calendar
-            </p>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                </svg>
-                Encrypted
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                Read-only access
-              </span>
-              <span>•</span>
-              <a href="/privacy" className="hover:text-indigo-600 transition-colors flex items-center gap-1">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                </svg>
-                Privacy Policy
-              </a>
-            </div>
+            <button
+              onClick={() => setShowMoreCalendars(!showMoreCalendars)}
+              className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1 mx-auto"
+            >
+              More calendar options
+              <ChevronDown className={`w-4 h-4 transition-transform ${showMoreCalendars ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showMoreCalendars && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="flex flex-col sm:flex-row gap-3 justify-center mt-4"
+              >
+                <button
+                  onClick={handleWebexAuth}
+                  disabled={loading}
+                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50 text-sm"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#00BCF2"/>
+                    <path d="M2 17L12 22L22 17L12 12L2 17Z" fill="#00BCF2"/>
+                    <path d="M2 12L12 17L22 12" stroke="#00BCF2" strokeWidth="2"/>
+                  </svg>
+                  Webex
+                </button>
+
+                <button
+                  onClick={() => setShowCalDAVModal(true)}
+                  disabled={loading}
+                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50 text-sm"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="#6B7280" strokeWidth="2"/>
+                    <path d="M3 10H21" stroke="#6B7280" strokeWidth="2"/>
+                    <path d="M8 2V6" stroke="#6B7280" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M16 2V6" stroke="#6B7280" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  iCloud / Yahoo
+                </button>
+              </motion.div>
+            )}
           </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="text-sm text-gray-500"
+          >
+            Connect your calendar for smart, contextual wellness moments
+          </motion.p>
         </div>
       </section>
 
-      {/* Features Section - Updated with Focus Rooms */}
+      {/* Features */}
       <section className="container mx-auto px-6 py-16 relative z-10">
-        <h2 className="text-4xl font-bold text-center mb-4">Key Features</h2>
-        <p className="text-center text-gray-600 mb-12 text-lg">
-          Everything you need to show up your best
-        </p>
-        
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <motion.h3
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-3xl font-bold text-center mb-12 text-gray-900"
+        >
+          Nurture Your Mental Wellness
+        </motion.h3>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
           <FeatureCard
-            icon={<Headphones className="w-8 h-8 text-teal-600" />}
-            title="Focus Rooms"
-            description="5 cinematic audio spaces for deep focus, composure, connection, confidence, and recovery. Spotify integration available."
-            isNew={true}
+            icon={<Wind className="w-7 h-7 text-sky-500" />}
+            title="Guided Flows"
+            description="Breathing exercises and micro-meditations tailored to your day"
           />
           <FeatureCard
-            icon={<Zap className="w-8 h-8 text-indigo-600" />}
-            title="Real-Time Coaching"
-            description="Level 2 audio analysis provides live composure cues during meetings. AI learns your patterns."
-            isNew={true}
+            icon={<Calendar className="w-7 h-7 text-indigo-500" />}
+            title="Calendar Smart"
+            description="Contextual wellness based on your schedule and stress patterns"
           />
           <FeatureCard
-            icon={<Brain className="w-8 h-8 text-teal-600" />}
-            title="5-Min Prep"
-            description="Guided breathing flows tailored to your meeting type. Choose: Clarity, Confidence, Connection, Composure, or Momentum."
+            icon={<Heart className="w-7 h-7 text-rose-500" />}
+            title="Serenity Games"
+            description="Playful activities that reduce anxiety and build focus"
           />
           <FeatureCard
-            icon={<Music className="w-8 h-8 text-indigo-600" />}
-            title="Smart Sound Learning"
-            description="AI learns your sound preferences and recommends ambient tracks based on your prep mode."
-            isNew={true}
-          />
-          <FeatureCard
-            icon={<Sparkles className="w-8 h-8 text-indigo-600" />}
-            title="Presley Flow"
-            description="Daily rhythm: Morning prep, meeting flows, evening wrap-up, and weekend intermission."
-          />
-          <FeatureCard
-            icon={<Calendar className="w-8 h-8 text-indigo-600" />}
-            title="Auto-Sync"
-            description="Google Calendar, Outlook, Webex, and CalDAV. Works with your existing calendar."
+            icon={<Music className="w-7 h-7 text-purple-500" />}
+            title="Spotify Integration"
+            description="Calming playlists that complement your wellness practice"
           />
         </div>
       </section>
 
+      {/* Garden Preview */}
+      <section className="container mx-auto px-6 py-16 relative z-10">
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-emerald-100 to-teal-100 rounded-3xl p-8 sm:p-12 border border-emerald-200">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Watch Your Progress Bloom
+            </h3>
+            <p className="text-gray-600">
+              Every wellness activity grows your personal garden. Track your journey visually.
+            </p>
+          </div>
 
-      {/* How It Works - Simplified */}
-      <section className="container mx-auto px-6 py-16 bg-gradient-to-br from-indigo-100 via-teal-100 to-pink-100 rounded-3xl shadow-2xl max-w-5xl relative z-10 border border-white/50">
-        <h2 className="text-4xl font-bold text-center mb-12">How It Works</h2>
-        
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <Step
-            number="1"
-            title="Connect Calendar"
-            description="Sync Google, Outlook, or Webex. We read your schedule (never modify it)."
-          />
-          <Step
-            number="2"
-            title="5-Min Prep"
-            description="Get a personalized prep link 5 minutes before each meeting. Choose your focus mode."
-          />
-          <Step
-            number="3"
-            title="Real-Time Cues"
-            description="Receive smart in-meeting coaching to stay calm, focused, and present."
-          />
-          <Step
-            number="4"
-            title="AI Learns"
-            description="Rate your meetings. AI adapts and gets smarter with every session."
-          />
-        </div>
-      </section>
+          <div className="grid grid-cols-5 gap-4 mb-8">
+            {['🌱', '🌿', '🌷', '🌻', '🌳'].map((emoji, i) => (
+              <motion.div
+                key={i}
+                initial={{ scale: 0 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="aspect-square bg-white/60 rounded-2xl flex items-center justify-center text-3xl shadow-sm"
+              >
+                {emoji}
+              </motion.div>
+            ))}
+          </div>
 
-      {/* Security Banner - Compact */}
-      <section className="container mx-auto px-6 py-12 relative z-10">
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200 max-w-4xl mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🔒</span>
-              <span className="text-gray-700">TLS 1.3 Encrypted</span>
-            </div>
-            <span className="text-gray-400">•</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">👁️</span>
-              <span className="text-gray-700">Read-Only Access</span>
-            </div>
-            <span className="text-gray-400">•</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🛡️</span>
-              <span className="text-gray-700">GDPR Compliant</span>
-            </div>
-            <span className="text-gray-400">•</span>
-            <a href="/privacy" className="text-indigo-600 hover:text-indigo-700 font-medium">
-              Privacy Policy →
-            </a>
+          <div className="flex flex-wrap justify-center gap-4 text-sm">
+            <span className="px-3 py-1 bg-white/60 rounded-full text-emerald-700">
+              🌬️ Breathing = Bamboo
+            </span>
+            <span className="px-3 py-1 bg-white/60 rounded-full text-amber-700">
+              ✨ Gratitude = Golden Flowers
+            </span>
+            <span className="px-3 py-1 bg-white/60 rounded-full text-rose-700">
+              🧘 Meditation = Lotus
+            </span>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="container mx-auto px-6 py-12 text-center text-gray-600">
-        <p className="mb-4">Meet Cute · Cinematic-professional focus moments</p>
-        <div className="flex justify-center gap-6 mb-4 text-sm">
-          <a href="/terms" className="hover:text-indigo-600 transition-colors">Terms of Use</a>
-          <span>·</span>
-          <a href="/privacy" className="hover:text-indigo-600 transition-colors">Privacy & Security</a>
-          <span>·</span>
-          <a href="mailto:support@meetcuteai.com" className="hover:text-indigo-600 transition-colors">Contact</a>
+      <footer className="container mx-auto px-6 py-12 text-center relative z-10">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <span className="text-2xl">🌱</span>
+          <span className="text-lg font-semibold text-gray-700">Mind Garden</span>
         </div>
-        <p className="text-xs text-gray-500 max-w-2xl mx-auto mb-4">
-          Meet Cute is a meeting preparation tool designed to help you focus and mentally prepare. 
-          It is not a substitute for professional mental health care, therapy, or medical advice. 
-          If you are experiencing mental health challenges, please consult a qualified healthcare provider.
+        <p className="text-gray-500 text-sm mb-4">
+          Cultivating calm, one moment at a time
         </p>
-        <p className="text-sm">© 2025 Meet Cute. All rights reserved.</p>
+        <div className="flex justify-center gap-6 text-sm text-gray-500">
+          <a href="/privacy" className="hover:text-emerald-600 transition-colors">Privacy</a>
+          <span>·</span>
+          <a href="/terms" className="hover:text-emerald-600 transition-colors">Terms</a>
+        </div>
+        <p className="text-xs text-gray-400 mt-6 max-w-lg mx-auto">
+          Mind Garden is a wellness tool, not a replacement for professional mental health care.
+        </p>
       </footer>
+
+      {/* CalDAV Modal */}
+      <CalDAVModal
+        isOpen={showCalDAVModal}
+        onClose={() => setShowCalDAVModal(false)}
+        onSuccess={handleCalDAVSuccess}
+      />
     </div>
   );
 }
 
-function FeatureCard({ icon, title, description, isNew }: { icon: React.ReactNode; title: string; description: string; isNew?: boolean }) {
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ scale: 1.05, y: -5 }}
-      className="bg-gradient-to-br from-white to-indigo-50/50 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all relative group border border-indigo-100/50"
-    >
-      {isNew && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 500, delay: 0.2 }}
-          className="absolute -top-3 -right-3 px-3 py-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg"
-        >
-          NEW
-        </motion.div>
-      )}
-      <motion.div
-        whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
-        transition={{ duration: 0.5 }}
-        className="mb-4"
-      >
-        {icon}
-      </motion.div>
-      <h3 className="text-xl font-semibold mb-3 text-gray-900">{title}</h3>
-      <p className="text-gray-600 leading-relaxed">{description}</p>
-    </motion.article>
-  );
-}
-
-function Step({ number, title, description }: { number: string; title: string; description: string }) {
+function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className="bg-white rounded-xl p-6 shadow-lg"
+      whileHover={{ y: -5 }}
+      className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all"
     >
-      <div className="flex items-center gap-4 mb-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-teal-100 flex items-center justify-center font-bold text-indigo-700">
-          {number}
-        </div>
-        <h4 className="text-xl font-semibold text-gray-900">{title}</h4>
+      <div className="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center mb-4">
+        {icon}
       </div>
-      <p className="text-gray-600 leading-relaxed">{description}</p>
+      <h4 className="text-lg font-semibold text-gray-900 mb-2">{title}</h4>
+      <p className="text-gray-600 text-sm leading-relaxed">{description}</p>
     </motion.div>
   );
 }
-

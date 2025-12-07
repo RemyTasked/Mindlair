@@ -87,12 +87,131 @@ let deviceId: string | null = null;
 let isReady = false;
 let isConnected = false;
 let currentVolume = 1;
-let duckedVolume = 0.3;
+// let duckedVolume = 0.3; // Deprecated
+let targetVolume = 1; // User set volume
 let isDucked = false;
+let volumeFadeInterval: any = null;
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY_BASE = 1000;
+
+// Caching
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+const playlistCache = new Map<string, { data: any; timestamp: number }>();
 
 // Event listeners
 type SpotifyEventListener = (data: any) => void;
 const eventListeners: Map<string, Set<SpotifyEventListener>> = new Map();
+
+/**
+ * Execute API call with exponential backoff retry
+ */
+async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && (error.response?.status === 429 || error.message === 'Network Error')) {
+      const delay = RETRY_DELAY_BASE * Math.pow(2, MAX_RETRIES - retries);
+      console.warn(`Spotify API error, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retries - 1);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Smoothly fade volume to target level
+ */
+async function fadeVolume(target: number, duration = 2000): Promise<void> {
+  if (volumeFadeInterval) clearInterval(volumeFadeInterval);
+  
+  const startVolume = currentVolume;
+  const startTime = Date.now();
+  const steps = 20; // Update every 100ms
+  const intervalTime = duration / steps;
+  
+  return new Promise<void>((resolve) => {
+    volumeFadeInterval = setInterval(async () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Calculate new volume
+      const newVolume = startVolume + (target - startVolume) * progress;
+      
+      // Update volume
+      await setVolumeInternal(newVolume);
+      
+      if (progress >= 1) {
+        clearInterval(volumeFadeInterval);
+        volumeFadeInterval = null;
+        resolve();
+      }
+    }, intervalTime);
+  });
+}
+
+/**
+ * Internal volume setter (no fade)
+ */
+async function setVolumeInternal(volume: number): Promise<void> {
+  currentVolume = Math.max(0, Math.min(1, volume));
+  
+  if (player && isReady) {
+    await player.setVolume(currentVolume);
+  } else {
+    // Debounce API calls if needed, or just call directly
+    await api.put('/api/spotify/player/volume', {
+      volume: Math.round(currentVolume * 100),
+    }).catch(() => {}); // Ignore errors for volume updates
+  }
+}
+
+/**
+ * Set target volume (user preference)
+ */
+export async function setTargetVolume(volume: number): Promise<void> {
+  targetVolume = Math.max(0, Math.min(1, volume));
+  if (!isDucked) {
+    await fadeVolume(targetVolume, 500); // Fast fade for user adjustment
+  }
+}
+
+/**
+ * Set volume ratio preference
+ * musicLevel: 0-1, guidanceLevel: 0-1 (handled by FlowPlayer volume)
+ */
+export async function setVolumeRatio(musicLevel: number): Promise<void> {
+  await setTargetVolume(musicLevel);
+}
+
+/**
+ * Duck volume for voice guidance
+ */
+export async function duckVolume(): Promise<void> {
+  if (isDucked) return;
+  isDucked = true;
+  // Duck to 30% of target volume, or absolute 0.1 minimum
+  const duckLevel = Math.max(0.1, targetVolume * 0.3);
+  await fadeVolume(duckLevel, 2000);
+}
+
+/**
+ * Restore volume after voice guidance
+ */
+export async function restoreVolume(): Promise<void> {
+  if (!isDucked) return;
+  isDucked = false;
+  await fadeVolume(targetVolume, 2000);
+}
+
+/**
+ * Set ducked volume level (deprecated, logic moved to duckVolume)
+ */
+export function setDuckedVolumeLevel(_level: number): void {
+  // No-op
+}
 
 /**
  * Load Spotify Web Playback SDK
@@ -123,6 +242,42 @@ export function loadSpotifySDK(): Promise<void> {
   });
 }
 
+// Polling state
+let pollingInterval: any = null;
+const POLLING_INTERVAL = 5000; // 5 seconds
+
+/**
+ * Start polling playback state
+ */
+function startPolling() {
+  if (pollingInterval) return;
+  
+  pollingInterval = setInterval(async () => {
+    if (!player) {
+      // Poll API if no local player
+      const state = await getPlaybackState();
+      if (state) {
+        emitEvent('state_changed', {
+          paused: !state.isPlaying,
+          track: state.track,
+          position: state.track?.progress || 0,
+          duration: state.track?.duration || 0,
+        });
+      }
+    }
+  }, POLLING_INTERVAL);
+}
+
+/**
+ * Stop polling playback state
+ */
+function stopPolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
+
 /**
  * Initialize Spotify player
  */
@@ -132,11 +287,14 @@ export async function initializePlayer(): Promise<boolean> {
     await loadSpotifySDK();
     
     // Get access token from backend
-    const tokenResponse = await api.get('/api/spotify/token');
+    const tokenResponse = await withRetry(() => api.get('/api/spotify/token'));
     if (!tokenResponse.data.accessToken) {
       console.warn('No Spotify access token available');
       return false;
     }
+    
+    // Start polling
+    startPolling();
     
     // Create player instance
     player = new window.Spotify.Player({
@@ -222,6 +380,7 @@ export async function initializePlayer(): Promise<boolean> {
  * Disconnect player
  */
 export function disconnectPlayer(): void {
+  stopPolling();
   if (player) {
     player.disconnect();
     player = null;
@@ -351,46 +510,12 @@ export async function seek(positionMs: number): Promise<void> {
 }
 
 /**
- * Set volume (0-1)
+ * Set volume (legacy method updated to use smooth fade)
  */
 export async function setVolume(volume: number): Promise<void> {
-  currentVolume = Math.max(0, Math.min(1, volume));
-  
-  if (player && isReady) {
-    await player.setVolume(currentVolume);
-  } else {
-    await api.put('/api/spotify/player/volume', {
-      volume: Math.round(currentVolume * 100),
-    });
-  }
+  await setTargetVolume(volume);
 }
 
-/**
- * Duck volume for voice guidance
- */
-export async function duckVolume(): Promise<void> {
-  if (isDucked) return;
-  
-  isDucked = true;
-  await setVolume(duckedVolume);
-}
-
-/**
- * Restore volume after voice guidance
- */
-export async function restoreVolume(): Promise<void> {
-  if (!isDucked) return;
-  
-  isDucked = false;
-  await setVolume(currentVolume);
-}
-
-/**
- * Set ducked volume level
- */
-export function setDuckedVolumeLevel(level: number): void {
-  duckedVolume = Math.max(0, Math.min(1, level));
-}
 
 /**
  * Get current playback state
@@ -477,7 +602,7 @@ export async function transferPlayback(targetDeviceId: string, startPlaying = fa
 }
 
 /**
- * Get playlists for a flow type
+ * Get playlists for a flow type (with caching)
  */
 export async function getFlowPlaylists(flowType: string): Promise<{
   id: string;
@@ -487,9 +612,20 @@ export async function getFlowPlaylists(flowType: string): Promise<{
   uri: string;
   trackCount: number;
 }[]> {
+  // Check cache
+  const cached = playlistCache.get(flowType);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+
   try {
-    const response = await api.get(`/api/spotify/playlists/flow/${flowType}`);
-    return response.data.playlists || [];
+    const response = await withRetry(() => api.get(`/api/spotify/playlists/flow/${flowType}`));
+    const data = response.data.playlists || [];
+    
+    // Update cache
+    playlistCache.set(flowType, { data, timestamp: Date.now() });
+    
+    return data;
   } catch (error) {
     console.error('Failed to get flow playlists:', error);
     return [];
@@ -497,13 +633,13 @@ export async function getFlowPlaylists(flowType: string): Promise<{
 }
 
 /**
- * Search for content
+ * Search for content (with retry)
  */
 export async function search(query: string, type: 'track' | 'playlist' | 'album' = 'playlist'): Promise<any> {
   try {
-    const response = await api.get('/api/spotify/search', {
+    const response = await withRetry(() => api.get('/api/spotify/search', {
       params: { q: query, type },
-    });
+    }));
     return response.data;
   } catch (error) {
     console.error('Search failed:', error);
@@ -512,7 +648,7 @@ export async function search(query: string, type: 'track' | 'playlist' | 'album'
 }
 
 /**
- * Get personalized recommendations
+ * Get personalized recommendations (with retry)
  */
 export async function getRecommendations(mood: string = 'calm'): Promise<{
   id: string;
@@ -524,9 +660,9 @@ export async function getRecommendations(mood: string = 'calm'): Promise<{
   preview: string | null;
 }[]> {
   try {
-    const response = await api.get('/api/spotify/recommendations', {
+    const response = await withRetry(() => api.get('/api/spotify/recommendations', {
       params: { mood },
-    });
+    }));
     return response.data.tracks || [];
   } catch (error) {
     console.error('Failed to get recommendations:', error);
@@ -629,6 +765,8 @@ export default {
   previousTrack,
   seek,
   setVolume,
+  setTargetVolume,
+  setVolumeRatio,
   duckVolume,
   restoreVolume,
   setDuckedVolumeLevel,

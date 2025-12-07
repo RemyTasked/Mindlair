@@ -6,7 +6,7 @@
  * - Thought Reframing Lab (CBT)
  * - Breathing Garden
  * - Mindful Moments
- * - Games (Scene Sense, Mind Match, Thought Tidy)
+ * - Games (Thought Popper, Zen Match, Thought Sorter)
  */
 
 import { useState } from 'react';
@@ -34,6 +34,7 @@ interface Activity {
   category: 'wellness' | 'mindfulness' | 'games' | 'creative';
   duration?: string;
   plantReward?: string;
+  serenityPoints?: string;
   available: boolean;
   comingSoon?: boolean;
 }
@@ -88,45 +89,48 @@ const ACTIVITIES: Activity[] = [
     plantReward: 'Rare Bloom',
     available: true,
   },
-  // Games
+  // Games - Updated to new Serenity Builders
   {
-    id: 'scene-sense',
-    name: 'Scene Sense',
-    description: 'Mental prep trivia game. Train your mind for any scene with quick questions.',
-    icon: '🧠',
+    id: 'thought-popper',
+    name: 'Thought Popper',
+    description: 'Focus and Mental Clearing Game. Visualize and dismiss intrusive thoughts by popping floating bubbles.',
+    icon: '💨',
     color: 'text-blue-400',
-    gradient: 'from-blue-500/20 to-indigo-500/20',
+    gradient: 'from-blue-500/20 to-cyan-500/20',
     category: 'games',
-    duration: '3-5 min',
+    duration: '1-2 min',
+    serenityPoints: '+2 per pop',
     available: true,
   },
   {
-    id: 'mind-match',
-    name: 'Mind Match',
-    description: 'Cognitive pairing game. Match cards to learn winning skill combinations.',
-    icon: '🎯',
-    color: 'text-purple-400',
-    gradient: 'from-purple-500/20 to-pink-500/20',
+    id: 'zen-match',
+    name: 'Zen Match',
+    description: 'Cognitive Concentration Game. Find matching pairs of nature icons to sharpen focus and recall.',
+    icon: '🍃',
+    color: 'text-green-400',
+    gradient: 'from-green-500/20 to-emerald-500/20',
     category: 'games',
     duration: '3-5 min',
+    serenityPoints: '+5 per match',
     available: true,
   },
   {
-    id: 'thought-tidy',
-    name: 'Thought Tidy',
-    description: 'End-of-day brain declutter. Sort thoughts into Keep, Park, or Release.',
-    icon: '🎬',
+    id: 'thought-sorter',
+    name: 'Thought Sorter',
+    description: 'Categorization Tool. Sort mental inputs—worries, tasks, or reflections—into Keep, Park, or Let Go.',
+    icon: '🗂️',
     color: 'text-indigo-400',
-    gradient: 'from-indigo-500/20 to-violet-500/20',
+    gradient: 'from-indigo-500/20 to-purple-500/20',
     category: 'games',
     duration: '5-10 min',
+    serenityPoints: '+3 per sort',
     available: true,
   },
   // Creative (Coming Soon)
   {
     id: 'mandala-garden',
     name: 'Mandala Garden',
-    description: 'Digital coloring for meditative relaxation. Unlock patterns with practice.',
+    description: 'Digital coloring for meditative relaxation. Create beautiful patterns while calming your mind.',
     icon: '🎨',
     color: 'text-rose-400',
     gradient: 'from-rose-500/20 to-pink-500/20',
@@ -138,7 +142,7 @@ const ACTIVITIES: Activity[] = [
   {
     id: 'sound-bowls',
     name: 'Sound Bowl Garden',
-    description: 'Interactive singing bowls and chimes. Create layered soundscapes.',
+    description: 'Interactive singing bowls and chimes. Create layered soundscapes for deep calm.',
     icon: '🔔',
     color: 'text-teal-400',
     gradient: 'from-teal-500/20 to-cyan-500/20',
@@ -180,9 +184,9 @@ export default function Activities() {
       case 'mindful-moments':
         navigate('/activities/mindful-moments');
         break;
-      case 'scene-sense':
-      case 'mind-match':
-      case 'thought-tidy':
+      case 'thought-popper':
+      case 'zen-match':
+      case 'thought-sorter':
         navigate('/games');
         break;
       default:
@@ -318,6 +322,12 @@ export default function Activities() {
                     {activity.plantReward}
                   </div>
                 )}
+                {activity.serenityPoints && activity.available && (
+                  <div className="flex items-center gap-1 text-xs text-amber-400">
+                    <Sparkles className="w-3 h-3" />
+                    {activity.serenityPoints}
+                  </div>
+                )}
               </div>
 
               {/* Hover Arrow */}
@@ -362,4 +372,3 @@ export default function Activities() {
     </DashboardLayout>
   );
 }
-
