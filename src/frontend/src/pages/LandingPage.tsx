@@ -3,11 +3,12 @@
  * 
  * A calm, nature-inspired landing page focused on mental wellness.
  * Features the garden growing metaphor and calendar-integrated wellness.
+ * 
+ * Performance optimized: CSS animations over JS, reduced motion, no infinite loops
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { Leaf, Sparkles, Calendar, Music, Heart, Wind, Sun, Moon, ChevronDown, Chrome, Globe } from 'lucide-react';
@@ -48,13 +49,7 @@ export default function LandingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-100">
         <div className="text-center">
-          <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-6xl mb-4"
-          >
-            🌱
-          </motion.div>
+          <div className="text-6xl mb-4 animate-pulse">🌱</div>
           <p className="text-emerald-700">Loading...</p>
         </div>
       </div>
@@ -100,95 +95,53 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50 to-cyan-50 relative overflow-hidden">
-      {/* Ambient Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ y: [0, -20, 0], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-20 left-10 text-6xl"
-        >
-          🌿
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, 15, 0], opacity: [0.2, 0.4, 0.2] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-40 right-20 text-5xl"
-        >
-          🌸
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, -10, 0], opacity: [0.2, 0.3, 0.2] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-40 left-1/4 text-4xl"
-        >
-          🦋
-        </motion.div>
+      {/* Ambient Background - CSS animations for performance */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div className="absolute top-20 left-10 text-6xl opacity-30 animate-float-slow">🌿</div>
+        <div className="absolute top-40 right-20 text-5xl opacity-25 animate-float-medium">🌸</div>
+        <div className="absolute bottom-40 left-1/4 text-4xl opacity-20 animate-float-fast">🦋</div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white/20" />
       </div>
 
       {/* Header */}
       <header className="container mx-auto px-6 py-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center items-center gap-3"
-        >
+        <div className="flex justify-center items-center gap-3 animate-fade-in">
           <span className="text-4xl">🌱</span>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
             Mind Garden
           </h1>
-        </motion.div>
+        </div>
       </header>
 
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-12 text-center relative z-10">
         <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="mb-6"
-          >
+          <div className="mb-6 animate-fade-in">
             <span className="inline-block px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
               Grow your mental wellness, one moment at a time
             </span>
-          </motion.div>
+          </div>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-tight"
-          >
+          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-tight animate-fade-in-up">
             Cultivate Calm.
             <br />
             <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
               Watch Your Garden Grow.
             </span>
-          </motion.h2>
+          </h2>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-xl text-gray-600 mb-10 leading-relaxed"
-          >
+          <p className="text-xl text-gray-600 mb-10 leading-relaxed animate-fade-in-up animation-delay-100">
             Micro-moments of mindfulness throughout your day. 
             Each breath, each flow, each moment of calm plants a seed in your personal garden.
-          </motion.p>
+          </p>
 
           {/* Browser Extension Feature */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-12"
-          >
+          <div className="mb-12 animate-fade-in-up animation-delay-200">
             <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
-              {/* Subtle background animation */}
-              <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500 rounded-full blur-3xl mix-blend-overlay animate-pulse"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500 rounded-full blur-3xl mix-blend-overlay animate-pulse"></div>
+              {/* Static gradient orbs - no animation for perf */}
+              <div className="absolute inset-0 opacity-15 pointer-events-none" aria-hidden="true">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500 rounded-full blur-3xl"></div>
               </div>
 
               <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
@@ -243,9 +196,9 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Right: Mockup (Compact) */}
-                <div className="hidden md:block relative transform hover:scale-[1.02] transition-transform duration-500">
-                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-2xl w-full max-w-[320px] mx-auto">
+                {/* Right: Mockup (Compact) - removed backdrop-blur for perf */}
+                <div className="hidden md:block relative">
+                  <div className="bg-white/10 rounded-2xl p-4 border border-white/20 shadow-2xl w-full max-w-[320px] mx-auto">
                     <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-lg shadow-lg">🌱</div>
@@ -259,14 +212,14 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <div className="bg-amber-500/20 border border-amber-500/30 rounded-lg p-2.5">
                         <div className="flex items-center gap-2 mb-1">
-                          <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse"></div>
+                          <div className="w-1.5 h-1.5 bg-amber-400 rounded-full"></div>
                           <span className="text-amber-100 text-[10px] font-medium uppercase tracking-wider">Up Next</span>
                         </div>
                         <div className="text-white font-medium text-sm">Team Sync</div>
                         <div className="text-white/60 text-[10px]">Starts in 5 min</div>
                       </div>
                       
-                      <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg p-2.5 shadow-lg flex items-center justify-between cursor-pointer">
+                      <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg p-2.5 shadow-lg flex items-center justify-between cursor-pointer hover:brightness-110 transition-all">
                         <div className="flex items-center gap-2">
                           <Wind className="w-3.5 h-3.5 text-white" />
                           <span className="text-white font-bold text-xs">Quick Focus</span>
@@ -278,15 +231,10 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Garden Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mb-12 bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-emerald-100"
-          >
+          <div className="mb-12 bg-white/60 rounded-3xl p-8 shadow-xl border border-emerald-100 animate-fade-in-up animation-delay-300">
             <div className="grid grid-cols-3 gap-6 mb-6">
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center">
@@ -315,15 +263,10 @@ export default function LandingPage() {
               <Sparkles className="w-5 h-5" />
               <span className="font-medium">Your garden grows with every moment of mindfulness</span>
             </div>
-          </motion.div>
+          </div>
 
           {/* Auth Buttons - Primary */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-4"
-          >
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4 animate-fade-in-up animation-delay-400">
             <button
               onClick={handleGoogleAuth}
               disabled={loading}
@@ -352,15 +295,10 @@ export default function LandingPage() {
               </svg>
               Continue with Outlook
             </button>
-          </motion.div>
+          </div>
 
           {/* More Calendar Options */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mb-8"
-          >
+          <div className="mb-8 animate-fade-in animation-delay-500">
             <button
               onClick={() => setShowMoreCalendars(!showMoreCalendars)}
               className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1 mx-auto"
@@ -370,11 +308,7 @@ export default function LandingPage() {
             </button>
 
             {showMoreCalendars && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="flex flex-col sm:flex-row gap-3 justify-center mt-4"
-              >
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4 animate-fade-in">
                 <button
                   onClick={handleWebexAuth}
                   disabled={loading}
@@ -401,31 +335,21 @@ export default function LandingPage() {
                   </svg>
                   iCloud / Yahoo
                 </button>
-              </motion.div>
+              </div>
             )}
-          </motion.div>
+          </div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="text-sm text-gray-500"
-          >
+          <p className="text-sm text-gray-500 animate-fade-in animation-delay-600">
             Connect your calendar for smart, contextual wellness moments
-          </motion.p>
+          </p>
         </div>
       </section>
 
       {/* Features */}
       <section className="container mx-auto px-6 py-16 relative z-10">
-        <motion.h3
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-3xl font-bold text-center mb-12 text-gray-900"
-        >
+        <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">
           Nurture Your Mental Wellness
-        </motion.h3>
+        </h3>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
           <FeatureCard
@@ -465,16 +389,12 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-5 gap-4 mb-8">
             {['🌱', '🌿', '🌷', '🌻', '🌳'].map((emoji, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ scale: 0 }}
-                whileInView={{ scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
                 className="aspect-square bg-white/60 rounded-2xl flex items-center justify-center text-3xl shadow-sm"
               >
                 {emoji}
-              </motion.div>
+              </div>
             ))}
           </div>
 
@@ -521,20 +441,14 @@ export default function LandingPage() {
   );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+const FeatureCard = memo(function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      whileHover={{ y: -5 }}
-      className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all"
-    >
+    <div className="bg-white/70 rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
       <div className="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center mb-4">
         {icon}
       </div>
       <h4 className="text-lg font-semibold text-gray-900 mb-2">{title}</h4>
       <p className="text-gray-600 text-sm leading-relaxed">{description}</p>
-    </motion.div>
+    </div>
   );
-}
+});
