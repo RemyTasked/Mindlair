@@ -685,3 +685,246 @@
   }
 }
 
+/* ========================================
+   Companion Animations
+   ======================================== */
+
+/* Butterfly flight path */
+@keyframes mg-butterfly-fly {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(50px, -30px) rotate(10deg);
+  }
+  50% {
+    transform: translate(100px, 10px) rotate(-5deg);
+  }
+  75% {
+    transform: translate(50px, -20px) rotate(15deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.mg-butterfly {
+  position: absolute;
+  animation: mg-butterfly-fly 15s ease-in-out infinite;
+}
+
+/* Wing flapping */
+@keyframes mg-wing-flap {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.3); }
+}
+
+.mg-wing-left {
+  animation: mg-wing-flap 0.15s ease-in-out infinite;
+  transform-origin: right center;
+}
+
+.mg-wing-right {
+  animation: mg-wing-flap 0.15s ease-in-out infinite;
+  transform-origin: left center;
+}
+
+/* Bee buzzing path */
+@keyframes mg-bee-buzz {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(20px, -10px);
+  }
+  50% {
+    transform: translate(40px, 5px);
+  }
+  75% {
+    transform: translate(20px, -5px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.mg-bee {
+  position: absolute;
+  animation: mg-bee-buzz 8s ease-in-out infinite;
+}
+
+@keyframes mg-wing-buzz {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
+.mg-wing-buzz {
+  animation: mg-wing-buzz 0.05s linear infinite;
+}
+
+/* Bird flight */
+@keyframes mg-bird-fly {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(200px);
+  }
+}
+
+.mg-bird {
+  position: absolute;
+  animation: mg-bird-fly 20s linear infinite;
+}
+
+/* Dragonfly hover */
+@keyframes mg-dragonfly-hover {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(30px, -20px) rotate(15deg);
+  }
+  50% {
+    transform: translate(0, -40px) rotate(-10deg);
+  }
+  75% {
+    transform: translate(-30px, -20px) rotate(5deg);
+  }
+}
+
+.mg-dragonfly {
+  position: absolute;
+  animation: mg-dragonfly-hover 12s ease-in-out infinite;
+}
+
+/* Rabbit twitch */
+@keyframes mg-rabbit-twitch {
+  0%, 90%, 100% { transform: translateY(0); }
+  93% { transform: translateY(-3px); }
+  96% { transform: translateY(0); }
+}
+
+.mg-rabbit {
+  position: absolute;
+  animation: mg-rabbit-twitch 5s ease-in-out infinite;
+}
+
+/* ========================================
+   Decoration Animations
+   ======================================== */
+
+/* Fountain spray */
+@keyframes mg-fountain-spray {
+  0% {
+    transform: translateY(0) scaleY(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-5px) scaleY(1.1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+    opacity: 0.8;
+  }
+}
+
+.mg-fountain-spray {
+  animation: mg-fountain-spray 2s ease-in-out infinite;
+}
+
+/* Fish swimming */
+@keyframes mg-fish-swim {
+  0% {
+    transform: translateX(0) scaleX(1);
+  }
+  25% {
+    transform: translateX(10px) scaleX(1);
+  }
+  50% {
+    transform: translateX(20px) scaleX(-1);
+  }
+  75% {
+    transform: translateX(10px) scaleX(-1);
+  }
+  100% {
+    transform: translateX(0) scaleX(1);
+  }
+}
+
+.mg-fish-swim {
+  animation: mg-fish-swim 6s ease-in-out infinite;
+}
+
+/* Waterfall flow */
+@keyframes mg-waterfall-flow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -50;
+  }
+}
+
+.mg-waterfall {
+  stroke-dasharray: 10 5;
+  animation: mg-waterfall-flow 1s linear infinite;
+}
+
+/* Lantern glow */
+@keyframes mg-lantern-glow {
+  0%, 100% {
+    opacity: 0.9;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+}
+
+.mg-lantern-glow {
+  animation: mg-lantern-glow 3s ease-in-out infinite;
+}
+
+/* String light twinkle */
+@keyframes mg-string-twinkle {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; filter: brightness(1.3); }
+}
+
+.mg-string-light {
+  animation: mg-string-twinkle 2s ease-in-out infinite;
+}
+
+/* Solar light pulse */
+@keyframes mg-solar-pulse {
+  0%, 100% { opacity: 0.6; r: 8; }
+  50% { opacity: 0.9; r: 10; }
+}
+
+.mg-solar-glow {
+  animation: mg-solar-pulse 4s ease-in-out infinite;
+}
+
+/* Fairy light sparkle */
+@keyframes mg-fairy-sparkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+.mg-fairy-light {
+  animation: mg-fairy-sparkle 1.5s ease-in-out infinite;
+}
+
+/* Fragrance indicator */
+@keyframes mg-fragrance-pulse {
+  0%, 100% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(1.3); }
+}
+
+.mg-fragrance {
+  animation: mg-fragrance-pulse 4s ease-in-out infinite;
+}
+

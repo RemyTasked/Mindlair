@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { X, Pause, Play, SkipForward, Volume2, VolumeX, RotateCcw, Music, Leaf, Sparkles } from 'lucide-react';
+import spotify from '../services/spotify';
 
 // Types from shared (simplified for frontend)
 interface FlowStep {
@@ -101,6 +102,9 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
   const [notes, setNotes] = useState('');
   const [flowCount, setFlowCount] = useState(0);
   const [showCrossPromo, setShowCrossPromo] = useState(false);
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
+  const [spotifyPlaying, setSpotifyPlaying] = useState(false);
+  const [showSpotifyPrompt, setShowSpotifyPrompt] = useState(false);
 
   const startTimeRef = useRef<number>(Date.now());
   const stepStartTimeRef = useRef<number>(Date.now());
@@ -263,8 +267,74 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     };
   }, []);
 
+  // Initialize Spotify if enabled
+  useEffect(() => {
+    if (!spotifyEnabled) return;
+
+    const initSpotify = async () => {
+      try {
+        const status = await spotify.getConnectionStatus();
+        setSpotifyConnected(status.connected);
+        
+        if (status.connected) {
+          // Check if user wants to play music (stored preference)
+          const playMusicPref = localStorage.getItem('mindgarden_spotify_autoplay');
+          if (playMusicPref === 'true') {
+            await startSpotifyMusic();
+          } else if (playMusicPref === null) {
+            // First time - show prompt
+            setShowSpotifyPrompt(true);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize Spotify:', error);
+      }
+    };
+
+    initSpotify();
+  }, [spotifyEnabled, flow.id]);
+
+  // Duck Spotify volume when speaking
+  useEffect(() => {
+    if (!spotifyConnected || !spotifyPlaying) return;
+
+    if (currentStep?.guidance && !isMuted) {
+      spotify.duckVolume();
+    } else {
+      spotify.restoreVolume();
+    }
+  }, [currentStep?.guidance, isMuted, spotifyConnected, spotifyPlaying]);
+
+  // Start Spotify music
+  const startSpotifyMusic = async () => {
+    try {
+      await spotify.playFlowMusic(flow.id);
+      setSpotifyPlaying(true);
+    } catch (error) {
+      console.error('Failed to start Spotify music:', error);
+    }
+  };
+
+  // Handle Spotify prompt response
+  const handleSpotifyPrompt = async (play: boolean, remember: boolean) => {
+    setShowSpotifyPrompt(false);
+    
+    if (remember) {
+      localStorage.setItem('mindgarden_spotify_autoplay', play.toString());
+    }
+    
+    if (play) {
+      await startSpotifyMusic();
+    }
+  };
+
   // Handle completion submit
   const handleComplete = () => {
+    // Stop Spotify music if playing
+    if (spotifyPlaying) {
+      spotify.pause();
+      setSpotifyPlaying(false);
+    }
     onComplete(rating ?? undefined, notes || undefined);
   };
 
@@ -313,6 +383,63 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     handleComplete();
     navigate('/garden');
   };
+
+  // Spotify prompt modal
+  if (showSpotifyPrompt) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950 flex items-center justify-center p-6"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-full max-w-md text-center"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
+            <Music className="w-10 h-10 text-green-400" />
+          </div>
+          
+          <h2 className="text-2xl font-bold text-emerald-300 mb-2">Play Music?</h2>
+          <p className="text-emerald-100/70 mb-6">
+            Would you like to play calming music during this flow?
+          </p>
+          
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => handleSpotifyPrompt(true, false)}
+              className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-400 hover:to-emerald-400 transition-colors font-medium"
+            >
+              Yes, Play Music
+            </button>
+            <button
+              onClick={() => handleSpotifyPrompt(false, false)}
+              className="w-full px-6 py-3 bg-emerald-900/30 text-emerald-300 rounded-xl hover:bg-emerald-800/50 transition-colors"
+            >
+              No, Just Guidance
+            </button>
+          </div>
+          
+          <div className="mt-6 pt-4 border-t border-emerald-800/30">
+            <label className="flex items-center justify-center gap-2 text-sm text-emerald-400 cursor-pointer">
+              <input
+                type="checkbox"
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    handleSpotifyPrompt(true, true);
+                  }
+                }}
+                className="rounded border-emerald-600 bg-emerald-900/30 text-green-500 focus:ring-green-500"
+              />
+              Remember my preference
+            </label>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
 
   if (showCompletion) {
     return (

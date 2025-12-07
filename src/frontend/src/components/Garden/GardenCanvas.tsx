@@ -85,13 +85,38 @@ export interface GardenData {
   stateMessage?: string;
 }
 
+// Decoration types (aligned with spec)
+export type DecorationType = 
+  // Paths
+  | 'stone-path' | 'brick-path' | 'gravel-path' | 'tile-path'
+  // Seating
+  | 'simple-bench' | 'ornate-bench' | 'garden-swing' | 'reading-nook'
+  // Water features
+  | 'bird-bath' | 'small-fountain' | 'koi-pond' | 'waterfall'
+  // Lighting
+  | 'garden-lantern' | 'string-lights' | 'solar-lights' | 'fairy-lights'
+  // Structures
+  | 'garden-arch' | 'pergola' | 'gazebo' | 'greenhouse';
+
+// Companion types
+export type CompanionType = 'butterflies' | 'bees' | 'birds' | 'rabbits' | 'koi-fish' | 'dragonflies';
+
 // Decorations
 export interface Decoration {
   id: string;
-  type: 'path' | 'bench' | 'fountain' | 'lantern' | 'arch' | 'birdbath';
+  type: DecorationType;
   x: number;
   y: number;
-  variant?: string;
+  placedAt?: string;
+}
+
+// Garden settings
+export interface GardenSettings {
+  timeOfDay: 'auto' | 'morning' | 'afternoon' | 'evening' | 'night' | 'dynamic';
+  showWeather: boolean;
+  weatherOverride: WeatherType | 'auto';
+  soundEnabled: boolean;
+  animationsEnabled: boolean;
 }
 
 interface GardenCanvasProps {
@@ -1062,6 +1087,331 @@ export default function GardenCanvas({
     onPlantClick?.(plant);
   };
 
+  // Decoration SVG components
+  const DecorationSVG: Record<DecorationType, (size: number) => JSX.Element> = {
+    // Paths
+    'stone-path': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <ellipse cx="30" cy="30" rx="15" ry="12" fill="#94a3b8" />
+        <ellipse cx="60" cy="25" rx="18" ry="14" fill="#9ca3af" />
+        <ellipse cx="45" cy="55" rx="20" ry="15" fill="#6b7280" />
+        <ellipse cx="70" cy="60" rx="16" ry="13" fill="#94a3b8" />
+        <ellipse cx="25" cy="75" rx="14" ry="11" fill="#9ca3af" />
+        <ellipse cx="55" cy="80" rx="17" ry="12" fill="#6b7280" />
+      </svg>
+    ),
+    'brick-path': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <rect x="10" y="15" width="35" height="20" fill="#b45309" rx="2" />
+        <rect x="55" y="15" width="35" height="20" fill="#d97706" rx="2" />
+        <rect x="10" y="40" width="35" height="20" fill="#d97706" rx="2" />
+        <rect x="55" y="40" width="35" height="20" fill="#b45309" rx="2" />
+        <rect x="10" y="65" width="35" height="20" fill="#b45309" rx="2" />
+        <rect x="55" y="65" width="35" height="20" fill="#d97706" rx="2" />
+      </svg>
+    ),
+    'gravel-path': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        {[...Array(40)].map((_, i) => (
+          <circle
+            key={i}
+            cx={10 + Math.random() * 80}
+            cy={10 + Math.random() * 80}
+            r={2 + Math.random() * 3}
+            fill={i % 2 === 0 ? '#d1d5db' : '#9ca3af'}
+          />
+        ))}
+      </svg>
+    ),
+    'tile-path': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <rect x="5" y="5" width="40" height="40" fill="#f0abfc" rx="3" />
+        <rect x="55" y="5" width="40" height="40" fill="#c4b5fd" rx="3" />
+        <rect x="5" y="55" width="40" height="40" fill="#c4b5fd" rx="3" />
+        <rect x="55" y="55" width="40" height="40" fill="#f0abfc" rx="3" />
+        <circle cx="25" cy="25" r="8" fill="#a855f7" opacity="0.3" />
+        <circle cx="75" cy="75" r="8" fill="#a855f7" opacity="0.3" />
+      </svg>
+    ),
+    // Seating
+    'simple-bench': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <rect x="15" y="40" width="70" height="8" fill="#92400e" rx="2" />
+        <rect x="20" y="48" width="8" height="30" fill="#78350f" />
+        <rect x="72" y="48" width="8" height="30" fill="#78350f" />
+        <rect x="18" y="75" width="12" height="5" fill="#78350f" />
+        <rect x="70" y="75" width="12" height="5" fill="#78350f" />
+      </svg>
+    ),
+    'ornate-bench': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <path d="M15 30 Q50 20, 85 30" stroke="#92400e" strokeWidth="4" fill="none" />
+        <rect x="15" y="35" width="70" height="10" fill="#b45309" rx="3" />
+        <path d="M20 45 Q25 60, 20 75" stroke="#78350f" strokeWidth="5" fill="none" />
+        <path d="M80 45 Q75 60, 80 75" stroke="#78350f" strokeWidth="5" fill="none" />
+        <ellipse cx="20" cy="77" rx="5" ry="3" fill="#78350f" />
+        <ellipse cx="80" cy="77" rx="5" ry="3" fill="#78350f" />
+      </svg>
+    ),
+    'garden-swing': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100" className="mg-plant-sway">
+        <rect x="20" y="5" width="60" height="5" fill="#78350f" />
+        <line x1="25" y1="10" x2="25" y2="45" stroke="#92400e" strokeWidth="3" />
+        <line x1="75" y1="10" x2="75" y2="45" stroke="#92400e" strokeWidth="3" />
+        <rect x="20" y="45" width="60" height="10" fill="#b45309" rx="3" />
+        <rect x="18" y="55" width="64" height="25" fill="#d97706" rx="5" />
+        <ellipse cx="50" cy="82" rx="25" ry="3" fill="rgba(0,0,0,0.1)" />
+      </svg>
+    ),
+    'reading-nook': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <ellipse cx="50" cy="75" rx="35" ry="15" fill="#d1d5db" />
+        <ellipse cx="50" cy="65" rx="30" ry="20" fill="#f1f5f9" />
+        <rect x="65" y="55" width="15" height="20" fill="#b45309" rx="2" />
+        <rect x="67" y="57" width="11" height="16" fill="#fef3c7" />
+      </svg>
+    ),
+    // Water features
+    'bird-bath': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <rect x="45" y="50" width="10" height="35" fill="#9ca3af" />
+        <ellipse cx="50" cy="50" rx="30" ry="10" fill="#6b7280" />
+        <ellipse cx="50" cy="45" rx="25" ry="8" fill="#38bdf8" opacity="0.7" />
+        <ellipse cx="50" cy="88" rx="18" ry="5" fill="#6b7280" />
+      </svg>
+    ),
+    'small-fountain': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <ellipse cx="50" cy="80" rx="35" ry="12" fill="#6b7280" />
+        <ellipse cx="50" cy="75" rx="30" ry="10" fill="#38bdf8" opacity="0.6" />
+        <rect x="45" y="40" width="10" height="35" fill="#9ca3af" />
+        <circle cx="50" cy="35" r="12" fill="#6b7280" />
+        <path d="M50 25 Q55 15, 50 5 Q45 15, 50 25" fill="#38bdf8" opacity="0.8" className="mg-fountain-spray" />
+        <path d="M40 30 Q35 20, 40 10" stroke="#38bdf8" strokeWidth="2" fill="none" className="mg-fountain-spray" />
+        <path d="M60 30 Q65 20, 60 10" stroke="#38bdf8" strokeWidth="2" fill="none" className="mg-fountain-spray" />
+      </svg>
+    ),
+    'koi-pond': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <ellipse cx="50" cy="50" rx="45" ry="35" fill="#0891b2" opacity="0.7" />
+        <ellipse cx="50" cy="45" rx="40" ry="30" fill="#38bdf8" opacity="0.6" />
+        <path d="M30 50 Q35 45, 40 50 Q35 55, 30 50" fill="#fb923c" className="mg-fish-swim" />
+        <path d="M60 40 Q65 35, 70 40 Q65 45, 60 40" fill="#f43f5e" className="mg-fish-swim" style={{ animationDelay: '0.5s' }} />
+        <path d="M45 60 Q50 55, 55 60 Q50 65, 45 60" fill="#fbbf24" className="mg-fish-swim" style={{ animationDelay: '1s' }} />
+        <circle cx="25" cy="40" r="10" fill="#22c55e" />
+        <circle cx="75" cy="55" r="8" fill="#22c55e" />
+      </svg>
+    ),
+    'waterfall': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <path d="M20 20 L30 20 L30 30 L50 30 L50 10 L70 10 L70 25 L80 25 L80 35" fill="#6b7280" />
+        <path d="M25 20 L25 80" stroke="#38bdf8" strokeWidth="8" opacity="0.6" className="mg-waterfall" />
+        <path d="M45 30 L45 80" stroke="#38bdf8" strokeWidth="8" opacity="0.6" className="mg-waterfall" style={{ animationDelay: '0.3s' }} />
+        <path d="M65 10 L65 80" stroke="#38bdf8" strokeWidth="8" opacity="0.6" className="mg-waterfall" style={{ animationDelay: '0.6s' }} />
+        <ellipse cx="50" cy="85" rx="40" ry="10" fill="#0891b2" opacity="0.7" />
+      </svg>
+    ),
+    // Lighting
+    'garden-lantern': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <rect x="45" y="60" width="10" height="30" fill="#78350f" />
+        <rect x="40" y="40" width="20" height="25" fill="#1f2937" />
+        <rect x="42" y="42" width="16" height="21" fill="#fef08a" opacity="0.9" className="mg-lantern-glow" />
+        <rect x="35" y="35" width="30" height="8" fill="#374151" />
+        <polygon points="50,20 35,35 65,35" fill="#374151" />
+      </svg>
+    ),
+    'string-lights': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <path d="M10 30 Q30 50, 50 30 Q70 10, 90 30" stroke="#374151" strokeWidth="2" fill="none" />
+        {[20, 35, 50, 65, 80].map((x, i) => (
+          <g key={i}>
+            <circle cx={x} cy={30 + (i % 2) * 10} r="5" fill={['#fef08a', '#f0abfc', '#a5f3fc', '#fca5a1', '#86efac'][i]} className="mg-string-light" style={{ animationDelay: `${i * 0.2}s` }} />
+          </g>
+        ))}
+      </svg>
+    ),
+    'solar-lights': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        {[25, 50, 75].map((x, i) => (
+          <g key={i}>
+            <rect x={x - 3} y="50" width="6" height="35" fill="#374151" />
+            <circle cx={x} cy="45" r="8" fill="#fef08a" opacity="0.8" className="mg-solar-glow" style={{ animationDelay: `${i * 0.5}s` }} />
+            <rect x={x - 5} y="40" width="10" height="5" fill="#1f2937" />
+          </g>
+        ))}
+      </svg>
+    ),
+    'fairy-lights': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        {[...Array(15)].map((_, i) => (
+          <circle
+            key={i}
+            cx={10 + Math.random() * 80}
+            cy={10 + Math.random() * 80}
+            r="3"
+            fill={['#fef08a', '#f0abfc', '#a5f3fc', '#fca5a1', '#86efac'][i % 5]}
+            className="mg-fairy-light"
+            style={{ animationDelay: `${i * 0.1}s` }}
+          />
+        ))}
+      </svg>
+    ),
+    // Structures
+    'garden-arch': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <path d="M20 90 L20 40 Q50 10, 80 40 L80 90" stroke="#92400e" strokeWidth="6" fill="none" />
+        <path d="M25 90 L25 45 Q50 20, 75 45 L75 90" stroke="#78350f" strokeWidth="4" fill="none" />
+        <path d="M22 50 Q35 45, 35 60" stroke="#22c55e" strokeWidth="3" fill="none" />
+        <path d="M78 50 Q65 45, 65 60" stroke="#22c55e" strokeWidth="3" fill="none" />
+        <circle cx="30" cy="55" r="4" fill="#f472b6" />
+        <circle cx="70" cy="55" r="4" fill="#f472b6" />
+      </svg>
+    ),
+    'pergola': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <rect x="15" y="20" width="8" height="70" fill="#92400e" />
+        <rect x="77" y="20" width="8" height="70" fill="#92400e" />
+        <rect x="10" y="15" width="80" height="8" fill="#78350f" />
+        {[25, 45, 65].map((x, i) => (
+          <rect key={i} x={x} y="10" width="5" height="15" fill="#92400e" />
+        ))}
+        <path d="M15 30 Q50 20, 85 30" stroke="#22c55e" strokeWidth="8" fill="none" opacity="0.7" />
+      </svg>
+    ),
+    'gazebo': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <polygon points="50,5 10,30 90,30" fill="#78350f" />
+        <rect x="15" y="30" width="8" height="55" fill="#92400e" />
+        <rect x="77" y="30" width="8" height="55" fill="#92400e" />
+        <rect x="46" y="30" width="8" height="55" fill="#92400e" />
+        <path d="M10 85 Q50 80, 90 85" stroke="#d1d5db" strokeWidth="3" fill="none" />
+        <rect x="25" y="75" width="50" height="10" fill="#e5e7eb" opacity="0.5" />
+      </svg>
+    ),
+    'greenhouse': (size) => (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <rect x="15" y="40" width="70" height="50" fill="#1f2937" opacity="0.3" />
+        <rect x="15" y="40" width="70" height="50" stroke="#6b7280" strokeWidth="2" fill="none" />
+        <polygon points="50,10 15,40 85,40" fill="#6b7280" opacity="0.3" />
+        <polygon points="50,10 15,40 85,40" stroke="#6b7280" strokeWidth="2" fill="none" />
+        <line x1="50" y1="10" x2="50" y2="40" stroke="#6b7280" strokeWidth="1" />
+        <line x1="15" y1="60" x2="85" y2="60" stroke="#6b7280" strokeWidth="1" />
+        <line x1="15" y1="75" x2="85" y2="75" stroke="#6b7280" strokeWidth="1" />
+        <line x1="35" y1="40" x2="35" y2="90" stroke="#6b7280" strokeWidth="1" />
+        <line x1="65" y1="40" x2="65" y2="90" stroke="#6b7280" strokeWidth="1" />
+        <circle cx="30" cy="70" r="5" fill="#22c55e" />
+        <circle cx="50" cy="65" r="6" fill="#16a34a" />
+        <circle cx="70" cy="70" r="5" fill="#22c55e" />
+      </svg>
+    ),
+  };
+
+  // Companion animations
+  const renderCompanions = () => {
+    const companions: CompanionType[] = (data as any).companions || [];
+    if (companions.length === 0) return null;
+
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {companions.includes('butterflies') && (
+          <>
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={`butterfly-${i}`}
+                className="mg-butterfly"
+                style={{
+                  left: `${20 + i * 25}%`,
+                  top: `${20 + i * 15}%`,
+                  animationDelay: `${i * 2}s`,
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                  <path d="M12 8 Q6 4, 4 8 Q6 12, 12 8" fill="#f472b6" className="mg-wing-left" />
+                  <path d="M12 8 Q18 4, 20 8 Q18 12, 12 8" fill="#f472b6" className="mg-wing-right" />
+                  <ellipse cx="12" cy="12" rx="1.5" ry="4" fill="#374151" />
+                </svg>
+              </div>
+            ))}
+          </>
+        )}
+        
+        {companions.includes('bees') && (
+          <>
+            {[...Array(2)].map((_, i) => (
+              <div
+                key={`bee-${i}`}
+                className="mg-bee"
+                style={{
+                  left: `${40 + i * 20}%`,
+                  top: `${30 + i * 10}%`,
+                  animationDelay: `${i * 1.5}s`,
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16">
+                  <ellipse cx="8" cy="8" rx="5" ry="4" fill="#fbbf24" />
+                  <line x1="5" y1="6" x2="5" y2="10" stroke="#1f2937" strokeWidth="1" />
+                  <line x1="8" y1="5" x2="8" y2="11" stroke="#1f2937" strokeWidth="1" />
+                  <line x1="11" y1="6" x2="11" y2="10" stroke="#1f2937" strokeWidth="1" />
+                  <ellipse cx="5" cy="5" rx="3" ry="2" fill="white" opacity="0.6" className="mg-wing-buzz" />
+                  <ellipse cx="11" cy="5" rx="3" ry="2" fill="white" opacity="0.6" className="mg-wing-buzz" />
+                </svg>
+              </div>
+            ))}
+          </>
+        )}
+        
+        {companions.includes('birds') && (
+          <>
+            {[...Array(2)].map((_, i) => (
+              <div
+                key={`bird-${i}`}
+                className="mg-bird"
+                style={{
+                  left: `${15 + i * 50}%`,
+                  top: `${10 + i * 5}%`,
+                  animationDelay: `${i * 3}s`,
+                }}
+              >
+                <svg width="20" height="12" viewBox="0 0 20 12">
+                  <path d="M0 6 Q5 2, 10 6 Q15 2, 20 6" stroke="#374151" strokeWidth="2" fill="none" />
+                </svg>
+              </div>
+            ))}
+          </>
+        )}
+        
+        {companions.includes('dragonflies') && (
+          <div className="mg-dragonfly" style={{ left: '60%', top: '40%' }}>
+            <svg width="30" height="20" viewBox="0 0 30 20">
+              <ellipse cx="15" cy="10" rx="8" ry="2" fill="#38bdf8" />
+              <ellipse cx="8" cy="6" rx="6" ry="1.5" fill="#38bdf8" opacity="0.6" />
+              <ellipse cx="8" cy="14" rx="6" ry="1.5" fill="#38bdf8" opacity="0.6" />
+              <ellipse cx="22" cy="6" rx="6" ry="1.5" fill="#38bdf8" opacity="0.6" />
+              <ellipse cx="22" cy="14" rx="6" ry="1.5" fill="#38bdf8" opacity="0.6" />
+            </svg>
+          </div>
+        )}
+        
+        {companions.includes('rabbits') && (
+          <div className="mg-rabbit" style={{ left: '70%', bottom: '15%' }}>
+            <svg width="30" height="30" viewBox="0 0 30 30">
+              <ellipse cx="15" cy="22" rx="8" ry="6" fill="#d1d5db" />
+              <circle cx="15" cy="14" r="6" fill="#e5e7eb" />
+              <ellipse cx="11" cy="6" rx="2" ry="5" fill="#e5e7eb" />
+              <ellipse cx="19" cy="6" rx="2" ry="5" fill="#e5e7eb" />
+              <ellipse cx="11" cy="5" rx="1" ry="3" fill="#fca5a1" />
+              <ellipse cx="19" cy="5" rx="1" ry="3" fill="#fca5a1" />
+              <circle cx="13" cy="13" r="1" fill="#374151" />
+              <circle cx="17" cy="13" r="1" fill="#374151" />
+              <ellipse cx="15" cy="16" rx="1.5" ry="1" fill="#fca5a1" />
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Render grid
   const renderGrid = () => {
     const cells = [];
@@ -1073,7 +1423,7 @@ export default function GardenCanvas({
         cells.push(
           <motion.div
             key={`${x}-${y}`}
-            className={`mg-garden-cell ${plant ? 'has-plant' : ''}`}
+            className={`mg-garden-cell ${plant ? 'has-plant' : ''} ${decoration ? 'has-decoration' : ''}`}
             style={{ width: cellSize, height: cellSize }}
             onClick={() => {
               if (plant) {
@@ -1085,6 +1435,12 @@ export default function GardenCanvas({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
+            {decoration && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                {DecorationSVG[decoration.type]?.(cellSize * 0.85)}
+              </div>
+            )}
+            
             {plant && (
               <motion.div
                 className="absolute inset-0 flex items-center justify-center"
@@ -1094,12 +1450,6 @@ export default function GardenCanvas({
               >
                 {PlantSVG[plant.type]?.({ stage: plant.growthStage, size: cellSize * 0.9 })}
               </motion.div>
-            )}
-            
-            {decoration && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-60">
-                {/* Decoration rendering would go here */}
-              </div>
             )}
           </motion.div>
         );
@@ -1189,6 +1539,9 @@ export default function GardenCanvas({
           opacity: 0.8,
         }}
       />
+
+      {/* Companions Layer */}
+      {renderCompanions()}
 
       {/* Garden Grid Container */}
       <div

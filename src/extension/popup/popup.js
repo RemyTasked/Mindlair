@@ -144,6 +144,21 @@ async function showDashboard(user) {
         <div class="forecast-description">${forecast.description}</div>
       </div>
 
+      <div class="spotify-card" id="spotify-controls">
+        <div class="spotify-header">
+          <span class="spotify-icon">🎵</span>
+          <span class="spotify-title">Spotify</span>
+        </div>
+        <div class="spotify-buttons">
+          <button class="spotify-btn" id="play-focus">
+            <span>🎯</span> Focus Music
+          </button>
+          <button class="spotify-btn" id="play-calm">
+            <span>🧘</span> Calm Music
+          </button>
+        </div>
+      </div>
+
       <div class="quick-actions">
         <h3>Quick Flows</h3>
         <div class="action-grid">
@@ -191,6 +206,24 @@ async function showDashboard(user) {
       const flowType = btn.dataset.flow;
       chrome.tabs.create({ url: `http://localhost:5173/flow/${flowType}` });
     });
+  });
+
+  // Spotify controls
+  document.getElementById('play-focus').addEventListener('click', async () => {
+    try {
+      await chrome.runtime.sendMessage({ type: 'SPOTIFY_PLAY', mood: 'focus' });
+    } catch (e) {
+      // Open dashboard with Spotify connection if not connected
+      chrome.tabs.create({ url: 'http://localhost:5173/settings?section=spotify' });
+    }
+  });
+
+  document.getElementById('play-calm').addEventListener('click', async () => {
+    try {
+      await chrome.runtime.sendMessage({ type: 'SPOTIFY_PLAY', mood: 'calm' });
+    } catch (e) {
+      chrome.tabs.create({ url: 'http://localhost:5173/settings?section=spotify' });
+    }
   });
 }
 

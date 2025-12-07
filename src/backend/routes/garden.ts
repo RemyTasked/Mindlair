@@ -58,6 +58,34 @@ type Season = 'spring' | 'summer' | 'fall' | 'winter';
 
 type WeatherType = 'sunny' | 'partly-cloudy' | 'cloudy' | 'golden-hour' | 'mist' | 'gentle-rain' | 'soft-snow';
 
+// Time of day setting options
+type TimeOfDaySetting = 'auto' | 'morning' | 'afternoon' | 'evening' | 'night' | 'dynamic';
+
+// Decoration types
+type DecorationCategory = 'path' | 'seating' | 'water' | 'lighting' | 'structure';
+
+type DecorationType = 
+  // Paths
+  | 'stone-path' | 'brick-path' | 'gravel-path' | 'tile-path'
+  // Seating
+  | 'simple-bench' | 'ornate-bench' | 'garden-swing' | 'reading-nook'
+  // Water features
+  | 'bird-bath' | 'small-fountain' | 'koi-pond' | 'waterfall'
+  // Lighting
+  | 'garden-lantern' | 'string-lights' | 'solar-lights' | 'fairy-lights'
+  // Structures
+  | 'garden-arch' | 'pergola' | 'gazebo' | 'greenhouse';
+
+// Companion types
+type CompanionType = 'butterflies' | 'bees' | 'birds' | 'rabbits' | 'koi-fish' | 'dragonflies';
+
+// Badge types
+type BadgeType = 
+  | 'first-flow' | '7-day-streak' | '30-day-streak' | '100-flows'
+  | 'morning-person' | 'evening-ritual' | 'meeting-master'
+  | 'garden-diversity' | 'zen-master' | 'gratitude-heart'
+  | 'breath-expert' | 'thought-shifter' | 'year-gardener';
+
 interface Plant {
   id: string;
   type: PlantType;
@@ -68,6 +96,30 @@ interface Plant {
   lastWatered?: string;
   bloomCount: number;
   associatedWith?: string;
+}
+
+interface Decoration {
+  id: string;
+  type: DecorationType;
+  x: number;
+  y: number;
+  placedAt: string;
+}
+
+interface Badge {
+  type: BadgeType;
+  name: string;
+  emoji: string;
+  description: string;
+  earnedAt: string;
+}
+
+interface GardenSettings {
+  timeOfDay: TimeOfDaySetting;
+  showWeather: boolean;
+  weatherOverride: WeatherType | 'auto';
+  soundEnabled: boolean;
+  animationsEnabled: boolean;
 }
 
 // Activity tracking for unlocks
@@ -84,6 +136,7 @@ interface ActivityCounts {
   mindfulMoments: number;
   quickResets: number;
   preMeetingFocus: number;
+  microFlows: number; // Total micro-flows for Meeting Master badge
 }
 
 // Plant unlock requirements
@@ -92,6 +145,33 @@ interface UnlockRequirement {
   name: string;
   description: string;
   requirement: (counts: ActivityCounts, streak: number, totalDays: number) => boolean;
+}
+
+// Decoration unlock requirements
+interface DecorationUnlock {
+  type: DecorationType;
+  name: string;
+  category: DecorationCategory;
+  requirement: number; // Total flows needed
+  description: string;
+  special?: string; // Special requirement (e.g., "evening flows")
+}
+
+// Badge requirements
+interface BadgeRequirement {
+  type: BadgeType;
+  name: string;
+  emoji: string;
+  description: string;
+  requirement: (data: GardenData) => boolean;
+}
+
+// Companion requirements
+interface CompanionRequirement {
+  type: CompanionType;
+  name: string;
+  requirement: (data: GardenData) => boolean;
+  description: string;
 }
 
 interface GardenData {
@@ -114,6 +194,16 @@ interface GardenData {
   
   // Unlocks
   unlockedPlants: PlantType[];
+  unlockedDecorations: DecorationType[];
+  
+  // Placed items
+  decorations: Decoration[];
+  
+  // Badges
+  badges: Badge[];
+  
+  // Settings
+  settings: GardenSettings;
   
   // Visual state
   visualState: GardenState;
@@ -121,8 +211,10 @@ interface GardenData {
   season: Season;
   theme: string;
   
-  // Decorations and extras
-  decorations: Array<{ id: string; type: string; x: number; y: number }>;
+  // Active companions (computed from conditions)
+  companions: CompanionType[];
+  
+  // Milestones
   milestones: string[];
   
   // Legacy compatibility
@@ -268,6 +360,96 @@ const STATE_MESSAGES: Record<GardenState, { title: string; message: string }> = 
 };
 
 // ============================================
+// DECORATION UNLOCKS
+// ============================================
+const DECORATION_UNLOCKS: DecorationUnlock[] = [
+  // Paths
+  { type: 'stone-path', name: 'Stone Path', category: 'path', requirement: 5, description: 'Complete 5 flows' },
+  { type: 'brick-path', name: 'Brick Path', category: 'path', requirement: 25, description: 'Complete 25 flows' },
+  { type: 'gravel-path', name: 'Gravel Path', category: 'path', requirement: 50, description: 'Complete 50 flows' },
+  { type: 'tile-path', name: 'Decorative Tile Path', category: 'path', requirement: 100, description: 'Complete 100 flows' },
+  // Seating
+  { type: 'simple-bench', name: 'Simple Bench', category: 'seating', requirement: 10, description: 'Complete 10 flows' },
+  { type: 'ornate-bench', name: 'Ornate Bench', category: 'seating', requirement: 50, description: 'Complete 50 flows' },
+  { type: 'garden-swing', name: 'Garden Swing', category: 'seating', requirement: 100, description: 'Complete 100 flows' },
+  { type: 'reading-nook', name: 'Reading Nook', category: 'seating', requirement: 200, description: 'Complete 200 flows' },
+  // Water features
+  { type: 'bird-bath', name: 'Bird Bath', category: 'water', requirement: 25, description: 'Complete 25 flows' },
+  { type: 'small-fountain', name: 'Small Fountain', category: 'water', requirement: 100, description: 'Complete 100 flows' },
+  { type: 'koi-pond', name: 'Koi Pond', category: 'water', requirement: 250, description: 'Complete 250 flows' },
+  { type: 'waterfall', name: 'Waterfall', category: 'water', requirement: 500, description: 'Complete 500 flows' },
+  // Lighting
+  { type: 'garden-lantern', name: 'Garden Lanterns', category: 'lighting', requirement: 15, description: 'Complete 15 evening flows', special: 'eveningFlows' },
+  { type: 'string-lights', name: 'String Lights', category: 'lighting', requirement: 30, description: 'Complete 30 evening flows', special: 'eveningFlows' },
+  { type: 'solar-lights', name: 'Solar Path Lights', category: 'lighting', requirement: 50, description: 'Complete 50 flows' },
+  { type: 'fairy-lights', name: 'Fairy Lights', category: 'lighting', requirement: 0, description: 'Premium feature' },
+  // Structures
+  { type: 'garden-arch', name: 'Garden Arch', category: 'structure', requirement: 75, description: 'Complete 75 flows' },
+  { type: 'pergola', name: 'Pergola', category: 'structure', requirement: 150, description: 'Complete 150 flows' },
+  { type: 'gazebo', name: 'Gazebo', category: 'structure', requirement: 300, description: 'Complete 300 flows' },
+  { type: 'greenhouse', name: 'Greenhouse', category: 'structure', requirement: 500, description: 'Complete 500 flows' },
+];
+
+// ============================================
+// BADGE REQUIREMENTS
+// ============================================
+const BADGE_REQUIREMENTS: BadgeRequirement[] = [
+  { type: 'first-flow', name: 'First Flow', emoji: '🌱', description: 'Completed your first flow', requirement: (d) => d.totalFlows >= 1 },
+  { type: '7-day-streak', name: 'Week Warrior', emoji: '🔥', description: '7-day streak', requirement: (d) => d.longestStreak >= 7 },
+  { type: '30-day-streak', name: 'Month Master', emoji: '🌟', description: '30-day streak', requirement: (d) => d.longestStreak >= 30 },
+  { type: '100-flows', name: 'Century', emoji: '💯', description: '100 flows completed', requirement: (d) => d.totalFlows >= 100 },
+  { type: 'morning-person', name: 'Morning Person', emoji: '☀️', description: '10 morning flows', requirement: (d) => d.activityCounts.morningFlows >= 10 },
+  { type: 'evening-ritual', name: 'Evening Ritual', emoji: '🌙', description: '10 evening flows', requirement: (d) => d.activityCounts.eveningFlows >= 10 },
+  { type: 'meeting-master', name: 'Meeting Master', emoji: '💼', description: '50 micro-flows', requirement: (d) => (d.activityCounts.microFlows || 0) >= 50 },
+  { type: 'garden-diversity', name: 'Garden Diversity', emoji: '🌈', description: '20 plant types', requirement: (d) => d.unlockedPlants.length >= 20 },
+  { type: 'zen-master', name: 'Zen Master', emoji: '🧘', description: '20 deep meditations', requirement: (d) => d.activityCounts.deepMeditations >= 20 },
+  { type: 'gratitude-heart', name: 'Gratitude Heart', emoji: '💝', description: '30 gratitude entries', requirement: (d) => d.activityCounts.gratitudeEntries >= 30 },
+  { type: 'breath-expert', name: 'Breath Expert', emoji: '🌬️', description: '50 breathing practices', requirement: (d) => d.activityCounts.breathingPractices >= 50 },
+  { type: 'thought-shifter', name: 'Thought Shifter', emoji: '🧠', description: '20 thought reframes', requirement: (d) => d.activityCounts.thoughtReframes >= 20 },
+  { type: 'year-gardener', name: 'Year-Long Gardener', emoji: '🏆', description: '365 days of practice', requirement: (d) => d.totalActiveDays >= 365 },
+];
+
+// ============================================
+// COMPANION REQUIREMENTS
+// ============================================
+const COMPANION_REQUIREMENTS: CompanionRequirement[] = [
+  { type: 'butterflies', name: 'Butterflies', description: '5+ flowering plants', requirement: (d) => countFloweringPlants(d) >= 5 },
+  { type: 'bees', name: 'Bees', description: '10+ flowering plants', requirement: (d) => countFloweringPlants(d) >= 10 },
+  { type: 'birds', name: 'Birds', description: 'Have a tree', requirement: (d) => hasTree(d) },
+  { type: 'rabbits', name: 'Rabbits', description: '20+ plants, meadow theme', requirement: (d) => d.plants.length >= 20 && d.theme === 'meadow' },
+  { type: 'koi-fish', name: 'Koi Fish', description: 'Have a koi pond', requirement: (d) => d.decorations.some(dec => dec.type === 'koi-pond') },
+  { type: 'dragonflies', name: 'Dragonflies', description: 'Have water feature', requirement: (d) => hasWaterFeature(d) },
+];
+
+// Flowering plant types
+const FLOWERING_PLANTS: PlantType[] = [
+  'daisy', 'chamomile', 'marigold', 'morning-glory', 'lavender', 'sunflower',
+  'evening-primrose', 'rose', 'lotus', 'poppy', 'violet', 'moonflower',
+  'night-jasmine', 'golden-flower',
+];
+
+// Tree types
+const TREE_TYPES: PlantType[] = ['cherry-tree', 'oak-sapling', 'willow', 'mature-tree'];
+
+// Water feature decorations
+const WATER_FEATURES: DecorationType[] = ['bird-bath', 'small-fountain', 'koi-pond', 'waterfall'];
+
+// Helper to count flowering plants
+function countFloweringPlants(data: GardenData): number {
+  return data.plants.filter(p => FLOWERING_PLANTS.includes(p.type)).length;
+}
+
+// Helper to check if garden has a tree
+function hasTree(data: GardenData): boolean {
+  return data.plants.some(p => TREE_TYPES.includes(p.type));
+}
+
+// Helper to check if garden has water feature
+function hasWaterFeature(data: GardenData): boolean {
+  return data.decorations.some(d => WATER_FEATURES.includes(d.type as DecorationType));
+}
+
+// ============================================
 // HELPER FUNCTIONS
 // ============================================
 
@@ -376,6 +558,7 @@ function createDefaultGardenData(): GardenData {
       mindfulMoments: 0,
       quickResets: 0,
       preMeetingFocus: 0,
+      microFlows: 0,
     },
     activitiesThisWeek: 0,
     streak: 0,
@@ -384,11 +567,21 @@ function createDefaultGardenData(): GardenData {
     daysSinceActive: 999,
     totalActiveDays: 0,
     unlockedPlants: ['daisy', 'chamomile', 'marigold', 'morning-glory', 'lavender'],
+    unlockedDecorations: ['stone-path'], // Default decoration
+    decorations: [],
+    badges: [],
+    settings: {
+      timeOfDay: 'auto',
+      showWeather: true,
+      weatherOverride: 'auto',
+      soundEnabled: true,
+      animationsEnabled: true,
+    },
     visualState: 'stable',
     weather: 'sunny',
     season: getCurrentSeason(),
     theme: 'cottage',
-    decorations: [],
+    companions: [],
     milestones: [],
     // Legacy
     health: 50,
@@ -396,6 +589,45 @@ function createDefaultGardenData(): GardenData {
     flowsToday: 0,
     growth: 0,
   };
+}
+
+// Get unlocked decorations based on flow counts
+function getUnlockedDecorations(totalFlows: number, activityCounts: ActivityCounts): DecorationType[] {
+  return DECORATION_UNLOCKS
+    .filter(dec => {
+      if (dec.special === 'eveningFlows') {
+        return activityCounts.eveningFlows >= dec.requirement;
+      }
+      return totalFlows >= dec.requirement && dec.requirement > 0;
+    })
+    .map(dec => dec.type);
+}
+
+// Check and award badges
+function checkBadges(data: GardenData): Badge[] {
+  const earnedBadges: Badge[] = [...(data.badges || [])];
+  const earnedTypes = new Set(earnedBadges.map(b => b.type));
+  
+  for (const req of BADGE_REQUIREMENTS) {
+    if (!earnedTypes.has(req.type) && req.requirement(data)) {
+      earnedBadges.push({
+        type: req.type,
+        name: req.name,
+        emoji: req.emoji,
+        description: req.description,
+        earnedAt: new Date().toISOString(),
+      });
+    }
+  }
+  
+  return earnedBadges;
+}
+
+// Get active companions based on garden conditions
+function getActiveCompanions(data: GardenData): CompanionType[] {
+  return COMPANION_REQUIREMENTS
+    .filter(comp => comp.requirement(data))
+    .map(comp => comp.type);
 }
 
 // ============================================
@@ -511,6 +743,19 @@ router.get(
       totalFlows: recentCheckIns.length,
       flowsToday: todaysFlows,
     };
+    
+    // Update unlocked decorations
+    const unlockedDecorations = getUnlockedDecorations(
+      gardenData.totalFlows,
+      gardenData.activityCounts
+    );
+    gardenData.unlockedDecorations = [...new Set([...gardenData.unlockedDecorations, ...unlockedDecorations])];
+    
+    // Check and award badges
+    gardenData.badges = checkBadges(gardenData);
+    
+    // Get active companions
+    gardenData.companions = getActiveCompanions(gardenData);
     
     // Get state message
     const stateInfo = STATE_MESSAGES[visualState];
@@ -974,6 +1219,343 @@ router.post(
     res.json({
       success: true,
       checkIn,
+    });
+  })
+);
+
+// ============================================
+// DECORATION ENDPOINTS
+// ============================================
+
+/**
+ * GET /api/garden/decorations
+ * Get all decorations with unlock status
+ */
+router.get(
+  '/decorations',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    const gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
+    
+    // Get unlocked decorations
+    const unlockedDecorations = getUnlockedDecorations(
+      gardenData.totalFlows,
+      gardenData.activityCounts
+    );
+    
+    // Build decoration list with unlock status
+    const decorations = DECORATION_UNLOCKS.map(dec => ({
+      type: dec.type,
+      name: dec.name,
+      category: dec.category,
+      description: dec.description,
+      requirement: dec.requirement,
+      special: dec.special,
+      unlocked: unlockedDecorations.includes(dec.type) || dec.requirement === 0,
+      placed: gardenData.decorations.some(d => d.type === dec.type),
+    }));
+    
+    res.json({
+      decorations,
+      placedDecorations: gardenData.decorations,
+    });
+  })
+);
+
+/**
+ * POST /api/garden/decoration/place
+ * Place a decoration in the garden
+ */
+router.post(
+  '/decoration/place',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { type, x, y } = req.body as { type: DecorationType; x: number; y: number };
+    
+    if (!type || x === undefined || y === undefined) {
+      return res.status(400).json({ error: 'Missing required fields: type, x, y' });
+    }
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      return res.status(404).json({ error: 'Garden not found' });
+    }
+    
+    const gardenData = { ...createDefaultGardenData(), ...(gardenState.gardenData as object) } as GardenData;
+    
+    // Check if decoration is unlocked
+    const unlockedDecorations = getUnlockedDecorations(
+      gardenData.totalFlows,
+      gardenData.activityCounts
+    );
+    
+    if (!unlockedDecorations.includes(type)) {
+      return res.status(403).json({ error: 'Decoration not unlocked yet' });
+    }
+    
+    // Check if position is valid
+    if (x < 0 || x >= gardenData.gridSize || y < 0 || y >= gardenData.gridSize) {
+      return res.status(400).json({ error: 'Invalid position' });
+    }
+    
+    // Check if position is occupied
+    const occupied = gardenData.plants.some(p => p.x === x && p.y === y) ||
+                     gardenData.decorations.some(d => d.x === x && d.y === y);
+    
+    if (occupied) {
+      return res.status(400).json({ error: 'Position already occupied' });
+    }
+    
+    // Add decoration
+    const decoration: Decoration = {
+      id: `dec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      x,
+      y,
+      placedAt: new Date().toISOString(),
+    };
+    
+    gardenData.decorations.push(decoration);
+    
+    // Update companions (placing decorations might unlock new companions)
+    gardenData.companions = getActiveCompanions(gardenData);
+    
+    await prisma.emotionGardenState.update({
+      where: { userId },
+      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+    });
+    
+    logger.info('Decoration placed', { userId, type, x, y });
+    
+    return res.json({
+      success: true,
+      decoration,
+      companions: gardenData.companions,
+    });
+  })
+);
+
+/**
+ * DELETE /api/garden/decoration/:id
+ * Remove a decoration from the garden
+ */
+router.delete(
+  '/decoration/:id',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { id } = req.params;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      return res.status(404).json({ error: 'Garden not found' });
+    }
+    
+    const gardenData = { ...createDefaultGardenData(), ...(gardenState.gardenData as object) } as GardenData;
+    
+    const decorationIndex = gardenData.decorations.findIndex(d => d.id === id);
+    
+    if (decorationIndex === -1) {
+      return res.status(404).json({ error: 'Decoration not found' });
+    }
+    
+    gardenData.decorations.splice(decorationIndex, 1);
+    
+    // Update companions
+    gardenData.companions = getActiveCompanions(gardenData);
+    
+    await prisma.emotionGardenState.update({
+      where: { userId },
+      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+    });
+    
+    return res.json({
+      success: true,
+      companions: gardenData.companions,
+    });
+  })
+);
+
+// ============================================
+// SETTINGS ENDPOINTS
+// ============================================
+
+/**
+ * GET /api/garden/settings
+ * Get garden display settings
+ */
+router.get(
+  '/settings',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    const gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
+    
+    res.json({
+      settings: gardenData.settings,
+      availableTimeOfDay: ['auto', 'morning', 'afternoon', 'evening', 'night', 'dynamic'],
+      availableWeather: ['auto', 'sunny', 'partly-cloudy', 'cloudy', 'golden-hour', 'mist', 'gentle-rain', 'soft-snow'],
+    });
+  })
+);
+
+/**
+ * PUT /api/garden/settings
+ * Update garden display settings
+ */
+router.put(
+  '/settings',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { timeOfDay, showWeather, weatherOverride, soundEnabled, animationsEnabled } = req.body;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      // Create garden state with settings
+      const newGardenData = {
+        ...createDefaultGardenData(),
+        settings: {
+          timeOfDay: timeOfDay || 'auto',
+          showWeather: showWeather !== false,
+          weatherOverride: weatherOverride || 'auto',
+          soundEnabled: soundEnabled !== false,
+          animationsEnabled: animationsEnabled !== false,
+        },
+      };
+      await prisma.emotionGardenState.create({
+        data: {
+          userId,
+          gardenData: newGardenData as unknown as Prisma.InputJsonValue,
+          lastUpdated: new Date(),
+        },
+      });
+    } else {
+      const gardenData = { ...createDefaultGardenData(), ...(gardenState.gardenData as object) } as GardenData;
+      
+      gardenData.settings = {
+        ...gardenData.settings,
+        ...(timeOfDay !== undefined && { timeOfDay }),
+        ...(showWeather !== undefined && { showWeather }),
+        ...(weatherOverride !== undefined && { weatherOverride }),
+        ...(soundEnabled !== undefined && { soundEnabled }),
+        ...(animationsEnabled !== undefined && { animationsEnabled }),
+      };
+      
+      await prisma.emotionGardenState.update({
+        where: { userId },
+        data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+      });
+    }
+    
+    logger.info('Garden settings updated', { userId });
+    
+    return res.json({ success: true });
+  })
+);
+
+// ============================================
+// BADGE ENDPOINTS
+// ============================================
+
+/**
+ * GET /api/garden/badges
+ * Get all badges with earned status
+ */
+router.get(
+  '/badges',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    const gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
+    
+    const earnedBadgeTypes = new Set(gardenData.badges.map(b => b.type));
+    
+    // Build badge list with earned status
+    const badges = BADGE_REQUIREMENTS.map(badge => ({
+      type: badge.type,
+      name: badge.name,
+      emoji: badge.emoji,
+      description: badge.description,
+      earned: earnedBadgeTypes.has(badge.type),
+      earnedAt: gardenData.badges.find(b => b.type === badge.type)?.earnedAt,
+    }));
+    
+    res.json({
+      badges,
+      totalEarned: gardenData.badges.length,
+      totalAvailable: BADGE_REQUIREMENTS.length,
+    });
+  })
+);
+
+// ============================================
+// COMPANION ENDPOINTS
+// ============================================
+
+/**
+ * GET /api/garden/companions
+ * Get all companions with availability status
+ */
+router.get(
+  '/companions',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    const gardenData: GardenData = gardenState?.gardenData 
+      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
+      : createDefaultGardenData();
+    
+    const activeCompanions = getActiveCompanions(gardenData);
+    
+    // Build companion list with availability
+    const companions = COMPANION_REQUIREMENTS.map(comp => ({
+      type: comp.type,
+      name: comp.name,
+      description: comp.description,
+      active: activeCompanions.includes(comp.type),
+    }));
+    
+    res.json({
+      companions,
+      activeCompanions,
     });
   })
 );
