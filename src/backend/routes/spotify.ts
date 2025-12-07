@@ -1019,7 +1019,20 @@ router.post(
     
     if (!response.ok && response.status !== 204) {
       const errData = await response.json().catch(() => ({ error: { message: 'Unknown error' } })) as SpotifyErrorResponse;
-      return res.status(response.status).json({ error: errData.error?.message || 'Playback error' });
+      const errorMessage = errData.error?.message || 'Playback error';
+      
+      // Map Spotify errors to user-friendly messages
+      let userMessage = errorMessage;
+      if (response.status === 403) {
+        userMessage = 'Spotify Premium is required for playback control. Try using Meet-Cute audio instead.';
+      } else if (response.status === 404) {
+        userMessage = 'No active Spotify device found. Please open Spotify on your device first.';
+      } else if (response.status === 502 || response.status === 503) {
+        userMessage = 'Spotify is temporarily unavailable. Please try again in a moment.';
+      }
+      
+      logger.warn('Spotify playback failed', { userId, roomId, status: response.status, error: errorMessage });
+      return res.status(response.status).json({ error: userMessage, spotifyError: errorMessage });
     }
     
     logger.info('Spotify playback started', { userId, roomId, playUri });

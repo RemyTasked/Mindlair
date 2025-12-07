@@ -300,7 +300,11 @@ export default function DashboardLayout({
           <span className="font-bold text-[var(--mg-accent-light)]">Mind Garden</span>
         </div>
         
-        <button className="p-2 rounded-lg hover:bg-[var(--mg-bg-card)] transition-colors">
+        <button 
+          onClick={() => navigate('/settings')}
+          className="p-2 rounded-lg hover:bg-[var(--mg-bg-card)] transition-colors"
+          title="Notifications & Settings"
+        >
           <Bell className="w-5 h-5" />
         </button>
       </header>

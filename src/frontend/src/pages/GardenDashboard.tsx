@@ -59,6 +59,22 @@ function TimeIcon() {
   }
 }
 
+// Once-per-day flows
+const ONCE_PER_DAY_FLOWS = ['evening-wind-down', 'end-of-day-transition', 'morning-intention'];
+
+// Check if a flow was completed today
+function isFlowCompletedToday(flowId: string): boolean {
+  if (!ONCE_PER_DAY_FLOWS.includes(flowId)) return false;
+  try {
+    const completedFlows = JSON.parse(localStorage.getItem('mindgarden_daily_flows') || '{}');
+    const completedDate = completedFlows[flowId];
+    if (!completedDate) return false;
+    return completedDate === new Date().toDateString();
+  } catch {
+    return false;
+  }
+}
+
 // Flow suggestions based on time of day
 const SUGGESTED_FLOWS = {
   morning: [
@@ -326,7 +342,13 @@ export default function GardenDashboard() {
     );
   }
 
-  const suggestedFlows = SUGGESTED_FLOWS[timeOfDay];
+  // Filter out completed once-per-day flows
+  const suggestedFlows = SUGGESTED_FLOWS[timeOfDay].filter(
+    flow => !isFlowCompletedToday(flow.id)
+  );
+  
+  // Check if the time reminder flow is completed
+  const isTimeReminderCompleted = isFlowCompletedToday(timeReminder.action);
 
   return (
     <DashboardLayout
@@ -431,12 +453,18 @@ export default function GardenDashboard() {
               <h3 className="font-semibold text-emerald-300 mb-1">{insights.stateTitle}</h3>
               <p className="text-emerald-100/70 text-sm">{insights.stateMessage}</p>
             </div>
-            <button
-              onClick={() => navigate(`/flow/${timeReminder.action}`)}
-              className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-sm font-medium transition-colors"
-            >
-              {timeReminder.actionLabel}
-            </button>
+            {isTimeReminderCompleted ? (
+              <div className="px-4 py-2 rounded-xl bg-emerald-500/30 text-emerald-300 text-sm font-medium flex items-center gap-2">
+                <span>✓</span> Done
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate(`/flow/${timeReminder.action}`)}
+                className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-sm font-medium transition-colors"
+              >
+                {timeReminder.actionLabel}
+              </button>
+            )}
           </div>
         </motion.div>
 
