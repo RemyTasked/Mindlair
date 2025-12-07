@@ -19,7 +19,6 @@ import api from '../lib/axios';
 import ThoughtPopperGame from '../components/games/ThoughtPopperGame';
 import ZenMatchGame from '../components/games/ZenMatchGame';
 import ThoughtSorterGame from '../components/games/ThoughtSorterGame';
-import EmotionGarden from '../components/EmotionGarden';
 
 interface GameProgress {
   totalCredits: number;
@@ -34,7 +33,6 @@ export default function GamesHub() {
   const navigate = useNavigate();
   const location = useLocation();
   const [gameType, setGameType] = useState<GameType>(null);
-  const [showEmotionGarden, setShowEmotionGarden] = useState(false);
   const [progress, setProgress] = useState<GameProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
@@ -224,15 +222,6 @@ export default function GamesHub() {
       </div>
     </header>
   );
-
-  if (showEmotionGarden) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-        {renderHeader()}
-        <EmotionGarden onExit={() => setShowEmotionGarden(false)} />
-      </div>
-    );
-  }
 
   if (gameStarted && gameType) {
     return (
@@ -490,11 +479,11 @@ export default function GamesHub() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowEmotionGarden(true)}
+              onClick={() => navigate('/garden')}
               className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base touch-manipulation"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              View Garden
+              View Mind Garden
             </motion.button>
           </div>
         </motion.div>

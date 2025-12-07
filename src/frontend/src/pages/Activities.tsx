@@ -344,7 +344,7 @@ export default function Activities() {
           ))}
         </div>
 
-        {/* Emotion Garden Link */}
+        {/* Mind Garden Link */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -356,15 +356,15 @@ export default function Activities() {
               <div className="text-4xl">🌱</div>
               <div>
                 <h3 className="text-lg font-bold text-[var(--mg-text-primary)]">
-                  Your Emotion Garden
+                  Your Mind Garden
                 </h3>
                 <p className="text-[var(--mg-text-secondary)]">
-                  Check in with your emotions and watch your inner world grow
+                  Watch your garden grow with every flow, game, and moment of mindfulness
                 </p>
               </div>
             </div>
             <button
-              onClick={() => navigate('/games')}
+              onClick={() => navigate('/garden')}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-400 transition-colors whitespace-nowrap"
             >
               View Garden
