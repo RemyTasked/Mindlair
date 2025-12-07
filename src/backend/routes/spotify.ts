@@ -916,4 +916,207 @@ router.get(
   })
 );
 
+// ============================================
+// CONVENIENCE ROUTES FOR FOCUS ROOMS
+// ============================================
+
+// Room to search query mapping
+const ROOM_PLAYLISTS: Record<string, { query: string; mood: string }> = {
+  'deep-focus': { query: 'focus instrumental lofi', mood: 'focus' },
+  'soft-composure': { query: 'calm peaceful meditation', mood: 'calm' },
+  'warm-connection': { query: 'warm acoustic chill', mood: 'warmth' },
+  'pitch-pulse': { query: 'confident upbeat energy', mood: 'confidence' },
+  'recovery-lounge': { query: 'relaxing ambient spa', mood: 'recovery' },
+};
+
+/**
+ * POST /api/spotify/play
+ * Convenience endpoint for Focus Rooms - plays music based on roomId
+ */
+router.post(
+  '/play',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { roomId, uri, contextUri, deviceId } = req.body;
+    
+    const accessToken = await getValidAccessToken(userId);
+    if (!accessToken) {
+      return res.status(401).json({ error: 'Spotify not connected' });
+    }
+    
+    // Check for available devices first
+    const devicesResponse = await fetch('https://api.spotify.com/v1/me/player/devices', {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    
+    if (!devicesResponse.ok) {
+      return res.status(400).json({ error: 'Failed to get devices' });
+    }
+    
+    const devicesData = await devicesResponse.json() as { devices: { id: string; is_active: boolean }[] };
+    if (!devicesData.devices || devicesData.devices.length === 0) {
+      return res.status(400).json({ 
+        error: 'No Spotify device available. Open Spotify on your phone, computer, or web player.' 
+      });
+    }
+    
+    // If no specific URI provided and roomId is given, search for a playlist
+    let playUri = uri || contextUri;
+    
+    if (!playUri && roomId) {
+      const roomConfig = ROOM_PLAYLISTS[roomId];
+      if (roomConfig) {
+        // Search for a playlist matching the room mood
+        const searchQuery = encodeURIComponent(roomConfig.query);
+        const searchResponse = await fetch(
+          `https://api.spotify.com/v1/search?q=${searchQuery}&type=playlist&limit=5`,
+          { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        );
+        
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json() as {
+            playlists: { items: { uri: string; name: string }[] };
+          };
+          
+          if (searchData.playlists.items.length > 0) {
+            // Use the first playlist result
+            playUri = searchData.playlists.items[0].uri;
+            logger.info('Found playlist for room', { 
+              roomId, 
+              playlistName: searchData.playlists.items[0].name,
+              uri: playUri 
+            });
+          }
+        }
+      }
+    }
+    
+    // Build playback request
+    const url = new URL('https://api.spotify.com/v1/me/player/play');
+    const targetDevice = deviceId || devicesData.devices.find(d => d.is_active)?.id || devicesData.devices[0]?.id;
+    if (targetDevice) {
+      url.searchParams.set('device_id', targetDevice);
+    }
+    
+    const body: any = {};
+    if (playUri) {
+      if (playUri.includes('playlist') || playUri.includes('album')) {
+        body.context_uri = playUri;
+      } else {
+        body.uris = [playUri];
+      }
+    }
+    
+    const response = await fetch(url.toString(), {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
+    });
+    
+    if (!response.ok && response.status !== 204) {
+      const errData = await response.json().catch(() => ({ error: { message: 'Unknown error' } })) as SpotifyErrorResponse;
+      return res.status(response.status).json({ error: errData.error?.message || 'Playback error' });
+    }
+    
+    logger.info('Spotify playback started', { userId, roomId, playUri });
+    return res.json({ success: true, playlistUri: playUri });
+  })
+);
+
+/**
+ * POST /api/spotify/pause
+ * Convenience endpoint to pause playback (POST instead of PUT)
+ */
+router.post(
+  '/pause',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const accessToken = await getValidAccessToken(userId);
+    
+    if (!accessToken) {
+      return res.status(401).json({ error: 'Spotify not connected' });
+    }
+    
+    const response = await fetch('https://api.spotify.com/v1/me/player/pause', {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    
+    if (!response.ok && response.status !== 204) {
+      const errData = await response.json().catch(() => ({ error: { message: 'Unknown error' } })) as SpotifyErrorResponse;
+      return res.status(response.status).json({ error: errData.error?.message || 'Pause error' });
+    }
+    
+    return res.json({ success: true });
+  })
+);
+
+/**
+ * POST /api/spotify/next
+ * Convenience endpoint to skip to next track
+ */
+router.post(
+  '/next',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const accessToken = await getValidAccessToken(userId);
+    
+    if (!accessToken) {
+      return res.status(401).json({ error: 'Spotify not connected' });
+    }
+    
+    const response = await fetch('https://api.spotify.com/v1/me/player/next', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    
+    if (!response.ok && response.status !== 204) {
+      const errData = await response.json().catch(() => ({ error: { message: 'Unknown error' } })) as SpotifyErrorResponse;
+      return res.status(response.status).json({ error: errData.error?.message || 'Skip error' });
+    }
+    
+    return res.json({ success: true });
+  })
+);
+
+/**
+ * POST /api/spotify/volume
+ * Convenience endpoint to set volume
+ */
+router.post(
+  '/volume',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    const { volumePercent } = req.body;
+    
+    if (volumePercent === undefined || volumePercent < 0 || volumePercent > 100) {
+      return res.status(400).json({ error: 'volumePercent must be between 0 and 100' });
+    }
+    
+    const accessToken = await getValidAccessToken(userId);
+    if (!accessToken) {
+      return res.status(401).json({ error: 'Spotify not connected' });
+    }
+    
+    const response = await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${Math.round(volumePercent)}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    
+    if (!response.ok && response.status !== 204) {
+      const errData = await response.json().catch(() => ({ error: { message: 'Unknown error' } })) as SpotifyErrorResponse;
+      return res.status(response.status).json({ error: errData.error?.message || 'Volume error' });
+    }
+    
+    return res.json({ success: true });
+  })
+);
+
 export default router;

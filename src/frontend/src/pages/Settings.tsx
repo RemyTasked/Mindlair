@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
-import { ArrowLeft, Save, ChevronDown, ChevronUp, Bell, Calendar, Leaf, User } from 'lucide-react';
+import { ArrowLeft, Save, ChevronDown, ChevronUp, Bell, Calendar, Leaf, User, Plus } from 'lucide-react';
 
 interface Preferences {
   // Flow settings
@@ -135,6 +135,37 @@ export default function Settings() {
       window.location.href = response.data.authUrl;
     } catch (error) {
       console.error('Error initiating Microsoft auth:', error);
+    }
+  };
+
+  const connectWebexCalendar = async () => {
+    try {
+      const response = await api.get('/api/auth/webex/url');
+      window.location.href = response.data.authUrl;
+    } catch (error) {
+      console.error('Error initiating Webex auth:', error);
+    }
+  };
+
+  const [showCalDAVModal, setShowCalDAVModal] = useState(false);
+  const [caldavForm, setCaldavForm] = useState({
+    serverUrl: '',
+    username: '',
+    password: '',
+    calendarName: '',
+  });
+
+  const connectCalDAV = async () => {
+    try {
+      await api.post('/api/auth/caldav/connect', caldavForm);
+      setShowCalDAVModal(false);
+      setCaldavForm({ serverUrl: '', username: '', password: '', calendarName: '' });
+      await loadSettings();
+      setMessage('CalDAV calendar connected!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error connecting CalDAV:', error);
+      setMessage('Error connecting calendar');
     }
   };
 
@@ -404,30 +435,39 @@ export default function Settings() {
 
               {calendarAccounts.length > 0 ? (
                 <div className="space-y-3">
-                  {calendarAccounts.map((account) => (
-                    <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold ${
-                          account.provider === 'google' ? 'bg-blue-500' : 'bg-blue-600'
-                        }`}>
-                          {account.provider === 'google' ? 'G' : 'M'}
+                  {calendarAccounts.map((account) => {
+                    const providerConfig: Record<string, { bg: string; label: string; letter: string }> = {
+                      google: { bg: 'bg-blue-500', label: 'Google Calendar', letter: 'G' },
+                      microsoft: { bg: 'bg-blue-600', label: 'Outlook', letter: 'M' },
+                      webex: { bg: 'bg-green-500', label: 'Webex', letter: 'W' },
+                      caldav: { bg: 'bg-gray-600', label: 'CalDAV', letter: 'C' },
+                      apple: { bg: 'bg-gray-800', label: 'Apple Calendar', letter: 'A' },
+                    };
+                    const config = providerConfig[account.provider] || { bg: 'bg-gray-500', label: account.provider, letter: '?' };
+                    
+                    return (
+                      <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold ${config.bg}`}>
+                            {config.letter}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{account.email || account.label}</p>
+                            <p className="text-xs text-gray-500">
+                              {config.label}
+                              {account.isPrimary && ' • Primary'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{account.email}</p>
-                          <p className="text-xs text-gray-500">
-                            {account.provider === 'google' ? 'Google Calendar' : 'Outlook'}
-                            {account.isPrimary && ' • Primary'}
-                          </p>
-                        </div>
+                        <button
+                          onClick={() => handleDisconnectCalendar(account.id)}
+                          className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          Disconnect
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleDisconnectCalendar(account.id)}
-                        className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        Disconnect
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="p-6 bg-gray-50 rounded-xl text-center">
@@ -435,10 +475,10 @@ export default function Settings() {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={connectGoogleCalendar}
-                  className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-colors font-medium flex items-center justify-center gap-2"
+                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -446,11 +486,11 @@ export default function Settings() {
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  Add Google
+                  Google
                 </button>
                 <button
                   onClick={connectMicrosoftCalendar}
-                  className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-colors font-medium flex items-center justify-center gap-2"
+                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 23 23">
                     <path fill="#f35325" d="M1 1h10v10H1z"/>
@@ -458,11 +498,106 @@ export default function Settings() {
                     <path fill="#05a6f0" d="M1 12h10v10H1z"/>
                     <path fill="#ffba08" d="M12 12h10v10H12z"/>
                   </svg>
-                  Add Outlook
+                  Outlook
+                </button>
+                <button
+                  onClick={connectWebexCalendar}
+                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-teal-300 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <circle fill="#00CF64" cx="12" cy="12" r="10"/>
+                    <path d="M7 12l3 3 7-7" stroke="white" strokeWidth="2" fill="none"/>
+                  </svg>
+                  Webex
+                </button>
+                <button
+                  onClick={() => setShowCalDAVModal(true)}
+                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-400 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-5 h-5 text-gray-600" />
+                  CalDAV / Other
                 </button>
               </div>
+              <p className="text-xs text-gray-500 mt-3">
+                CalDAV works with Apple Calendar, Fastmail, Nextcloud, and more.
+              </p>
             </div>
           </Section>
+
+          {/* CalDAV Modal */}
+          {showCalDAVModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Connect CalDAV Calendar</h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Works with iCloud, Fastmail, Nextcloud, Synology, and other CalDAV servers.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Server URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://caldav.example.com"
+                      value={caldavForm.serverUrl}
+                      onChange={(e) => setCaldavForm({ ...caldavForm, serverUrl: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Username / Email</label>
+                    <input
+                      type="text"
+                      placeholder="your@email.com"
+                      value={caldavForm.username}
+                      onChange={(e) => setCaldavForm({ ...caldavForm, username: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Password / App Password</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={caldavForm.password}
+                      onChange={(e) => setCaldavForm({ ...caldavForm, password: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      For iCloud, use an app-specific password from appleid.apple.com
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Calendar Name (optional)</label>
+                    <input
+                      type="text"
+                      placeholder="Work, Personal, etc."
+                      value={caldavForm.calendarName}
+                      onChange={(e) => setCaldavForm({ ...caldavForm, calendarName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowCalDAVModal(false);
+                      setCaldavForm({ serverUrl: '', username: '', password: '', calendarName: '' });
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={connectCalDAV}
+                    disabled={!caldavForm.serverUrl || !caldavForm.username || !caldavForm.password}
+                    className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Connect
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Account */}
           <Section

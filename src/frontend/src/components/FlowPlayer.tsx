@@ -124,27 +124,61 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
   // Calculate total breath cycle duration
   const breathCycleDuration = breathTiming.inhale + breathTiming.holdIn + breathTiming.exhale + breathTiming.holdOut;
 
-  // Speak guidance text
+  // Speak guidance text - optimized for calm, natural delivery
   const speakGuidance = useCallback((text: string) => {
     if (isMuted || !('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel();
     
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.85;
-    utterance.pitch = 1;
-    utterance.volume = 0.8;
+    // Add natural pauses by replacing punctuation with longer pauses
+    // SSML-like pauses using ellipsis which most TTS engines interpret as pauses
+    const textWithPauses = text
+      .replace(/\.\.\./g, ',   ')  // Triple dots become longer pause
+      .replace(/\./g, '.   ')      // Periods get extra pause
+      .replace(/,/g, ',  ');        // Commas get slight pause
     
-    // Try to use a calm voice
+    const utterance = new SpeechSynthesisUtterance(textWithPauses);
+    
+    // More natural, meditative settings
+    utterance.rate = 0.75;      // Slower for calm effect
+    utterance.pitch = 0.95;     // Slightly lower pitch sounds warmer
+    utterance.volume = 0.75;    // Slightly softer
+    
+    // Try to find the best available voice for meditation/wellness
     const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(v => 
-      v.name.includes('Samantha') || 
-      v.name.includes('Karen') || 
-      v.name.includes('Google UK')
-    ) || voices[0];
     
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+    // Priority order of preferred voices (tested to sound most natural)
+    const voicePreferences = [
+      // macOS voices (high quality)
+      'Samantha',           // macOS - female, warm
+      'Karen',              // macOS - Australian, calm
+      'Moira',              // macOS - Irish, soothing
+      'Daniel',             // macOS - British, calm
+      // Windows voices
+      'Microsoft Zira',     // Windows - female, neutral
+      'Microsoft David',    // Windows - male, calm
+      // Google voices
+      'Google UK English Female',
+      'Google UK English Male',
+      // Generic fallbacks
+      'Female',
+      'en-US',
+      'en-GB',
+    ];
+    
+    let selectedVoice = voices[0];
+    for (const pref of voicePreferences) {
+      const match = voices.find(v => 
+        v.name.toLowerCase().includes(pref.toLowerCase())
+      );
+      if (match) {
+        selectedVoice = match;
+        break;
+      }
+    }
+    
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
     }
     
     speechSynthRef.current = utterance;

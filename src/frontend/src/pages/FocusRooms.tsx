@@ -87,7 +87,7 @@ export default function FocusRooms() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [totalCredits, setTotalCredits] = useState(0);
-  const [activeTab, setActiveTab] = useState<'focus-rooms' | 'ambient-library' | 'lofi-soundscape'>('focus-rooms');
+  const [activeTab, setActiveTab] = useState<'focus-rooms' | 'ambient-library'>('focus-rooms');
 
   // Check if Spotify/Apple Music is connected and load credits
   useEffect(() => {
@@ -715,38 +715,6 @@ export default function FocusRooms() {
                   <span>Ambient Library</span>
                 </div>
               </button>
-              <button
-                onClick={() => {
-                  // Stop ALL audio from any tab when switching
-                  window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                    detail: { source: 'lofi-soundscape-tab-switch', fadeOut: true }
-                  }));
-                  
-                  if (activeRoom) {
-                    if (audioProvider === 'spotify') {
-                      api.post('/api/spotify/pause').catch(() => {});
-                    } else if (audioProvider === 'apple-music') {
-                      if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                        (window as any).MusicKit.getInstance().stop().catch(() => {});
-                      }
-                    }
-                    setActiveRoom(null);
-                    setIsPlaying(false);
-                  }
-                  
-                  setActiveTab('lofi-soundscape');
-                }}
-                className={`flex-1 px-6 py-4 text-center font-semibold transition-all ${
-                  activeTab === 'lofi-soundscape'
-                    ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white border-b-2 border-rose-600'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Music className="w-5 h-5" />
-                  <span>Focus Scene Lo-Fi</span>
-                </div>
-              </button>
             </div>
 
             {/* Tab Content */}
@@ -1298,165 +1266,6 @@ export default function FocusRooms() {
                   </motion.div>
                 )}
 
-                {activeTab === 'lofi-soundscape' && (
-                  <motion.div
-                    key="lofi-soundscape"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="text-center mb-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Focus Scene Lo-Fi Soundscape</h3>
-                      <p className="text-gray-600">The same lo-fi sounds recommended in your 5-minute meeting prep</p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                      {[
-                        { id: 'lofi-focus', name: 'Lofi Focus', description: 'For clarity & clear thinking', icon: '🧠', gradient: 'from-blue-500 to-cyan-500', bgGradient: 'from-blue-50 to-cyan-50' },
-                        { id: 'lofi-morning', name: 'Lofi Morning', description: 'Uplifting energy for confidence', icon: '☀️', gradient: 'from-yellow-500 to-orange-500', bgGradient: 'from-yellow-50 to-orange-50' },
-                        { id: 'lofi-calm', name: 'Lofi Calm', description: 'Calm ambient for empathy', icon: '💙', gradient: 'from-sky-500 to-cyan-500', bgGradient: 'from-sky-50 to-cyan-50' },
-                        { id: 'lofi-chill', name: 'Lofi Chill', description: 'Energizing beats for momentum', icon: '🎵', gradient: 'from-pink-500 to-rose-500', bgGradient: 'from-pink-50 to-rose-50' },
-                        { id: 'lofi-evening', name: 'Lofi Evening', description: 'Mellow & introspective', icon: '🌙', gradient: 'from-emerald-500 to-teal-500', bgGradient: 'from-emerald-50 to-teal-50' },
-                      ].map((sound, index) => {
-                        const isActive = activeRoom === sound.id && isPlaying;
-                        return (
-                          <motion.div
-                            key={sound.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 * index }}
-                            onClick={() => {
-                              // ALWAYS stop ALL audio first (from any source or tab)
-                              window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                detail: { source: 'lofi-soundscape-select', fadeOut: true }
-                              }));
-                              
-                              // Stop Spotify/Apple Music if active
-                              if (activeRoom) {
-                                if (audioProvider === 'spotify') {
-                                  api.post('/api/spotify/pause').catch(() => {});
-                                } else if (audioProvider === 'apple-music') {
-                                  if (typeof window !== 'undefined' && (window as any).MusicKit) {
-                                    (window as any).MusicKit.getInstance().stop().catch(() => {});
-                                  }
-                                }
-                              }
-                              
-                              if (isActive) {
-                                // Toggle off
-                                setActiveRoom(null);
-                                setIsPlaying(false);
-                              } else {
-                                // Toggle on - wait for ALL audio to fully stop
-                                setTimeout(() => {
-                                  setActiveRoom(sound.id);
-                                  setIsPlaying(true);
-                                  setAudioProvider('meetcute');
-                                  window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-                                    detail: { 
-                                      source: 'lofi-soundscape', 
-                                      soundType: sound.id as any
-                                    }
-                                  }));
-                                }, 800); // Wait for all audio to fully stop
-                              }
-                            }}
-                            className={`
-                              relative bg-gradient-to-br ${sound.bgGradient} rounded-xl shadow-lg p-6 cursor-pointer
-                              transition-all hover:shadow-xl hover:scale-105
-                              ${isActive ? 'ring-4 ring-teal-400 ring-offset-2' : ''}
-                            `}
-                          >
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="text-4xl">{sound.icon}</div>
-                              {isActive && (
-                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                              )}
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
-                              {sound.name}
-                            </h3>
-                            <p className="text-gray-700 text-sm mb-4">
-                              {sound.description}
-                            </p>
-                            {isActive && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                className="mt-4 pt-4 border-t border-gray-300"
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <Volume2 className="w-4 h-4 text-teal-600" />
-                                    <span className="text-sm font-semibold text-gray-700">Volume</span>
-                                    <span className="text-sm font-semibold text-teal-600">
-                                      {Math.round((isMuted ? 0 : volume) * 100)}%
-                                    </span>
-                                  </div>
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      if (isPlaying) {
-                                        window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                          detail: { source: 'lofi-soundscape' }
-                                        }));
-                                        setIsPlaying(false);
-                                      } else {
-                                        window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-                                          detail: { 
-                                            source: 'lofi-soundscape', 
-                                            soundType: sound.id as any
-                                          }
-                                        }));
-                                        setIsPlaying(true);
-                                      }
-                                    }}
-                                    className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md flex-shrink-0"
-                                    title={isPlaying ? 'Pause' : 'Play'}
-                                  >
-                                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                                  </button>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setIsMuted(!isMuted);
-                                      window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                                        detail: { volume: isMuted ? volume : 0 }
-                                      }));
-                                    }}
-                                    className="w-8 h-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all flex-shrink-0"
-                                    title={isMuted ? 'Unmute' : 'Mute'}
-                                  >
-                                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                                  </button>
-                                  <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.01"
-                                    value={isMuted ? 0 : volume}
-                                    onChange={(e) => {
-                                      e.stopPropagation();
-                                      const newVolume = parseFloat(e.target.value);
-                                      setVolume(newVolume);
-                                      setIsMuted(newVolume === 0);
-                                      window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                                        detail: { volume: newVolume }
-                                      }));
-                                    }}
-                                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
-                                  />
-                                </div>
-                              </motion.div>
-                            )}
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
               </AnimatePresence>
             </div>
           </div>
