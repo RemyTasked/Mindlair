@@ -194,6 +194,9 @@ export default function LandingPage() {
                       Firefox
                     </a>
                   </div>
+                  <p className="text-emerald-200/70 text-xs mt-3 text-center md:text-left">
+                    💻 Desktop only · On mobile? Use our web app — add to home screen for the full experience!
+                  </p>
                 </div>
 
                 {/* Right: Mockup (Compact) - removed backdrop-blur for perf */}

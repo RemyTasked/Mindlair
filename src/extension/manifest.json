@@ -55,7 +55,7 @@
     "https://mindgarden.app/*"
   ],
   "oauth2": {
-    "client_id": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+    "client_id": "317117970533-d1fdfm2o7mok8io6fc4rf5lt14fu45cq.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/calendar.events.readonly",
       "https://www.googleapis.com/auth/userinfo.email",
