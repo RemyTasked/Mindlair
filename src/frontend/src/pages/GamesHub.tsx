@@ -40,6 +40,8 @@ export default function GamesHub() {
   const [loading, setLoading] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
 
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+
   useEffect(() => {
     // Check if we should auto-open a game from navigation state
     const state = location.state as { openGame?: GameType } | null;
@@ -51,9 +53,16 @@ export default function GamesHub() {
       window.history.replaceState({}, document.title);
     } else {
       // If no game specified, redirect to the unified Activities page
+      setShouldRedirect(true);
+    }
+  }, [location.state]);
+
+  // Redirect effect - separate to avoid hook dependency issues
+  useEffect(() => {
+    if (shouldRedirect) {
       navigate('/activities', { replace: true });
     }
-  }, [location.state, navigate]);
+  }, [shouldRedirect, navigate]);
 
   const loadProgress = async () => {
     try {
@@ -90,13 +99,14 @@ export default function GamesHub() {
     setGameStarted(false);
   };
 
-  if (loading) {
+  // Show nothing while redirecting
+  if (shouldRedirect || loading) {
     return (
       <DashboardLayout activeSection="activities">
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="text-4xl mb-4">🎮</div>
-            <p className="text-[var(--mg-text-secondary)]">Loading Games Hub...</p>
+            <p className="text-[var(--mg-text-secondary)]">Loading...</p>
           </div>
         </div>
       </DashboardLayout>
