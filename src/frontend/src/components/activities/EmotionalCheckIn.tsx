@@ -187,7 +187,17 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-      setError('Voice input is not supported in this browser. Please use text input instead.');
+      setError('Voice input is not available in this browser. Please use text input instead, or try Chrome/Safari.');
+      setInputMode('text');
+      return;
+    }
+
+    // Check if we're on iOS - Web Speech API has limited support
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    if (isIOS && !isSafari) {
+      setError('Voice input on iOS works best in Safari. Please switch to Safari or use text input.');
       setInputMode('text');
       return;
     }
@@ -204,29 +214,44 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
       };
 
       recognition.onresult = (event: any) => {
-        let interimTranscript = '';
         let finalTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
             finalTranscript += result[0].transcript + ' ';
-          } else {
-            interimTranscript += result[0].transcript;
           }
         }
 
-        setTranscript(prev => prev + finalTranscript);
+        if (finalTranscript) {
+          setTranscript(prev => prev + finalTranscript);
+        }
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        if (event.error === 'not-allowed') {
-          setError('Microphone access denied. Please enable microphone permissions or use text input.');
-        } else {
-          setError('Voice recognition error. Please try again or use text input.');
-        }
         setIsRecording(false);
+        
+        switch (event.error) {
+          case 'not-allowed':
+          case 'permission-denied':
+            setError('Microphone access denied. Please allow microphone access in your browser settings, or use text input.');
+            break;
+          case 'no-speech':
+            setError('No speech detected. Please try again or use text input.');
+            break;
+          case 'audio-capture':
+            setError('No microphone found. Please connect a microphone or use text input.');
+            break;
+          case 'network':
+            setError('Network error during voice recognition. Please check your connection or use text input.');
+            break;
+          case 'aborted':
+            // User cancelled - not an error
+            break;
+          default:
+            setError(`Voice recognition error: ${event.error}. Please try again or use text input.`);
+        }
       };
 
       recognition.onend = () => {
@@ -235,9 +260,9 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
 
       recognitionRef.current = recognition;
       recognition.start();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to start speech recognition:', err);
-      setError('Could not start voice input. Please use text input instead.');
+      setError(`Could not start voice input: ${err.message || 'Unknown error'}. Please use text input instead.`);
       setInputMode('text');
     }
   };

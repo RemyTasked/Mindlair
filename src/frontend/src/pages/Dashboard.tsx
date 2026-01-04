@@ -286,15 +286,34 @@ export default function Dashboard() {
       }
       
       // Load upcoming meetings
+      // Use user's local timezone for accurate date boundaries
       try {
-        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const now = new Date();
+        // Get end of tomorrow in user's local time
+        const endOfTomorrow = new Date(now);
+        endOfTomorrow.setDate(endOfTomorrow.getDate() + 2);
+        endOfTomorrow.setHours(0, 0, 0, 0);
+        
         const meetingsResponse = await api.get('/api/meetings', {
           params: {
-            startDate: new Date().toISOString(),
-            endDate: tomorrow.toISOString(),
+            startDate: now.toISOString(),
+            endDate: endOfTomorrow.toISOString(),
           },
         });
-        setUpcomingMeetings(meetingsResponse.data.meetings?.slice(0, 3) || []);
+        
+        // Filter to only show meetings that are actually today in user's local time
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date(now);
+        todayEnd.setDate(todayEnd.getDate() + 1);
+        todayEnd.setHours(0, 0, 0, 0);
+        
+        const todaysMeetings = (meetingsResponse.data.meetings || []).filter((meeting: any) => {
+          const meetingStart = new Date(meeting.startTime);
+          return meetingStart >= todayStart && meetingStart < todayEnd;
+        });
+        
+        setUpcomingMeetings(todaysMeetings.slice(0, 3));
       } catch (meetingError) {
         console.warn('Meetings not available');
       }
@@ -754,6 +773,11 @@ export default function Dashboard() {
                     const startTime = new Date(meeting.startTime);
                     const now = new Date();
                     const minutesUntil = Math.round((startTime.getTime() - now.getTime()) / (1000 * 60));
+                    const hoursUntil = Math.round(minutesUntil / 60);
+                    
+                    // Check if meeting is today
+                    const isToday = startTime.toDateString() === now.toDateString();
+                    const isTomorrow = startTime.toDateString() === new Date(now.getTime() + 86400000).toDateString();
                     
                     return (
                       <div
@@ -766,11 +790,17 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2 mt-1 text-xs text-[var(--mg-text-muted)]">
                           <Clock className="w-3 h-3" />
                           <span>
-                            {startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                            {isToday ? 'Today' : isTomorrow ? 'Tomorrow' : startTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}{' '}
+                            at {startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                           </span>
-                          {minutesUntil > 0 && minutesUntil <= 60 && (
+                          {isToday && minutesUntil > 0 && minutesUntil <= 60 && (
                             <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">
                               in {minutesUntil}m
+                            </span>
+                          )}
+                          {isToday && minutesUntil > 60 && hoursUntil <= 4 && (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                              in {hoursUntil}h
                             </span>
                           )}
                         </div>
