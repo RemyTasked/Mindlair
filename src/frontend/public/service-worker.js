@@ -160,25 +160,28 @@ async function syncGardenData() {
 self.addEventListener('push', (event) => {
   console.log('🌱 Mind Garden SW: Push notification received');
   
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Mind Garden';
+  const payload = event.data ? event.data.json() : {};
+  const title = payload.title || 'Mind Garden';
+  
+  // Extract nested data (flowType, meetingId, etc. are inside payload.data from backend)
+  const nestedData = payload.data || {};
   
   // Build notification options with actionable buttons
   const options = {
-    body: data.body || 'Time for a mindful moment 🌱',
-    icon: data.icon || '/icons/mindgarden-icon-192x192.png',
+    body: payload.body || 'Time for a mindful moment 🌱',
+    icon: payload.icon || '/icons/mindgarden-icon-192x192.png',
     badge: '/icons/mindgarden-icon-72x72.png',
     vibrate: [100, 50, 100, 50, 200],
     silent: false,
     requireInteraction: true, // Keep visible until user interacts
-    tag: data.tag || 'mind-garden-notification',
+    tag: payload.tag || 'mind-garden-notification',
     renotify: true,
     data: {
-      url: data.url || '/',
-      flowType: data.flowType || null,
-      meetingId: data.meetingId || null,
-      meetingTitle: data.meetingTitle || null,
-      ...data.data,
+      url: payload.url || '/',
+      flowType: nestedData.flowType || null,
+      meetingId: nestedData.meetingId || null,
+      meetingTitle: nestedData.meetingTitle || null,
+      ...nestedData,
     },
     // Actionable notification buttons
     actions: [
