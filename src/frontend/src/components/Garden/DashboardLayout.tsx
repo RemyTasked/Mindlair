@@ -32,7 +32,7 @@ import '../../styles/garden-theme.css';
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  activeSection?: 'home' | 'flows' | 'activities' | 'insights' | 'settings' | 'spotify';
+  activeSection?: 'home' | 'flows' | 'activities' | 'insights' | 'settings' | 'sounds';
   gardenState?: {
     health: number;
     visualState: 'thriving' | 'growing' | 'stable' | 'idle' | 'dormant';
@@ -53,7 +53,7 @@ const NAV_ITEMS = [
   { id: 'flows', label: 'Flows', icon: Sparkles, path: '/flows' },
   { id: 'activities', label: 'Activities', icon: Gamepad2, path: '/games' },
   { id: 'insights', label: 'Insights', icon: BarChart3, path: '/insights' },
-  { id: 'spotify', label: 'Music', icon: Music, path: '/focus-rooms' },
+  { id: 'sounds', label: 'Sounds', icon: Music, path: '/focus-rooms' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
 ] as const;
 

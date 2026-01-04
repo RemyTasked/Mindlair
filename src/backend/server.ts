@@ -1,6 +1,6 @@
 // Mind Garden Backend Server - v2.0.0
 // Calendar-integrated mental fitness with contextual micro-interventions
-// Features: Flows, Garden, Focus Rooms, Games Hub, Spotify Integration
+// Features: Flows, Garden, Focus Rooms, Games Hub
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -22,8 +22,6 @@ import calendarRoutes from './routes/calendar';
 import webhookRoutes from './routes/webhook';
 import pushNotificationRoutes from './routes/pushNotifications';
 import slackRoutes from './routes/slack';
-import spotifyRoutes from './routes/spotify';
-import appleMusicRoutes from './routes/appleMusic';
 import focusRoomsRoutes from './routes/focusRooms';
 import gamesRoutes from './routes/games';
 import emotionGardenRoutes from './routes/emotionGarden';
@@ -109,9 +107,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/push', pushNotificationRoutes);
 app.use('/api/slack', slackRoutes);
 
-// API Routes - Music & Audio
-app.use('/api/spotify', spotifyRoutes);
-app.use('/api/apple-music', appleMusicRoutes);
+// API Routes - Focus Rooms & Audio
 app.use('/api/focus-rooms', focusRoomsRoutes);
 
 // API Routes - Mind Garden Features

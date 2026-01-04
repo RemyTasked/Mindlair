@@ -3,14 +3,13 @@
  * 
  * A beautiful, immersive flow player for guided micro-interventions.
  * Features animated breathing indicators, step progress, ambient sounds with fade,
- * Spotify integration, and garden growth rewards with cross-promotion prompts.
+ * and garden growth rewards with cross-promotion prompts.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { X, Pause, Play, SkipForward, Volume2, VolumeX, RotateCcw, Music, Leaf, Sparkles } from 'lucide-react';
-import spotify from '../services/spotify';
+import { X, Pause, Play, SkipForward, Volume2, VolumeX, RotateCcw, Leaf, Sparkles } from 'lucide-react';
 
 // Ambient sound URLs for flow background
 const AMBIENT_SOUNDS: Record<string, string> = {
@@ -37,7 +36,6 @@ interface MicroFlow {
   duration: number;
   bestFor: string[];
   breathingPattern: 'box' | 'calming' | 'energizing' | 'cleansing' | 'extended-exhale';
-  spotifyMood: string;
   gardenPlant?: string;
   steps: FlowStep[];
   benefits: string[];
@@ -84,25 +82,23 @@ interface FlowPlayerProps {
   flow: MicroFlow;
   onComplete: (rating?: number, notes?: string) => void;
   onClose: () => void;
-  spotifyEnabled?: boolean;
   autostart?: boolean;
 }
 
-// Breathing timing patterns (aligned with spec)
+// Breathing timing patterns - SLOWED DOWN for meditative experience
 const BREATHING_PATTERNS = {
-  box: { inhale: 4, holdIn: 4, exhale: 4, holdOut: 4 },
-  calming: { inhale: 4, holdIn: 7, exhale: 8, holdOut: 0 },          // 4-7-8 breathing
-  'extended-exhale': { inhale: 4, holdIn: 6, exhale: 8, holdOut: 0 }, // Calms nervous system
-  energizing: { inhale: 4, holdIn: 2, exhale: 4, holdOut: 2 },
-  cleansing: { inhale: 4, holdIn: 0, exhale: 6, holdOut: 0 },
+  box: { inhale: 6, holdIn: 6, exhale: 6, holdOut: 6 },                  // Increased from 4s to 6s
+  calming: { inhale: 5, holdIn: 8, exhale: 10, holdOut: 0 },             // 5-8-10 breathing (slowed)
+  'extended-exhale': { inhale: 5, holdIn: 7, exhale: 10, holdOut: 0 },   // Calms nervous system
+  energizing: { inhale: 5, holdIn: 3, exhale: 5, holdOut: 3 },           // Increased from 4s
+  cleansing: { inhale: 5, holdIn: 0, exhale: 8, holdOut: 0 },            // Increased from 4s/6s
 };
 
-export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled = false, autostart: _autostart = false }: FlowPlayerProps) {
+export default function FlowPlayer({ flow, onComplete, onClose, autostart = false }: FlowPlayerProps) {
   const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [stepProgress, setStepProgress] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  // Note: autostart is passed from FlowPage when launched from notification
+  const [isPlaying, setIsPlaying] = useState(autostart);
   const [isMuted, setIsMuted] = useState(false);
   const [breathPhase, setBreathPhase] = useState<'inhale' | 'holdIn' | 'exhale' | 'holdOut'>('inhale');
   const [breathProgress, setBreathProgress] = useState(0);
@@ -111,19 +107,11 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
   const [notes, setNotes] = useState('');
   const [flowCount, setFlowCount] = useState(0);
   const [showCrossPromo, setShowCrossPromo] = useState(false);
-  const [spotifyConnected, setSpotifyConnected] = useState(false);
-  const [spotifyPlaying, setSpotifyPlaying] = useState(false);
-  const [showSpotifyPrompt, setShowSpotifyPrompt] = useState(false);
-  const [musicVolume, setMusicVolume] = useState(0.5); // 0-1
-  const [showVolumeControls, setShowVolumeControls] = useState(false);
-  const [spotifyError, setSpotifyError] = useState<string | null>(null);
-  const [useFallbackAudio, setUseFallbackAudio] = useState(false);
 
   const startTimeRef = useRef<number>(Date.now());
   const stepStartTimeRef = useRef<number>(Date.now());
   const animationFrameRef = useRef<number>();
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentStep = flow.steps[currentStepIndex];
@@ -196,7 +184,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     }
   }, []);
 
-  // Speak guidance text - optimized for calm, natural delivery with MUCH slower pacing
+  // Speak guidance text - VERY SLOW pacing for meditative delivery
   const speakGuidance = useCallback((text: string) => {
     if (isMuted || !('speechSynthesis' in window)) return;
 
@@ -216,16 +204,16 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
         // Done speaking - restore ambient volume after a pause
         setTimeout(() => {
           duckAmbientVolume(false);
-        }, 800);
+        }, 1000);
         return;
       }
       
       const sentence = sentences[sentenceIndex];
       const utterance = new SpeechSynthesisUtterance(sentence);
       
-      // Very slow, meditative settings
-      utterance.rate = 0.65;      // Much slower for calm, deliberate delivery
-      utterance.pitch = 0.9;      // Lower pitch sounds warmer and calmer
+      // VERY slow, meditative settings - slowed down further
+      utterance.rate = 0.55;      // Even slower for calm, deliberate delivery
+      utterance.pitch = 0.85;     // Lower pitch sounds warmer and calmer
       utterance.volume = 0.8;     // Clear but not overwhelming
       
       // Try to find the best available voice for meditation/wellness
@@ -267,8 +255,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
       
       utterance.onend = () => {
         sentenceIndex++;
-        // Long pause between sentences for meditative feel (1.5 seconds)
-        setTimeout(speakNextSentence, 1500);
+        // LONGER pause between sentences for meditative feel (2.5 seconds)
+        setTimeout(speakNextSentence, 2500);
       };
       
       speechSynthRef.current = utterance;
@@ -287,7 +275,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     } else {
       // Flow complete
       setIsPlaying(false);
-      stopAmbientSound(); // Stop ambient on completion
+      stopAmbientSound();
       
       // Increment flow count and check if we should show cross-promotion
       const newCount = incrementFlowCount();
@@ -409,217 +397,16 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     return () => clearTimeout(timer);
   }, [isPlaying, showCompletion, startAmbientSound]);
 
-  // Cleanup speech synthesis, fallback audio, and ambient audio on unmount
+  // Cleanup speech synthesis and ambient audio on unmount
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
-      if (fallbackAudioRef.current) {
-        fallbackAudioRef.current.pause();
-        fallbackAudioRef.current = null;
-      }
       if (ambientAudioRef.current) {
         ambientAudioRef.current.pause();
         ambientAudioRef.current = null;
       }
     };
   }, []);
-
-  // Initialize Spotify if enabled
-  useEffect(() => {
-    if (!spotifyEnabled) return;
-
-    const initSpotify = async () => {
-      try {
-        const status = await spotify.getConnectionStatus();
-        setSpotifyConnected(status.connected);
-        
-        if (status.connected) {
-          // Check if user wants to play music (stored preference)
-          const playMusicPref = localStorage.getItem('mindgarden_spotify_autoplay');
-          if (playMusicPref === 'true') {
-            await startSpotifyMusic();
-          } else if (playMusicPref === null) {
-            // First time - show prompt
-            setShowSpotifyPrompt(true);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize Spotify:', error);
-      }
-    };
-
-    initSpotify();
-  }, [spotifyEnabled, flow.id]);
-
-  // Duck volume when speaking (both Spotify and fallback)
-  useEffect(() => {
-    if (!spotifyPlaying) return;
-
-    if (currentStep?.guidance && !isMuted) {
-      if (useFallbackAudio && fallbackAudioRef.current) {
-        // Duck fallback audio to 30%
-        fallbackAudioRef.current.volume = musicVolume * 0.3;
-      } else if (spotifyConnected) {
-        spotify.duckVolume();
-      }
-    } else {
-      if (useFallbackAudio && fallbackAudioRef.current) {
-        // Restore fallback audio volume
-        fallbackAudioRef.current.volume = musicVolume;
-      } else if (spotifyConnected) {
-        spotify.restoreVolume();
-      }
-    }
-  }, [currentStep?.guidance, isMuted, spotifyConnected, spotifyPlaying, useFallbackAudio, musicVolume]);
-
-  // Sync fallback audio volume when musicVolume changes
-  useEffect(() => {
-    if (useFallbackAudio && fallbackAudioRef.current && !isMuted) {
-      fallbackAudioRef.current.volume = musicVolume;
-    }
-  }, [musicVolume, useFallbackAudio, isMuted]);
-
-  // Sync preferences when Spotify reconnects
-  useEffect(() => {
-    if (spotifyConnected && !useFallbackAudio) {
-      // Restore volume preference
-      const savedVol = localStorage.getItem(`mindgarden_volume_${flow.id}`);
-      if (savedVol) {
-        const vol = parseFloat(savedVol);
-        spotify.setTargetVolume(vol);
-      }
-    }
-  }, [spotifyConnected, useFallbackAudio, flow.id]);
-
-  // Load volume preference
-  useEffect(() => {
-    const savedVol = localStorage.getItem(`mindgarden_volume_${flow.id}`);
-    if (savedVol) {
-      const vol = parseFloat(savedVol);
-      setMusicVolume(vol);
-      // We don't set spotify volume here immediately to avoid jumping if not playing yet,
-      // but startSpotifyMusic uses musicVolume state.
-    }
-  }, [flow.id]);
-
-  // Handle music volume change
-  const handleMusicVolumeChange = (vol: number) => {
-    setMusicVolume(vol);
-    localStorage.setItem(`mindgarden_volume_${flow.id}`, vol.toString());
-    if (spotifyPlaying) {
-      spotify.setTargetVolume(vol);
-    }
-  };
-
-  // Fallback audio URLs (ambient sounds for when Spotify unavailable)
-  const FALLBACK_AUDIO_URLS: Record<string, string> = {
-    calm: 'https://cdn.freesound.org/previews/531/531947_6183164-lq.mp3', // Gentle rain
-    focus: 'https://cdn.freesound.org/previews/463/463903_9497060-lq.mp3', // Soft ambient
-    energize: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3', // Uplifting tone
-  };
-
-  // Get fallback audio type based on flow
-  const getFallbackAudioType = (flowId: string): string => {
-    if (flowId.includes('morning') || flowId.includes('energiz') || flowId.includes('presentation')) return 'energize';
-    if (flowId.includes('focus') || flowId.includes('meeting')) return 'focus';
-    return 'calm';
-  };
-
-  // Start fallback audio (when Spotify unavailable)
-  const startFallbackAudio = useCallback(() => {
-    try {
-      const audioType = getFallbackAudioType(flow.id);
-      const audioUrl = FALLBACK_AUDIO_URLS[audioType];
-      
-      if (fallbackAudioRef.current) {
-        fallbackAudioRef.current.pause();
-      }
-      
-      const audio = new Audio(audioUrl);
-      audio.loop = true;
-      audio.volume = musicVolume;
-      audio.play().catch(err => console.warn('Fallback audio blocked:', err));
-      
-      fallbackAudioRef.current = audio;
-      setUseFallbackAudio(true);
-      setSpotifyPlaying(true); // Treat as "music playing" for UI purposes
-    } catch (error) {
-      console.error('Failed to start fallback audio:', error);
-    }
-  }, [flow.id, musicVolume]);
-
-  // Stop fallback audio
-  const stopFallbackAudio = useCallback(() => {
-    if (fallbackAudioRef.current) {
-      fallbackAudioRef.current.pause();
-      fallbackAudioRef.current = null;
-    }
-    setUseFallbackAudio(false);
-  }, []);
-
-  // Start Spotify music (with error handling and fallback)
-  const startSpotifyMusic = async () => {
-    try {
-      setSpotifyError(null);
-      await spotify.setTargetVolume(musicVolume);
-      const success = await spotify.playFlowMusic(flow.id);
-      
-      if (success) {
-        setSpotifyPlaying(true);
-      } else {
-        // No playlists found, use fallback
-        console.log('No Spotify playlists found, using fallback audio');
-        startFallbackAudio();
-      }
-    } catch (error: any) {
-      console.error('Failed to start Spotify music:', error);
-      
-      // Check for specific error types
-      const errorMessage = error?.response?.data?.error?.message || error?.message || '';
-      const isNoDeviceError = 
-        errorMessage.toLowerCase().includes('no active device') ||
-        errorMessage.toLowerCase().includes('player command failed') ||
-        error?.response?.status === 404;
-      
-      if (isNoDeviceError) {
-        setSpotifyError('no_device');
-      } else {
-        setSpotifyError('playback_failed');
-        // Fall back to Mind Garden audio
-        startFallbackAudio();
-      }
-    }
-  };
-
-  // Handle Spotify prompt response
-  const handleSpotifyPrompt = async (play: boolean, remember: boolean) => {
-    setShowSpotifyPrompt(false);
-    
-    if (remember) {
-      localStorage.setItem('mindgarden_spotify_autoplay', play.toString());
-    }
-    
-    if (play) {
-      await startSpotifyMusic();
-    }
-  };
-
-  // Handle completion submit
-  const handleComplete = () => {
-    // Stop ambient sound
-    stopAmbientSound();
-    
-    // Stop music (Spotify or fallback)
-    if (spotifyPlaying) {
-      if (useFallbackAudio) {
-        stopFallbackAudio();
-      } else {
-        spotify.pause();
-      }
-      setSpotifyPlaying(false);
-    }
-    onComplete(rating ?? undefined, notes || undefined);
-  };
 
   // Format time remaining
   const formatTime = (seconds: number) => {
@@ -667,134 +454,11 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     navigate('/dashboard');
   };
 
-  // Spotify prompt modal
-  if (showSpotifyPrompt) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950 flex items-center justify-center p-6"
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="w-full max-w-md text-center"
-        >
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
-            <Music className="w-10 h-10 text-green-400" />
-          </div>
-          
-          <h2 className="text-2xl font-bold text-emerald-300 mb-2">Play Music?</h2>
-          <p className="text-emerald-100/70 mb-6">
-            Would you like to play calming music during this flow?
-          </p>
-          
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => handleSpotifyPrompt(true, false)}
-              className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-400 hover:to-emerald-400 transition-colors font-medium"
-            >
-              Yes, Play Music
-            </button>
-            <button
-              onClick={() => handleSpotifyPrompt(false, false)}
-              className="w-full px-6 py-3 bg-emerald-900/30 text-emerald-300 rounded-xl hover:bg-emerald-800/50 transition-colors"
-            >
-              No, Just Guidance
-            </button>
-          </div>
-          
-          <div className="mt-6 pt-4 border-t border-emerald-800/30">
-            <label className="flex items-center justify-center gap-2 text-sm text-emerald-400 cursor-pointer">
-              <input
-                type="checkbox"
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    handleSpotifyPrompt(true, true);
-                  }
-                }}
-                className="rounded border-emerald-600 bg-emerald-900/30 text-green-500 focus:ring-green-500"
-              />
-              Remember my preference
-            </label>
-          </div>
-        </motion.div>
-      </motion.div>
-    );
-  }
-
-  // No Device error prompt
-  if (spotifyError === 'no_device') {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950 flex items-center justify-center p-6"
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="w-full max-w-md text-center"
-        >
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-500/20 flex items-center justify-center">
-            <Music className="w-10 h-10 text-amber-400" />
-          </div>
-          
-          <h2 className="text-2xl font-bold text-amber-300 mb-2">Open Spotify</h2>
-          <p className="text-emerald-100/70 mb-4">
-            No active Spotify device found. Please open Spotify on your device to play music.
-          </p>
-          
-          <div className="bg-emerald-900/30 rounded-xl p-4 mb-6 text-left text-sm text-emerald-200/80">
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Open Spotify on your phone, computer, or web player</li>
-              <li>Start playing any track briefly</li>
-              <li>Return here and try again</li>
-            </ol>
-          </div>
-          
-          <div className="flex flex-col gap-3">
-            <a
-              href="https://open.spotify.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-400 hover:to-emerald-400 transition-colors font-medium"
-            >
-              Open Spotify Web Player
-            </a>
-            <button
-              onClick={() => {
-                setSpotifyError(null);
-                startSpotifyMusic();
-              }}
-              className="w-full px-6 py-3 bg-emerald-900/30 text-emerald-300 rounded-xl hover:bg-emerald-800/50 transition-colors"
-            >
-              Try Again
-            </button>
-            <button
-              onClick={() => {
-                setSpotifyError(null);
-                startFallbackAudio();
-              }}
-              className="w-full px-6 py-3 bg-emerald-900/30 text-emerald-300/70 rounded-xl hover:bg-emerald-800/50 transition-colors text-sm"
-            >
-              Continue with Ambient Sounds Instead
-            </button>
-            <button
-              onClick={() => {
-                setSpotifyError(null);
-              }}
-              className="w-full text-emerald-400/60 hover:text-emerald-300 text-sm transition-colors"
-            >
-              Skip Music
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    );
-  }
+  // Handle completion submit
+  const handleComplete = () => {
+    stopAmbientSound();
+    onComplete(rating ?? undefined, notes || undefined);
+  };
 
   if (showCompletion) {
     return (
@@ -1002,19 +666,12 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
           <p className="text-sm text-emerald-400/60">{formatTime(totalRemaining)} remaining</p>
         </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={toggleMute}
-            className="p-2 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-lg hover:bg-emerald-900/30"
-          >
-            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-          </button>
-          {spotifyEnabled && (
-            <button className="p-2 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-lg hover:bg-emerald-900/30">
-              <Music className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+        <button
+          onClick={toggleMute}
+          className="p-2 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-lg hover:bg-emerald-900/30"
+        >
+          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
       </div>
 
       {/* Step Progress Dots */}
@@ -1099,107 +756,12 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-6 pb-8 safe-area-bottom">
-        {/* Volume Controls */}
-        <div className="relative">
-          <button
-            onClick={() => setShowVolumeControls(!showVolumeControls)}
-            className="p-3 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-full hover:bg-emerald-900/30"
-          >
-            {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
-          </button>
-
-          <AnimatePresence>
-            {showVolumeControls && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-full left-0 mb-4 p-4 bg-emerald-950/90 border border-emerald-800/50 rounded-2xl shadow-xl backdrop-blur-md w-64 z-50"
-              >
-                <div className="space-y-4">
-                  {/* Voice Volume (Mute Toggle) */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-emerald-100">Voice Guidance</span>
-                    <button onClick={toggleMute} className="text-emerald-400 hover:text-emerald-300">
-                      {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  
-                  {/* Music Volume (Spotify) */}
-                  {spotifyConnected ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-emerald-100 flex items-center gap-2">
-                          <Music className="w-4 h-4 text-emerald-400" />
-                          Music
-                        </span>
-                        <span className="text-emerald-400">{Math.round(musicVolume * 100)}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.05"
-                        value={musicVolume}
-                        onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
-                        className="w-full h-2 bg-emerald-900 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                      />
-                      {/* Volume Presets */}
-                      <div className="grid grid-cols-3 gap-1 text-xs">
-                        <button 
-                          onClick={() => { handleMusicVolumeChange(0.5); if (isMuted) toggleMute(); }}
-                          className={`px-2 py-1.5 rounded transition-colors ${
-                            musicVolume === 0.5 && !isMuted ? 'bg-emerald-600 text-white' : 'bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50'
-                          }`}
-                        >
-                          50/50
-                        </button>
-                        <button 
-                          onClick={() => { handleMusicVolumeChange(0.3); if (isMuted) toggleMute(); }}
-                          className={`px-2 py-1.5 rounded transition-colors ${
-                            musicVolume === 0.3 && !isMuted ? 'bg-emerald-600 text-white' : 'bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50'
-                          }`}
-                        >
-                          30/70
-                        </button>
-                        <button 
-                          onClick={() => { handleMusicVolumeChange(0.7); if (isMuted) toggleMute(); }}
-                          className={`px-2 py-1.5 rounded transition-colors ${
-                            musicVolume === 0.7 && !isMuted ? 'bg-emerald-600 text-white' : 'bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50'
-                          }`}
-                        >
-                          70/30
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <button 
-                          onClick={() => { handleMusicVolumeChange(1.0); if (!isMuted) toggleMute(); }}
-                          className={`px-2 py-1.5 rounded transition-colors ${
-                            musicVolume === 1.0 && isMuted ? 'bg-emerald-600 text-white' : 'bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50'
-                          }`}
-                        >
-                          Music Only
-                        </button>
-                        <button 
-                          onClick={() => { handleMusicVolumeChange(0); if (isMuted) toggleMute(); }}
-                          className={`px-2 py-1.5 rounded transition-colors ${
-                            musicVolume === 0 && !isMuted ? 'bg-emerald-600 text-white' : 'bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50'
-                          }`}
-                        >
-                          Guidance Only
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-3 bg-emerald-900/30 rounded-lg text-xs text-emerald-400/60 text-center">
-                      Connect Spotify for music
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <button
+          onClick={toggleMute}
+          className="p-3 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-full hover:bg-emerald-900/30"
+        >
+          {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+        </button>
 
         <button
           onClick={restartFlow}
@@ -1229,4 +791,3 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
     </motion.div>
   );
 }
-

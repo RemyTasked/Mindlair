@@ -24,14 +24,14 @@ interface MicroFlow {
   icon: string;
 }
 
-// Available flows (simplified version for API)
+// Available flows (simplified version for API) - durations increased for slower pacing
 const AVAILABLE_FLOWS: MicroFlow[] = [
   {
     id: 'pre-meeting-focus',
     name: 'Pre-Meeting Focus',
     shortName: 'Focus',
     description: 'Center yourself before any meeting with focused breathing and intention setting.',
-    duration: 120,
+    duration: 250, // Increased from 120s
     bestFor: ['Standard meetings', 'Check-ins', 'One-on-ones'],
     icon: '🎯',
   },
@@ -40,7 +40,7 @@ const AVAILABLE_FLOWS: MicroFlow[] = [
     name: 'Pre-Presentation Power',
     shortName: 'Power Up',
     description: 'Build confidence and presence before presentations, pitches, and speeches.',
-    duration: 180,
+    duration: 250, // Increased from 180s
     bestFor: ['Presentations', 'Pitches', 'Demos', 'Interviews'],
     icon: '⚡',
   },
@@ -49,7 +49,7 @@ const AVAILABLE_FLOWS: MicroFlow[] = [
     name: 'Difficult Conversation Prep',
     shortName: 'Ground',
     description: 'Ground yourself before challenging discussions.',
-    duration: 180,
+    duration: 250, // Increased from 180s
     bestFor: ['Performance reviews', 'Conflicts', 'Hard feedback'],
     icon: '🌿',
   },
@@ -57,8 +57,8 @@ const AVAILABLE_FLOWS: MicroFlow[] = [
     id: 'quick-reset',
     name: 'Quick Reset',
     shortName: 'Reset',
-    description: 'A rapid 90-second reset to clear your mind between meetings.',
-    duration: 90,
+    description: 'A gentle reset to clear your mind between meetings.',
+    duration: 170, // Increased from 90s
     bestFor: ['Between meetings', 'Context switching'],
     icon: '🔄',
   },
@@ -67,7 +67,7 @@ const AVAILABLE_FLOWS: MicroFlow[] = [
     name: 'Post-Meeting Decompress',
     shortName: 'Decompress',
     description: 'Release tension and transition after difficult meetings.',
-    duration: 120,
+    duration: 170, // Increased from 120s
     bestFor: ['After difficult meetings', 'After long meetings'],
     icon: '🌊',
   },
@@ -76,9 +76,18 @@ const AVAILABLE_FLOWS: MicroFlow[] = [
     name: 'End-of-Day Transition',
     shortName: 'Transition',
     description: 'Create a mental boundary between work and personal life.',
-    duration: 180,
+    duration: 250, // Increased from 180s
     bestFor: ['After last meeting', 'Before commute'],
     icon: '🌅',
+  },
+  {
+    id: 'breathing',
+    name: 'Simple Breathing',
+    shortName: 'Breathe',
+    description: 'A simple breathing exercise to calm your mind.',
+    duration: 130, // Increased from 90s
+    bestFor: ['Quick calm', 'Anxiety relief', 'Focus boost'],
+    icon: '🌬️',
   },
 ];
 
