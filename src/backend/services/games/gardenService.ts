@@ -52,6 +52,8 @@ export interface ActivityCounts {
 export interface GardenData {
   growthPoints: number;
   totalPoints: number;
+  pendingPoints: number;  // Points earned today, applied to growth tomorrow
+  lastGrowthDate: string | null;  // Last date when pending points were applied
   plants: Plant[];
   gridSize: number;
   activityCounts: ActivityCounts;
@@ -167,6 +169,8 @@ export async function updateGarden(
     const defaultData: GardenData = {
       growthPoints: 0,
       totalPoints: 0,
+      pendingPoints: 0,
+      lastGrowthDate: null,
       plants: [],
       gridSize: 5,
       activityCounts: {
@@ -204,9 +208,9 @@ export async function updateGarden(
       ? { ...defaultData, ...(gardenState.gardenData as object) }
       : defaultData;
     
-    // 1. AWARD POINTS
+    // 1. AWARD POINTS (to pending, not growth - growth happens next day)
     const points = pointsOverride || ACTIVITY_POINTS[activityType] || 10;
-    gardenData.growthPoints += points;
+    gardenData.pendingPoints = (gardenData.pendingPoints || 0) + points;
     gardenData.totalPoints += points;
     
     // 2. UPDATE ACTIVITY COUNTS
@@ -339,4 +343,152 @@ function getCurrentSeason(): Season {
   if (month >= 5 && month <= 7) return 'summer';
   if (month >= 8 && month <= 10) return 'fall';
   return 'winter';
+}
+
+/**
+ * Apply pending points to garden growth (should be called when user visits garden)
+ * Points earned today are "pending" and get applied the next day
+ */
+export async function applyPendingGrowth(userId: string): Promise<{ applied: boolean; pointsApplied: number; newPlant: Plant | null }> {
+  try {
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      return { applied: false, pointsApplied: 0, newPlant: null };
+    }
+    
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    
+    // Default data structure
+    const defaultData: GardenData = {
+      growthPoints: 0,
+      totalPoints: 0,
+      pendingPoints: 0,
+      lastGrowthDate: null,
+      plants: [],
+      gridSize: 5,
+      activityCounts: {
+        morningFlows: 0,
+        eveningFlows: 0,
+        extendedFlows: 0,
+        deepMeditations: 0,
+        presentationPreps: 0,
+        difficultConversationPreps: 0,
+        gratitudeEntries: 0,
+        breathingPractices: 0,
+        thoughtReframes: 0,
+        mindfulMoments: 0,
+        quickResets: 0,
+        preMeetingFocus: 0,
+        microFlows: 0,
+        games: 0,
+      },
+      activitiesThisWeek: 0,
+      streak: 0,
+      longestStreak: 0,
+      lastActiveDate: null,
+      daysSinceActive: 0,
+      totalActiveDays: 0,
+      unlockedPlants: ['daisy', 'chamomile', 'marigold', 'morning-glory', 'lavender'],
+      visualState: 'stable',
+      weather: 'sunny',
+      season: getCurrentSeason(),
+      growth: 0,
+      health: 50,
+      totalFlows: 0,
+    };
+    
+    let gardenData: GardenData = { ...defaultData, ...(gardenState.gardenData as object) };
+    
+    // Initialize pendingPoints if not present
+    if (typeof gardenData.pendingPoints !== 'number') {
+      gardenData.pendingPoints = 0;
+    }
+    
+    // Check if we should apply pending points
+    // Only apply if lastGrowthDate is NOT today (meaning it's a new day)
+    const lastGrowthDate = gardenData.lastGrowthDate?.split('T')[0];
+    
+    if (lastGrowthDate === todayStr) {
+      // Already applied growth today, don't apply again
+      return { applied: false, pointsApplied: 0, newPlant: null };
+    }
+    
+    // No pending points to apply
+    if (gardenData.pendingPoints <= 0) {
+      // Just update the lastGrowthDate if not set
+      if (!gardenData.lastGrowthDate) {
+        gardenData.lastGrowthDate = now.toISOString();
+        await prisma.emotionGardenState.update({
+          where: { userId },
+          data: { gardenData: gardenData as any, lastUpdated: now },
+        });
+      }
+      return { applied: false, pointsApplied: 0, newPlant: null };
+    }
+    
+    // Transfer pending points to growth points
+    const pointsToApply = gardenData.pendingPoints;
+    gardenData.growthPoints += pointsToApply;
+    gardenData.pendingPoints = 0;
+    gardenData.lastGrowthDate = now.toISOString();
+    
+    // PLANT GROWTH LOGIC
+    let newPlant: Plant | null = null;
+    if (!Array.isArray(gardenData.plants)) gardenData.plants = [];
+    
+    // Check for new plant creation
+    if (gardenData.growthPoints >= NEW_PLANT_THRESHOLD) {
+      gardenData.growthPoints -= NEW_PLANT_THRESHOLD;
+      
+      // Determine plant type based on most recent activity or random starter
+      const starterPlants = ['daisy', 'chamomile', 'marigold', 'morning-glory', 'lavender'];
+      const plantType = starterPlants[Math.floor(Math.random() * starterPlants.length)];
+      const position = findEmptyPosition(gardenData.plants, gardenData.gridSize);
+      
+      if (position) {
+        newPlant = {
+          id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: plantType,
+          x: position.x,
+          y: position.y,
+          growthStage: gardenData.plants.length === 0 ? 'growing' : 'sprout',
+          plantedAt: now.toISOString(),
+          bloomCount: 0,
+        };
+        gardenData.plants.push(newPlant);
+        gardenData.growth++;
+      }
+    } else if (gardenData.growthPoints >= BLOOM_THRESHOLD && gardenData.plants.length > 0) {
+      // Bloom an existing plant
+      const randomPlant = gardenData.plants[Math.floor(Math.random() * gardenData.plants.length)];
+      randomPlant.bloomCount++;
+      
+      const stages = ['seed', 'sprout', 'growing', 'blooming', 'full', 'mature'];
+      const currentIdx = stages.indexOf(randomPlant.growthStage);
+      if (currentIdx < stages.length - 1 && randomPlant.bloomCount >= (currentIdx + 1) * 2) {
+        randomPlant.growthStage = stages[currentIdx + 1];
+      }
+    }
+    
+    // Update visual state
+    gardenData.gridSize = calculateGridSize(gardenData.totalPoints);
+    gardenData.health = Math.min(100, 50 + (gardenData.streak * 2) + (gardenData.plants.length * 2));
+    
+    // Save
+    await prisma.emotionGardenState.update({
+      where: { userId },
+      data: { gardenData: gardenData as any, lastUpdated: now },
+    });
+    
+    logger.info('Applied pending growth', { userId, pointsApplied: pointsToApply, newPlant: !!newPlant });
+    
+    return { applied: true, pointsApplied: pointsToApply, newPlant };
+  } catch (error) {
+    logger.error('Error in applyPendingGrowth:', error);
+    return { applied: false, pointsApplied: 0, newPlant: null };
+  }
 }

@@ -331,6 +331,15 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
     );
   }
 
+  const handlePlayNextLevel = () => {
+    if (harmonyLevel < HARMONY_LEVELS.length - 1) {
+      const nextLevel = harmonyLevel + 1;
+      setHarmonyLevel(nextLevel);
+      setSelectedLevel(nextLevel);
+      setGameComplete(false);
+    }
+  };
+
   // Game Complete
   if (gameComplete) {
     const credits = numPairs * POINTS_PER_MATCH;
@@ -365,13 +374,27 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           </div>
           
           {canLevelUp && (
-            <div className="bg-green-50 rounded-xl p-3 mb-4 text-sm text-green-700">
-              <Sparkles className="w-4 h-4 inline mr-1" />
-              Next level unlocked: {HARMONY_LEVELS[harmonyLevel + 1].name}!
-            </div>
+            <>
+              <div className="bg-green-50 rounded-xl p-3 mb-4 text-sm text-green-700">
+                <Sparkles className="w-4 h-4 inline mr-1" />
+                Next level unlocked: {HARMONY_LEVELS[harmonyLevel + 1].name}!
+              </div>
+              
+              <button
+                onClick={handlePlayNextLevel}
+                className="w-full py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-teal-700 transition-all shadow-lg mb-3"
+              >
+                Play Next Level
+              </button>
+            </>
           )}
           
-          <p className="text-gray-500 text-sm">Returning to Games Hub...</p>
+          <button
+            onClick={onExit}
+            className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+          >
+            Back to Games
+          </button>
         </motion.div>
       </div>
     );

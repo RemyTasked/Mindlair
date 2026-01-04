@@ -194,6 +194,45 @@ interface ReframeFeedback {
   tips: string[];
 }
 
+// Educational intro examples
+const INTRO_EXAMPLES = [
+  {
+    title: 'What is Thought Reframing?',
+    description: 'Our brains sometimes play tricks on us, creating "cognitive distortions" - unhelpful thinking patterns that make situations seem worse than they are. Reframing means catching these tricky thoughts and finding a more balanced, realistic perspective.',
+    example: null,
+  },
+  {
+    title: 'Example: Catastrophizing',
+    description: 'This is when we assume the worst will happen, even without evidence.',
+    example: {
+      distortion: 'Catastrophizing',
+      thought: '"I\'m going to fail this presentation."',
+      reframe: '"I\'ve prepared well. Even if it\'s not perfect, I can learn from the experience."',
+      why: 'The reframe acknowledges uncertainty without assuming disaster.',
+    },
+  },
+  {
+    title: 'Example: Mind Reading',
+    description: 'This is when we assume we know what others are thinking about us.',
+    example: {
+      distortion: 'Mind Reading',
+      thought: '"They all think I\'m incompetent."',
+      reframe: '"I don\'t actually know what they think. My work speaks for itself."',
+      why: 'The reframe recognizes we can\'t read minds.',
+    },
+  },
+  {
+    title: 'How to Play',
+    description: 'In this game, you\'ll practice identifying cognitive distortions and writing your own balanced reframes. Don\'t worry - the game will guide you with feedback!',
+    example: null,
+    steps: [
+      { num: 1, text: 'Read the thought and identify its distortion pattern' },
+      { num: 2, text: 'Write a more balanced, realistic perspective' },
+      { num: 3, text: 'Compare your reframe with an example' },
+    ],
+  },
+];
+
 export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtReframingLabProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [step, setStep] = useState<'identify' | 'reframe' | 'compare'>('identify');
@@ -202,6 +241,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
   const [showHint, setShowHint] = useState(false);
   const [reframedCount, setReframedCount] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [introStep, setIntroStep] = useState(0);
   const [gameComplete, setGameComplete] = useState(false);
   const [customThought, setCustomThought] = useState('');
   const [isUsingCustom, setIsUsingCustom] = useState(false);
@@ -397,69 +437,133 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
     setTimeout(() => onComplete(credits, 1), 2500);
   };
 
-  // Onboarding
+  // Educational Onboarding with Examples
   if (showOnboarding) {
+    const currentIntro = INTRO_EXAMPLES[introStep];
+    const isLastStep = introStep === INTRO_EXAMPLES.length - 1;
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-100 to-purple-100 p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+          key={introStep}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full"
         >
-          <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Brain className="w-10 h-10 text-indigo-600" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">Thought Reframing Lab</h2>
-          <p className="text-gray-600 mb-6">
-            CBT-based Cognitive Restructuring with Smart Guidance
-          </p>
-          
-          <div className="bg-indigo-50 rounded-2xl p-5 mb-6 text-left">
-            <h3 className="font-semibold text-gray-800 mb-3">How It Works:</h3>
-            <ul className="space-y-3 text-gray-600 text-sm">
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-indigo-200 rounded-full flex items-center justify-center flex-shrink-0 text-indigo-700 font-bold text-xs">1</div>
-                <div>
-                  <span className="font-medium text-indigo-700">Identify</span>
-                  <p className="text-xs text-gray-500">Spot the cognitive distortion pattern</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-indigo-200 rounded-full flex items-center justify-center flex-shrink-0 text-indigo-700 font-bold text-xs">2</div>
-                <div>
-                  <span className="font-medium text-indigo-700">Reframe</span>
-                  <p className="text-xs text-gray-500">Write a more balanced perspective</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-indigo-200 rounded-full flex items-center justify-center flex-shrink-0 text-indigo-700 font-bold text-xs">3</div>
-                <div>
-                  <span className="font-medium text-indigo-700">Compare</span>
-                  <p className="text-xs text-gray-500">See before and after side by side</p>
-                </div>
-              </li>
-            </ul>
-            <div className="mt-4 pt-3 border-t border-indigo-100 flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-amber-500" />
-              <span className="text-xs text-gray-600">Smart feedback helps you learn CBT techniques</span>
-            </div>
-            <div className="mt-2">
-              <span className="text-indigo-600 font-medium">+{POINTS_PER_REFRAME}</span>
-              <span className="text-gray-500 text-sm"> Serenity per reframe</span>
-            </div>
+          {/* Progress dots */}
+          <div className="flex justify-center gap-2 mb-6">
+            {INTRO_EXAMPLES.map((_, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  i === introStep ? 'bg-indigo-600' : i < introStep ? 'bg-indigo-300' : 'bg-gray-200'
+                }`}
+              />
+            ))}
           </div>
           
-          <button
-            onClick={() => setShowOnboarding(false)}
-            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold text-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg"
-          >
-            Start Reframing
-          </button>
+          {/* Icon */}
+          <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <Brain className="w-8 h-8 text-indigo-600" />
+          </div>
+          
+          {/* Title & Description */}
+          <h2 className="text-2xl font-bold text-gray-900 mb-3 text-center">{currentIntro.title}</h2>
+          <p className="text-gray-600 mb-6 text-center text-sm leading-relaxed">{currentIntro.description}</p>
+          
+          {/* Example Card (for steps with examples) */}
+          {currentIntro.example && (
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mb-6 border border-indigo-100">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-1 bg-indigo-200 text-indigo-800 text-xs font-medium rounded-full">
+                  {currentIntro.example.distortion}
+                </span>
+              </div>
+              
+              {/* Original Thought */}
+              <div className="bg-red-50 rounded-xl p-3 mb-3 border border-red-100">
+                <p className="text-xs text-red-600 font-medium mb-1">Distorted Thought:</p>
+                <p className="text-gray-800 text-sm italic">{currentIntro.example.thought}</p>
+              </div>
+              
+              {/* Arrow */}
+              <div className="flex justify-center my-2">
+                <ArrowRight className="w-5 h-5 text-indigo-400" />
+              </div>
+              
+              {/* Reframe */}
+              <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                <p className="text-xs text-emerald-600 font-medium mb-1">Balanced Reframe:</p>
+                <p className="text-gray-800 text-sm italic">{currentIntro.example.reframe}</p>
+              </div>
+              
+              {/* Why */}
+              <div className="mt-3 flex items-start gap-2">
+                <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-gray-600">{currentIntro.example.why}</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Steps list (for last step) */}
+          {currentIntro.steps && (
+            <div className="bg-indigo-50 rounded-2xl p-5 mb-6">
+              <ul className="space-y-3">
+                {currentIntro.steps.map((step) => (
+                  <li key={step.num} className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-indigo-200 rounded-full flex items-center justify-center flex-shrink-0 text-indigo-700 font-bold text-xs">
+                      {step.num}
+                    </div>
+                    <p className="text-gray-700 text-sm">{step.text}</p>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 pt-3 border-t border-indigo-200 flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-500" />
+                <span className="text-sm text-indigo-700 font-medium">+{POINTS_PER_REFRAME} Serenity per reframe</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Navigation */}
+          <div className="flex gap-3">
+            {introStep > 0 && (
+              <button
+                onClick={() => setIntroStep(prev => prev - 1)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+              >
+                Back
+              </button>
+            )}
+            <button
+              onClick={() => {
+                if (isLastStep) {
+                  setShowOnboarding(false);
+                } else {
+                  setIntroStep(prev => prev + 1);
+                }
+              }}
+              className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg"
+            >
+              {isLastStep ? "Let's Begin!" : 'Next'}
+            </button>
+          </div>
+          
+          {/* Skip option */}
+          {!isLastStep && (
+            <button
+              onClick={() => setShowOnboarding(false)}
+              className="w-full mt-3 text-gray-400 hover:text-gray-600 text-sm"
+            >
+              Skip intro
+            </button>
+          )}
           
           {onExit && (
             <button
               onClick={onExit}
-              className="mt-4 text-gray-500 hover:text-gray-700 text-sm"
+              className="w-full mt-3 text-gray-500 hover:text-gray-700 text-sm"
             >
               Back to Games
             </button>

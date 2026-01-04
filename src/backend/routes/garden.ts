@@ -603,6 +603,9 @@ router.get(
   asyncHandler(async (req, res) => {
     const userId = req.userId!;
     
+    // First, try to apply any pending growth from previous days
+    const growthResult = await gardenService.applyPendingGrowth(userId);
+    
     // Get stored garden state
     const gardenState = await prisma.emotionGardenState.findUnique({
       where: { userId },
@@ -724,6 +727,11 @@ router.get(
       stateTitle: stateInfo.title,
       stateMessage: stateInfo.message,
       lastUpdated: gardenState?.lastUpdated || new Date(),
+      // Include pending points info for frontend display
+      pendingPoints: (gardenData as any).pendingPoints || 0,
+      growthAppliedToday: growthResult.applied,
+      pointsAppliedToday: growthResult.pointsApplied,
+      newPlantFromGrowth: growthResult.newPlant,
     });
   })
 );
@@ -1146,6 +1154,7 @@ router.get(
       plantsGrown: gardenData.plants.length,
       favoriteFlow,
       totalMinutes: Math.round(totalMinutes),
+      pendingPoints: (gardenData as any).pendingPoints || 0,
       
       // Charts data
       flowsByDay,

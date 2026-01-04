@@ -70,6 +70,7 @@ interface InsightsData {
   plantsGrown: number;
   favoriteFlow: string;
   totalMinutes: number;
+  pendingPoints: number;
   flowsByDay: Array<{ day: string; count: number }>;
   flowsByType: Array<{ type: string; count: number }>;
   recentAchievements: Array<{ id: string; name: string; icon: string; date: string }>;
@@ -155,6 +156,7 @@ export default function Insights() {
           plantsGrown: gardenResponse.data.plantsGrown ?? 0,
           favoriteFlow: gardenResponse.data.favoriteFlow ?? 'None yet',
           totalMinutes: gardenResponse.data.totalMinutes ?? 0,
+          pendingPoints: gardenResponse.data.pendingPoints ?? 0,
           flowsByDay: gardenResponse.data.flowsByDay ?? [
             { day: 'Mon', count: 0 }, { day: 'Tue', count: 0 }, { day: 'Wed', count: 0 },
             { day: 'Thu', count: 0 }, { day: 'Fri', count: 0 }, { day: 'Sat', count: 0 }, { day: 'Sun', count: 0 },
@@ -558,6 +560,15 @@ export default function Insights() {
                 </div>
                 <span className="font-bold text-[var(--mg-text-primary)]">{insights.totalFlows}</span>
               </div>
+              {insights.pendingPoints > 0 && (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-900/20 to-yellow-900/20 border border-amber-700/30">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">🌱</span>
+                    <span className="text-amber-300">Points for Tomorrow</span>
+                  </div>
+                  <span className="font-bold text-amber-200">+{insights.pendingPoints}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--mg-bg-primary)]">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">💜</span>

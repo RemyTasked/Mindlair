@@ -103,6 +103,7 @@ interface DashboardStats {
   totalFlows: number;
   gardenHealth: number;
   plantsGrown: number;
+  pendingPoints: number;
 }
 
 interface Meeting {
@@ -164,6 +165,7 @@ export default function Dashboard() {
     totalFlows: 0,
     gardenHealth: 50,
     plantsGrown: 0,
+    pendingPoints: 0,
   });
   const [gardenData, setGardenData] = useState<GardenData>({
     plants: [],
@@ -231,6 +233,7 @@ export default function Dashboard() {
           totalFlows: gardenState.totalFlows || 0,
           gardenHealth: gardenState.health || 50,
           plantsGrown: gardenState.plants?.length || 0,
+          pendingPoints: gardenState.pendingPoints || 0,
         }));
         
         // Map garden state to GardenData format
@@ -468,6 +471,29 @@ export default function Dashboard() {
             </div>
           </motion.div>
         </div>
+
+        {/* Pending Points Banner */}
+        {stats.pendingPoints > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-900/30 to-yellow-900/30 border border-amber-700/30"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/20">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-amber-200 font-medium">
+                  🌱 {stats.pendingPoints} points ready for tomorrow's growth!
+                </p>
+                <p className="text-amber-300/60 text-xs mt-0.5">
+                  Points earned today will be applied to your garden when you return tomorrow.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Garden State Message */}
         <motion.div
