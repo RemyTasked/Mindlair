@@ -408,9 +408,6 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* PWA Install Banner - shows at top of page */}
-      <PWAInstallBanner variant="banner" />
-      
       <DashboardLayout
         activeSection="home"
         gardenState={{
@@ -422,6 +419,9 @@ export default function Dashboard() {
         user={user}
         onLogout={handleLogout}
       >
+        {/* PWA Install Banner - at top of content area */}
+        <PWAInstallBanner variant="banner" />
+        
         <div className="p-4 md:p-8 pb-32">
         {/* Header */}
         <div className="mb-6">

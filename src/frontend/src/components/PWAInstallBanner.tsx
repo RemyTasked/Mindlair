@@ -203,18 +203,19 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3"
+        className="relative z-10 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white px-4 py-4 shadow-lg rounded-xl mx-4 mt-4 md:mx-6 md:mt-6"
       >
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="p-2 bg-white/20 rounded-lg flex-shrink-0">
-              {isMobile ? <Smartphone className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+            {/* Logo with high contrast background */}
+            <div className="p-2 bg-white rounded-xl flex-shrink-0 shadow-md">
+              <span className="text-2xl">🌱</span>
             </div>
             <div className="min-w-0">
-              <p className="font-medium text-sm sm:text-base">
-                {isMobile ? 'Add Mind Garden to your home screen' : 'Install Mind Garden for quick access'}
+              <p className="font-bold text-sm sm:text-base drop-shadow-sm">
+                {isMobile ? 'Add Mind Garden to your home screen!' : 'Install Mind Garden for quick access!'}
               </p>
-              <p className="text-xs sm:text-sm text-white/80 hidden sm:block">
+              <p className="text-xs sm:text-sm text-white/90 hidden sm:block">
                 Get instant access, offline support, and push notifications
               </p>
             </div>
@@ -224,10 +225,10 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
             <button
               onClick={handleInstall}
               disabled={installing}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-700 rounded-lg font-semibold text-sm hover:bg-emerald-50 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-lg font-bold text-sm hover:bg-orange-50 transition-colors disabled:opacity-50 shadow-md"
             >
               {installing ? (
-                <div className="w-4 h-4 border-2 border-emerald-300 border-t-emerald-700 rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-orange-200 border-t-orange-600 rounded-full animate-spin" />
               ) : (
                 <Download className="w-4 h-4" />
               )}
