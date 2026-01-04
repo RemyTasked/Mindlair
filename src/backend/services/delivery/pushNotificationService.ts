@@ -110,23 +110,60 @@ class PushNotificationService {
   }
 
   /**
-   * Send pre-meeting cue notification
+   * Determine the recommended flow type based on meeting title
+   */
+  determineFlowType(meetingTitle: string): string {
+    const title = meetingTitle.toLowerCase();
+    
+    // Presentation/demo meetings
+    if (title.includes('presentation') || title.includes('demo') || title.includes('pitch') || title.includes('keynote')) {
+      return 'pre-presentation-power';
+    }
+    
+    // Difficult conversations / reviews
+    if (title.includes('review') || title.includes('1:1') || title.includes('one on one') || 
+        title.includes('feedback') || title.includes('performance') || title.includes('difficult')) {
+      return 'difficult-conversation-prep';
+    }
+    
+    // High-stakes meetings
+    if (title.includes('board') || title.includes('executive') || title.includes('investor') || 
+        title.includes('client') || title.includes('stakeholder')) {
+      return 'pre-presentation-power';
+    }
+    
+    // Quick meetings - suggest quick reset
+    if (title.includes('standup') || title.includes('sync') || title.includes('check-in') || title.includes('quick')) {
+      return 'quick-reset';
+    }
+    
+    // Default to pre-meeting focus
+    return 'pre-meeting-focus';
+  }
+
+  /**
+   * Send pre-meeting cue notification with actionable flow button
    */
   async sendPreMeetingCue(
     userId: string,
     meetingTitle: string,
     cueMessage: string,
-    focusSceneUrl?: string
+    focusSceneUrl?: string,
+    meetingId?: string
   ): Promise<boolean> {
+    const flowType = this.determineFlowType(meetingTitle);
+    
     return this.sendToUser(userId, {
-      title: `🎬 You're on in 5: ${meetingTitle}`,
-      body: cueMessage,
-      icon: '/logo.png',
-      url: focusSceneUrl || '/dashboard',
+      title: `🌱 ${meetingTitle} in 10 minutes`,
+      body: cueMessage || 'Take 3 minutes to prepare',
+      icon: '/icons/mindgarden-icon-192x192.png',
+      url: `/flow/${flowType}?autostart=true${meetingId ? `&meetingId=${meetingId}` : ''}`,
       tag: 'pre-meeting-cue',
       data: {
         type: 'pre-meeting-cue',
         meetingTitle,
+        meetingId,
+        flowType,
         focusSceneUrl,
       },
     });

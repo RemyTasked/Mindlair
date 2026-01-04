@@ -1,35 +1,34 @@
 /* eslint-disable no-restricted-globals */
 
-// AUTOMATIC CACHE-BUSTING:
-// - Vite generates unique filenames with content hashes (e.g., main-a1b2c3d4.js)
-// - Server sends Cache-Control headers to prevent stale content
-// - Service worker cache version bumped on each deployment
-// - ETags enabled for efficient cache validation
-// DEPLOYMENT: 2025-11-23 - Automatic update detection + mobile optimizations
-const CACHE_NAME = 'meetcute-v16-automatic-updates';
-const RUNTIME_CACHE = 'meetcute-runtime-v16';
+/**
+ * Mind Garden Service Worker
+ * 
+ * Features:
+ * - PWA offline support with asset caching
+ * - Push notifications with actionable buttons
+ * - Deep linking to flows via notification clicks
+ * - Automatic updates with cache busting
+ */
 
-// Assets to cache on install
-// Using NEW filename that iOS has never cached before
-const LOGO_FILE = 'meetcute-logo-v4.png'; // Completely new filename
+const CACHE_NAME = 'mind-garden-v1';
+const RUNTIME_CACHE = 'mind-garden-runtime-v1';
+
+// Core assets to cache on install for offline use
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  `/icons/${LOGO_FILE}`, // New logo file
-  `/icons/icon-192x192.png?v=20251108192533`,
-  `/icons/icon-512x512.png?v=20251108192533`,
-  `/icons/apple-touch-icon.png?v=20251108192533`,
-  `/favicon.png?v=20251108192533`,
-  `/og-image.png?v=20251108192533`,
+  '/icons/mindgarden-icon-192x192.png',
+  '/icons/mindgarden-icon-512x512.png',
+  '/favicon.png',
 ];
 
 // Install event - cache critical assets
 self.addEventListener('install', (event) => {
-  console.log('🎬 Service Worker: Installing...');
+  console.log('🌱 Mind Garden SW: Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('🎬 Service Worker: Caching app shell');
+      console.log('🌱 Mind Garden SW: Caching app shell');
       return cache.addAll(PRECACHE_ASSETS);
     }).then(() => {
       return self.skipWaiting();
@@ -37,27 +36,24 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - AGGRESSIVELY clean up ALL old caches
+// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('🎬 Service Worker: Activating and clearing ALL old caches...');
+  console.log('🌱 Mind Garden SW: Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
-      console.log('🎬 Found caches:', cacheNames);
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // Delete ANY cache that doesn't match current version
           if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
-            console.log('🗑️ Service Worker: DELETING old cache:', cacheName);
+            console.log('🗑️ Mind Garden SW: Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      console.log('✅ Service Worker: All old caches cleared, claiming clients');
-      // Force all tabs to use new service worker immediately
+      console.log('✅ Mind Garden SW: Claiming clients');
       return self.clients.claim();
     }).then(() => {
-      // Notify all clients to reload for fresh content
+      // Notify all clients about the update
       return self.clients.matchAll().then((clients) => {
         clients.forEach((client) => {
           client.postMessage({
@@ -80,7 +76,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // API requests - network only (always fresh data)
+  // API requests - network only
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request).catch(() => {
@@ -96,12 +92,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For navigation requests, use network first
+  // Navigation requests - network first
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone and cache the response
           const responseClone = response.clone();
           caches.open(RUNTIME_CACHE).then((cache) => {
             cache.put(request, responseClone);
@@ -109,12 +104,10 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Fallback to cache
           return caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            // Fallback to index.html for SPA routing
             return caches.match('/index.html');
           });
         })
@@ -122,7 +115,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For other requests (CSS, JS, images), use cache first
+  // Other requests - cache first
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -130,12 +123,10 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(request).then((response) => {
-        // Don't cache non-successful responses
         if (!response || response.status !== 200 || response.type === 'error') {
           return response;
         }
 
-        // Clone and cache the response
         const responseClone = response.clone();
         caches.open(RUNTIME_CACHE).then((cache) => {
           cache.put(request, responseClone);
@@ -147,40 +138,60 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Background sync for offline actions (future enhancement)
+// Background sync for offline actions
 self.addEventListener('sync', (event) => {
-  console.log('🎬 Service Worker: Background sync triggered', event.tag);
-  if (event.tag === 'sync-reflections') {
-    event.waitUntil(syncReflections());
+  console.log('🌱 Mind Garden SW: Background sync:', event.tag);
+  if (event.tag === 'sync-garden-data') {
+    event.waitUntil(syncGardenData());
   }
 });
 
-async function syncReflections() {
-  // Placeholder for syncing offline reflections when back online
-  console.log('🎬 Service Worker: Syncing offline reflections...');
+async function syncGardenData() {
+  console.log('🌱 Mind Garden SW: Syncing garden data...');
 }
 
-// Push notifications with sound and vibration
+/**
+ * Push Notification Handler
+ * 
+ * Displays rich notifications with actionable buttons:
+ * - "Start Flow" - Opens app directly to the flow
+ * - "Not Now" - Dismisses the notification
+ */
 self.addEventListener('push', (event) => {
-  console.log('🎬 Service Worker: Push notification received', event);
+  console.log('🌱 Mind Garden SW: Push notification received');
   
   const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Meet Cute';
+  const title = data.title || 'Mind Garden';
+  
+  // Build notification options with actionable buttons
   const options = {
-    body: data.body || 'You have a new notification',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
-    // Enhanced vibration pattern: double chime feel
+    body: data.body || 'Time for a mindful moment 🌱',
+    icon: data.icon || '/icons/mindgarden-icon-192x192.png',
+    badge: '/icons/mindgarden-icon-72x72.png',
     vibrate: [100, 50, 100, 50, 200],
-    // Sound plays automatically on most platforms when notification shows
-    silent: false, // Ensure sound plays
-    requireInteraction: false, // Auto-dismiss after a few seconds
-    tag: data.tag || 'meetcute-notification', // Prevent duplicate notifications
-    renotify: true, // Play sound even if notification with same tag exists
-    data: data.url || '/',
+    silent: false,
+    requireInteraction: true, // Keep visible until user interacts
+    tag: data.tag || 'mind-garden-notification',
+    renotify: true,
+    data: {
+      url: data.url || '/',
+      flowType: data.flowType || null,
+      meetingId: data.meetingId || null,
+      meetingTitle: data.meetingTitle || null,
+      ...data.data,
+    },
+    // Actionable notification buttons
     actions: [
-      { action: 'open', title: 'Open', icon: '/icons/icon-72x72.png' },
-      { action: 'close', title: 'Close', icon: '/icons/icon-72x72.png' },
+      {
+        action: 'start-flow',
+        title: '🌱 Start Flow',
+        icon: '/icons/mindgarden-icon-72x72.png',
+      },
+      {
+        action: 'dismiss',
+        title: 'Not Now',
+        icon: '/icons/mindgarden-icon-72x72.png',
+      },
     ],
   };
 
@@ -189,21 +200,58 @@ self.addEventListener('push', (event) => {
   );
 });
 
+/**
+ * Notification Click Handler
+ * 
+ * Routes user to the appropriate flow based on:
+ * - Which action button was clicked
+ * - The flow type from the notification data
+ * - Autostart parameter for immediate flow playback
+ */
 self.addEventListener('notificationclick', (event) => {
-  console.log('🎬 Service Worker: Notification clicked', event.action);
+  console.log('🌱 Mind Garden SW: Notification clicked:', event.action);
   event.notification.close();
 
-  if (event.action === 'open') {
-    event.waitUntil(
-      clients.openWindow(event.notification.data)
-    );
+  const notifData = event.notification.data || {};
+  let targetUrl = '/garden';
+
+  if (event.action === 'start-flow' || event.action === 'open' || !event.action) {
+    // User clicked "Start Flow" or the notification body
+    if (notifData.flowType) {
+      // Build URL with autostart parameter
+      targetUrl = `/flow/${notifData.flowType}?autostart=true`;
+      if (notifData.meetingId) {
+        targetUrl += `&meetingId=${notifData.meetingId}`;
+      }
+    } else if (notifData.url) {
+      targetUrl = notifData.url;
+    }
+  } else if (event.action === 'dismiss') {
+    // User clicked "Not Now" - just close, don't open anything
+    return;
   }
+
+  // Open or focus the app window
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Check if app is already open
+      for (const client of clientList) {
+        if (client.url.includes(self.registration.scope) && 'focus' in client) {
+          // Navigate existing window to the target URL
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      // Open new window if app not open
+      return clients.openWindow(targetUrl);
+    })
+  );
 });
 
 // Handle skip waiting message from client
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('🎬 Service Worker: Received SKIP_WAITING message, activating immediately');
+    console.log('🌱 Mind Garden SW: Activating immediately');
     self.skipWaiting();
   }
 });

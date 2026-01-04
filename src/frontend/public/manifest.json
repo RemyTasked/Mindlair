@@ -1,76 +1,68 @@
 {
   "name": "Mind Garden",
   "short_name": "Mind Garden",
-  "description": "Calendar-integrated mental fitness tool with contextual micro-interventions. Grow your focus and transform stress into growth.",
+  "description": "Transform stress into growth with guided flows and your personal wellness garden. Calendar-integrated mental fitness for professionals.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0c1e1a",
-  "theme_color": "#10b981",
+  "background_color": "#ffffff",
+  "theme_color": "#059669",
   "orientation": "portrait-primary",
   "scope": "/",
   "categories": ["health", "productivity", "lifestyle"],
   "icons": [
     {
-      "src": "/icons/mindgarden-icon-72x72.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/mindgarden-icon-96x96.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/mindgarden-icon-128x128.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/mindgarden-icon-144x144.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/mindgarden-icon-152x152.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/mindgarden-icon-180x180.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-180x180.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/mindgarden-icon-192x192.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/mindgarden-icon-384x384.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/mindgarden-icon-512x512.png?v=20251206000000",
+      "src": "/icons/mindgarden-icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/dashboard.png",
-      "sizes": "1170x2532",
-      "type": "image/png",
-      "form_factor": "narrow"
     }
   ],
   "shortcuts": [
@@ -78,22 +70,22 @@
       "name": "Dashboard",
       "short_name": "Home",
       "description": "View your garden and dashboard",
-      "url": "/dashboard",
-      "icons": [{ "src": "/icons/mindgarden-icon-96x96.png?v=20251206000000", "sizes": "96x96" }]
+      "url": "/garden",
+      "icons": [{ "src": "/icons/mindgarden-icon-96x96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Quick Flow",
-      "short_name": "Flow",
-      "description": "Start a quick flow",
-      "url": "/flow/quick-reset",
-      "icons": [{ "src": "/icons/mindgarden-icon-96x96.png?v=20251206000000", "sizes": "96x96" }]
+      "name": "Quick Reset",
+      "short_name": "Reset",
+      "description": "90-second breathing reset",
+      "url": "/flow/quick-reset?autostart=true",
+      "icons": [{ "src": "/icons/mindgarden-icon-96x96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Settings",
-      "short_name": "Settings",
-      "description": "Manage your preferences",
-      "url": "/settings",
-      "icons": [{ "src": "/icons/mindgarden-icon-96x96.png?v=20251206000000", "sizes": "96x96" }]
+      "name": "Focus Rooms",
+      "short_name": "Focus",
+      "description": "Ambient sounds for deep work",
+      "url": "/focus-rooms",
+      "icons": [{ "src": "/icons/mindgarden-icon-96x96.png", "sizes": "96x96" }]
     }
   ]
 }

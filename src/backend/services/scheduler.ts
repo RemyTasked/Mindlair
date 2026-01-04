@@ -474,10 +474,12 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
           user.id,
           event.summary,
           cueMessage,
-          focusSceneUrl
+          focusSceneUrl,
+          meeting.id
         );
         logger.info('✅ Push notification sent successfully', {
           userId: user.id,
+          flowType: pushNotificationService.determineFlowType(event.summary),
         });
       }
 

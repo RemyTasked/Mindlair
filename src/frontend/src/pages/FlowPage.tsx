@@ -4,7 +4,8 @@
  * Page that loads and displays a specific flow based on URL parameter.
  */
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import FlowPlayer from '../components/FlowPlayer';
 import api from '../lib/axios';
 
@@ -153,9 +154,26 @@ const FLOWS = {
 
 export default function FlowPage() {
   const { flowId } = useParams<{ flowId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
+  const [autostart, setAutostart] = useState(false);
+  
   const flow = flowId ? FLOWS[flowId as keyof typeof FLOWS] : null;
+  
+  // Check for autostart parameter from notification deep links
+  useEffect(() => {
+    const shouldAutostart = searchParams.get('autostart') === 'true';
+    const meetingId = searchParams.get('meetingId');
+    
+    if (shouldAutostart) {
+      setAutostart(true);
+      // Remove autostart from URL to prevent replay on refresh
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('autostart');
+      if (!meetingId) newParams.delete('meetingId');
+      window.history.replaceState({}, '', `${window.location.pathname}${newParams.toString() ? `?${newParams}` : ''}`);
+    }
+  }, [searchParams]);
 
   const handleComplete = async (rating?: number, notes?: string) => {
     try {
@@ -201,6 +219,6 @@ export default function FlowPage() {
     );
   }
 
-  return <FlowPlayer flow={flow} onComplete={handleComplete} onClose={handleClose} />;
+  return <FlowPlayer flow={flow} onComplete={handleComplete} onClose={handleClose} autostart={autostart} />;
 }
 

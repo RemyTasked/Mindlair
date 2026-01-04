@@ -85,6 +85,7 @@ interface FlowPlayerProps {
   onComplete: (rating?: number, notes?: string) => void;
   onClose: () => void;
   spotifyEnabled?: boolean;
+  autostart?: boolean;
 }
 
 // Breathing timing patterns (aligned with spec)
@@ -96,11 +97,12 @@ const BREATHING_PATTERNS = {
   cleansing: { inhale: 4, holdIn: 0, exhale: 6, holdOut: 0 },
 };
 
-export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled = false }: FlowPlayerProps) {
+export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled = false, autostart = false }: FlowPlayerProps) {
   const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [stepProgress, setStepProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [hasAutoStarted, setHasAutoStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [breathPhase, setBreathPhase] = useState<'inhale' | 'holdIn' | 'exhale' | 'holdOut'>('inhale');
   const [breathProgress, setBreathProgress] = useState(0);
