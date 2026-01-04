@@ -24,10 +24,12 @@ interface PWAInstallBannerProps {
 export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAInstallBannerProps) {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isMac, setIsMac] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [showDesktopInstructions, setShowDesktopInstructions] = useState(false);
   const [installing, setInstalling] = useState(false);
 
   useEffect(() => {
@@ -44,6 +46,10 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
     // Detect iOS
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(iOS);
+
+    // Detect Mac (for Safari instructions)
+    const mac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(navigator.userAgent) && !iOS;
+    setIsMac(mac);
 
     // Detect mobile
     const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -83,17 +89,35 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
 
   const handleInstall = async () => {
     if (deferredPrompt) {
+      // Chrome/Edge on Android or Desktop - use native prompt
       setInstalling(true);
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setIsStandalone(true);
-        setShowBanner(false);
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setIsStandalone(true);
+          setShowBanner(false);
+        }
+      } catch (err) {
+        console.warn('Install prompt failed:', err);
+        // Fall back to showing instructions
+        if (isMobile) {
+          setShowIOSInstructions(true);
+        } else {
+          setShowDesktopInstructions(true);
+        }
       }
       setDeferredPrompt(null);
       setInstalling(false);
     } else if (isIOS) {
+      // iOS Safari - show manual instructions
       setShowIOSInstructions(true);
+    } else if (isMac || !isMobile) {
+      // Desktop (Mac Safari, Firefox, etc.) - show desktop instructions
+      setShowDesktopInstructions(true);
+    } else {
+      // Android browser that doesn't support beforeinstallprompt
+      setShowIOSInstructions(true); // Use mobile instructions
     }
   };
 
@@ -109,7 +133,7 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
     return null;
   }
 
-  // iOS Instructions Modal
+  // iOS/Mobile Instructions Modal
   if (showIOSInstructions) {
     return (
       <AnimatePresence>
@@ -186,6 +210,140 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
 
             <button
               onClick={() => setShowIOSInstructions(false)}
+              className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+            >
+              Got it
+            </button>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  // Desktop Instructions Modal (for Safari, Firefox, etc.)
+  if (showDesktopInstructions) {
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+    const isChrome = /chrome/i.test(navigator.userAgent) && !/edge|edg/i.test(navigator.userAgent);
+    
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 z-[300] flex items-center justify-center p-4"
+          onClick={() => setShowDesktopInstructions(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl">
+                  🌱
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Install Mind Garden</h3>
+              </div>
+              <button
+                onClick={() => setShowDesktopInstructions(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              Add Mind Garden to your desktop for quick access anytime.
+            </p>
+
+            <div className="space-y-4 mb-6">
+              {isChrome && (
+                <>
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">
+                      1
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 mb-1">Click the install icon</p>
+                      <p className="text-gray-600 text-sm">Look for ⊕ in the address bar (right side)</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">
+                      2
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 mb-1">Click "Install"</p>
+                      <p className="text-gray-600 text-sm">Mind Garden will open as a standalone app</p>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {isSafari && (
+                <>
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">
+                      1
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 mb-1">Click File → Add to Dock</p>
+                      <p className="text-gray-600 text-sm">In the Safari menu bar</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">
+                      2
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 mb-1">Click "Add"</p>
+                      <p className="text-gray-600 text-sm">Mind Garden will appear in your Dock</p>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {isFirefox && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <p className="font-medium text-amber-900 mb-1">Firefox doesn't support PWA installation</p>
+                  <p className="text-amber-700 text-sm">
+                    For the best experience, try using Chrome, Edge, or Safari. 
+                    You can still bookmark this page for quick access!
+                  </p>
+                </div>
+              )}
+              
+              {!isChrome && !isSafari && !isFirefox && (
+                <>
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">
+                      1
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 mb-1">Look for an install option</p>
+                      <p className="text-gray-600 text-sm">Check your browser's menu or address bar for an "Install" or "Add to..." option</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">
+                      2
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 mb-1">Or bookmark this page</p>
+                      <p className="text-gray-600 text-sm">Press Cmd+D (Mac) or Ctrl+D (Windows) to bookmark</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowDesktopInstructions(false)}
               className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
             >
               Got it
