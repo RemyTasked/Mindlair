@@ -17,13 +17,77 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, MicOff, Send, X, Heart, Shield, Sparkles,
-  AlertCircle, CheckCircle2, Keyboard, Volume2
+  AlertCircle, CheckCircle2, Keyboard, Volume2,
+  History, Trash2, Clock, ChevronLeft
 } from 'lucide-react';
 import api from '../../lib/axios';
 
 interface EmotionalCheckInProps {
   onComplete?: () => void;
 }
+
+// Local check-in entry structure
+interface LocalCheckIn {
+  id: string;
+  timestamp: string;
+  emotion: string | null;
+  text: string;
+  mode: 'voice' | 'text';
+}
+
+const LOCAL_STORAGE_KEY = 'mindgarden_emotional_history';
+
+// Helper functions for local storage
+const loadLocalHistory = (): LocalCheckIn[] => {
+  try {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.warn('Failed to load emotional history:', error);
+  }
+  return [];
+};
+
+const saveToLocalHistory = (entry: LocalCheckIn): void => {
+  try {
+    const history = loadLocalHistory();
+    // Add new entry at the beginning
+    history.unshift(entry);
+    // Keep only last 50 entries to manage storage
+    const trimmed = history.slice(0, 50);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(trimmed));
+  } catch (error) {
+    console.warn('Failed to save to emotional history:', error);
+  }
+};
+
+const clearLocalHistory = (): void => {
+  try {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+  } catch (error) {
+    console.warn('Failed to clear emotional history:', error);
+  }
+};
+
+// Format relative time
+const formatRelativeTime = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 // Emotion categories for quick selection
 const EMOTION_PRESETS = [
@@ -41,7 +105,7 @@ const POINTS_PER_CHECKIN = 20;
 
 export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'intro' | 'input' | 'complete'>('intro');
+  const [step, setStep] = useState<'intro' | 'input' | 'complete' | 'history'>('intro');
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('text');
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -51,8 +115,15 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [localHistory, setLocalHistory] = useState<LocalCheckIn[]>([]);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   
   const recognitionRef = useRef<any>(null);
+
+  // Load local history on mount
+  useEffect(() => {
+    setLocalHistory(loadLocalHistory());
+  }, []);
 
   // Check for Web Speech API support
   useEffect(() => {
@@ -139,6 +210,17 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
     setError(null);
 
     try {
+      // Save to local storage for user's private diary
+      const newEntry: LocalCheckIn = {
+        id: `checkin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        emotion: selectedEmotion,
+        text: content,
+        mode: inputMode,
+      };
+      saveToLocalHistory(newEntry);
+      setLocalHistory(loadLocalHistory()); // Refresh history
+
       // Record the check-in for garden points
       await api.post('/api/garden/activity', {
         activityType: 'emotional-checkin',
@@ -210,10 +292,10 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
               <div>
                 <h4 className="font-semibold text-emerald-800 text-sm mb-1">Your Privacy is Protected</h4>
                 <ul className="text-emerald-700 text-xs space-y-1">
+                  <li>• Diary entries are saved <strong>only on this device</strong></li>
                   <li>• Voice recordings are <strong>never stored</strong> - only transcribed locally</li>
-                  <li>• Your words help personalize games (anonymized)</li>
-                  <li>• You can opt out of sharing entirely</li>
-                  <li>• Raw text is processed for keywords only</li>
+                  <li>• Your words help personalize games (anonymized, opt-out available)</li>
+                  <li>• Mind Garden does not store your private text on our servers</li>
                 </ul>
               </div>
             </div>
@@ -230,6 +312,16 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
           >
             Begin Check-In
           </button>
+
+          {localHistory.length > 0 && (
+            <button
+              onClick={() => setStep('history')}
+              className="w-full mt-3 py-3 flex items-center justify-center gap-2 text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors font-medium"
+            >
+              <History className="w-4 h-4" />
+              View Past Check-Ins ({localHistory.length})
+            </button>
+          )}
 
           <button
             onClick={() => navigate('/activities')}
@@ -288,6 +380,133 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
             Continue
           </button>
         </motion.div>
+      </div>
+    );
+  }
+
+  // History screen
+  if (step === 'history') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-rose-50 to-pink-100 p-4">
+        {/* Header */}
+        <div className="max-w-2xl mx-auto mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setStep('intro')}
+                className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors shadow-sm"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Your Diary</h2>
+                <p className="text-gray-600 text-sm">Private check-in history</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/activities')}
+              className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors shadow-sm"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          {/* Privacy Reminder */}
+          <div className="bg-white/80 backdrop-blur rounded-xl p-3 mb-4 flex items-center gap-2 text-sm text-gray-600">
+            <Shield className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <span>These entries are stored only on your device. Mind Garden cannot access them.</span>
+          </div>
+
+          {/* History List */}
+          <div className="space-y-3 mb-6">
+            {localHistory.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+                <History className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">No check-ins yet</p>
+                <p className="text-gray-400 text-sm mt-1">Your diary entries will appear here</p>
+              </div>
+            ) : (
+              localHistory.map((entry, index) => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white rounded-2xl shadow-lg p-4"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {entry.emotion && (
+                        <span className="text-2xl">
+                          {EMOTION_PRESETS.find(e => e.label === entry.emotion)?.emoji || '💭'}
+                        </span>
+                      )}
+                      {entry.emotion && (
+                        <span className="font-medium text-gray-800">{entry.emotion}</span>
+                      )}
+                      {!entry.emotion && <span className="text-gray-500 text-sm italic">No emotion selected</span>}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <Clock className="w-3 h-3" />
+                      <span>{formatRelativeTime(entry.timestamp)}</span>
+                    </div>
+                  </div>
+                  {entry.text && (
+                    <p className="text-gray-700 text-sm leading-relaxed">{entry.text}</p>
+                  )}
+                  {entry.mode === 'voice' && (
+                    <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                      <Volume2 className="w-3 h-3" />
+                      <span>Voice transcription</span>
+                    </div>
+                  )}
+                </motion.div>
+              ))
+            )}
+          </div>
+
+          {/* Clear History Button */}
+          {localHistory.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-lg p-4">
+              {showClearConfirm ? (
+                <div className="text-center">
+                  <p className="text-gray-700 mb-3">Are you sure you want to delete all entries?</p>
+                  <p className="text-sm text-gray-500 mb-4">This cannot be undone.</p>
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => setShowClearConfirm(false)}
+                      className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        clearLocalHistory();
+                        setLocalHistory([]);
+                        setShowClearConfirm(false);
+                        setStep('intro');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete All
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowClearConfirm(true)}
+                  className="w-full flex items-center justify-center gap-2 text-red-500 hover:text-red-600 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Clear All Entries
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
