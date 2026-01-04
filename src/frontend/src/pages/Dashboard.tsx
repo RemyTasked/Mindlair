@@ -25,6 +25,7 @@ import DashboardLayout from '../components/Garden/DashboardLayout';
 import GardenCanvas, { GardenData, Plant } from '../components/Garden/GardenCanvas';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
+import { pushNotificationService } from '../services/pushNotificationService';
 
 // Get time of day
 function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
@@ -519,11 +520,34 @@ export default function Dashboard() {
                 <div className="flex gap-3">
                   <button
                     onClick={async () => {
-                      if (typeof Notification !== 'undefined') {
-                        const permission = await Notification.requestPermission();
-                        if (permission === 'granted') {
-                          localStorage.setItem('mindgarden_notifications_enabled', 'true');
-                          setShowNotificationPrompt(false);
+                      try {
+                        // Use pushNotificationService for proper PWA/iOS support
+                        const token = localStorage.getItem('mindgarden_token') || localStorage.getItem('meetcute_token');
+                        if (token) {
+                          const subscribed = await pushNotificationService.subscribe(token);
+                          if (subscribed) {
+                            localStorage.setItem('mindgarden_notifications_enabled', 'true');
+                            setShowNotificationPrompt(false);
+                          } else {
+                            // Fallback: just request permission
+                            if (typeof Notification !== 'undefined') {
+                              const permission = await Notification.requestPermission();
+                              if (permission === 'granted') {
+                                localStorage.setItem('mindgarden_notifications_enabled', 'true');
+                                setShowNotificationPrompt(false);
+                              }
+                            }
+                          }
+                        }
+                      } catch (error) {
+                        console.warn('Failed to enable notifications:', error);
+                        // Fallback to basic permission request
+                        if (typeof Notification !== 'undefined') {
+                          const permission = await Notification.requestPermission();
+                          if (permission === 'granted') {
+                            localStorage.setItem('mindgarden_notifications_enabled', 'true');
+                            setShowNotificationPrompt(false);
+                          }
                         }
                       }
                     }}

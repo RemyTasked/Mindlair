@@ -21,7 +21,7 @@ const AMBIENT_SOUNDS: Record<string, string> = {
 // Types from shared (simplified for frontend)
 interface FlowStep {
   id: string;
-  type: 'intro' | 'breathing' | 'visualization' | 'body-scan' | 'affirmation' | 'movement' | 'journaling' | 'closing';
+  type: 'intro' | 'breathing' | 'visualization' | 'body-scan' | 'affirmation' | 'movement' | 'journaling' | 'closing' | 'gratitude' | 'reflection' | 'self-compassion' | 'meditation' | 'letting-go';
   duration: number;
   text: string;
   guidance?: string;

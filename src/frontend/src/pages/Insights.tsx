@@ -24,10 +24,10 @@ import {
   Info,
   RefreshCw,
   TrendingUp,
-  Music,
-  Volume2,
+  AlertCircle,
 } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
+import InsightCards from '../components/Garden/InsightCards';
 import api from '../lib/axios';
 
 // Chart components
@@ -86,11 +86,20 @@ interface MeetingPatterns {
   highStakesMeetingsPerWeek: number;
 }
 
-interface AudioPreferences {
-  spotifyConnected: boolean;
-  preferredSoundscape: string;
-  volumeRatio: string;
-  totalListeningMinutes: number;
+interface StressForecast {
+  level: 'light' | 'moderate' | 'heavy';
+  label: string;
+  description: string;
+  color: 'green' | 'yellow' | 'orange';
+  score: number;
+  indicators: {
+    totalMeetings: number;
+    backToBack: number;
+    longMeetings: number;
+    highStakes: number;
+  };
+  recommendations: string[];
+  suggestedFlows: string[];
 }
 
 export default function Insights() {
@@ -98,7 +107,7 @@ export default function Insights() {
   const [refreshing, setRefreshing] = useState(false);
   const [insights, setInsights] = useState<InsightsData | null>(null);
   const [meetingPatterns, setMeetingPatterns] = useState<MeetingPatterns | null>(null);
-  const [audioPrefs, setAudioPrefs] = useState<AudioPreferences | null>(null);
+  const [stressForecast, setStressForecast] = useState<StressForecast | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -110,35 +119,30 @@ export default function Insights() {
       setLoading(true);
       setError(null);
       
-      // Fetch garden insights, meeting patterns, and spotify/audio status in parallel
-      const [gardenResponse, patternsResponse, spotifyResponse] = await Promise.all([
+      // Fetch garden insights, meeting patterns, and today's meetings for stress forecast
+      const [gardenResponse, patternsResponse, meetingsResponse] = await Promise.all([
         api.get('/api/garden/insights').catch(() => null),
         api.get('/api/analysis/patterns').catch(() => null),
-        api.get('/api/spotify/status').catch(() => null),
+        api.get('/api/meetings', {
+          params: {
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          },
+        }).catch(() => null),
       ]);
       
-      // Set audio preferences from Spotify status or defaults
-      if (spotifyResponse?.data) {
-        const volumeRatio = localStorage.getItem('mg_volume_ratio') || '30/70';
-        const preferredSoundscape = localStorage.getItem('mg_preferred_sound') || 'calm';
-        
-        setAudioPrefs({
-          spotifyConnected: spotifyResponse.data.connected || false,
-          preferredSoundscape,
-          volumeRatio,
-          totalListeningMinutes: spotifyResponse.data.totalMinutes || 0,
-        });
-      } else {
-        // Check local storage for preferences even without Spotify
-        const volumeRatio = localStorage.getItem('mg_volume_ratio') || '30/70';
-        const preferredSoundscape = localStorage.getItem('mg_preferred_sound') || 'calm';
-        
-        setAudioPrefs({
-          spotifyConnected: false,
-          preferredSoundscape,
-          volumeRatio,
-          totalListeningMinutes: 0,
-        });
+      // Calculate stress forecast from today's meetings
+      if (meetingsResponse?.data?.meetings && meetingsResponse.data.meetings.length > 0) {
+        try {
+          const forecastResponse = await api.post('/api/analysis/forecast', {
+            meetings: meetingsResponse.data.meetings,
+          });
+          if (forecastResponse?.data) {
+            setStressForecast(forecastResponse.data);
+          }
+        } catch (err) {
+          console.warn('Could not calculate stress forecast');
+        }
       }
       
       if (gardenResponse?.data) {
@@ -250,6 +254,89 @@ export default function Insights() {
             <RefreshCw className={`w-5 h-5 text-[var(--mg-text-muted)] ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
+
+        {/* AI Insight Cards - Collapsible, rotates daily */}
+        <InsightCards
+          hasData={insights.totalFlows > 0}
+          userData={{
+            streak: insights.currentStreak,
+            totalFlows: insights.totalFlows,
+            weeklyFlows: insights.weeklyFlows,
+            gardenHealth: insights.gardenHealth,
+            plantsGrown: insights.plantsGrown,
+          }}
+          meetingData={meetingPatterns ? {
+            busiestDay: meetingPatterns.busiestDay,
+            avgMeetingsPerDay: meetingPatterns.avgMeetingsPerDay,
+            highStakesMeetingsPerWeek: meetingPatterns.highStakesMeetingsPerWeek,
+            backToBackCount: meetingPatterns.avgBackToBack,
+          } : undefined}
+          stressForecast={stressForecast ? {
+            level: stressForecast.level,
+            score: stressForecast.score,
+            indicators: stressForecast.indicators,
+          } : undefined}
+        />
+
+        {/* Today's Stress Forecast (if available) */}
+        {stressForecast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className={`mg-card mb-6 border ${
+              stressForecast.color === 'green' ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-900/20 to-teal-900/20' :
+              stressForecast.color === 'yellow' ? 'border-amber-500/30 bg-gradient-to-r from-amber-900/20 to-yellow-900/20' :
+              'border-orange-500/30 bg-gradient-to-r from-orange-900/20 to-red-900/20'
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`p-3 rounded-xl ${
+                stressForecast.color === 'green' ? 'bg-emerald-500/20' :
+                stressForecast.color === 'yellow' ? 'bg-amber-500/20' :
+                'bg-orange-500/20'
+              }`}>
+                <AlertCircle className={`w-6 h-6 ${
+                  stressForecast.color === 'green' ? 'text-emerald-400' :
+                  stressForecast.color === 'yellow' ? 'text-amber-400' :
+                  'text-orange-400'
+                }`} />
+              </div>
+              <div className="flex-1">
+                <h3 className={`font-semibold mb-1 ${
+                  stressForecast.color === 'green' ? 'text-emerald-300' :
+                  stressForecast.color === 'yellow' ? 'text-amber-300' :
+                  'text-orange-300'
+                }`}>
+                  Today's Meeting Stress: {stressForecast.label}
+                </h3>
+                <p className="text-[var(--mg-text-secondary)] text-sm mb-3">
+                  {stressForecast.description}
+                </p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <span className="px-2 py-1 rounded-full bg-[var(--mg-bg-primary)] text-xs text-[var(--mg-text-muted)]">
+                    {stressForecast.indicators.totalMeetings} meetings
+                  </span>
+                  {stressForecast.indicators.backToBack > 0 && (
+                    <span className="px-2 py-1 rounded-full bg-[var(--mg-bg-primary)] text-xs text-[var(--mg-text-muted)]">
+                      {stressForecast.indicators.backToBack} back-to-back
+                    </span>
+                  )}
+                  {stressForecast.indicators.highStakes > 0 && (
+                    <span className="px-2 py-1 rounded-full bg-[var(--mg-bg-primary)] text-xs text-[var(--mg-text-muted)]">
+                      {stressForecast.indicators.highStakes} high-stakes
+                    </span>
+                  )}
+                </div>
+                {stressForecast.recommendations.length > 0 && (
+                  <div className="text-xs text-[var(--mg-text-muted)]">
+                    💡 {stressForecast.recommendations[0]}
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Top Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -431,69 +518,6 @@ export default function Insights() {
               <div className="p-3 rounded-xl bg-[var(--mg-bg-primary)]">
                 <div className="text-xs text-[var(--mg-text-muted)] mb-1">High-Stakes/Week</div>
                 <div className="font-semibold text-[var(--mg-text-primary)]">{meetingPatterns.highStakesMeetingsPerWeek}</div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Audio & Music Preferences */}
-        {audioPrefs && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mg-card mb-8"
-          >
-            <h3 className="font-semibold text-[var(--mg-text-primary)] flex items-center gap-2 mb-4">
-              <Music className="w-5 h-5 text-cyan-400" />
-              Audio & Soundscape
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-3 rounded-xl bg-[var(--mg-bg-primary)]">
-                <div className="text-xs text-[var(--mg-text-muted)] mb-1">Spotify</div>
-                <div className="font-semibold text-[var(--mg-text-primary)] flex items-center gap-2">
-                  {audioPrefs.spotifyConnected ? (
-                    <>
-                      <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                      Connected
-                    </>
-                  ) : (
-                    <>
-                      <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                      Not Connected
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-[var(--mg-bg-primary)]">
-                <div className="text-xs text-[var(--mg-text-muted)] mb-1">Preferred Sound</div>
-                <div className="font-semibold text-[var(--mg-text-primary)] capitalize">
-                  {audioPrefs.preferredSoundscape === 'calm' && '🌊 Calm'}
-                  {audioPrefs.preferredSoundscape === 'focus' && '🎯 Focus'}
-                  {audioPrefs.preferredSoundscape === 'energize' && '⚡ Energize'}
-                  {audioPrefs.preferredSoundscape === 'nature' && '🌿 Nature'}
-                  {!['calm', 'focus', 'energize', 'nature'].includes(audioPrefs.preferredSoundscape) && '🎵 Default'}
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-[var(--mg-bg-primary)]">
-                <div className="text-xs text-[var(--mg-text-muted)] mb-1 flex items-center gap-1">
-                  <Volume2 className="w-3 h-3" />
-                  Volume Ratio
-                </div>
-                <div className="font-semibold text-[var(--mg-text-primary)]">
-                  {audioPrefs.volumeRatio === '50/50' && 'Balanced'}
-                  {audioPrefs.volumeRatio === '30/70' && 'Guidance Focus'}
-                  {audioPrefs.volumeRatio === '70/30' && 'Music Focus'}
-                  {!['50/50', '30/70', '70/30'].includes(audioPrefs.volumeRatio) && audioPrefs.volumeRatio}
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-[var(--mg-bg-primary)]">
-                <div className="text-xs text-[var(--mg-text-muted)] mb-1">Listening Time</div>
-                <div className="font-semibold text-[var(--mg-text-primary)]">
-                  {audioPrefs.totalListeningMinutes > 60 
-                    ? `${Math.floor(audioPrefs.totalListeningMinutes / 60)}h ${audioPrefs.totalListeningMinutes % 60}m`
-                    : `${audioPrefs.totalListeningMinutes}m`}
-                </div>
               </div>
             </div>
           </motion.div>
