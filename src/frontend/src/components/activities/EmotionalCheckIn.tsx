@@ -271,59 +271,55 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
     setIsSubmitting(true);
     setError(null);
 
-    try {
-      // Save to local storage for user's private diary (includes gratitude)
-      const newEntry: LocalCheckIn = {
-        id: `checkin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: new Date().toISOString(),
-        emotion: selectedEmotion,
-        text: emotionalContent,
-        gratitude: gratitudeContent || undefined,
-        mode: inputMode,
-      };
-      saveToLocalHistory(newEntry);
-      setLocalHistory(loadLocalHistory());
+    // Save to local storage FIRST for user's private diary (includes gratitude)
+    // This ensures the entry is saved even if the API fails
+    const newEntry: LocalCheckIn = {
+      id: `checkin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      emotion: selectedEmotion,
+      text: emotionalContent,
+      gratitude: gratitudeContent || undefined,
+      mode: inputMode,
+    };
+    saveToLocalHistory(newEntry);
+    setLocalHistory(loadLocalHistory());
 
-      // Save gratitude entry separately (for compatibility with old gratitude history)
-      if (gratitudeContent) {
-        saveGratitudeEntry(gratitudeContent, selectedEmotion || undefined);
-      }
-
-      // Record the check-in for garden points
-      await api.post('/api/garden/activity', {
-        activityType: 'daily-checkin',
-        flowType: 'daily-checkin',
-      });
-
-      // Optionally share anonymized content to community pool
-      if (shareWithCommunity) {
-        const allContent = `${emotionalContent} ${gratitudeContent}`;
-        const words = allContent.split(/\s+/).filter(w => w.length > 3);
-        const significantWords = words.slice(0, 5);
-        
-        for (const word of significantWords) {
-          try {
-            await api.post('/api/thoughts/share', {
-              text: word,
-              category: selectedEmotion === 'Anxious' || selectedEmotion === 'Frustrated' || selectedEmotion === 'Sad' 
-                ? 'negative' 
-                : selectedEmotion === 'Happy' || selectedEmotion === 'Motivated' || selectedEmotion === 'Calm'
-                  ? 'positive'
-                  : 'general',
-            });
-          } catch {
-            // Non-critical, continue
-          }
-        }
-      }
-
-      setStep('complete');
-    } catch (err) {
-      console.error('Failed to submit check-in:', err);
-      setError('Failed to save your check-in. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+    // Save gratitude entry separately (for compatibility with old gratitude history)
+    if (gratitudeContent) {
+      saveGratitudeEntry(gratitudeContent, selectedEmotion || undefined);
     }
+
+    // Record the check-in for garden points (non-blocking - don't let API failure stop completion)
+    api.post('/api/garden/activity', {
+      activityType: 'daily-checkin',
+      flowType: 'daily-checkin',
+    }).catch(err => {
+      console.warn('Failed to record activity for garden points:', err);
+    });
+
+    // Optionally share anonymized content to community pool (non-blocking)
+    if (shareWithCommunity) {
+      const allContent = `${emotionalContent} ${gratitudeContent}`;
+      const words = allContent.split(/\s+/).filter(w => w.length > 3);
+      const significantWords = words.slice(0, 5);
+      
+      for (const word of significantWords) {
+        api.post('/api/thoughts/share', {
+          text: word,
+          category: selectedEmotion === 'Anxious' || selectedEmotion === 'Frustrated' || selectedEmotion === 'Sad' 
+            ? 'negative' 
+            : selectedEmotion === 'Happy' || selectedEmotion === 'Motivated' || selectedEmotion === 'Calm'
+              ? 'positive'
+              : 'general',
+        }).catch(() => {
+          // Non-critical, silently ignore
+        });
+      }
+    }
+
+    // Always transition to complete - local storage save is the critical action
+    setIsSubmitting(false);
+    setStep('complete');
   };
 
   const getNewPrompt = () => {

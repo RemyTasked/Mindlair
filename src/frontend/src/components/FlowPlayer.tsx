@@ -645,53 +645,216 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     );
   }
 
+  // Check if this is a breathing/nature-themed flow that should show the field background
+  const showFieldBackground = flow.id === 'breathing' || flow.id === 'body-scan' || flow.id === 'morning-intention';
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950 flex flex-col"
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden"
     >
+      {/* Animated Open Field Background */}
+      {showFieldBackground ? (
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Sky gradient - shifts with time */}
+          <motion.div 
+            className="absolute inset-0"
+            animate={{
+              background: [
+                'linear-gradient(to bottom, #87CEEB 0%, #B0E2FF 30%, #E8F5E9 70%, #A5D6A7 100%)',
+                'linear-gradient(to bottom, #7EC8E3 0%, #A8DADC 30%, #E8F5E9 70%, #81C784 100%)',
+                'linear-gradient(to bottom, #87CEEB 0%, #B0E2FF 30%, #E8F5E9 70%, #A5D6A7 100%)',
+              ],
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          />
+          
+          {/* Sun with glow */}
+          <motion.div
+            className="absolute top-16 right-16 w-24 h-24 rounded-full"
+            style={{
+              background: 'radial-gradient(circle, #FFF9C4 0%, #FFE082 50%, rgba(255,224,130,0) 100%)',
+              boxShadow: '0 0 80px 40px rgba(255,236,179,0.4)',
+            }}
+            animate={{ 
+              scale: [1, 1.05, 1],
+              opacity: [0.9, 1, 0.9],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          
+          {/* Distant hills - layer 1 */}
+          <div 
+            className="absolute bottom-[40%] left-0 right-0 h-[25%]"
+            style={{
+              background: 'linear-gradient(to bottom, #81C784 0%, #66BB6A 100%)',
+              borderRadius: '100% 100% 0 0 / 200% 200% 0 0',
+              transform: 'scaleX(1.5)',
+            }}
+          />
+          
+          {/* Distant hills - layer 2 */}
+          <div 
+            className="absolute bottom-[35%] left-[-10%] right-0 h-[20%]"
+            style={{
+              background: 'linear-gradient(to bottom, #66BB6A 0%, #4CAF50 100%)',
+              borderRadius: '80% 100% 0 0 / 200% 200% 0 0',
+              transform: 'scaleX(1.3)',
+            }}
+          />
+          
+          {/* Main grass field */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[45%]"
+            style={{
+              background: 'linear-gradient(to bottom, #4CAF50 0%, #388E3C 60%, #2E7D32 100%)',
+            }}
+          />
+          
+          {/* Animated grass blades */}
+          <div className="absolute bottom-0 left-0 right-0 h-[45%] overflow-hidden">
+            {[...Array(30)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute bottom-0"
+                style={{
+                  left: `${(i / 30) * 100}%`,
+                  width: '3px',
+                  height: `${25 + Math.random() * 25}px`,
+                  background: `linear-gradient(to top, #2E7D32, ${Math.random() > 0.5 ? '#4CAF50' : '#66BB6A'})`,
+                  borderRadius: '2px 2px 0 0',
+                  transformOrigin: 'bottom center',
+                }}
+                animate={{
+                  rotateZ: [
+                    -5 + Math.random() * 3, 
+                    5 + Math.random() * 3, 
+                    -5 + Math.random() * 3
+                  ],
+                }}
+                transition={{
+                  duration: 2 + Math.random() * 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: Math.random() * 2,
+                }}
+              />
+            ))}
+          </div>
+          
+          {/* Floating particles (pollen/dandelion seeds) */}
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={`particle-${i}`}
+              className="absolute w-2 h-2 rounded-full bg-white/60"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${20 + Math.random() * 40}%`,
+              }}
+              animate={{
+                x: [0, 30, -20, 40, 0],
+                y: [0, -20, 10, -30, 0],
+                opacity: [0.4, 0.7, 0.5, 0.6, 0.4],
+                scale: [0.8, 1, 0.9, 1.1, 0.8],
+              }}
+              transition={{
+                duration: 10 + Math.random() * 10,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: Math.random() * 5,
+              }}
+            />
+          ))}
+          
+          {/* Gentle clouds */}
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={`cloud-${i}`}
+              className="absolute"
+              style={{
+                top: `${8 + i * 12}%`,
+                left: `${-20 + i * 30}%`,
+              }}
+              animate={{
+                x: ['0%', '120vw'],
+              }}
+              transition={{
+                duration: 60 + i * 20,
+                repeat: Infinity,
+                ease: 'linear',
+                delay: i * 10,
+              }}
+            >
+              <div 
+                className="w-32 h-12 bg-white/40 rounded-full blur-sm"
+                style={{
+                  boxShadow: '20px 10px 0 8px rgba(255,255,255,0.3), 40px 5px 0 4px rgba(255,255,255,0.25)',
+                }}
+              />
+            </motion.div>
+          ))}
+          
+          {/* Overlay for better text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
+        </div>
+      ) : (
+        /* Default dark gradient background for other flows */
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950" />
+      )}
       {/* Header */}
-      <div className="flex items-center justify-between p-4 safe-area-top">
+      <div className="relative z-10 flex items-center justify-between p-4 safe-area-top">
         <button
           onClick={onClose}
-          className="p-2 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-lg hover:bg-emerald-900/30"
+          className={`p-2 transition-colors rounded-lg ${
+            showFieldBackground 
+              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/30 backdrop-blur-sm' 
+              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+          }`}
         >
           <X className="w-6 h-6" />
         </button>
 
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-emerald-200">{flow.name}</h2>
-          <p className="text-sm text-emerald-400/60">{formatTime(totalRemaining)} remaining</p>
+        <div className={`text-center px-4 py-2 rounded-xl ${showFieldBackground ? 'bg-white/40 backdrop-blur-sm' : ''}`}>
+          <h2 className={`text-lg font-semibold ${showFieldBackground ? 'text-emerald-900' : 'text-emerald-200'}`}>
+            {flow.name}
+          </h2>
+          <p className={`text-sm ${showFieldBackground ? 'text-emerald-700' : 'text-emerald-400/60'}`}>
+            {formatTime(totalRemaining)} remaining
+          </p>
         </div>
 
         <button
           onClick={toggleMute}
-          className="p-2 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-lg hover:bg-emerald-900/30"
+          className={`p-2 transition-colors rounded-lg ${
+            showFieldBackground 
+              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/30 backdrop-blur-sm' 
+              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+          }`}
         >
           {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Step Progress Dots */}
-      <div className="flex justify-center gap-2 px-4 mb-4">
+      <div className="relative z-10 flex justify-center gap-2 px-4 mb-4">
         {flow.steps.map((step, index) => (
           <div
             key={step.id}
             className={`h-1.5 rounded-full transition-all ${
               index < currentStepIndex
-                ? 'bg-emerald-400 w-8'
+                ? showFieldBackground ? 'bg-emerald-700 w-8' : 'bg-emerald-400 w-8'
                 : index === currentStepIndex
-                ? 'bg-emerald-500 w-12'
-                : 'bg-emerald-900/50 w-8'
+                ? showFieldBackground ? 'bg-emerald-800 w-12' : 'bg-emerald-500 w-12'
+                : showFieldBackground ? 'bg-emerald-500/40 w-8' : 'bg-emerald-900/50 w-8'
             }`}
           />
         ))}
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStepIndex}
@@ -704,12 +867,18 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             {/* Breathing Animation */}
             {isBreathingStep && (
               <motion.div
-                className="w-48 h-48 mx-auto mb-8 rounded-full bg-gradient-to-br from-emerald-400/30 to-teal-500/30 border-2 border-emerald-400/50 flex items-center justify-center"
+                className={`w-48 h-48 mx-auto mb-8 rounded-full flex items-center justify-center ${
+                  showFieldBackground
+                    ? 'bg-white/50 backdrop-blur-md border-2 border-white/70 shadow-xl shadow-emerald-500/20'
+                    : 'bg-gradient-to-br from-emerald-400/30 to-teal-500/30 border-2 border-emerald-400/50'
+                }`}
                 animate={{ scale: getBreathScale() }}
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
               >
                 <div className="text-center">
-                  <p className="text-2xl font-medium text-emerald-200">{getBreathInstruction()}</p>
+                  <p className={`text-2xl font-medium ${showFieldBackground ? 'text-emerald-800' : 'text-emerald-200'}`}>
+                    {getBreathInstruction()}
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -717,9 +886,13 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             {/* Step Type Icon */}
             {!isBreathingStep && (
               <motion.div
-                className="w-32 h-32 mx-auto mb-8 rounded-full flex items-center justify-center"
+                className={`w-32 h-32 mx-auto mb-8 rounded-full flex items-center justify-center ${
+                  showFieldBackground ? 'bg-white/40 backdrop-blur-sm' : ''
+                }`}
                 style={{
-                  background: `radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%)`,
+                  background: showFieldBackground 
+                    ? undefined 
+                    : `radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%)`,
                 }}
                 animate={
                   currentStep?.animation === 'pulse'
@@ -735,44 +908,64 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             )}
 
             {/* Step Text */}
-            <h3 className="text-2xl font-semibold text-emerald-100 mb-4">{currentStep?.text}</h3>
-            
-            {currentStep?.guidance && (
-              <p className="text-lg text-emerald-300/80 leading-relaxed">{currentStep.guidance}</p>
-            )}
+            <div className={`${showFieldBackground ? 'bg-white/60 backdrop-blur-sm rounded-2xl px-6 py-4' : ''}`}>
+              <h3 className={`text-2xl font-semibold mb-4 ${showFieldBackground ? 'text-emerald-900' : 'text-emerald-100'}`}>
+                {currentStep?.text}
+              </h3>
+              
+              {currentStep?.guidance && (
+                <p className={`text-lg leading-relaxed ${showFieldBackground ? 'text-emerald-800' : 'text-emerald-300/80'}`}>
+                  {currentStep.guidance}
+                </p>
+              )}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Step Progress Bar */}
-      <div className="px-6 mb-4">
-        <div className="h-1 bg-emerald-900/50 rounded-full overflow-hidden">
+      <div className="relative z-10 px-6 mb-4">
+        <div className={`h-1 rounded-full overflow-hidden ${showFieldBackground ? 'bg-white/40' : 'bg-emerald-900/50'}`}>
           <motion.div
-            className="h-full bg-gradient-to-r from-emerald-400 to-teal-400"
+            className={`h-full ${showFieldBackground ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-emerald-400 to-teal-400'}`}
             style={{ width: `${stepProgress * 100}%` }}
           />
         </div>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-center gap-6 pb-8 safe-area-bottom">
+      <div className={`relative z-10 flex items-center justify-center gap-6 pb-8 safe-area-bottom ${
+        showFieldBackground ? 'bg-gradient-to-t from-black/10 via-transparent to-transparent pt-4' : ''
+      }`}>
         <button
           onClick={toggleMute}
-          className="p-3 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-full hover:bg-emerald-900/30"
+          className={`p-3 transition-colors rounded-full ${
+            showFieldBackground 
+              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/40 backdrop-blur-sm' 
+              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+          }`}
         >
           {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
         </button>
 
         <button
           onClick={restartFlow}
-          className="p-3 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-full hover:bg-emerald-900/30"
+          className={`p-3 transition-colors rounded-full ${
+            showFieldBackground 
+              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/40 backdrop-blur-sm' 
+              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+          }`}
         >
           <RotateCcw className="w-6 h-6" />
         </button>
 
         <button
           onClick={togglePlayPause}
-          className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-400 transition-all active:scale-95"
+          className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95 ${
+            showFieldBackground
+              ? 'bg-gradient-to-br from-emerald-600 to-teal-600 shadow-emerald-600/40 hover:from-emerald-500 hover:to-teal-500'
+              : 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-400'
+          }`}
         >
           {isPlaying ? (
             <Pause className="w-7 h-7 text-white" />
@@ -783,7 +976,11 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
 
         <button
           onClick={skipStep}
-          className="p-3 text-emerald-300/60 hover:text-emerald-300 transition-colors rounded-full hover:bg-emerald-900/30"
+          className={`p-3 transition-colors rounded-full ${
+            showFieldBackground 
+              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/40 backdrop-blur-sm' 
+              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+          }`}
         >
           <SkipForward className="w-6 h-6" />
         </button>
