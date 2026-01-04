@@ -77,8 +77,8 @@ export interface GardenData {
 // CONSTANTS
 // ============================================
 
-const NEW_PLANT_THRESHOLD = 20;
-const BLOOM_THRESHOLD = 5;
+const NEW_PLANT_THRESHOLD = 15;  // Lowered for faster visual reward
+const BLOOM_THRESHOLD = 3;       // Lowered for more frequent plant upgrades
 
 export const ACTIVITY_POINTS: Record<string, number> = {
   'pre-meeting-focus': 20,
@@ -251,9 +251,12 @@ export async function updateGarden(
     let newPlant: Plant | null = null;
     if (!Array.isArray(gardenData.plants)) gardenData.plants = [];
     
+    // For first 3 activities, always create a plant (starter garden)
+    const isStarterGarden = gardenData.plants.length < 3;
+    
     // Check for new plant
-    if (gardenData.plants.length === 0 || gardenData.growthPoints >= NEW_PLANT_THRESHOLD) {
-      if (gardenData.growthPoints >= NEW_PLANT_THRESHOLD) {
+    if (gardenData.plants.length === 0 || isStarterGarden || gardenData.growthPoints >= NEW_PLANT_THRESHOLD) {
+      if (gardenData.growthPoints >= NEW_PLANT_THRESHOLD && !isStarterGarden) {
         gardenData.growthPoints -= NEW_PLANT_THRESHOLD;
       }
       
@@ -261,14 +264,17 @@ export async function updateGarden(
       const position = findEmptyPosition(gardenData.plants, gardenData.gridSize);
       
       if (position) {
+        // Starter plants start at 'growing' stage for immediate visual impact
+        const startingStage = isStarterGarden ? 'growing' : 'sprout';
+        
         newPlant = {
           id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: plantType,
           x: position.x,
           y: position.y,
-          growthStage: gardenData.plants.length === 0 ? 'growing' : 'sprout',
+          growthStage: startingStage,
           plantedAt: now.toISOString(),
-          bloomCount: 0,
+          bloomCount: isStarterGarden ? 1 : 0, // Starter plants have 1 bloom count for faster progression
           associatedWith: activityType,
         };
         gardenData.plants.push(newPlant);

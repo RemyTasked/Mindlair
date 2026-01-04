@@ -1022,6 +1022,72 @@ const PlantSVG: Record<PlantType, (props: { stage: GrowthStage; size: number }) 
   ),
 };
 
+// Procedural filler element types
+interface FillerElement {
+  id: string;
+  type: 'grass' | 'wildflower' | 'pebble';
+  x: number;
+  y: number;
+  variant: number;
+  delay: number;
+}
+
+// Generate procedural filler elements based on health and pending points
+function generateFillerElements(gridSize: number, health: number, pendingPoints: number, plants: Plant[]): FillerElement[] {
+  const elements: FillerElement[] = [];
+  const occupiedCells = new Set(plants.map(p => `${p.x},${p.y}`));
+  
+  // More filler as health increases
+  const density = Math.floor((health / 100) * 3) + 1; // 1-4 elements per empty cell
+  const wildflowerChance = Math.min(0.4, (health / 100) * 0.5 + (pendingPoints > 0 ? 0.2 : 0));
+  
+  for (let y = 0; y < gridSize; y++) {
+    for (let x = 0; x < gridSize; x++) {
+      if (occupiedCells.has(`${x},${y}`)) continue;
+      
+      // Add grass tufts
+      for (let i = 0; i < density; i++) {
+        if (Math.random() < 0.7) {
+          elements.push({
+            id: `grass-${x}-${y}-${i}`,
+            type: 'grass',
+            x: x + (Math.random() * 0.8 - 0.4),
+            y: y + (Math.random() * 0.8 - 0.4),
+            variant: Math.floor(Math.random() * 3),
+            delay: Math.random() * 2,
+          });
+        }
+      }
+      
+      // Add wildflowers (more common with higher health)
+      if (Math.random() < wildflowerChance) {
+        elements.push({
+          id: `flower-${x}-${y}`,
+          type: 'wildflower',
+          x: x + (Math.random() * 0.6 - 0.3),
+          y: y + (Math.random() * 0.6 - 0.3),
+          variant: Math.floor(Math.random() * 5),
+          delay: Math.random() * 1.5,
+        });
+      }
+      
+      // Add occasional pebbles
+      if (Math.random() < 0.15) {
+        elements.push({
+          id: `pebble-${x}-${y}`,
+          type: 'pebble',
+          x: x + (Math.random() * 0.6 - 0.3),
+          y: y + (Math.random() * 0.6 - 0.3),
+          variant: Math.floor(Math.random() * 3),
+          delay: 0,
+        });
+      }
+    }
+  }
+  
+  return elements;
+}
+
 export default function GardenCanvas({
   data,
   onPlantClick,
@@ -1043,13 +1109,26 @@ export default function GardenCanvas({
   const [showActivityBurst, setShowActivityBurst] = useState(false);
   const [prevPendingPoints, setPrevPendingPoints] = useState(pendingPoints);
   const [floatingPoints, setFloatingPoints] = useState<number | null>(null);
+  const [showLushBoost, setShowLushBoost] = useState(false);
   
-  // Detect when pendingPoints increases to trigger activity burst
+  // Generate filler elements (memoized based on key data)
+  const fillerElements = useRef<FillerElement[]>([]);
+  useEffect(() => {
+    fillerElements.current = generateFillerElements(
+      data.gridSize, 
+      data.health || 50, 
+      pendingPoints,
+      data.plants || []
+    );
+  }, [data.gridSize, data.health, data.plants?.length, pendingPoints > 0]);
+  
+  // Detect when pendingPoints increases to trigger activity burst and lush boost
   useEffect(() => {
     if (pendingPoints > prevPendingPoints) {
       const pointsGained = pendingPoints - prevPendingPoints;
       setShowActivityBurst(true);
       setFloatingPoints(pointsGained);
+      setShowLushBoost(true);
       
       // Hide after animation
       const timer = setTimeout(() => {
@@ -1057,7 +1136,14 @@ export default function GardenCanvas({
         setFloatingPoints(null);
       }, 2500);
       
-      return () => clearTimeout(timer);
+      const lushTimer = setTimeout(() => {
+        setShowLushBoost(false);
+      }, 2000);
+      
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(lushTimer);
+      };
     }
     setPrevPendingPoints(pendingPoints);
   }, [pendingPoints, prevPendingPoints]);
@@ -1379,9 +1465,169 @@ export default function GardenCanvas({
     ),
   };
 
+  // Render procedural filler (grass, wildflowers, pebbles)
+  const renderProceduralFiller = () => {
+    if (!fillerElements.current.length) return null;
+    
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 5 }}>
+        {fillerElements.current.map((element) => {
+          const left = ((element.x + 0.5) / data.gridSize) * 100;
+          const top = ((element.y + 0.5) / data.gridSize) * 100;
+          
+          if (element.type === 'grass') {
+            const height = 8 + element.variant * 4;
+            return (
+              <div
+                key={element.id}
+                className="absolute mg-grass-tuft"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  animationDelay: `${element.delay}s`,
+                }}
+              >
+                <svg width="12" height={height} viewBox={`0 0 12 ${height}`}>
+                  <path
+                    d={`M4 ${height} Q3 ${height * 0.6}, 2 ${height * 0.3} Q1 0, 3 ${height * 0.4} Q4 ${height * 0.7}, 4 ${height}`}
+                    fill="#22c55e"
+                    opacity="0.8"
+                  />
+                  <path
+                    d={`M6 ${height} Q6 ${height * 0.5}, 6 ${height * 0.2} Q6 0, 6 ${height * 0.3} Q6 ${height * 0.6}, 6 ${height}`}
+                    fill="#16a34a"
+                    opacity="0.9"
+                  />
+                  <path
+                    d={`M8 ${height} Q9 ${height * 0.6}, 10 ${height * 0.3} Q11 0, 9 ${height * 0.4} Q8 ${height * 0.7}, 8 ${height}`}
+                    fill="#22c55e"
+                    opacity="0.7"
+                  />
+                </svg>
+              </div>
+            );
+          }
+          
+          if (element.type === 'wildflower') {
+            const colors = ['#f472b6', '#fbbf24', '#a78bfa', '#fb7185', '#38bdf8'];
+            const color = colors[element.variant % colors.length];
+            return (
+              <div
+                key={element.id}
+                className="absolute mg-wildflower"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  animationDelay: `${element.delay}s`,
+                }}
+              >
+                <svg width="10" height="14" viewBox="0 0 10 14">
+                  <path d="M5 14 Q5 10, 5 6" stroke="#16a34a" strokeWidth="1" fill="none" />
+                  <circle cx="5" cy="4" r="3" fill={color} />
+                  <circle cx="5" cy="4" r="1.5" fill="#fef08a" />
+                </svg>
+              </div>
+            );
+          }
+          
+          if (element.type === 'pebble') {
+            const sizes = [4, 5, 6];
+            const size = sizes[element.variant % sizes.length];
+            return (
+              <div
+                key={element.id}
+                className="absolute"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                }}
+              >
+                <svg width={size * 2} height={size} viewBox={`0 0 ${size * 2} ${size}`}>
+                  <ellipse cx={size} cy={size / 2} rx={size} ry={size / 2} fill="#9ca3af" opacity="0.5" />
+                </svg>
+              </div>
+            );
+          }
+          
+          return null;
+        })}
+      </div>
+    );
+  };
+
+  // Render vitality overlay (sunbeams, sparkles when pendingPoints > 0)
+  const renderVitalityOverlay = () => {
+    if (pendingPoints <= 0 && !recentActivity) return null;
+    
+    const sparkleCount = Math.min(20, Math.floor(pendingPoints / 5) + 8);
+    
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 15 }}>
+        {/* Sunbeams */}
+        {[0, 1, 2].map((i) => (
+          <div
+            key={`sunbeam-${i}`}
+            className="mg-sunbeam"
+            style={{
+              left: `${-30 + i * 40}%`,
+              top: '-20%',
+              animationDelay: `${i * 4}s`,
+            }}
+          />
+        ))}
+        
+        {/* Energy sparkles */}
+        {[...Array(sparkleCount)].map((_, i) => (
+          <motion.div
+            key={`energy-${i}`}
+            className="absolute"
+            style={{
+              left: `${10 + Math.random() * 80}%`,
+              top: `${20 + Math.random() * 60}%`,
+            }}
+            animate={{
+              y: [0, -20, -40],
+              opacity: [0.4, 0.9, 0],
+              scale: [0.8, 1.2, 0.6],
+            }}
+            transition={{
+              duration: 2.5,
+              delay: i * 0.2,
+              repeat: Infinity,
+              repeatDelay: Math.random() * 2,
+            }}
+          >
+            <svg width="8" height="8" viewBox="0 0 8 8">
+              <circle cx="4" cy="4" r="2" fill="#fbbf24" />
+              <circle cx="4" cy="4" r="3" fill="#fbbf24" opacity="0.3" />
+            </svg>
+          </motion.div>
+        ))}
+        
+        {/* Ambient glow overlay */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-t from-emerald-400/5 via-emerald-300/10 to-amber-200/5"
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
+    );
+  };
+
   // Companion animations
   const renderCompanions = () => {
-    const companions: CompanionType[] = (data as any).companions || [];
+    // Auto-add butterflies if health > 40
+    let companions: CompanionType[] = (data as any).companions || [];
+    if (data.health > 40 && !companions.includes('butterflies')) {
+      companions = [...companions, 'butterflies'];
+    }
+    if (data.health > 60 && !companions.includes('bees')) {
+      companions = [...companions, 'bees'];
+    }
+    if (pendingPoints > 20 && !companions.includes('birds')) {
+      companions = [...companions, 'birds'];
+    }
+    
     if (companions.length === 0) return null;
 
     return (
@@ -1583,8 +1829,13 @@ export default function GardenCanvas({
     }
   };
 
+  // Determine dynamic classes
+  const vitalityClass = pendingPoints > 0 ? 'mg-vitality-active' : '';
+  const breathingClass = data.health > 30 ? 'mg-garden-breathing' : '';
+  const lushBoostClass = showLushBoost ? 'mg-lush-boost' : '';
+
   return (
-    <div className="relative w-full h-full min-h-[500px] overflow-hidden rounded-2xl bg-[var(--mg-bg-primary)]">
+    <div className={`relative w-full h-full min-h-[500px] overflow-hidden rounded-2xl bg-[var(--mg-bg-primary)] ${vitalityClass}`}>
       {/* Sky/Background */}
       <div 
         className={`absolute inset-0 transition-colors duration-1000`}
@@ -1612,13 +1863,19 @@ export default function GardenCanvas({
         }}
       />
 
+      {/* Procedural Filler Layer (grass, wildflowers, pebbles) */}
+      {renderProceduralFiller()}
+
       {/* Companions Layer */}
       {renderCompanions()}
+
+      {/* Vitality Overlay (sunbeams, sparkles when active) */}
+      {renderVitalityOverlay()}
 
       {/* Garden Grid Container */}
       <div
         ref={canvasRef}
-        className="absolute inset-0 flex items-center justify-center overflow-auto p-8"
+        className={`absolute inset-0 flex items-center justify-center overflow-auto p-8 ${breathingClass} ${lushBoostClass}`}
         style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
       >
         <div
