@@ -44,18 +44,12 @@ export const UpdateSpinner: React.FC = () => {
   );
 };
 
-// Global state management for auto-update
-let pendingUpdateCallback: (() => void) | null = null;
-
 /**
  * Apply a pending update automatically
  * Called when a new service worker is ready
  */
 export const applyAutoUpdate = (onUpdate: () => void) => {
   console.log('🔄 Auto-update: Applying update silently...');
-  
-  // Store the callback for after reload
-  pendingUpdateCallback = onUpdate;
   
   // Show brief updating indicator then apply
   window.dispatchEvent(new CustomEvent('pwa-updating'));

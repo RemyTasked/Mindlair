@@ -3,12 +3,14 @@
  * 
  * Focus and Mental Clearing Game
  * Pop negative thought bubbles to clear your mind and earn Serenity points.
+ * Now with dynamic thoughts from the community pool!
  * +2 Serenity per pop
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Wind, Target } from 'lucide-react';
+import api from '../../lib/axios';
 
 interface ThoughtPopperGameProps {
   onComplete: (credits: number, streak: number) => void;
@@ -24,29 +26,18 @@ interface Bubble {
   size: number;
 }
 
-// Extended list of negative thoughts for variety
-const NEGATIVE_THOUGHTS = [
-  // Common anxieties
+// Fallback negative thoughts if API fails
+const FALLBACK_THOUGHTS = [
   "Anxiety", "Doubt", "Fear", "Worry", "Panic", "Dread",
-  // Work stress
   "Burnout", "Overwhelm", "Deadline", "Pressure", "Overload",
-  // Emotional burdens
   "Guilt", "Shame", "Regret", "Blame", "Resentment",
-  // Mental noise
   "Noise", "Chaos", "Clutter", "Distraction", "Confusion",
-  // Physical tension
   "Stress", "Tension", "Fatigue", "Exhaustion", "Restless",
-  // Negative self-talk
   "Not enough", "Failure", "Inadequate", "Imposter", "Unworthy",
-  // Interpersonal
   "Conflict", "Judgment", "Rejection", "Criticism", "Comparison",
-  // Future worries
   "What if", "Uncertainty", "Unknown", "Tomorrow", "Later",
-  // Past dwelling
   "Should have", "If only", "Mistake", "Missed", "Lost",
-  // General negativity
   "Can't", "Won't work", "Too hard", "Impossible", "Never",
-  "Anger", "Frustration", "Irritation", "Impatience", "Rush"
 ];
 
 const GOAL = 15;
@@ -59,6 +50,27 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
   const [gameComplete, setGameComplete] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [creditsEarned, setCreditsEarned] = useState(0);
+  const [thoughtPool, setThoughtPool] = useState<string[]>(FALLBACK_THOUGHTS);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load thoughts from API
+  useEffect(() => {
+    const loadThoughts = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/api/thoughts/popper', { params: { count: 30 } });
+        if (response.data.thoughts && response.data.thoughts.length > 0) {
+          setThoughtPool(response.data.thoughts);
+        }
+      } catch (error) {
+        console.warn('Using fallback thoughts:', error);
+        // Use fallback thoughts
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadThoughts();
+  }, []);
 
   // Spawn bubbles periodically
   useEffect(() => {
@@ -67,7 +79,7 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     const spawnInterval = setInterval(() => {
       if (bubbles.length < 6) {
         const id = Math.random().toString(36).substr(2, 9);
-        const text = NEGATIVE_THOUGHTS[Math.floor(Math.random() * NEGATIVE_THOUGHTS.length)];
+        const text = thoughtPool[Math.floor(Math.random() * thoughtPool.length)];
         const x = Math.random() * 70 + 15; // 15% to 85% width
         const speed = Math.random() * 0.8 + 0.4; // Speed 0.4-1.2
         const size = Math.random() * 30 + 70; // 70-100px
@@ -77,7 +89,7 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     }, 1200);
 
     return () => clearInterval(spawnInterval);
-  }, [gameActive, gameComplete, bubbles.length]);
+  }, [gameActive, gameComplete, bubbles.length, thoughtPool]);
 
   // Game loop - move bubbles upward
   useEffect(() => {
@@ -176,9 +188,10 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
           
           <button
             onClick={startGame}
-            className="w-full py-4 bg-gradient-to-r from-sky-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-sky-600 hover:to-teal-700 transition-all shadow-lg"
+            disabled={isLoading}
+            className="w-full py-4 bg-gradient-to-r from-sky-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-sky-600 hover:to-teal-700 transition-all shadow-lg disabled:opacity-50"
           >
-            Start Popping
+            {isLoading ? 'Loading thoughts...' : 'Start Popping'}
           </button>
           
           {onExit && (
@@ -313,4 +326,3 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     </div>
   );
 }
-

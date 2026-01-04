@@ -691,3 +691,30 @@ model EmotionGardenState {
 
   @@map("emotion_garden_states")
 }
+
+// ============================================
+// SHARED THOUGHT LIBRARY
+// ============================================
+
+model SharedThought {
+  id        String   @id @default(uuid())
+  text      String
+  category  String   @default("general") // "negative", "positive", "worry", "gratitude", "work", "relationship", "health", "general"
+  source    String   @default("user") // "system" (pre-seeded) or "user" (anonymized from users)
+  
+  // For Thought Sorter: suggested healthy bucket
+  suggestedBucket String? // "keep", "park", "letGo" - null means any is acceptable
+  
+  // For Thought Reframing: cognitive distortion type
+  distortionType  String? // "all-or-nothing", "catastrophizing", etc.
+  exampleReframe  String? // Example balanced reframe for learning
+  
+  useCount  Int      @default(0) // Track popularity for ranking
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([source])
+  @@index([distortionType])
+  @@map("shared_thoughts")
+}

@@ -31,6 +31,7 @@ import flowsRoutes from './routes/flows';
 import gardenRoutes from './routes/garden';
 import analysisRoutes from './routes/analysis';
 import extensionAuthRoutes from './routes/extensionAuth';
+import thoughtsRoutes from './routes/thoughts';
 
 dotenv.config();
 
@@ -117,6 +118,7 @@ app.use('/api/focus-rooms', focusRoomsRoutes);
 app.use('/api/flows', flowsRoutes);
 app.use('/api/garden', gardenRoutes);
 app.use('/api/games', gamesRoutes);
+app.use('/api/thoughts', thoughtsRoutes);
 app.use('/api/emotion-garden', emotionGardenRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/extension', extensionAuthRoutes);

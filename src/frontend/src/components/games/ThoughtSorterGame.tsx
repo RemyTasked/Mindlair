@@ -1,8 +1,9 @@
 /**
  * Mind Garden - Thought Sorter Game
  * 
- * Categorization Tool
+ * Categorization Tool with Smart Feedback
  * Sort your mental inputs into actionable buckets to reduce cognitive load.
+ * Now provides educational guidance when you might benefit from a different choice!
  * +3 Serenity per sort
  */
 
@@ -10,7 +11,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Clock, Wind,
-  LayoutGrid, Sparkles, Heart, Plus
+  LayoutGrid, Sparkles, Heart, Plus, Lightbulb
 } from 'lucide-react';
 import api from '../../lib/axios';
 
@@ -23,111 +24,74 @@ interface Thought {
   id: string;
   text: string;
   isCustom?: boolean;
+  suggestedBucket?: string | null;
+  category?: string;
 }
 
-// Extended pool of thoughts for variety
-const ALL_THOUGHTS: Thought[] = [
-  // Work-related
-  { id: '1', text: "I need to finish that report" },
-  { id: '2', text: "My presentation is tomorrow" },
-  { id: '3', text: "That meeting was stressful" },
-  { id: '4', text: "I have too many emails" },
-  { id: '5', text: "Did I miss that deadline?" },
-  { id: '6', text: "I need to follow up with that client" },
-  { id: '7', text: "The project scope keeps changing" },
-  { id: '8', text: "I should ask for that raise" },
-  { id: '9', text: "My inbox is out of control" },
-  { id: '10', text: "I need to update my resume" },
-  // Positive self-talk
-  { id: '11', text: "Today was a good day" },
-  { id: '12', text: "I am capable" },
-  { id: '13', text: "I handled that well" },
-  { id: '14', text: "I'm making progress" },
-  { id: '15', text: "I'm proud of what I accomplished" },
-  { id: '16', text: "I've grown so much this year" },
-  { id: '17', text: "Small steps still count" },
-  { id: '18', text: "I showed up for myself today" },
-  // Worries & Anxiety
-  { id: '19', text: "What if I fail?" },
-  { id: '20', text: "Did I lock the door?" },
-  { id: '21', text: "Too much noise in my head" },
-  { id: '22', text: "What will people think?" },
-  { id: '23', text: "I'm not good enough" },
-  { id: '24', text: "Everything feels overwhelming" },
-  { id: '25', text: "I can't stop worrying about money" },
-  { id: '26', text: "Am I making the right decisions?" },
-  { id: '27', text: "I feel like I'm falling behind" },
-  // Tasks & Reminders
-  { id: '28', text: "Call mom tomorrow" },
-  { id: '29', text: "I should exercise more" },
-  { id: '30', text: "Need to schedule that appointment" },
-  { id: '31', text: "The house is a mess" },
-  { id: '32', text: "I forgot to reply to that message" },
-  { id: '33', text: "Groceries are running low" },
-  { id: '34', text: "I need to pay that bill" },
-  { id: '35', text: "Should I meal prep this weekend?" },
-  // Relationships
-  { id: '36', text: "I miss my old friends" },
-  { id: '37', text: "That conversation was awkward" },
-  { id: '38', text: "I should reach out more often" },
-  { id: '39', text: "They probably don't like me" },
-  { id: '40', text: "I'm grateful for my support system" },
-  { id: '41', text: "Did I say the wrong thing?" },
-  { id: '42', text: "I wish I had more time for family" },
-  { id: '43', text: "That text came across wrong" },
-  // Self-care & Health
-  { id: '44', text: "I need more sleep" },
-  { id: '45', text: "I should drink more water" },
-  { id: '46', text: "When did I last take a real break?" },
-  { id: '47', text: "I deserve some quiet time" },
-  { id: '48', text: "I should schedule that checkup" },
-  { id: '49', text: "My back has been hurting lately" },
-  { id: '50', text: "I need to be kinder to myself" },
-  // Future & Goals
-  { id: '51', text: "Where will I be in 5 years?" },
-  { id: '52', text: "I'm excited about new possibilities" },
-  { id: '53', text: "Change can be good" },
-  { id: '54', text: "I'm ready for the next chapter" },
-  { id: '55', text: "What do I actually want in life?" },
-  { id: '56', text: "I want to learn something new" },
-  // Past & Regrets
-  { id: '57', text: "I wish I'd done things differently" },
-  { id: '58', text: "That was a great memory" },
-  { id: '59', text: "I learned from that mistake" },
-  { id: '60', text: "Why did I say that?" },
-  // Financial
-  { id: '61', text: "I need to check my bank balance" },
-  { id: '62', text: "Should I start saving more?" },
-  { id: '63', text: "That purchase wasn't necessary" },
-  { id: '64', text: "I'm doing okay financially" },
-  // Creative & Hobbies
-  { id: '65', text: "I want to start painting again" },
-  { id: '66', text: "I miss playing music" },
-  { id: '67', text: "I should read more books" },
-  { id: '68', text: "When did I last do something creative?" },
-  // Gratitude
-  { id: '69', text: "I'm lucky to have good friends" },
-  { id: '70', text: "The weather was beautiful today" },
-  { id: '71', text: "That meal was really delicious" },
-  { id: '72', text: "I appreciate the small moments" },
-  // Random daily thoughts
-  { id: '73', text: "I wonder what's for dinner" },
-  { id: '74', text: "Traffic was terrible today" },
-  { id: '75', text: "I need a vacation" },
-  { id: '76', text: "Why is everything so expensive?" },
-  { id: '77', text: "That song has been stuck in my head" },
-  { id: '78', text: "I should clean out my closet" },
+// Fallback thoughts with suggested buckets
+const FALLBACK_THOUGHTS: Thought[] = [
+  // Negative thoughts - suggest "letGo"
+  { id: '1', text: "I always mess up presentations", suggestedBucket: "letGo", category: "negative" },
+  { id: '2', text: "Everyone thinks I'm incompetent", suggestedBucket: "letGo", category: "negative" },
+  { id: '3', text: "I'm such an idiot", suggestedBucket: "letGo", category: "negative" },
+  { id: '4', text: "What if I fail?", suggestedBucket: "letGo", category: "worry" },
+  { id: '5', text: "They probably don't like me", suggestedBucket: "letGo", category: "negative" },
+  { id: '6', text: "I'm not good enough", suggestedBucket: "letGo", category: "negative" },
+  // Tasks - suggest "park"
+  { id: '7', text: "I need to finish that report", suggestedBucket: "park", category: "work" },
+  { id: '8', text: "Should schedule that appointment", suggestedBucket: "park", category: "health" },
+  { id: '9', text: "Need to reply to that email", suggestedBucket: "park", category: "work" },
+  { id: '10', text: "The house needs cleaning", suggestedBucket: "park", category: "general" },
+  // Positive thoughts - suggest "keep"
+  { id: '11', text: "I handled that well today", suggestedBucket: "keep", category: "positive" },
+  { id: '12', text: "I'm grateful for my friends", suggestedBucket: "keep", category: "gratitude" },
+  { id: '13', text: "I'm making progress", suggestedBucket: "keep", category: "positive" },
+  { id: '14', text: "Small steps still count", suggestedBucket: "keep", category: "positive" },
+  { id: '15', text: "I deserve some rest", suggestedBucket: "keep", category: "positive" },
 ];
-
-// Select random thoughts for each session
-const selectRandomThoughts = (count: number = 10): Thought[] => {
-  const shuffled = [...ALL_THOUGHTS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-};
 
 const POINTS_PER_SORT = 3;
 
 type BucketType = 'keep' | 'park' | 'letGo';
+
+// Feedback messages for different scenarios
+const FEEDBACK_MESSAGES: Record<string, Record<BucketType, string>> = {
+  negative: {
+    keep: "This sounds like a self-critical thought. Consider 'Letting Go' to clear it from your mind, or 'Parking' it to examine later with more perspective.",
+    park: "Parking can work, but be careful not to revisit self-criticism too often. Sometimes it's healthier to just 'Let Go'.",
+    letGo: "", // Correct choice
+  },
+  worry: {
+    keep: "Holding onto worries can increase anxiety. Try 'Letting Go' to release this thought, or 'Park' it to address it constructively later.",
+    park: "If you plan to take action on this, parking is fine. Otherwise, consider 'Letting Go' to reduce mental noise.",
+    letGo: "", // Correct choice
+  },
+  positive: {
+    keep: "", // Correct choice
+    park: "Positive thoughts deserve to be cherished! Consider 'Keeping' this one to boost your mood.",
+    letGo: "This sounds like a positive thought! Try 'Keeping' it instead - positive self-talk is valuable.",
+  },
+  gratitude: {
+    keep: "", // Correct choice
+    park: "Gratitude is a gift to yourself. Try 'Keeping' this thought to nurture appreciation.",
+    letGo: "Gratitude thoughts are precious! Consider 'Keeping' this one to build a positive mindset.",
+  },
+  work: {
+    keep: "This seems like a task. Try 'Parking' it so you can address it at the right time.",
+    park: "", // Correct choice
+    letGo: "If this is something you need to do, consider 'Parking' it rather than letting it go entirely.",
+  },
+  health: {
+    keep: "Health tasks are important to address. Try 'Parking' this so you remember to follow up.",
+    park: "", // Correct choice
+    letGo: "Health matters! Consider 'Parking' this to schedule or address it properly.",
+  },
+  general: {
+    keep: "",
+    park: "",
+    letGo: "",
+  },
+};
 
 export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterGameProps) {
   const [thoughts, setThoughts] = useState<Thought[]>([]);
@@ -139,46 +103,62 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   const [animatingTo, setAnimatingTo] = useState<BucketType | null>(null);
   const [customThoughtInput, setCustomThoughtInput] = useState('');
   const [showAddThought, setShowAddThought] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [pendingSort, setPendingSort] = useState<BucketType | null>(null);
 
-  // Load thoughts
+  // Load thoughts from API
   useEffect(() => {
     loadThoughts();
   }, []);
 
   const loadThoughts = async () => {
     try {
-      const response = await api.get('/api/thought-tidy/cards');
-      if (response.data.cards && response.data.cards.length > 0) {
-        setThoughts(response.data.cards.map((card: any, index: number) => ({
-          id: card.id || String(index),
-          text: card.text || card,
+      const response = await api.get('/api/thoughts/sorter', { params: { count: 12 } });
+      if (response.data.thoughts && response.data.thoughts.length > 0) {
+        setThoughts(response.data.thoughts.map((t: any) => ({
+          id: t.id,
+          text: t.text,
+          suggestedBucket: t.suggestedBucket,
+          category: t.category,
         })));
       } else {
-        // Select fresh random thoughts each session
-        setThoughts(selectRandomThoughts(10));
+        // Use fallback and shuffle
+        const shuffled = [...FALLBACK_THOUGHTS].sort(() => Math.random() - 0.5);
+        setThoughts(shuffled.slice(0, 10));
       }
     } catch (error) {
-      console.warn('Using random default thoughts:', error);
-      // Select fresh random thoughts each session for variety
-      setThoughts(selectRandomThoughts(10));
+      console.warn('Using fallback thoughts:', error);
+      const shuffled = [...FALLBACK_THOUGHTS].sort(() => Math.random() - 0.5);
+      setThoughts(shuffled.slice(0, 10));
     } finally {
       setLoading(false);
     }
   };
 
-  const addCustomThought = () => {
+  const addCustomThought = async () => {
     if (customThoughtInput.trim()) {
       const newThought: Thought = {
         id: `custom-${Date.now()}`,
         text: customThoughtInput.trim(),
         isCustom: true,
       };
-      // Insert custom thought at current position (so it appears next)
+      // Insert custom thought at current position
       setThoughts(prev => [
         ...prev.slice(0, currentIndex + 1),
         newThought,
         ...prev.slice(currentIndex + 1),
       ]);
+      
+      // Share to community pool (fire and forget)
+      try {
+        await api.post('/api/thoughts/share', { 
+          text: customThoughtInput.trim(),
+          category: 'general',
+        });
+      } catch (error) {
+        // Non-critical, ignore errors
+      }
+      
       setCustomThoughtInput('');
       setShowAddThought(false);
     }
@@ -187,9 +167,43 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   const currentThought = thoughts[currentIndex];
   const totalThoughts = thoughts.length;
 
+  const checkForFeedback = (bucket: BucketType): string | null => {
+    if (!currentThought) return null;
+    
+    const category = currentThought.category || 'general';
+    const suggested = currentThought.suggestedBucket;
+    
+    // If there's a suggested bucket and user chose differently, show feedback
+    if (suggested && suggested !== bucket) {
+      const message = FEEDBACK_MESSAGES[category]?.[bucket];
+      if (message) {
+        return message;
+      }
+    }
+    
+    return null;
+  };
+
   const handleSort = async (bucket: BucketType) => {
     if (!currentThought || animatingTo) return;
 
+    // Check if we should show feedback
+    const feedback = checkForFeedback(bucket);
+    
+    if (feedback && !pendingSort) {
+      // Show feedback first, let user reconsider or confirm
+      setFeedbackMessage(feedback);
+      setPendingSort(bucket);
+      return;
+    }
+
+    // Proceed with sorting
+    confirmSort(bucket);
+  };
+
+  const confirmSort = (bucket: BucketType) => {
+    setFeedbackMessage(null);
+    setPendingSort(null);
     setAnimatingTo(bucket);
     
     // Update counts
@@ -207,12 +221,23 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
     }, 400);
   };
 
+  const dismissFeedback = () => {
+    if (pendingSort) {
+      confirmSort(pendingSort);
+    }
+  };
+
+  const reconsiderSort = () => {
+    setFeedbackMessage(null);
+    setPendingSort(null);
+  };
+
   const finishGame = async () => {
     setGameComplete(true);
     const totalSorted = sortedCounts.keep + sortedCounts.park + sortedCounts.letGo + 1; // +1 for current
     const credits = totalSorted * POINTS_PER_SORT;
 
-    // Try to submit to backend (map letGo to release for compatibility)
+    // Submit to backend
     try {
       await api.post('/api/thought-tidy/submit', {
         kept: Array(sortedCounts.keep + (animatingTo === 'keep' ? 1 : 0)).fill('thought'),
@@ -240,7 +265,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Thought Sorter</h2>
           <p className="text-gray-600 mb-6">
-            Categorization Tool
+            Categorization Tool with Smart Guidance
           </p>
           
           <div className="bg-teal-50 rounded-2xl p-5 mb-6 text-left">
@@ -252,7 +277,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
                 </div>
                 <div>
                   <span className="font-medium text-green-700">Keep</span>
-                  <p className="text-xs text-gray-500">Something positive to cherish</p>
+                  <p className="text-xs text-gray-500">Positive thoughts to cherish</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -261,7 +286,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
                 </div>
                 <div>
                   <span className="font-medium text-amber-700">Park</span>
-                  <p className="text-xs text-gray-500">File away for later</p>
+                  <p className="text-xs text-gray-500">Tasks to address later</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -270,11 +295,15 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
                 </div>
                 <div>
                   <span className="font-medium text-blue-700">Let Go</span>
-                  <p className="text-xs text-gray-500">Consciously dismiss</p>
+                  <p className="text-xs text-gray-500">Negative thoughts to release</p>
                 </div>
               </li>
             </ul>
-            <div className="mt-4 pt-3 border-t border-teal-100">
+            <div className="mt-4 pt-3 border-t border-teal-100 flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-amber-500" />
+              <span className="text-xs text-gray-600">Smart feedback helps you learn healthy thought patterns</span>
+            </div>
+            <div className="mt-2">
               <span className="text-teal-600 font-medium">+{POINTS_PER_SORT}</span>
               <span className="text-gray-500 text-sm"> Serenity per sort</span>
             </div>
@@ -380,7 +409,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Thought Sorter</h2>
-            <p className="text-gray-600 text-sm">Process your thoughts</p>
+            <p className="text-gray-600 text-sm">Process your thoughts mindfully</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-full font-medium text-gray-700 shadow-sm">
@@ -494,13 +523,57 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
         </div>
       </div>
 
+      {/* Feedback Modal */}
+      <AnimatePresence>
+        {feedbackMessage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full"
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Lightbulb className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Gentle Suggestion</h3>
+                  <p className="text-gray-600 text-sm">{feedbackMessage}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={reconsiderSort}
+                  className="flex-1 py-2.5 bg-teal-500 text-white rounded-xl font-medium hover:bg-teal-600 transition-colors"
+                >
+                  Try Another
+                </button>
+                <button
+                  onClick={dismissFeedback}
+                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Keep My Choice
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Buckets */}
       <div className="max-w-2xl mx-auto w-full mt-8 mb-4">
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {/* Keep */}
           <motion.button
             onClick={() => handleSort('keep')}
-            disabled={!!animatingTo}
+            disabled={!!animatingTo || !!feedbackMessage}
             className="bg-gradient-to-br from-green-400 to-emerald-500 text-white rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 transition-all shadow-lg disabled:opacity-50"
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
@@ -513,7 +586,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           {/* Park */}
           <motion.button
             onClick={() => handleSort('park')}
-            disabled={!!animatingTo}
+            disabled={!!animatingTo || !!feedbackMessage}
             className="bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 transition-all shadow-lg disabled:opacity-50"
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
@@ -526,14 +599,14 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           {/* Let Go */}
           <motion.button
             onClick={() => handleSort('letGo')}
-            disabled={!!animatingTo}
+            disabled={!!animatingTo || !!feedbackMessage}
             className="bg-gradient-to-br from-sky-400 to-teal-500 text-white rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 transition-all shadow-lg disabled:opacity-50"
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
           >
             <Wind className="w-6 h-6 sm:w-8 sm:h-8" />
             <span className="font-bold text-sm sm:text-base">Let Go</span>
-            <span className="text-xs opacity-80 hidden sm:block">Dismiss</span>
+            <span className="text-xs opacity-80 hidden sm:block">Release</span>
           </motion.button>
         </div>
       </div>
@@ -549,4 +622,3 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
     </div>
   );
 }
-

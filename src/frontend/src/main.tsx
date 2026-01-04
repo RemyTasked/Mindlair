@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
-import { showUpdateNotification, markUpdatePending, showUpdateSuccessToast } from './components/UpdateNotification';
+import { markUpdatePending, showUpdateSuccessToast } from './components/UpdateNotification';
 import { getToken } from './utils/persistentStorage';
 
 // PWA version tracking for cache management

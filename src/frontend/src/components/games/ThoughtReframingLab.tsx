@@ -1,8 +1,9 @@
 /**
  * Mind Garden - Thought Reframing Lab
  * 
- * CBT-based Cognitive Restructuring Tool
+ * CBT-based Cognitive Restructuring Tool with Smart Guidance
  * Identify cognitive distortions and practice reframing negative thoughts.
+ * Now with intelligent feedback on distortion selection and reframe quality!
  * +5 Serenity per reframe
  */
 
@@ -10,8 +11,9 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Brain, Lightbulb, ArrowRight, 
-  Sparkles, RefreshCw, CheckCircle2
+  Sparkles, RefreshCw, CheckCircle2, AlertCircle, ThumbsUp
 } from 'lucide-react';
+import api from '../../lib/axios';
 
 interface ThoughtReframingLabProps {
   onComplete: (credits: number, streak: number) => void;
@@ -36,48 +38,66 @@ type DistortionType =
   | 'overgeneralization'
   | 'emotional-reasoning';
 
-const DISTORTION_INFO: Record<DistortionType, { name: string; description: string; color: string }> = {
+const DISTORTION_INFO: Record<DistortionType, { name: string; description: string; color: string; keywords: string[] }> = {
   'all-or-nothing': {
     name: 'All-or-Nothing Thinking',
     description: 'Seeing things in black and white with no middle ground',
     color: 'bg-red-100 text-red-700 border-red-300',
+    keywords: ['always', 'never', 'completely', 'totally', 'perfect', 'ruined', 'failure', 'success'],
   },
   'catastrophizing': {
     name: 'Catastrophizing',
     description: 'Expecting the worst possible outcome',
     color: 'bg-orange-100 text-orange-700 border-orange-300',
+    keywords: ['disaster', 'terrible', 'horrible', 'worst', 'ruin', 'end', 'awful', 'nightmare'],
   },
   'mind-reading': {
     name: 'Mind Reading',
     description: 'Assuming you know what others think without evidence',
     color: 'bg-purple-100 text-purple-700 border-purple-300',
+    keywords: ['they think', 'everyone thinks', 'probably thinks', 'must think', 'hate me', 'judge me'],
   },
   'fortune-telling': {
     name: 'Fortune Telling',
     description: 'Predicting negative outcomes as if they\'re certain',
     color: 'bg-blue-100 text-blue-700 border-blue-300',
+    keywords: ['will be', 'going to', 'never going to', 'won\'t work', 'bound to', 'definitely will'],
   },
   'should-statements': {
     name: 'Should Statements',
     description: 'Rigid rules about how things must be',
     color: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+    keywords: ['should', 'must', 'have to', 'ought to', 'supposed to', 'need to'],
   },
   'labeling': {
     name: 'Labeling',
     description: 'Attaching a negative label to yourself or others',
     color: 'bg-pink-100 text-pink-700 border-pink-300',
+    keywords: ['i\'m a', 'i am a', 'such an', 'idiot', 'loser', 'failure', 'stupid', 'worthless'],
   },
   'overgeneralization': {
     name: 'Overgeneralization',
     description: 'Drawing broad conclusions from single events',
     color: 'bg-indigo-100 text-indigo-700 border-indigo-300',
+    keywords: ['always', 'never', 'everyone', 'nobody', 'nothing', 'everything', 'all the time'],
   },
   'emotional-reasoning': {
     name: 'Emotional Reasoning',
     description: 'Assuming feelings reflect reality',
     color: 'bg-teal-100 text-teal-700 border-teal-300',
+    keywords: ['i feel', 'feels like', 'must be', 'so it is', 'therefore'],
   },
 };
+
+// Counter-keywords for reframe validation
+const REFRAME_POSITIVE_INDICATORS = [
+  'sometimes', 'often', 'may', 'might', 'could', 'possible', 'some',
+  'balanced', 'perspective', 'learn', 'growth', 'opportunity',
+  'however', 'but', 'although', 'even though', 'despite',
+  'grateful', 'appreciate', 'thankful',
+  'okay', 'alright', 'fine', 'manageable', 'handle',
+  'try', 'attempt', 'work on', 'progress',
+];
 
 const DISTORTED_THOUGHTS: DistortedThought[] = [
   {
@@ -168,6 +188,12 @@ const DISTORTED_THOUGHTS: DistortedThought[] = [
 
 const POINTS_PER_REFRAME = 5;
 
+interface ReframeFeedback {
+  isGood: boolean;
+  message: string;
+  tips: string[];
+}
+
 export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtReframingLabProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [step, setStep] = useState<'identify' | 'reframe' | 'compare'>('identify');
@@ -179,6 +205,8 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
   const [gameComplete, setGameComplete] = useState(false);
   const [customThought, setCustomThought] = useState('');
   const [isUsingCustom, setIsUsingCustom] = useState(false);
+  const [distortionFeedback, setDistortionFeedback] = useState<string | null>(null);
+  const [reframeFeedback, setReframeFeedback] = useState<ReframeFeedback | null>(null);
 
   // Select random thoughts for session
   const [thoughts] = useState(() => {
@@ -190,24 +218,153 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
     ? { id: 'custom', thought: customThought, distortionType: selectedDistortion || 'all-or-nothing', hint: '', exampleReframe: '' }
     : thoughts[currentIndex];
 
+  // Validate distortion selection
+  const validateDistortionChoice = (selected: DistortionType): string | null => {
+    if (isUsingCustom) return null; // Can't validate custom thoughts
+    
+    const correct = currentThought.distortionType;
+    if (selected === correct) return null;
+    
+    // Provide educational explanation
+    const correctInfo = DISTORTION_INFO[correct];
+    const selectedInfo = DISTORTION_INFO[selected];
+    
+    return `This thought is actually "${correctInfo.name}". ${correctInfo.description}. Notice the pattern: "${currentThought.thought}" suggests ${correct === 'overgeneralization' ? 'a sweeping conclusion from one event' : correct === 'mind-reading' ? 'assuming what others think' : correct === 'fortune-telling' ? 'predicting a negative future' : correct === 'all-or-nothing' ? 'only two extreme options' : correct === 'should-statements' ? 'rigid rules about how things must be' : correct === 'labeling' ? 'attaching a negative label' : correct === 'catastrophizing' ? 'expecting the worst' : 'feelings dictating reality'}. "${selectedInfo.name}" would be more about ${selectedInfo.description.toLowerCase()}.`;
+  };
+
+  // Validate reframe quality using heuristics
+  const validateReframe = (original: string, reframe: string): ReframeFeedback => {
+    const reframeLower = reframe.toLowerCase();
+    const originalLower = original.toLowerCase();
+    const tips: string[] = [];
+    let score = 0;
+    
+    // Check 1: Reframe is substantially different
+    if (reframe.length > original.length * 0.8) {
+      score += 1;
+    } else {
+      tips.push("Try expanding your reframe with more balanced perspective");
+    }
+    
+    // Check 2: Contains positive/balanced indicators
+    const hasPositiveIndicators = REFRAME_POSITIVE_INDICATORS.some(word => 
+      reframeLower.includes(word)
+    );
+    if (hasPositiveIndicators) {
+      score += 2;
+    } else {
+      tips.push("Use words like 'sometimes', 'might', 'could', or 'however' to add nuance");
+    }
+    
+    // Check 3: Avoids repeating extreme language from original
+    const distortionKeywords = DISTORTION_INFO[currentThought.distortionType as DistortionType]?.keywords || [];
+    const repeatsExtreme = distortionKeywords.some(word => 
+      originalLower.includes(word) && reframeLower.includes(word)
+    );
+    if (!repeatsExtreme) {
+      score += 1;
+    } else {
+      tips.push("Try to replace extreme words like 'always', 'never', 'everyone' with more moderate alternatives");
+    }
+    
+    // Check 4: Minimum length
+    if (reframe.length >= 30) {
+      score += 1;
+    } else {
+      tips.push("A more detailed reframe helps internalize the balanced thinking");
+    }
+    
+    // Determine feedback
+    if (score >= 4) {
+      return {
+        isGood: true,
+        message: "Excellent reframe! You've successfully challenged the distorted thinking.",
+        tips: [],
+      };
+    } else if (score >= 2) {
+      return {
+        isGood: true,
+        message: "Good effort! Your reframe shows balanced thinking.",
+        tips: tips.slice(0, 1), // Show one tip for improvement
+      };
+    } else {
+      return {
+        isGood: false,
+        message: "Your reframe could be more balanced. Here are some suggestions:",
+        tips,
+      };
+    }
+  };
+
   const handleDistortionSelect = (distortion: DistortionType) => {
     setSelectedDistortion(distortion);
+    setDistortionFeedback(null);
   };
 
   const handleSubmitIdentification = () => {
-    if (selectedDistortion) {
-      setStep('reframe');
+    if (!selectedDistortion) return;
+    
+    const feedback = validateDistortionChoice(selectedDistortion);
+    if (feedback) {
+      setDistortionFeedback(feedback);
+      return;
     }
+    
+    setStep('reframe');
+  };
+
+  const handleAcceptCorrection = () => {
+    // User acknowledges the correct answer and moves to reframe
+    if (!isUsingCustom) {
+      setSelectedDistortion(currentThought.distortionType as DistortionType);
+    }
+    setDistortionFeedback(null);
+    setStep('reframe');
   };
 
   const handleSubmitReframe = () => {
-    if (userReframe.trim().length >= 10) {
-      setStep('compare');
-      setReframedCount(prev => prev + 1);
+    if (userReframe.trim().length < 10) return;
+    
+    const feedback = validateReframe(currentThought.thought, userReframe);
+    setReframeFeedback(feedback);
+    
+    // If not good, let them revise
+    if (!feedback.isGood) {
+      return;
     }
+    
+    // Move to compare step
+    setStep('compare');
+    setReframedCount(prev => prev + 1);
   };
 
-  const handleNext = () => {
+  const handleAcceptReframe = () => {
+    // User accepts their reframe despite suggestions
+    setReframeFeedback(null);
+    setStep('compare');
+    setReframedCount(prev => prev + 1);
+  };
+
+  const handleReviseReframe = () => {
+    // User wants to revise
+    setReframeFeedback(null);
+  };
+
+  const handleNext = async () => {
+    // Share the reframe to community (for custom thoughts)
+    if (isUsingCustom && customThought && userReframe) {
+      try {
+        await api.post('/api/thoughts/share', {
+          text: customThought,
+          category: 'negative',
+          distortionType: selectedDistortion,
+          exampleReframe: userReframe,
+        });
+      } catch (error) {
+        // Non-critical, ignore
+      }
+    }
+    
     if (currentIndex < thoughts.length - 1) {
       setCurrentIndex(prev => prev + 1);
       resetForNextThought();
@@ -230,6 +387,8 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
     setShowHint(false);
     setIsUsingCustom(false);
     setCustomThought('');
+    setDistortionFeedback(null);
+    setReframeFeedback(null);
   };
 
   const finishGame = () => {
@@ -252,7 +411,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Thought Reframing Lab</h2>
           <p className="text-gray-600 mb-6">
-            CBT-based Cognitive Restructuring
+            CBT-based Cognitive Restructuring with Smart Guidance
           </p>
           
           <div className="bg-indigo-50 rounded-2xl p-5 mb-6 text-left">
@@ -280,7 +439,11 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                 </div>
               </li>
             </ul>
-            <div className="mt-4 pt-3 border-t border-indigo-100">
+            <div className="mt-4 pt-3 border-t border-indigo-100 flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-amber-500" />
+              <span className="text-xs text-gray-600">Smart feedback helps you learn CBT techniques</span>
+            </div>
+            <div className="mt-2">
               <span className="text-indigo-600 font-medium">+{POINTS_PER_REFRAME}</span>
               <span className="text-gray-500 text-sm"> Serenity per reframe</span>
             </div>
@@ -444,6 +607,32 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                 </p>
               </div>
 
+              {/* Distortion Feedback */}
+              <AnimatePresence>
+                {distortionFeedback && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6"
+                  >
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-amber-800 mb-2">Learning Moment</h4>
+                        <p className="text-amber-700 text-sm mb-4">{distortionFeedback}</p>
+                        <button
+                          onClick={handleAcceptCorrection}
+                          className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
+                        >
+                          Got It, Continue
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Select Distortion */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="font-semibold text-gray-800 mb-4">What type of thinking pattern is this?</h3>
@@ -474,7 +663,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                   </motion.div>
                 )}
 
-                {!isUsingCustom && !showHint && currentThought.hint && (
+                {!isUsingCustom && !showHint && currentThought.hint && !distortionFeedback && (
                   <button
                     onClick={() => setShowHint(true)}
                     className="text-sm text-indigo-500 hover:text-indigo-700 mb-4"
@@ -498,7 +687,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
 
                 <button
                   onClick={handleSubmitIdentification}
-                  disabled={!selectedDistortion}
+                  disabled={!selectedDistortion || !!distortionFeedback}
                   className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Continue to Reframe
@@ -526,6 +715,44 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                 </div>
                 <p className="text-gray-800">"{currentThought.thought}"</p>
               </div>
+
+              {/* Reframe Feedback */}
+              <AnimatePresence>
+                {reframeFeedback && !reframeFeedback.isGood && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-amber-800 mb-2">{reframeFeedback.message}</h4>
+                        <ul className="text-amber-700 text-sm mb-4 space-y-1">
+                          {reframeFeedback.tips.map((tip, i) => (
+                            <li key={i}>• {tip}</li>
+                          ))}
+                        </ul>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={handleReviseReframe}
+                            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
+                          >
+                            Revise My Reframe
+                          </button>
+                          <button
+                            onClick={handleAcceptReframe}
+                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                          >
+                            Keep As Is
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Reframe Input */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -558,7 +785,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                   disabled={userReframe.trim().length < 10}
                   className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  See Comparison
+                  Check My Reframe
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
@@ -579,6 +806,21 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                   <span className="font-bold text-emerald-600">Great reframe!</span>
                   <span className="text-indigo-600 font-bold">+{POINTS_PER_REFRAME} Serenity</span>
                 </div>
+
+                {/* Reframe quality feedback */}
+                {reframeFeedback?.isGood && reframeFeedback.tips.length > 0 && (
+                  <div className="bg-emerald-50 rounded-xl p-4 mb-6 border border-emerald-200">
+                    <div className="flex items-start gap-2">
+                      <ThumbsUp className="w-4 h-4 text-emerald-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-emerald-700 font-medium">{reframeFeedback.message}</p>
+                        {reframeFeedback.tips.length > 0 && (
+                          <p className="text-xs text-emerald-600 mt-1">Tip for next time: {reframeFeedback.tips[0]}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Side by Side */}
                 <div className="grid md:grid-cols-2 gap-4 mb-6">
@@ -627,4 +869,3 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
     </div>
   );
 }
-

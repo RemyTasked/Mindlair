@@ -3,6 +3,7 @@
  * 
  * Cognitive Concentration Game
  * Classic memory game with nature-themed icons to sharpen focus.
+ * Now with expanded variety and Harmony Levels!
  * +5 Serenity per match
  */
 
@@ -11,7 +12,9 @@ import { motion } from 'framer-motion';
 import { 
   X, Sparkles, Leaf, Sun, Cloud, CloudRain, 
   Wind, Flower2, Moon, Star, Snowflake, Droplets,
-  Mountain, TreeDeciduous, Bird, Feather, Shell, Heart, Waves
+  Mountain, TreeDeciduous, Bird, Feather, Shell, Heart, Waves,
+  Sprout, TreePine, Sunrise, Sunset, Umbrella, CloudSun,
+  Gem, Flame, Zap, Globe, Palmtree, Clover, Cherry
 } from 'lucide-react';
 
 interface ZenMatchGameProps {
@@ -26,21 +29,30 @@ interface Card {
   isMatched: boolean;
 }
 
-// Extended pool of nature-themed icons for variety
+// Expanded pool of nature-themed icons for variety
 const ALL_ICON_CONFIGS = [
   // Weather & Sky
   { type: 'sun', icon: Sun, color: 'text-amber-500', bg: 'bg-amber-50' },
   { type: 'moon', icon: Moon, color: 'text-slate-400', bg: 'bg-slate-50' },
   { type: 'star', icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-50' },
   { type: 'cloud', icon: Cloud, color: 'text-sky-400', bg: 'bg-sky-50' },
-  { type: 'rain', icon: CloudRain, color: 'text-sky-400', bg: 'bg-sky-50' },
+  { type: 'rain', icon: CloudRain, color: 'text-sky-500', bg: 'bg-sky-50' },
   { type: 'snow', icon: Snowflake, color: 'text-cyan-400', bg: 'bg-cyan-50' },
   { type: 'wind', icon: Wind, color: 'text-teal-400', bg: 'bg-teal-50' },
+  { type: 'sunrise', icon: Sunrise, color: 'text-orange-400', bg: 'bg-orange-50' },
+  { type: 'sunset', icon: Sunset, color: 'text-rose-400', bg: 'bg-rose-50' },
+  { type: 'cloudsun', icon: CloudSun, color: 'text-amber-400', bg: 'bg-amber-50' },
+  { type: 'umbrella', icon: Umbrella, color: 'text-blue-400', bg: 'bg-blue-50' },
   // Nature Elements
   { type: 'flower', icon: Flower2, color: 'text-pink-400', bg: 'bg-pink-50' },
   { type: 'leaf', icon: Leaf, color: 'text-green-500', bg: 'bg-green-50' },
   { type: 'tree', icon: TreeDeciduous, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { type: 'pine', icon: TreePine, color: 'text-green-700', bg: 'bg-green-50' },
   { type: 'mountain', icon: Mountain, color: 'text-slate-500', bg: 'bg-slate-50' },
+  { type: 'sprout', icon: Sprout, color: 'text-lime-500', bg: 'bg-lime-50' },
+  { type: 'palm', icon: Palmtree, color: 'text-green-600', bg: 'bg-green-50' },
+  { type: 'clover', icon: Clover, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+  { type: 'cherry', icon: Cherry, color: 'text-red-400', bg: 'bg-red-50' },
   // Water
   { type: 'droplet', icon: Droplets, color: 'text-blue-500', bg: 'bg-blue-50' },
   { type: 'waves', icon: Waves, color: 'text-blue-400', bg: 'bg-blue-50' },
@@ -48,19 +60,30 @@ const ALL_ICON_CONFIGS = [
   // Creatures
   { type: 'bird', icon: Bird, color: 'text-sky-500', bg: 'bg-sky-50' },
   { type: 'feather', icon: Feather, color: 'text-gray-500', bg: 'bg-gray-50' },
+  // Elements & Energy
+  { type: 'gem', icon: Gem, color: 'text-purple-500', bg: 'bg-purple-50' },
+  { type: 'flame', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-50' },
+  { type: 'zap', icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-50' },
+  { type: 'globe', icon: Globe, color: 'text-blue-500', bg: 'bg-blue-50' },
   // Feelings
   { type: 'heart', icon: Heart, color: 'text-rose-500', bg: 'bg-rose-50' },
 ];
 
-// Select random icons for each game (6 pairs = 12 cards)
-const NUM_PAIRS = 6;
-
-const selectRandomIcons = () => {
-  const shuffled = [...ALL_ICON_CONFIGS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, NUM_PAIRS);
-};
+// Harmony levels with increasing difficulty
+const HARMONY_LEVELS = [
+  { name: 'Calm', pairs: 6, description: 'A gentle start' },
+  { name: 'Focused', pairs: 8, description: 'Building concentration' },
+  { name: 'Centered', pairs: 10, description: 'Deep focus mode' },
+  { name: 'Enlightened', pairs: 12, description: 'Master level' },
+];
 
 const POINTS_PER_MATCH = 5;
+
+// Select random icons for each game
+const selectRandomIcons = (count: number) => {
+  const shuffled = [...ALL_ICON_CONFIGS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+};
 
 export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) {
   const [cards, setCards] = useState<Card[]>([]);
@@ -70,14 +93,25 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
   const [gameComplete, setGameComplete] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
+  const [harmonyLevel, setHarmonyLevel] = useState(0);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [showLevelSelect, setShowLevelSelect] = useState(false);
+
+  const currentLevel = HARMONY_LEVELS[harmonyLevel];
+  const numPairs = currentLevel.pairs;
 
   useEffect(() => {
-    initializeGame();
-  }, []);
+    if (selectedLevel !== null) {
+      initializeGame();
+    }
+  }, [selectedLevel]);
 
   const initializeGame = () => {
+    const level = selectedLevel !== null ? selectedLevel : harmonyLevel;
+    const pairs = HARMONY_LEVELS[level].pairs;
+    
     // Select random icons for this game
-    const selectedIcons = selectRandomIcons();
+    const selectedIcons = selectRandomIcons(pairs);
     
     // Create pairs of cards
     const newCards: Card[] = [];
@@ -91,6 +125,14 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
     setMatchedPairs(new Set());
     setFlippedCards([]);
     setMoves(0);
+    setGameComplete(false);
+  };
+
+  const handleLevelSelect = (level: number) => {
+    setHarmonyLevel(level);
+    setSelectedLevel(level);
+    setShowLevelSelect(false);
+    setShowOnboarding(false);
   };
 
   const handleCardClick = (id: string) => {
@@ -128,7 +170,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
         setIsChecking(false);
         
         // Check if game is complete
-        if (newMatched.size === NUM_PAIRS) {
+        if (newMatched.size === numPairs) {
           finishGame();
         }
       }, 600);
@@ -146,7 +188,13 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
 
   const finishGame = () => {
     setGameComplete(true);
-    const credits = NUM_PAIRS * POINTS_PER_MATCH;
+    const credits = numPairs * POINTS_PER_MATCH;
+    
+    // Unlock next level if applicable
+    if (harmonyLevel < HARMONY_LEVELS.length - 1) {
+      // Could persist this to backend/localStorage in future
+    }
+    
     setTimeout(() => onComplete(credits, 1), 2500);
   };
 
@@ -160,6 +208,69 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
   const getIconBg = (type: string) => {
     return ALL_ICON_CONFIGS.find(c => c.type === type)?.bg || 'bg-gray-50';
   };
+
+  // Calculate grid columns based on number of cards
+  const getGridCols = () => {
+    const totalCards = numPairs * 2;
+    if (totalCards <= 12) return 'grid-cols-3 sm:grid-cols-4';
+    if (totalCards <= 16) return 'grid-cols-4';
+    if (totalCards <= 20) return 'grid-cols-4 sm:grid-cols-5';
+    return 'grid-cols-4 sm:grid-cols-6';
+  };
+
+  // Level Select
+  if (showLevelSelect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-teal-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+        >
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Leaf className="w-10 h-10 text-green-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">Choose Your Level</h2>
+          <p className="text-gray-600 mb-6">Select a Harmony Level to begin</p>
+          
+          <div className="space-y-3 mb-6">
+            {HARMONY_LEVELS.map((level, index) => (
+              <button
+                key={index}
+                onClick={() => handleLevelSelect(index)}
+                className={`w-full p-4 rounded-xl text-left transition-all border-2 ${
+                  index <= harmonyLevel + 1 
+                    ? 'bg-green-50 border-green-200 hover:border-green-400 cursor-pointer'
+                    : 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                }`}
+                disabled={index > harmonyLevel + 1}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800">{level.name}</h3>
+                    <p className="text-sm text-gray-500">{level.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-green-600">{level.pairs} pairs</span>
+                    <p className="text-xs text-gray-400">{level.pairs * POINTS_PER_MATCH} pts</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              Back to Games
+            </button>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
 
   // Onboarding
   if (showOnboarding) {
@@ -191,7 +302,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-500 mt-1">•</span>
-                Match all {NUM_PAIRS} pairs to win
+                Choose your Harmony Level for varying difficulty
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 mt-1">+{POINTS_PER_MATCH}</span>
@@ -201,10 +312,10 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           </div>
           
           <button
-            onClick={() => setShowOnboarding(false)}
+            onClick={() => setShowLevelSelect(true)}
             className="w-full py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-teal-700 transition-all shadow-lg"
           >
-            Begin
+            Choose Level
           </button>
           
           {onExit && (
@@ -222,6 +333,9 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
 
   // Game Complete
   if (gameComplete) {
+    const credits = numPairs * POINTS_PER_MATCH;
+    const canLevelUp = harmonyLevel < HARMONY_LEVELS.length - 1;
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-teal-100 p-4">
         <motion.div 
@@ -239,13 +353,23 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           </motion.div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Harmony Found</h2>
           <p className="text-gray-600 mb-2">
-            All pairs matched in {moves} moves
+            All {numPairs} pairs matched in {moves} moves
+          </p>
+          <p className="text-sm text-green-600 font-medium mb-4">
+            Level: {currentLevel.name}
           </p>
           
           <div className="flex items-center justify-center gap-2 text-2xl font-bold text-green-600 mb-6">
             <Sparkles className="w-6 h-6" />
-            <span>+{NUM_PAIRS * POINTS_PER_MATCH} Serenity</span>
+            <span>+{credits} Serenity</span>
           </div>
+          
+          {canLevelUp && (
+            <div className="bg-green-50 rounded-xl p-3 mb-4 text-sm text-green-700">
+              <Sparkles className="w-4 h-4 inline mr-1" />
+              Next level unlocked: {HARMONY_LEVELS[harmonyLevel + 1].name}!
+            </div>
+          )}
           
           <p className="text-gray-500 text-sm">Returning to Games Hub...</p>
         </motion.div>
@@ -257,11 +381,11 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-teal-100 p-4">
       {/* Header */}
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="max-w-3xl mx-auto mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Zen Match</h2>
-            <p className="text-gray-600 text-sm">Find matching pairs</p>
+            <p className="text-gray-600 text-sm">Level: {currentLevel.name}</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-full font-medium text-gray-700 shadow-sm">
@@ -280,24 +404,27 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
       </div>
 
       {/* Progress */}
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="max-w-3xl mx-auto mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">
-            Matched: {matchedPairs.size} / {NUM_PAIRS}
+            Matched: {matchedPairs.size} / {numPairs}
+          </span>
+          <span className="text-sm text-green-600 font-medium">
+            +{matchedPairs.size * POINTS_PER_MATCH} pts
           </span>
         </div>
         <div className="bg-white/50 rounded-full h-2 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${(matchedPairs.size / NUM_PAIRS) * 100}%` }}
+            animate={{ width: `${(matchedPairs.size / numPairs) * 100}%` }}
             className="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full"
           />
         </div>
       </div>
 
       {/* Cards Grid */}
-      <div className="max-w-2xl mx-auto">
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="max-w-3xl mx-auto">
+        <div className={`grid ${getGridCols()} gap-2 sm:gap-3`}>
           {cards.map(card => {
             const isRevealed = card.isFlipped || card.isMatched;
             
@@ -306,7 +433,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                 key={card.id}
                 onClick={() => handleCardClick(card.id)}
                 disabled={card.isMatched || isChecking}
-                className={`aspect-square rounded-2xl cursor-pointer transition-all duration-300 ${
+                className={`aspect-square rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 ${
                   card.isMatched ? 'cursor-default' : ''
                 }`}
                 whileHover={!card.isMatched && !isChecking ? { scale: 1.05 } : {}}
@@ -321,15 +448,15 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                 >
                   {/* Card Back */}
                   <div 
-                    className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-400 to-green-500 shadow-lg flex items-center justify-center backface-hidden"
+                    className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-400 to-green-500 shadow-lg flex items-center justify-center backface-hidden"
                     style={{ backfaceVisibility: 'hidden' }}
                   >
-                    <Leaf className="w-8 h-8 text-white/40" />
+                    <Leaf className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />
                   </div>
                   
                   {/* Card Front */}
                   <div 
-                    className={`absolute inset-0 rounded-2xl ${getIconBg(card.iconType)} shadow-lg flex items-center justify-center border-2 ${
+                    className={`absolute inset-0 rounded-xl sm:rounded-2xl ${getIconBg(card.iconType)} shadow-lg flex items-center justify-center border-2 ${
                       card.isMatched ? 'border-green-400' : 'border-gray-100'
                     }`}
                     style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
@@ -341,7 +468,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                         animate={{ scale: 1 }}
                         className="absolute top-1 right-1"
                       >
-                        <Sparkles className="w-4 h-4 text-green-500" />
+                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                       </motion.div>
                     )}
                   </div>
@@ -353,14 +480,13 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
       </div>
 
       {/* Footer hint */}
-      <div className="max-w-2xl mx-auto mt-6 text-center">
+      <div className="max-w-3xl mx-auto mt-6 text-center">
         <p className="text-gray-500 text-sm">
           {matchedPairs.size === 0 
             ? "Tap any card to begin" 
-            : `${NUM_PAIRS - matchedPairs.size} pairs remaining`}
+            : `${numPairs - matchedPairs.size} pairs remaining`}
         </p>
       </div>
     </div>
   );
 }
-
