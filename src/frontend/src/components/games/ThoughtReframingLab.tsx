@@ -188,6 +188,53 @@ const DISTORTED_THOUGHTS: DistortedThought[] = [
 
 const POINTS_PER_REFRAME = 5;
 
+// Game difficulty levels
+const DIFFICULTY_LEVELS = [
+  { id: 'beginner', name: 'Beginner', description: 'Single distortion, helpful hints', thoughtCount: 4, showHints: true, multipleDistortions: false },
+  { id: 'intermediate', name: 'Intermediate', description: 'More variety, fewer hints', thoughtCount: 5, showHints: false, multipleDistortions: false },
+  { id: 'advanced', name: 'Advanced', description: 'Challenging thoughts', thoughtCount: 6, showHints: false, multipleDistortions: false },
+  { id: 'expert', name: 'Expert', description: 'Complex thoughts, multiple distortions', thoughtCount: 7, showHints: false, multipleDistortions: true },
+];
+
+// Additional challenge thoughts for Expert mode (multiple distortions)
+const EXPERT_THOUGHTS: DistortedThought[] = [
+  {
+    id: 'e1',
+    thought: "I always fail at everything, and everyone knows I'm a complete fraud.",
+    distortionType: 'overgeneralization', // Also labeling + mind-reading
+    hint: "Notice the extreme words and assumptions about others",
+    exampleReframe: "I sometimes struggle with challenges, which is normal. I can't know what others think, and one setback doesn't define my abilities.",
+  },
+  {
+    id: 'e2',
+    thought: "If I don't get this perfect, my whole career will be ruined forever.",
+    distortionType: 'catastrophizing', // Also all-or-nothing + fortune-telling
+    hint: "Consider if one outcome truly determines everything",
+    exampleReframe: "While this is important, my career is built on many experiences. Imperfection is human, and there will be other opportunities.",
+  },
+  {
+    id: 'e3',
+    thought: "I should be happy all the time. Since I'm not, I must be broken.",
+    distortionType: 'should-statements', // Also emotional-reasoning + labeling
+    hint: "Are your expectations realistic? Can emotions define who you are?",
+    exampleReframe: "All emotions are valid, including difficult ones. Feeling unhappy sometimes is part of being human, not a sign of being broken.",
+  },
+  {
+    id: 'e4',
+    thought: "They're all talking about my mistake. I'll never recover from this humiliation.",
+    distortionType: 'mind-reading', // Also catastrophizing + fortune-telling
+    hint: "Do you have evidence for these assumptions?",
+    exampleReframe: "I don't know what others are thinking. Mistakes happen to everyone, and people usually move on quickly. I can recover from this.",
+  },
+  {
+    id: 'e5',
+    thought: "I feel like a failure, which means I am one. Nothing I do ever works out.",
+    distortionType: 'emotional-reasoning', // Also labeling + overgeneralization
+    hint: "Are feelings the same as facts?",
+    exampleReframe: "Feeling like a failure doesn't make it true. I can think of times when things worked out. My worth isn't determined by temporary feelings.",
+  },
+];
+
 interface ReframeFeedback {
   isGood: boolean;
   message: string;
@@ -242,17 +289,31 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
   const [reframedCount, setReframedCount] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [introStep, setIntroStep] = useState(0);
+  const [showLevelSelect, setShowLevelSelect] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState(0);
   const [gameComplete, setGameComplete] = useState(false);
+
+  const currentDifficulty = DIFFICULTY_LEVELS[selectedDifficulty];
   const [customThought, setCustomThought] = useState('');
   const [isUsingCustom, setIsUsingCustom] = useState(false);
   const [distortionFeedback, setDistortionFeedback] = useState<string | null>(null);
   const [reframeFeedback, setReframeFeedback] = useState<ReframeFeedback | null>(null);
 
-  // Select random thoughts for session
-  const [thoughts] = useState(() => {
-    const shuffled = [...DISTORTED_THOUGHTS].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 5);
-  });
+  // Select random thoughts for session based on difficulty
+  const [thoughts, setThoughts] = useState<DistortedThought[]>([]);
+  
+  // Initialize thoughts when difficulty is selected
+  const initializeThoughts = () => {
+    let pool = [...DISTORTED_THOUGHTS];
+    
+    // Expert mode includes complex multi-distortion thoughts
+    if (currentDifficulty.multipleDistortions) {
+      pool = [...EXPERT_THOUGHTS, ...pool];
+    }
+    
+    const shuffled = pool.sort(() => Math.random() - 0.5);
+    setThoughts(shuffled.slice(0, currentDifficulty.thoughtCount));
+  };
 
   const currentThought = isUsingCustom 
     ? { id: 'custom', thought: customThought, distortionType: selectedDistortion || 'all-or-nothing', hint: '', exampleReframe: '' }
@@ -540,15 +601,22 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
               onClick={() => {
                 if (isLastStep) {
                   setShowOnboarding(false);
+                  setShowLevelSelect(true);
                 } else {
                   setIntroStep(prev => prev + 1);
                 }
               }}
               className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg"
             >
-              {isLastStep ? "Let's Begin!" : 'Next'}
+              {isLastStep ? 'Choose Difficulty' : 'Next'}
             </button>
           </div>
+          
+          {isLastStep && (
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              4 difficulty levels: Beginner to Expert
+            </p>
+          )}
           
           {/* Skip option */}
           {!isLastStep && (
@@ -568,6 +636,61 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
               Back to Games
             </button>
           )}
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Level Select
+  if (showLevelSelect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-100 to-purple-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+        >
+          <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Brain className="w-8 h-8 text-indigo-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Difficulty</h2>
+          <p className="text-gray-600 mb-6 text-sm">Higher levels = more complex thoughts</p>
+          
+          <div className="space-y-3 mb-6">
+            {DIFFICULTY_LEVELS.map((level, index) => (
+              <button
+                key={level.id}
+                onClick={() => {
+                  setSelectedDifficulty(index);
+                  initializeThoughts();
+                  setShowLevelSelect(false);
+                }}
+                className="w-full p-4 rounded-xl text-left transition-all border-2 bg-indigo-50 border-indigo-200 hover:border-indigo-400"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800">{level.name}</h3>
+                    <p className="text-sm text-gray-500">{level.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-indigo-600">{level.thoughtCount}</span>
+                    <p className="text-xs text-gray-400">thoughts</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          
+          <button
+            onClick={() => {
+              setShowLevelSelect(false);
+              setShowOnboarding(true);
+              setIntroStep(INTRO_EXAMPLES.length - 1);
+            }}
+            className="text-gray-500 hover:text-gray-700 text-sm"
+          >
+            Back
+          </button>
         </motion.div>
       </div>
     );

@@ -54,6 +54,61 @@ const POINTS_PER_SORT = 3;
 
 type BucketType = 'keep' | 'park' | 'letGo';
 
+// Game modes
+const GAME_MODES = [
+  { id: 'relaxed', name: 'Relaxed', description: 'Take your time, no pressure', timeLimit: null, thoughtCount: 10 },
+  { id: 'timed', name: 'Timed Challenge', description: 'Sort 15 thoughts in 60 seconds', timeLimit: 60, thoughtCount: 15 },
+  { id: 'marathon', name: 'Marathon', description: 'Process 25 thoughts for maximum points', timeLimit: null, thoughtCount: 25 },
+];
+
+// Thought categories (themes)
+const THOUGHT_CATEGORIES = [
+  { id: 'mixed', name: 'Mixed', emoji: '🎯', description: 'A variety of thoughts' },
+  { id: 'work', name: 'Work Stress', emoji: '💼', description: 'Work-related thoughts' },
+  { id: 'social', name: 'Social Anxiety', emoji: '👥', description: 'Social situations' },
+  { id: 'self-care', name: 'Self-Care', emoji: '💝', description: 'Self-care & wellness' },
+];
+
+// Category-specific fallback thoughts
+const CATEGORY_THOUGHTS: Record<string, Thought[]> = {
+  work: [
+    { id: 'w1', text: "I have too many deadlines", suggestedBucket: "park", category: "work" },
+    { id: 'w2', text: "My boss probably thinks I'm slow", suggestedBucket: "letGo", category: "negative" },
+    { id: 'w3', text: "I handled that meeting well", suggestedBucket: "keep", category: "positive" },
+    { id: 'w4', text: "Need to prepare for the presentation", suggestedBucket: "park", category: "work" },
+    { id: 'w5', text: "I'm not qualified for this job", suggestedBucket: "letGo", category: "negative" },
+    { id: 'w6', text: "I'm learning new skills every day", suggestedBucket: "keep", category: "positive" },
+    { id: 'w7', text: "The project is going to fail", suggestedBucket: "letGo", category: "worry" },
+    { id: 'w8', text: "I should update my task list", suggestedBucket: "park", category: "work" },
+    { id: 'w9', text: "I contributed a good idea today", suggestedBucket: "keep", category: "positive" },
+    { id: 'w10', text: "Everyone is more productive than me", suggestedBucket: "letGo", category: "negative" },
+  ],
+  social: [
+    { id: 's1', text: "They probably think I'm awkward", suggestedBucket: "letGo", category: "negative" },
+    { id: 's2', text: "I should reach out to my friend", suggestedBucket: "park", category: "relationship" },
+    { id: 's3', text: "That conversation went really well", suggestedBucket: "keep", category: "positive" },
+    { id: 's4', text: "Nobody wants to talk to me", suggestedBucket: "letGo", category: "negative" },
+    { id: 's5', text: "I'm a good listener", suggestedBucket: "keep", category: "positive" },
+    { id: 's6', text: "What if I say something stupid?", suggestedBucket: "letGo", category: "worry" },
+    { id: 's7', text: "Need to RSVP to that event", suggestedBucket: "park", category: "general" },
+    { id: 's8', text: "My friends appreciate me", suggestedBucket: "keep", category: "gratitude" },
+    { id: 's9', text: "I'm so bad at small talk", suggestedBucket: "letGo", category: "negative" },
+    { id: 's10', text: "I made someone smile today", suggestedBucket: "keep", category: "positive" },
+  ],
+  'self-care': [
+    { id: 'sc1', text: "I deserve to rest today", suggestedBucket: "keep", category: "positive" },
+    { id: 'sc2', text: "I should exercise more", suggestedBucket: "park", category: "health" },
+    { id: 'sc3', text: "I'm so lazy", suggestedBucket: "letGo", category: "negative" },
+    { id: 'sc4', text: "I'm proud of my progress", suggestedBucket: "keep", category: "positive" },
+    { id: 'sc5', text: "I need to book a doctor's appointment", suggestedBucket: "park", category: "health" },
+    { id: 'sc6', text: "I never do anything right for myself", suggestedBucket: "letGo", category: "negative" },
+    { id: 'sc7', text: "I'm grateful for my health", suggestedBucket: "keep", category: "gratitude" },
+    { id: 'sc8', text: "Try that new recipe this weekend", suggestedBucket: "park", category: "general" },
+    { id: 'sc9', text: "I'll never be able to relax", suggestedBucket: "letGo", category: "worry" },
+    { id: 'sc10', text: "I took time for myself today", suggestedBucket: "keep", category: "positive" },
+  ],
+};
+
 // Feedback messages for different scenarios
 const FEEDBACK_MESSAGES: Record<string, Record<BucketType, string>> = {
   negative: {
@@ -99,40 +154,89 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   const [sortedCounts, setSortedCounts] = useState({ keep: 0, park: 0, letGo: 0 });
   const [gameComplete, setGameComplete] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
-  const [loading, setLoading] = useState(true);
+  const [showModeSelect, setShowModeSelect] = useState(false);
+  const [showCategorySelect, setShowCategorySelect] = useState(false);
+  const [selectedMode, setSelectedMode] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('mixed');
+  const [loading, setLoading] = useState(false);
   const [animatingTo, setAnimatingTo] = useState<BucketType | null>(null);
   const [customThoughtInput, setCustomThoughtInput] = useState('');
   const [showAddThought, setShowAddThought] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [pendingSort, setPendingSort] = useState<BucketType | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [gameStarted, setGameStarted] = useState(false);
 
-  // Load thoughts from API
+  const currentMode = GAME_MODES[selectedMode];
+
+  // Timer effect for timed mode
   useEffect(() => {
-    loadThoughts();
-  }, []);
+    if (!gameStarted || currentMode.timeLimit === null || timeRemaining === null) return;
+    if (timeRemaining <= 0) {
+      finishGame();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setTimeRemaining(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [gameStarted, timeRemaining, currentMode.timeLimit]);
 
   const loadThoughts = async () => {
+    setLoading(true);
     try {
-      const response = await api.get('/api/thoughts/sorter', { params: { count: 12 } });
+      const response = await api.get('/api/thoughts/sorter', { params: { count: currentMode.thoughtCount } });
       if (response.data.thoughts && response.data.thoughts.length > 0) {
-        setThoughts(response.data.thoughts.map((t: any) => ({
+        const apiThoughts = response.data.thoughts.map((t: any) => ({
           id: t.id,
           text: t.text,
           suggestedBucket: t.suggestedBucket,
           category: t.category,
-        })));
+        }));
+        
+        // If category is selected, mix with category-specific thoughts
+        if (selectedCategory !== 'mixed' && CATEGORY_THOUGHTS[selectedCategory]) {
+          const categoryThoughts = [...CATEGORY_THOUGHTS[selectedCategory]].sort(() => Math.random() - 0.5);
+          const mixed = [...apiThoughts.slice(0, Math.floor(currentMode.thoughtCount / 2)), ...categoryThoughts.slice(0, Math.ceil(currentMode.thoughtCount / 2))];
+          setThoughts(mixed.sort(() => Math.random() - 0.5).slice(0, currentMode.thoughtCount));
+        } else {
+          setThoughts(apiThoughts.slice(0, currentMode.thoughtCount));
+        }
       } else {
-        // Use fallback and shuffle
-        const shuffled = [...FALLBACK_THOUGHTS].sort(() => Math.random() - 0.5);
-        setThoughts(shuffled.slice(0, 10));
+        // Use fallback based on category
+        let fallbackPool = [...FALLBACK_THOUGHTS];
+        if (selectedCategory !== 'mixed' && CATEGORY_THOUGHTS[selectedCategory]) {
+          fallbackPool = [...fallbackPool, ...CATEGORY_THOUGHTS[selectedCategory]];
+        }
+        const shuffled = fallbackPool.sort(() => Math.random() - 0.5);
+        setThoughts(shuffled.slice(0, currentMode.thoughtCount));
       }
     } catch (error) {
       console.warn('Using fallback thoughts:', error);
-      const shuffled = [...FALLBACK_THOUGHTS].sort(() => Math.random() - 0.5);
-      setThoughts(shuffled.slice(0, 10));
+      let fallbackPool = [...FALLBACK_THOUGHTS];
+      if (selectedCategory !== 'mixed' && CATEGORY_THOUGHTS[selectedCategory]) {
+        fallbackPool = [...fallbackPool, ...CATEGORY_THOUGHTS[selectedCategory]];
+      }
+      const shuffled = fallbackPool.sort(() => Math.random() - 0.5);
+      setThoughts(shuffled.slice(0, currentMode.thoughtCount));
     } finally {
       setLoading(false);
     }
+  };
+
+  const startGame = async () => {
+    await loadThoughts();
+    setCurrentIndex(0);
+    setSortedCounts({ keep: 0, park: 0, letGo: 0 });
+    if (currentMode.timeLimit) {
+      setTimeRemaining(currentMode.timeLimit);
+    }
+    setGameStarted(true);
+    setShowOnboarding(false);
+    setShowModeSelect(false);
+    setShowCategorySelect(false);
   };
 
   const addCustomThought = async () => {
@@ -251,6 +355,105 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
     setTimeout(() => onComplete(credits, 1), 2500);
   };
 
+  // Mode Select
+  if (showModeSelect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+        >
+          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <LayoutGrid className="w-8 h-8 text-teal-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Mode</h2>
+          <p className="text-gray-600 mb-6 text-sm">How would you like to sort today?</p>
+          
+          <div className="space-y-3 mb-6">
+            {GAME_MODES.map((mode, index) => (
+              <button
+                key={mode.id}
+                onClick={() => {
+                  setSelectedMode(index);
+                  setShowModeSelect(false);
+                  setShowCategorySelect(true);
+                }}
+                className="w-full p-4 rounded-xl text-left transition-all border-2 bg-teal-50 border-teal-200 hover:border-teal-400"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800">{mode.name}</h3>
+                    <p className="text-sm text-gray-500">{mode.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-teal-600">{mode.thoughtCount}</span>
+                    <p className="text-xs text-gray-400">thoughts</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          
+          <button
+            onClick={() => {
+              setShowModeSelect(false);
+              setShowOnboarding(true);
+            }}
+            className="text-gray-500 hover:text-gray-700 text-sm"
+          >
+            Back
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Category Select
+  if (showCategorySelect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+        >
+          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <LayoutGrid className="w-8 h-8 text-teal-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Theme</h2>
+          <p className="text-gray-600 mb-6 text-sm">What area would you like to focus on?</p>
+          
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {THOUGHT_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  startGame();
+                }}
+                className="p-4 rounded-xl text-center transition-all border-2 bg-teal-50 border-teal-200 hover:border-teal-400"
+              >
+                <span className="text-3xl block mb-2">{cat.emoji}</span>
+                <h3 className="font-semibold text-gray-800 text-sm">{cat.name}</h3>
+              </button>
+            ))}
+          </div>
+          
+          <button
+            onClick={() => {
+              setShowCategorySelect(false);
+              setShowModeSelect(true);
+            }}
+            className="text-gray-500 hover:text-gray-700 text-sm"
+          >
+            Back to Mode Select
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   // Onboarding
   if (showOnboarding) {
     return (
@@ -301,7 +504,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
             </ul>
             <div className="mt-4 pt-3 border-t border-teal-100 flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-amber-500" />
-              <span className="text-xs text-gray-600">Smart feedback helps you learn healthy thought patterns</span>
+              <span className="text-xs text-gray-600">Choose from 3 modes and 4 themes!</span>
             </div>
             <div className="mt-2">
               <span className="text-teal-600 font-medium">+{POINTS_PER_SORT}</span>
@@ -310,10 +513,10 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           </div>
           
           <button
-            onClick={() => setShowOnboarding(false)}
+            onClick={() => setShowModeSelect(true)}
             className="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-teal-600 hover:to-emerald-700 transition-all shadow-lg"
           >
-            Start Sorting
+            Choose Mode
           </button>
           
           {onExit && (
@@ -409,9 +612,16 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Thought Sorter</h2>
-            <p className="text-gray-600 text-sm">Process your thoughts mindfully</p>
+            <p className="text-gray-600 text-sm">{currentMode.name} • {THOUGHT_CATEGORIES.find(c => c.id === selectedCategory)?.name}</p>
           </div>
           <div className="flex items-center gap-4">
+            {timeRemaining !== null && (
+              <div className={`bg-white/80 backdrop-blur px-4 py-2 rounded-full font-bold shadow-sm ${
+                timeRemaining <= 10 ? 'text-red-600 animate-pulse' : 'text-amber-600'
+              }`}>
+                ⏱️ {timeRemaining}s
+              </div>
+            )}
             <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-full font-medium text-gray-700 shadow-sm">
               {currentIndex + 1} / {totalThoughts}
             </div>

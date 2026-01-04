@@ -42,6 +42,18 @@ interface Activity {
 const ACTIVITIES: Activity[] = [
   // Wellness Activities
   {
+    id: 'emotional-checkin',
+    name: 'How I\'m Feeling',
+    description: 'Voice or text check-in to express your current emotional state. Your privacy is protected.',
+    icon: '💭',
+    color: 'text-rose-400',
+    gradient: 'from-rose-500/20 to-pink-500/20',
+    category: 'wellness',
+    duration: '1-3 min',
+    serenityPoints: '+20 points',
+    available: true,
+  },
+  {
     id: 'gratitude-garden',
     name: 'Gratitude Garden',
     description: 'Daily journaling to cultivate thankfulness. Each entry plants a golden flower.',
@@ -172,6 +184,9 @@ export default function Activities() {
     if (!activity.available) return;
     
     switch (activity.id) {
+      case 'emotional-checkin':
+        navigate('/activities/emotional-checkin');
+        break;
       case 'gratitude-garden':
         navigate('/activities/gratitude');
         break;

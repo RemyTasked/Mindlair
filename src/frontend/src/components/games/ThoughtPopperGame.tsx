@@ -70,7 +70,14 @@ const FALLBACK_THOUGHTS = [
   "Can't", "Won't work", "Too hard", "Impossible"
 ];
 
-const GOAL = 20; // Increased goal
+// Difficulty levels
+const DIFFICULTY_LEVELS = [
+  { name: 'Mindful', goal: 12, maxBubbles: 5, spawnRate: 1200, speedMultiplier: 0.7, description: 'A gentle start' },
+  { name: 'Focused', goal: 18, maxBubbles: 6, spawnRate: 1000, speedMultiplier: 0.85, description: 'Building concentration' },
+  { name: 'Centered', goal: 25, maxBubbles: 7, spawnRate: 900, speedMultiplier: 1.0, description: 'Stay present' },
+  { name: 'Intense', goal: 35, maxBubbles: 8, spawnRate: 750, speedMultiplier: 1.2, description: 'Challenge your focus' },
+  { name: 'Master', goal: 50, maxBubbles: 10, spawnRate: 600, speedMultiplier: 1.5, description: 'Ultimate mental clarity' },
+];
 
 export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperGameProps) {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
@@ -79,11 +86,16 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
   const [gameActive, setGameActive] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showLevelSelect, setShowLevelSelect] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState(1); // Default to "Focused"
   const [creditsEarned, setCreditsEarned] = useState(0);
   const [thoughtPool, setThoughtPool] = useState<string[]>([...FALLBACK_THOUGHTS, ...DESTRUCTIVE_WORDS]);
   const [isLoading, setIsLoading] = useState(false);
   const [poppedWords, setPoppedWords] = useState<string[]>([]);
   const [showSummary, setShowSummary] = useState(false);
+
+  const currentLevel = DIFFICULTY_LEVELS[selectedLevel];
+  const GOAL = currentLevel.goal;
 
   // Load thoughts from API
   useEffect(() => {
@@ -104,28 +116,29 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     loadThoughts();
   }, []);
 
-  // Spawn bubbles periodically
+  // Spawn bubbles periodically based on difficulty
   useEffect(() => {
     if (!gameActive || gameComplete) return;
 
     const spawnInterval = setInterval(() => {
-      if (bubbles.length < 8) {
+      if (bubbles.length < currentLevel.maxBubbles) {
         const id = Math.random().toString(36).substr(2, 9);
         const text = thoughtPool[Math.floor(Math.random() * thoughtPool.length)];
         const isDestructive = DESTRUCTIVE_WORDS.includes(text);
         
         const x = Math.random() * 70 + 15;
-        // Gamification: destructive words are faster, smaller, and have health
-        const speed = isDestructive ? Math.random() * 0.6 + 0.8 : Math.random() * 0.6 + 0.4;
+        // Apply speed multiplier from difficulty
+        const baseSpeed = isDestructive ? Math.random() * 0.6 + 0.8 : Math.random() * 0.6 + 0.4;
+        const speed = baseSpeed * currentLevel.speedMultiplier;
         const size = isDestructive ? Math.random() * 20 + 60 : Math.random() * 30 + 80;
         const health = isDestructive ? 3 : 1;
 
         setBubbles(prev => [...prev, { id, text, x, y: 100, speed, size, health, maxHealth: health, isDestructive }]);
       }
-    }, 1000);
+    }, currentLevel.spawnRate);
 
     return () => clearInterval(spawnInterval);
-  }, [gameActive, gameComplete, bubbles.length, thoughtPool]);
+  }, [gameActive, gameComplete, bubbles.length, thoughtPool, currentLevel]);
 
   // Game loop - move bubbles upward
   useEffect(() => {
@@ -195,6 +208,59 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     setShowSummary(false);
   };
 
+  // Level Select Screen
+  if (showLevelSelect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-100 to-teal-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+        >
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Wind className="w-8 h-8 text-blue-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Difficulty</h2>
+          <p className="text-gray-600 mb-6 text-sm">Higher levels = faster thoughts, bigger rewards</p>
+          
+          <div className="space-y-2 mb-6">
+            {DIFFICULTY_LEVELS.map((level, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setSelectedLevel(index);
+                  setShowLevelSelect(false);
+                  startGame();
+                }}
+                className="w-full p-4 rounded-xl text-left transition-all border-2 bg-sky-50 border-sky-200 hover:border-sky-400"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-800">{level.name}</h3>
+                    <p className="text-sm text-gray-500">{level.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-sky-600">{level.goal}</span>
+                    <p className="text-xs text-gray-400">thoughts</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              Back to Games
+            </button>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
+
   // Onboarding
   if (showOnboarding) {
     return (
@@ -225,17 +291,17 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 mt-1">•</span>
-                Pop {GOAL} thoughts to clear your mind.
+                Choose from 5 difficulty levels with increasing challenge.
               </li>
             </ul>
           </div>
           
           <button
-            onClick={startGame}
+            onClick={() => setShowLevelSelect(true)}
             disabled={isLoading}
             className="w-full py-4 bg-gradient-to-r from-sky-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-sky-600 hover:to-teal-700 transition-all shadow-lg disabled:opacity-50"
           >
-            {isLoading ? 'Loading thoughts...' : 'Start Popping'}
+            {isLoading ? 'Loading thoughts...' : 'Choose Level'}
           </button>
           
           {onExit && (

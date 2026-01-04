@@ -74,16 +74,36 @@ const HARMONY_LEVELS = [
   { name: 'Calm', pairs: 6, description: 'A gentle start' },
   { name: 'Focused', pairs: 8, description: 'Building concentration' },
   { name: 'Centered', pairs: 10, description: 'Deep focus mode' },
-  { name: 'Enlightened', pairs: 12, description: 'Master level' },
+  { name: 'Enlightened', pairs: 12, description: 'High focus' },
+  { name: 'Transcendent', pairs: 14, description: 'Push your limits' },
+  { name: 'Master', pairs: 16, description: 'Ultimate memory challenge' },
 ];
 
-const POINTS_PER_MATCH = 5;
-
-// Select random icons for each game
-const selectRandomIcons = (count: number) => {
-  const shuffled = [...ALL_ICON_CONFIGS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+// Icon themes for variety
+const ICON_THEMES = {
+  nature: {
+    name: 'Nature',
+    emoji: '🌿',
+    icons: ['sun', 'moon', 'star', 'cloud', 'rain', 'snow', 'wind', 'sunrise', 'sunset', 'cloudsun', 'flower', 'leaf', 'tree', 'pine', 'mountain', 'sprout'],
+  },
+  cosmic: {
+    name: 'Cosmic',
+    emoji: '✨',
+    icons: ['star', 'moon', 'sun', 'gem', 'zap', 'globe', 'sunrise', 'sunset', 'wind', 'snow', 'cloud', 'rain', 'flame', 'heart', 'feather', 'droplet'],
+  },
+  ocean: {
+    name: 'Ocean',
+    emoji: '🌊',
+    icons: ['waves', 'droplet', 'shell', 'cloud', 'rain', 'wind', 'sun', 'moon', 'star', 'bird', 'feather', 'palm', 'sunrise', 'sunset', 'fish', 'umbrella'],
+  },
+  wellness: {
+    name: 'Wellness',
+    emoji: '🧘',
+    icons: ['heart', 'flower', 'leaf', 'sprout', 'sun', 'moon', 'star', 'clover', 'cherry', 'gem', 'feather', 'bird', 'tree', 'mountain', 'waves', 'droplet'],
+  },
 };
+
+const POINTS_PER_MATCH = 5;
 
 export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) {
   const [cards, setCards] = useState<Card[]>([]);
@@ -96,6 +116,8 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
   const [harmonyLevel, setHarmonyLevel] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [showLevelSelect, setShowLevelSelect] = useState(false);
+  const [showThemeSelect, setShowThemeSelect] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState<keyof typeof ICON_THEMES>('nature');
 
   const currentLevel = HARMONY_LEVELS[harmonyLevel];
   const numPairs = currentLevel.pairs;
@@ -110,8 +132,13 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
     const level = selectedLevel !== null ? selectedLevel : harmonyLevel;
     const pairs = HARMONY_LEVELS[level].pairs;
     
-    // Select random icons for this game
-    const selectedIcons = selectRandomIcons(pairs);
+    // Filter icons based on selected theme
+    const themeIconTypes = ICON_THEMES[selectedTheme].icons;
+    const filteredIcons = ALL_ICON_CONFIGS.filter(config => themeIconTypes.includes(config.type));
+    
+    // Select random icons for this game from the filtered set
+    const shuffledIcons = [...filteredIcons].sort(() => Math.random() - 0.5);
+    const selectedIcons = shuffledIcons.slice(0, pairs);
     
     // Create pairs of cards
     const newCards: Card[] = [];
@@ -132,6 +159,12 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
     setHarmonyLevel(level);
     setSelectedLevel(level);
     setShowLevelSelect(false);
+    setShowThemeSelect(true); // Show theme selection after level
+  };
+
+  const handleThemeSelect = (theme: keyof typeof ICON_THEMES) => {
+    setSelectedTheme(theme);
+    setShowThemeSelect(false);
     setShowOnboarding(false);
   };
 
@@ -218,6 +251,48 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
     return 'grid-cols-4 sm:grid-cols-6';
   };
 
+  // Theme Select
+  if (showThemeSelect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-teal-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+        >
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Leaf className="w-8 h-8 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Theme</h2>
+          <p className="text-gray-600 mb-6 text-sm">Each theme offers a unique set of icons</p>
+          
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {Object.entries(ICON_THEMES).map(([key, theme]) => (
+              <button
+                key={key}
+                onClick={() => handleThemeSelect(key as keyof typeof ICON_THEMES)}
+                className="p-4 rounded-xl text-center transition-all border-2 bg-green-50 border-green-200 hover:border-green-400"
+              >
+                <span className="text-3xl block mb-2">{theme.emoji}</span>
+                <h3 className="font-semibold text-gray-800">{theme.name}</h3>
+              </button>
+            ))}
+          </div>
+          
+          <button
+            onClick={() => {
+              setShowThemeSelect(false);
+              setShowLevelSelect(true);
+            }}
+            className="text-gray-500 hover:text-gray-700 text-sm"
+          >
+            Back to Level Select
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   // Level Select
   if (showLevelSelect) {
     return (
@@ -233,17 +308,12 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Choose Your Level</h2>
           <p className="text-gray-600 mb-6">Select a Harmony Level to begin</p>
           
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-6 max-h-80 overflow-y-auto">
             {HARMONY_LEVELS.map((level, index) => (
               <button
                 key={index}
                 onClick={() => handleLevelSelect(index)}
-                className={`w-full p-4 rounded-xl text-left transition-all border-2 ${
-                  index <= harmonyLevel + 1 
-                    ? 'bg-green-50 border-green-200 hover:border-green-400 cursor-pointer'
-                    : 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
-                }`}
-                disabled={index > harmonyLevel + 1}
+                className="w-full p-4 rounded-xl text-left transition-all border-2 bg-green-50 border-green-200 hover:border-green-400 cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div>
