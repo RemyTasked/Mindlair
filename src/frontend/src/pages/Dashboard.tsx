@@ -188,6 +188,8 @@ export default function Dashboard() {
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(!areNotificationsEnabled());
   const [isWatering, setIsWatering] = useState(false);
   const [isPruning, setIsPruning] = useState(false);
+  const [isEnablingNotifications, setIsEnablingNotifications] = useState(false);
+  const [notificationError, setNotificationError] = useState<string | null>(null);
   const timeReminder = TIME_REMINDERS[timeOfDay];
 
   // Load data
@@ -543,10 +545,49 @@ export default function Dashboard() {
                   Enable notifications to receive mindfulness prompts before stressful meetings. 
                   Never enter a meeting unprepared.
                 </p>
-                <div className="flex gap-3">
+                
+                {/* Check if notifications are blocked */}
+                {typeof Notification !== 'undefined' && Notification.permission === 'denied' && (
+                  <div className="mb-3 p-3 rounded-lg bg-red-500/20 border border-red-500/30">
+                    <p className="text-red-300 text-sm">
+                      <strong>Notifications are blocked.</strong> Please enable them in your browser/device settings for this site, then refresh the page.
+                    </p>
+                  </div>
+                )}
+                
+                {/* Error message */}
+                {notificationError && (
+                  <div className="mb-3 p-3 rounded-lg bg-amber-500/20 border border-amber-500/30">
+                    <p className="text-amber-300 text-sm">{notificationError}</p>
+                  </div>
+                )}
+                
+                <div className="flex flex-wrap gap-3">
                   <button
+                    disabled={isEnablingNotifications || (typeof Notification !== 'undefined' && Notification.permission === 'denied')}
                     onClick={async () => {
+                      setIsEnablingNotifications(true);
+                      setNotificationError(null);
+                      
                       try {
+                        // Check if notifications are supported
+                        if (!pushNotificationService.isSupported()) {
+                          // Check if it's iOS and not a PWA
+                          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                              (window.navigator as any).standalone === true;
+                          
+                          if (isIOS && !isStandalone) {
+                            setNotificationError('On iOS, please install Mind Garden as an app first: tap Share → "Add to Home Screen", then try again.');
+                            setIsEnablingNotifications(false);
+                            return;
+                          }
+                          
+                          setNotificationError('Push notifications are not supported on this device/browser.');
+                          setIsEnablingNotifications(false);
+                          return;
+                        }
+                        
                         // Use pushNotificationService for proper PWA/iOS support
                         const token = localStorage.getItem('mindgarden_token') || localStorage.getItem('meetcute_token');
                         if (token) {
@@ -555,31 +596,42 @@ export default function Dashboard() {
                             localStorage.setItem('mindgarden_notifications_enabled', 'true');
                             setShowNotificationPrompt(false);
                           } else {
-                            // Fallback: just request permission
-                            if (typeof Notification !== 'undefined') {
-                              const permission = await Notification.requestPermission();
-                              if (permission === 'granted') {
-                                localStorage.setItem('mindgarden_notifications_enabled', 'true');
-                                setShowNotificationPrompt(false);
+                            // Check if permission was denied
+                            if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+                              setNotificationError('Permission denied. Please enable notifications in your browser settings.');
+                            } else {
+                              // Fallback: just request permission
+                              if (typeof Notification !== 'undefined') {
+                                const permission = await Notification.requestPermission();
+                                if (permission === 'granted') {
+                                  localStorage.setItem('mindgarden_notifications_enabled', 'true');
+                                  setShowNotificationPrompt(false);
+                                } else if (permission === 'denied') {
+                                  setNotificationError('Permission denied. Please enable notifications in your browser settings.');
+                                }
                               }
                             }
                           }
+                        } else {
+                          setNotificationError('Please log in again to enable notifications.');
                         }
                       } catch (error) {
                         console.warn('Failed to enable notifications:', error);
-                        // Fallback to basic permission request
-                        if (typeof Notification !== 'undefined') {
-                          const permission = await Notification.requestPermission();
-                          if (permission === 'granted') {
-                            localStorage.setItem('mindgarden_notifications_enabled', 'true');
-                            setShowNotificationPrompt(false);
-                          }
-                        }
+                        setNotificationError('Failed to enable notifications. Please try again.');
+                      } finally {
+                        setIsEnablingNotifications(false);
                       }
                     }}
-                    className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium transition-colors inline-flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:bg-sky-500/50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors inline-flex items-center gap-2"
                   >
-                    🔔 Enable Notifications
+                    {isEnablingNotifications ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Enabling...
+                      </>
+                    ) : (
+                      <>🔔 Enable Notifications</>
+                    )}
                   </button>
                   <button
                     onClick={() => setShowNotificationPrompt(false)}
@@ -633,6 +685,8 @@ export default function Dashboard() {
               onPrune={handlePruneGarden}
               isWatering={isWatering}
               isPruning={isPruning}
+              pendingPoints={stats.pendingPoints}
+              recentActivity={stats.flowsThisWeek > 0}
             />
           </motion.div>
 

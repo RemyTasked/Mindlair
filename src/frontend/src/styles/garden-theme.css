@@ -254,10 +254,36 @@
 
 @keyframes mg-plant-sway {
   0%, 100% {
-    transform: rotate(-2deg);
+    transform: rotate(-5deg) translateX(-2px);
+  }
+  25% {
+    transform: rotate(0deg) translateX(0);
   }
   50% {
-    transform: rotate(2deg);
+    transform: rotate(5deg) translateX(2px);
+  }
+  75% {
+    transform: rotate(0deg) translateX(0);
+  }
+}
+
+@keyframes mg-plant-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.08);
+    filter: brightness(1.15);
+  }
+}
+
+@keyframes mg-plant-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.6));
   }
 }
 
@@ -279,21 +305,76 @@
 @keyframes mg-sparkle {
   0%, 100% {
     opacity: 0;
-    transform: scale(0);
+    transform: scale(0) rotate(0deg);
   }
   50% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1.2) rotate(180deg);
   }
 }
 
+@keyframes mg-sparkle-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0) translate(0, 0);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) translate(var(--burst-x, 20px), var(--burst-y, -30px));
+  }
+}
+
+@keyframes mg-points-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-40px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+  }
+}
+
+.mg-sparkle-burst {
+  animation: mg-sparkle-burst 1.5s ease-out forwards;
+}
+
+.mg-points-float {
+  animation: mg-points-float 2s ease-out forwards;
+}
+
 .mg-plant {
-  animation: mg-plant-grow 0.6s ease-out forwards;
+  animation: mg-plant-grow 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .mg-plant-sway {
-  animation: mg-plant-sway 4s ease-in-out infinite;
+  animation: mg-plant-sway 6s ease-in-out infinite;
   transform-origin: bottom center;
+}
+
+.mg-plant-pulse {
+  animation: mg-plant-pulse 2s ease-in-out infinite;
+}
+
+.mg-plant-glow {
+  animation: mg-plant-glow 3s ease-in-out infinite;
+}
+
+.mg-plant-new {
+  animation: mg-plant-grow 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             mg-plant-glow 2s ease-in-out 1.2s infinite;
 }
 
 .mg-plant-bloom {

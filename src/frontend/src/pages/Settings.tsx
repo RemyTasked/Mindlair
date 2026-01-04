@@ -11,7 +11,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
-import { ArrowLeft, Save, ChevronDown, ChevronUp, Bell, Calendar, Leaf, User, Plus } from 'lucide-react';
+import { ArrowLeft, Save, ChevronDown, ChevronUp, Bell, Calendar, Leaf, User, Plus, Smartphone, CheckCircle2, XCircle, Send, AlertTriangle } from 'lucide-react';
+import { pushNotificationService } from '../services/pushNotificationService';
 
 interface Preferences {
   // Flow settings
@@ -29,6 +30,10 @@ interface Preferences {
   quietHoursEnd: string;
   enableWellnessReminders: boolean;
   wellnessReminderFrequency: number;
+  // New notification types
+  enableMeetingReminders: boolean;
+  enableWellnessCues: boolean;
+  enableWeeklyRecap: boolean;
 }
 
 interface CalendarAccount {
@@ -60,13 +65,82 @@ export default function Settings() {
     quietHoursEnd: '07:00',
     enableWellnessReminders: true,
     wellnessReminderFrequency: 3,
+    enableMeetingReminders: true,
+    enableWellnessCues: true,
+    enableWeeklyRecap: true,
   });
+  
+  // PWA and notification status
+  const [isPWA, setIsPWA] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
 
   const [calendarAccounts, setCalendarAccounts] = useState<CalendarAccount[]>([]);
 
   useEffect(() => {
     loadSettings();
+    checkPWAStatus();
+    checkNotificationStatus();
   }, []);
+  
+  const checkPWAStatus = () => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        (window.navigator as any).standalone === true;
+    setIsPWA(isStandalone);
+  };
+  
+  const checkNotificationStatus = async () => {
+    if (!('Notification' in window)) {
+      setNotificationPermission('unsupported');
+      return;
+    }
+    setNotificationPermission(Notification.permission);
+    
+    const subscribed = await pushNotificationService.isSubscribed();
+    setIsSubscribed(subscribed);
+  };
+  
+  const handleSendTestNotification = async () => {
+    setSendingTest(true);
+    setTestResult(null);
+    
+    try {
+      const token = localStorage.getItem('mindgarden_token') || localStorage.getItem('meetcute_token');
+      if (!token) {
+        setTestResult('error');
+        return;
+      }
+      
+      const success = await pushNotificationService.sendTestNotification(token);
+      setTestResult(success ? 'success' : 'error');
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      setTestResult('error');
+    } finally {
+      setSendingTest(false);
+      setTimeout(() => setTestResult(null), 3000);
+    }
+  };
+  
+  const handleEnableNotifications = async () => {
+    try {
+      const token = localStorage.getItem('mindgarden_token') || localStorage.getItem('meetcute_token');
+      if (!token) return;
+      
+      const success = await pushNotificationService.subscribe(token);
+      if (success) {
+        setNotificationPermission('granted');
+        setIsSubscribed(true);
+        setMessage('Notifications enabled!');
+        setTimeout(() => setMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Error enabling notifications:', error);
+      setMessage('Failed to enable notifications');
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -343,6 +417,108 @@ export default function Settings() {
             onToggle={toggleSection}
           >
             <div className="space-y-6">
+              {/* PWA & Notification Status */}
+              <div className="p-4 bg-gray-50 rounded-xl space-y-3">
+                <h4 className="font-medium text-gray-800 flex items-center gap-2">
+                  <Smartphone className="w-4 h-4" />
+                  App Status
+                </h4>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Installation</span>
+                  <span className={`flex items-center gap-1.5 font-medium ${isPWA ? 'text-emerald-600' : 'text-gray-500'}`}>
+                    {isPWA ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        Installed as App
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4" />
+                        Running in Browser
+                      </>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Push Notifications</span>
+                  <span className={`flex items-center gap-1.5 font-medium ${
+                    notificationPermission === 'granted' && isSubscribed ? 'text-emerald-600' : 
+                    notificationPermission === 'denied' ? 'text-red-500' : 'text-gray-500'
+                  }`}>
+                    {notificationPermission === 'unsupported' ? (
+                      <>
+                        <XCircle className="w-4 h-4" />
+                        Not Supported
+                      </>
+                    ) : notificationPermission === 'denied' ? (
+                      <>
+                        <XCircle className="w-4 h-4" />
+                        Blocked
+                      </>
+                    ) : notificationPermission === 'granted' && isSubscribed ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        Enabled
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        Not Enabled
+                      </>
+                    )}
+                  </span>
+                </div>
+                
+                {notificationPermission === 'denied' && (
+                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                    Notifications are blocked. Please enable them in your browser settings for this site.
+                  </p>
+                )}
+                
+                {notificationPermission !== 'granted' && notificationPermission !== 'denied' && notificationPermission !== 'unsupported' && (
+                  <button
+                    onClick={handleEnableNotifications}
+                    className="w-full py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm"
+                  >
+                    Enable Push Notifications
+                  </button>
+                )}
+                
+                {notificationPermission === 'granted' && isSubscribed && (
+                  <button
+                    onClick={handleSendTestNotification}
+                    disabled={sendingTest}
+                    className={`w-full py-2 flex items-center justify-center gap-2 rounded-lg transition-colors font-medium text-sm ${
+                      testResult === 'success' ? 'bg-emerald-100 text-emerald-700' :
+                      testResult === 'error' ? 'bg-red-100 text-red-700' :
+                      'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {sendingTest ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : testResult === 'success' ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        Test Sent!
+                      </>
+                    ) : testResult === 'error' ? (
+                      <>
+                        <XCircle className="w-4 h-4" />
+                        Failed to Send
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send Test Notification
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              
               <Toggle
                 label="Enable Notifications"
                 description="Receive reminders for flows and wellness check-ins"
@@ -365,6 +541,33 @@ export default function Settings() {
                       <option value="email">Email</option>
                       <option value="none">None</option>
                     </select>
+                  </div>
+                  
+                  {/* Notification Type Toggles */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <h4 className="font-medium text-gray-800 mb-4">Notification Types</h4>
+                    <div className="space-y-4">
+                      <Toggle
+                        label="Meeting Reminders"
+                        description="Get notified 10 minutes before meetings with a suggested flow"
+                        checked={preferences.enableMeetingReminders}
+                        onChange={(checked) => setPreferences({ ...preferences, enableMeetingReminders: checked })}
+                      />
+                      
+                      <Toggle
+                        label="Wellness Cues"
+                        description="Gentle reminders to take mindful breaks throughout the day"
+                        checked={preferences.enableWellnessCues}
+                        onChange={(checked) => setPreferences({ ...preferences, enableWellnessCues: checked })}
+                      />
+                      
+                      <Toggle
+                        label="Weekly Recap"
+                        description="Sunday summary of your wellness journey and garden growth"
+                        checked={preferences.enableWeeklyRecap}
+                        onChange={(checked) => setPreferences({ ...preferences, enableWeeklyRecap: checked })}
+                      />
+                    </div>
                   </div>
 
                   <Toggle

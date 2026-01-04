@@ -129,6 +129,8 @@ interface GardenCanvasProps {
   interactive?: boolean;
   isWatering?: boolean;
   isPruning?: boolean;
+  pendingPoints?: number;
+  recentActivity?: boolean;
 }
 
 
@@ -1030,12 +1032,35 @@ export default function GardenCanvas({
   interactive = true,
   isWatering = false,
   isPruning = false,
+  pendingPoints = 0,
+  recentActivity = false,
 }: GardenCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
   const [showTimeLapse, setShowTimeLapse] = useState(false);
   const [timeLapseStage, setTimeLapseStage] = useState(0);
+  const [showActivityBurst, setShowActivityBurst] = useState(false);
+  const [prevPendingPoints, setPrevPendingPoints] = useState(pendingPoints);
+  const [floatingPoints, setFloatingPoints] = useState<number | null>(null);
+  
+  // Detect when pendingPoints increases to trigger activity burst
+  useEffect(() => {
+    if (pendingPoints > prevPendingPoints) {
+      const pointsGained = pendingPoints - prevPendingPoints;
+      setShowActivityBurst(true);
+      setFloatingPoints(pointsGained);
+      
+      // Hide after animation
+      const timer = setTimeout(() => {
+        setShowActivityBurst(false);
+        setFloatingPoints(null);
+      }, 2500);
+      
+      return () => clearTimeout(timer);
+    }
+    setPrevPendingPoints(pendingPoints);
+  }, [pendingPoints, prevPendingPoints]);
   
   // Time-lapse effect - cycle through growth stages
   useEffect(() => {
@@ -1795,6 +1820,83 @@ export default function GardenCanvas({
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Activity Burst Animation - Shows when user earns points */}
+      <AnimatePresence>
+        {showActivityBurst && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 pointer-events-none z-35 overflow-hidden"
+          >
+            {/* Sparkle particles across garden */}
+            {[...Array(24)].map((_, i) => (
+              <motion.div
+                key={`activity-sparkle-${i}`}
+                className="absolute text-2xl"
+                style={{ 
+                  left: `${10 + (i % 6) * 15}%`,
+                  top: `${15 + Math.floor(i / 6) * 20}%`,
+                }}
+                initial={{ scale: 0, opacity: 0, rotate: 0 }}
+                animate={{ 
+                  scale: [0, 1.5, 0],
+                  opacity: [0, 1, 0],
+                  rotate: [0, 180],
+                  y: [0, -20],
+                }}
+                transition={{ 
+                  delay: i * 0.05,
+                  duration: 1.2,
+                  ease: 'easeOut'
+                }}
+              >
+                ✨
+              </motion.div>
+            ))}
+            
+            {/* Floating points indicator */}
+            {floatingPoints && (
+              <motion.div
+                className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center"
+                initial={{ scale: 0, opacity: 0, y: 0 }}
+                animate={{ 
+                  scale: [0, 1.2, 1],
+                  opacity: [0, 1, 1, 0],
+                  y: [0, -60],
+                }}
+                transition={{ duration: 2, ease: 'easeOut' }}
+              >
+                <div className="text-4xl font-bold text-emerald-500 drop-shadow-lg">
+                  +{floatingPoints}
+                </div>
+                <div className="text-lg font-medium text-emerald-600 drop-shadow">
+                  Serenity Points
+                </div>
+              </motion.div>
+            )}
+            
+            {/* Garden shimmer overlay */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-t from-emerald-300/20 via-transparent to-emerald-200/10"
+              animate={{ opacity: [0, 0.6, 0] }}
+              transition={{ duration: 1.5 }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Recent Activity Glow - Subtle ambient effect when garden is active */}
+      {(recentActivity || pendingPoints > 0) && (
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-t from-emerald-400/10 via-transparent to-transparent"
+            animate={{ opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
+      )}
 
       {/* Garden Actions */}
       {interactive && (
