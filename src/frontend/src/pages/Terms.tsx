@@ -33,7 +33,7 @@ export default function Terms() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">1. Acceptance of Terms</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                By accessing and using Meet Cute ("the Service"), you accept and agree to be bound by the terms and 
+                By accessing and using Mind Garden ("the Service"), you accept and agree to be bound by the terms and 
                 provisions of this agreement. If you do not agree to these Terms of Use, please do not use the Service.
               </p>
             </section>
@@ -49,14 +49,14 @@ export default function Terms() {
                 <li>Focus rooms with ambient soundscapes</li>
                 <li>Gratitude journaling and mindfulness tools</li>
                 <li>Calendar integration with Google Calendar and Microsoft Outlook</li>
-                <li>Browser extension for contextual micro-interventions</li>
+                <li>Push notifications for pre-meeting wellness reminders</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">3. User Accounts</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                To use Meet Cute, you must authenticate using either Google or Microsoft OAuth. You are responsible for:
+                To use Mind Garden, you must authenticate using either Google or Microsoft OAuth. You are responsible for:
               </p>
               <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
                 <li>Maintaining the security of your account credentials</li>
@@ -68,7 +68,7 @@ export default function Terms() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">4. Calendar Access</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                By connecting your calendar, you grant Meet Cute permission to:
+                By connecting your calendar, you grant Mind Garden permission to:
               </p>
               <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
                 <li>Read your calendar events (title, time, attendees, description)</li>
@@ -83,7 +83,7 @@ export default function Terms() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">5. AI and Data Usage</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Meet Cute uses AI (OpenAI GPT-4) to generate personalized content. By using the Service:
+                Mind Garden uses AI (OpenAI GPT-4) to generate personalized content. By using the Service:
               </p>
               <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
                 <li>You consent to AI processing of your meeting metadata</li>
@@ -110,7 +110,7 @@ export default function Terms() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">7. Third-Party Services</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Meet Cute integrates with third-party services:
+                Mind Garden integrates with third-party services:
               </p>
               <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
                 <li><strong>Google Calendar & Microsoft Outlook:</strong> For calendar access</li>
@@ -126,7 +126,7 @@ export default function Terms() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">8. Intellectual Property</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                The Service, including all content, features, and functionality, is owned by Meet Cute and is 
+                The Service, including all content, features, and functionality, is owned by Mind Garden and is 
                 protected by international copyright, trademark, and other intellectual property laws.
               </p>
             </section>
@@ -135,10 +135,10 @@ export default function Terms() {
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">9. Disclaimer of Warranties</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
                 THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. 
-                Meet Cute does not guarantee that the Service will be uninterrupted, secure, or error-free.
+                Mind Garden does not guarantee that the Service will be uninterrupted, secure, or error-free.
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">
-                <strong>Note:</strong> Meet Cute is a productivity tool, not a substitute for professional mental 
+                <strong>Note:</strong> Mind Garden is a productivity tool, not a substitute for professional mental 
                 health services. If you're experiencing stress or anxiety, please consult a qualified professional.
               </p>
             </section>
@@ -146,7 +146,7 @@ export default function Terms() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">10. Limitation of Liability</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Meet Cute shall not be liable for any indirect, incidental, special, consequential, or punitive 
+                Mind Garden shall not be liable for any indirect, incidental, special, consequential, or punitive 
                 damages resulting from your use or inability to use the Service.
               </p>
             </section>
@@ -202,7 +202,7 @@ export default function Terms() {
           <span>·</span>
           <a href="mailto:support@meetcuteai.com" className="hover:text-teal-600 transition-colors">Contact</a>
         </div>
-        <p className="text-sm">© 2025 Meet Cute. All rights reserved.</p>
+        <p className="text-sm">© 2025 Mind Garden. All rights reserved.</p>
       </footer>
     </div>
   );

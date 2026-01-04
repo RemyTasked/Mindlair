@@ -2,7 +2,7 @@ import { useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
-import { Calendar, Settings as SettingsIcon, TrendingUp, Headphones, Gamepad2, Flower2, Chrome } from 'lucide-react';
+import { Calendar, Settings as SettingsIcon, TrendingUp, Headphones, Gamepad2, Flower2, Download } from 'lucide-react';
 import AmbientSound from '../components/AmbientSound';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
@@ -483,8 +483,8 @@ export default function Dashboard() {
               rel="noopener noreferrer"
               className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center gap-2"
             >
-              <Chrome className="w-4 h-4" />
-              Get Extension
+              <Download className="w-4 h-4" />
+              Install App
             </a>
           </div>
         </div>

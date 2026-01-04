@@ -91,7 +91,7 @@ export default function PWAInstallPrompt() {
             <div className="flex items-center gap-3 mb-3">
               <Logo size="md" />
               <div>
-                <h3 className="text-lg font-bold">Install Meet Cute</h3>
+                <h3 className="text-lg font-bold">Install Mind Garden</h3>
                 <p className="text-sm text-teal-100">
                   Get the full experience with our app
                 </p>

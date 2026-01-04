@@ -36,7 +36,7 @@ export default function Privacy() {
                 Your Privacy is Our Priority
               </h2>
               <p className="text-lg text-gray-700 leading-relaxed">
-                Meet Cute is designed with security-first principles. We only access what we need, 
+                Mind Garden is designed with security-first principles. We only access what we need, 
                 encrypt everything, and never sell your data. Your calendar and meeting information 
                 stay private and secure.
               </p>
@@ -155,19 +155,19 @@ export default function Privacy() {
         <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 mb-12 border border-amber-200">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">Revoking Access</h3>
           <p className="text-gray-700 mb-4">
-            You can revoke Meet Cute's access to your calendar at any time:
+            You can revoke Mind Garden's access to your calendar at any time:
           </p>
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-start gap-2">
               <span className="font-semibold min-w-[120px]">Google:</span>
-              <span>Visit <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">myaccount.google.com/permissions</a> → Find "Meet Cute" → Remove Access</span>
+              <span>Visit <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">myaccount.google.com/permissions</a> → Find "Mind Garden" → Remove Access</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold min-w-[120px]">Microsoft:</span>
-              <span>Visit <a href="https://account.microsoft.com/privacy/app-access" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">account.microsoft.com/privacy</a> → Apps & Services → Remove Meet Cute</span>
+              <span>Visit <a href="https://account.microsoft.com/privacy/app-access" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">account.microsoft.com/privacy</a> → Apps & Services → Remove Mind Garden</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="font-semibold min-w-[120px]">Meet Cute:</span>
+              <span className="font-semibold min-w-[120px]">Mind Garden:</span>
               <span>Settings → Delete Account (permanently removes all data)</span>
             </li>
           </ul>
@@ -180,14 +180,14 @@ export default function Privacy() {
             <div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Important Health Disclaimer</h3>
               <p className="text-lg font-semibold text-amber-800">
-                Meet Cute is a Professional Tool, Not Medical Care
+                Mind Garden is a Professional Tool, Not Medical Care
               </p>
             </div>
           </div>
           
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
-              <strong>Meet Cute is designed to help you prepare mentally for meetings and improve your focus.</strong> 
+              <strong>Mind Garden is designed to help you prepare mentally for meetings and improve your focus.</strong> 
               It is a productivity and wellness tool that provides AI-generated suggestions for meeting preparation, 
               breathing exercises, and reflection prompts.
             </p>
@@ -225,7 +225,7 @@ export default function Privacy() {
             </div>
 
             <p className="text-sm text-gray-600 italic bg-white p-4 rounded-lg border border-gray-200">
-              <strong>By using Meet Cute, you acknowledge that:</strong> This tool is for professional productivity 
+              <strong>By using Mind Garden, you acknowledge that:</strong> This tool is for professional productivity 
               and should not replace proper mental health care when needed. Always consult qualified healthcare 
               providers for medical advice, diagnosis, or treatment.
             </p>

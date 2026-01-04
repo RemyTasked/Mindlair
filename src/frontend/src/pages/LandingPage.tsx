@@ -11,7 +11,7 @@ import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
-import { Leaf, Sparkles, Calendar, Music, Heart, Wind, Sun, Moon, ChevronDown, Chrome, Globe } from 'lucide-react';
+import { Leaf, Sparkles, Calendar, Music, Heart, Wind, Sun, Moon, ChevronDown, Bell, Smartphone, Download } from 'lucide-react';
 import CalDAVModal from '../components/CalDAVModal';
 
 export default function LandingPage() {
@@ -135,7 +135,7 @@ export default function LandingPage() {
             Each breath, each flow, each moment of calm plants a seed in your personal garden.
           </p>
 
-          {/* Browser Extension Feature */}
+          {/* PWA App Feature */}
           <div className="mb-12 animate-fade-in-up animation-delay-200">
             <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
               {/* Static gradient orbs - no animation for perf */}
@@ -148,87 +148,66 @@ export default function LandingPage() {
                 <div className="text-center md:text-left">
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 backdrop-blur-sm rounded-full text-emerald-100 text-xs font-medium mb-4 border border-emerald-400/20">
                     <Sparkles className="w-3 h-3 text-amber-300" />
-                    Most Popular
+                    Works Everywhere
                   </div>
                   
                   <h3 className="text-2xl sm:text-3xl font-bold mb-6 leading-tight">
-                    Wellness Right in<br/>Your Calendar
+                    Smart Reminders<br/>Before Meetings
                   </h3>
                   
                   <div className="grid grid-cols-2 gap-3 mb-8">
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
-                      <Calendar className="w-5 h-5 text-emerald-300" />
-                      <span className="text-xs font-medium text-emerald-50">Smart Nudges</span>
+                      <Bell className="w-5 h-5 text-emerald-300" />
+                      <span className="text-xs font-medium text-emerald-50">Push Notifications</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
                       <Wind className="w-5 h-5 text-emerald-300" />
                       <span className="text-xs font-medium text-emerald-50">2-Min Resets</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
-                      <Leaf className="w-5 h-5 text-emerald-300" />
-                      <span className="text-xs font-medium text-emerald-50">Grow Daily</span>
+                      <Smartphone className="w-5 h-5 text-emerald-300" />
+                      <span className="text-xs font-medium text-emerald-50">Desktop & Mobile</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
-                      <Music className="w-5 h-5 text-emerald-300" />
-                      <span className="text-xs font-medium text-emerald-50">Focus Audio</span>
+                      <Download className="w-5 h-5 text-emerald-300" />
+                      <span className="text-xs font-medium text-emerald-50">Install as App</span>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                    <a
-                      href="https://chrome.google.com/webstore/detail/mind-garden"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-emerald-900 rounded-xl font-bold hover:bg-emerald-50 transition-all shadow-lg text-sm"
-                    >
-                      <Chrome className="w-4 h-4" />
-                      Add to Chrome
-                    </a>
-                    <a
-                      href="https://addons.mozilla.org/firefox/addon/mind-garden"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-800/50 text-white border border-emerald-400/30 rounded-xl font-medium hover:bg-emerald-800/70 transition-all backdrop-blur-sm text-sm"
-                    >
-                      <Globe className="w-4 h-4" />
-                      Firefox
-                    </a>
-                  </div>
-                  <p className="text-emerald-200/70 text-xs mt-3 text-center md:text-left">
-                    💻 Desktop only · On mobile? Use our web app — add to home screen for the full experience!
+                  <p className="text-emerald-100/80 text-sm mb-4">
+                    Get a gentle nudge 10 minutes before stressful meetings. One tap starts a calming flow.
+                  </p>
+                  
+                  <p className="text-emerald-200/60 text-xs">
+                    📱 Works on any device — add to home screen for the full app experience
                   </p>
                 </div>
 
-                {/* Right: Mockup (Compact) - removed backdrop-blur for perf */}
+                {/* Right: Notification Mockup */}
                 <div className="hidden md:block relative">
                   <div className="bg-white/10 rounded-2xl p-4 border border-white/20 shadow-2xl w-full max-w-[320px] mx-auto">
-                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-lg shadow-lg">🌱</div>
-                        <div>
-                          <div className="text-white font-semibold text-sm">Mind Garden</div>
-                          <div className="text-emerald-200 text-[10px]">Thriving · 12 day streak</div>
+                    {/* Notification preview */}
+                    <div className="bg-white rounded-xl p-4 shadow-lg mb-3">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-lg shadow-md shrink-0">🌱</div>
+                        <div className="flex-1">
+                          <div className="text-gray-900 font-semibold text-sm">Mind Garden</div>
+                          <div className="text-gray-600 text-xs">Board Meeting in 10 minutes</div>
+                          <div className="text-gray-500 text-xs">Take 3 minutes to prepare</div>
                         </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="flex-1 py-2 bg-emerald-500 text-white rounded-lg text-xs font-semibold">
+                          🌱 Start Flow
+                        </button>
+                        <button className="flex-1 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
+                          Not Now
+                        </button>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div className="bg-amber-500/20 border border-amber-500/30 rounded-lg p-2.5">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="w-1.5 h-1.5 bg-amber-400 rounded-full"></div>
-                          <span className="text-amber-100 text-[10px] font-medium uppercase tracking-wider">Up Next</span>
-                        </div>
-                        <div className="text-white font-medium text-sm">Team Sync</div>
-                        <div className="text-white/60 text-[10px]">Starts in 5 min</div>
-                      </div>
-                      
-                      <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg p-2.5 shadow-lg flex items-center justify-between cursor-pointer hover:brightness-110 transition-all">
-                        <div className="flex items-center gap-2">
-                          <Wind className="w-3.5 h-3.5 text-white" />
-                          <span className="text-white font-bold text-xs">Quick Focus</span>
-                        </div>
-                        <span className="text-white/80 text-[10px] bg-white/20 px-1.5 py-0.5 rounded">2 min</span>
-                      </div>
+                    <div className="text-center text-emerald-200/60 text-[10px]">
+                      Actionable notifications with one-tap access
                     </div>
                   </div>
                 </div>

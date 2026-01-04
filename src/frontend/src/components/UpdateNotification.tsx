@@ -1,161 +1,140 @@
 import React, { useState, useEffect } from 'react';
-import { X, RefreshCw } from 'lucide-react';
+import { RefreshCw, CheckCircle } from 'lucide-react';
 
-interface UpdateNotificationProps {
-  onUpdate: () => void;
-  onDismiss: () => void;
+/**
+ * Mind Garden PWA Auto-Update System
+ * 
+ * Updates are applied silently in the background. Users only see a brief
+ * success toast after the update is complete - no manual action required.
+ */
+
+interface UpdateToastProps {
+  message: string;
+  onClose: () => void;
 }
 
-export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onUpdate, onDismiss }) => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  if (!isVisible) return null;
+// Brief success toast shown after auto-update completes
+export const UpdateToast: React.FC<UpdateToastProps> = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up">
-      <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl shadow-2xl p-4 border border-teal-400 animate-pulse">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-1">
-            <RefreshCw className={`w-6 h-6 text-white ${isUpdating ? 'animate-spin' : ''}`} />
-          </div>
-          <div className="flex-1">
-            {isUpdating ? (
-              <>
-                <h3 className="font-semibold text-lg mb-1">Updating... ✨</h3>
-                <p className="text-sm text-teal-100">
-                  Refreshing to the latest version. This will only take a moment!
-                </p>
-              </>
-            ) : (
-              <>
-                <h3 className="font-semibold text-lg mb-1">🚀 Update Ready!</h3>
-                <p className="text-sm text-teal-100 mb-3">
-                  A fresh version of Meet Cute is waiting! Get the latest features and improvements.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setIsUpdating(true);
-                      // Small delay to show the updating state
-                      setTimeout(() => {
-                        onUpdate();
-                      }, 500);
-                    }}
-                    className="flex-1 px-4 py-2 bg-white text-teal-600 rounded-lg hover:bg-teal-50 transition-colors font-medium text-sm shadow-md"
-                  >
-                    Update Now
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Small delay to prevent accidental dismissal
-                      setTimeout(() => {
-                        setIsVisible(false);
-                        onDismiss();
-                      }, 300);
-                    }}
-                    className="px-4 py-2 bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors font-medium text-sm"
-                  >
-                    Maybe Later
-                  </button>
-                </div>
-                <p className="text-xs text-teal-200 mt-2">
-                  💡 Tip: Update during a break to avoid interrupting your workflow
-                </p>
-              </>
-            )}
-          </div>
-          {!isUpdating && (
-            <button
-              onClick={() => {
-                setIsVisible(false);
-                onDismiss();
-              }}
-              className="flex-shrink-0 text-white hover:text-teal-200 transition-colors"
-              aria-label="Dismiss"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 animate-slide-up">
+      <div className="bg-emerald-600 text-white rounded-xl shadow-lg p-4 flex items-center gap-3">
+        <CheckCircle className="w-5 h-5 text-emerald-200 shrink-0" />
+        <p className="text-sm font-medium">{message}</p>
       </div>
     </div>
   );
 };
 
-// Global state management for update notification
-let updateNotificationCallback: (() => void) | null = null;
-
-export const showUpdateNotification = (onUpdate: () => void) => {
-  console.log('🔔 showUpdateNotification called - checking if user recently dismissed');
-
-  // Check if user dismissed within the last 24 hours
-  const dismissedTime = localStorage.getItem('meetcute_update_dismissed');
-  if (dismissedTime) {
-    const hoursSinceDismissal = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60);
-    if (hoursSinceDismissal < 24) {
-      console.log('🔔 Update notification dismissed recently, not showing again');
-      return;
-    }
-  }
-
-  console.log('🔔 Showing update notification');
-  updateNotificationCallback = onUpdate;
-  // Dispatch event immediately to show notification
-  window.dispatchEvent(new CustomEvent('show-update-notification'));
-  // Also try a small delay in case event listener isn't ready
-  setTimeout(() => {
-    window.dispatchEvent(new CustomEvent('show-update-notification'));
-  }, 100);
-};
-
-export const hideUpdateNotification = () => {
-  window.dispatchEvent(new CustomEvent('hide-update-notification'));
-};
-
-// Manager component to handle the notification globally
-export const UpdateNotificationManager: React.FC = () => {
-  const [showNotification, setShowNotification] = useState(false);
-  const [updateCallback, setUpdateCallback] = useState<(() => void) | null>(null);
-
-  useEffect(() => {
-    const handleShow = () => {
-      console.log('🔔 UpdateNotificationManager: show-update-notification event received');
-      if (updateNotificationCallback) {
-        setUpdateCallback(() => updateNotificationCallback);
-        setShowNotification(true);
-      } else {
-        console.warn('⚠️ UpdateNotificationManager: No callback set yet');
-      }
-    };
-
-    const handleHide = () => {
-      setShowNotification(false);
-    };
-
-    window.addEventListener('show-update-notification', handleShow);
-    window.addEventListener('hide-update-notification', handleHide);
-
-    return () => {
-      window.removeEventListener('show-update-notification', handleShow);
-      window.removeEventListener('hide-update-notification', handleHide);
-    };
-  }, []);
-
-  if (!showNotification || !updateCallback) return null;
-
+// Loading indicator shown briefly during update
+export const UpdateSpinner: React.FC = () => {
   return (
-    <UpdateNotification
-      onUpdate={() => {
-        updateCallback();
-        setShowNotification(false);
-      }}
-      onDismiss={() => {
-        setShowNotification(false);
-        // Store dismissal time - only show again if app is reopened after 24 hours
-        localStorage.setItem('meetcute_update_dismissed', Date.now().toString());
-      }}
-    />
+    <div className="fixed bottom-4 right-4 z-50">
+      <div className="bg-slate-800/90 text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
+        <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin" />
+        <p className="text-xs">Updating...</p>
+      </div>
+    </div>
   );
 };
 
+// Global state management for auto-update
+let pendingUpdateCallback: (() => void) | null = null;
+
+/**
+ * Apply a pending update automatically
+ * Called when a new service worker is ready
+ */
+export const applyAutoUpdate = (onUpdate: () => void) => {
+  console.log('🔄 Auto-update: Applying update silently...');
+  
+  // Store the callback for after reload
+  pendingUpdateCallback = onUpdate;
+  
+  // Show brief updating indicator then apply
+  window.dispatchEvent(new CustomEvent('pwa-updating'));
+  
+  // Small delay to show the updating state, then apply
+  setTimeout(() => {
+    onUpdate();
+  }, 300);
+};
+
+/**
+ * Show success toast after update completes
+ * Called on page load if we just updated
+ */
+export const showUpdateSuccessToast = () => {
+  // Check if we just completed an update
+  const justUpdated = sessionStorage.getItem('mindgarden_just_updated');
+  if (justUpdated) {
+    sessionStorage.removeItem('mindgarden_just_updated');
+    window.dispatchEvent(new CustomEvent('pwa-updated'));
+  }
+};
+
+/**
+ * Mark that we're about to update (for success toast after reload)
+ */
+export const markUpdatePending = () => {
+  sessionStorage.setItem('mindgarden_just_updated', 'true');
+};
+
+// Manager component to handle update UI globally
+export const UpdateNotificationManager: React.FC = () => {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    const handleUpdating = () => {
+      setIsUpdating(true);
+    };
+
+    const handleUpdated = () => {
+      setIsUpdating(false);
+      setShowSuccess(true);
+    };
+
+    window.addEventListener('pwa-updating', handleUpdating);
+    window.addEventListener('pwa-updated', handleUpdated);
+    
+    // Check on mount if we just updated
+    showUpdateSuccessToast();
+
+    return () => {
+      window.removeEventListener('pwa-updating', handleUpdating);
+      window.removeEventListener('pwa-updated', handleUpdated);
+    };
+  }, []);
+
+  if (isUpdating) {
+    return <UpdateSpinner />;
+  }
+
+  if (showSuccess) {
+    return (
+      <UpdateToast 
+        message="Mind Garden updated! 🌱" 
+        onClose={() => setShowSuccess(false)} 
+      />
+    );
+  }
+
+  return null;
+};
+
+// Legacy export for compatibility - now auto-applies instead of prompting
+export const showUpdateNotification = (onUpdate: () => void) => {
+  console.log('🔄 Auto-update: New version detected, applying automatically...');
+  applyAutoUpdate(onUpdate);
+};
+
+export const hideUpdateNotification = () => {
+  // No-op for compatibility
+};
