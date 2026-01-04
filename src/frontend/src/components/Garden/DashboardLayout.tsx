@@ -51,7 +51,7 @@ interface DashboardLayoutProps {
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', icon: Home, path: '/dashboard' },
   { id: 'flows', label: 'Flows', icon: Sparkles, path: '/flows' },
-  { id: 'activities', label: 'Activities', icon: Gamepad2, path: '/games' },
+  { id: 'activities', label: 'Activities', icon: Gamepad2, path: '/activities' },
   { id: 'insights', label: 'Insights', icon: BarChart3, path: '/insights' },
   { id: 'sounds', label: 'Sounds', icon: Music, path: '/focus-rooms' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },

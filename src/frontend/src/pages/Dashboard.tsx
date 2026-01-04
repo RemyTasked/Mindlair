@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
 import GardenCanvas, { GardenData, Plant } from '../components/Garden/GardenCanvas';
+import PWAInstallBanner from '../components/PWAInstallBanner';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { pushNotificationService } from '../services/pushNotificationService';
@@ -387,18 +388,22 @@ export default function Dashboard() {
   const isTimeReminderCompleted = isFlowCompletedToday(timeReminder.action);
 
   return (
-    <DashboardLayout
-      activeSection="home"
-      gardenState={{
-        health: stats.gardenHealth,
-        visualState: getVisualState(stats.gardenHealth, stats.currentStreak),
-        flowsToday: stats.flowsToday,
-        streak: stats.currentStreak,
-      }}
-      user={user}
-      onLogout={handleLogout}
-    >
-      <div className="p-4 md:p-8 pb-32">
+    <>
+      {/* PWA Install Banner - shows at top of page */}
+      <PWAInstallBanner variant="banner" />
+      
+      <DashboardLayout
+        activeSection="home"
+        gardenState={{
+          health: stats.gardenHealth,
+          visualState: getVisualState(stats.gardenHealth, stats.currentStreak),
+          flowsToday: stats.flowsToday,
+          streak: stats.currentStreak,
+        }}
+        user={user}
+        onLogout={handleLogout}
+      >
+        <div className="p-4 md:p-8 pb-32">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-1">
@@ -784,6 +789,7 @@ export default function Dashboard() {
         </div>
       </div>
     </DashboardLayout>
+    </>
   );
 }
 

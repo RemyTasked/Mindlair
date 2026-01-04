@@ -41,17 +41,19 @@ export default function GamesHub() {
   const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
-    loadProgress();
-    
     // Check if we should auto-open a game from navigation state
     const state = location.state as { openGame?: GameType } | null;
     if (state?.openGame) {
+      loadProgress();
       setGameType(state.openGame);
       setGameStarted(true);
       // Clear the state to prevent re-opening on refresh
       window.history.replaceState({}, document.title);
+    } else {
+      // If no game specified, redirect to the unified Activities page
+      navigate('/activities', { replace: true });
     }
-  }, [location.state]);
+  }, [location.state, navigate]);
 
   const loadProgress = async () => {
     try {

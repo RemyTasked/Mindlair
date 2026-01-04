@@ -11,8 +11,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
-import { ArrowLeft, Save, ChevronDown, ChevronUp, Bell, Calendar, Leaf, User, Plus, Smartphone, CheckCircle2, XCircle, Send, AlertTriangle } from 'lucide-react';
+import { Save, ChevronDown, ChevronUp, Bell, Calendar, Leaf, User, Plus, Smartphone, CheckCircle2, XCircle, Send, AlertTriangle } from 'lucide-react';
 import { pushNotificationService } from '../services/pushNotificationService';
+import DashboardLayout from '../components/Garden/DashboardLayout';
 
 interface Preferences {
   // Flow settings
@@ -282,43 +283,34 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-teal-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50 border-b border-emerald-100">
-        <div className="container mx-auto px-4 py-4 max-w-3xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-emerald-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <h1 className="text-xl font-bold text-gray-800">Settings</h1>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {message && (
-                <span className={`text-sm font-medium ${
-                  message.includes('Error') ? 'text-red-600' : 'text-emerald-600'
-                }`}>
-                  {message}
-                </span>
-              )}
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors font-medium"
-              >
-                <Save className="w-4 h-4" />
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-            </div>
+    <DashboardLayout activeSection="settings">
+      <div className="p-4 md:p-8 pb-32 max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--mg-text-primary)]">Settings</h1>
+            <p className="text-[var(--mg-text-secondary)] text-sm">Customize your Mind Garden experience</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {message && (
+              <span className={`text-sm font-medium ${
+                message.includes('Error') ? 'text-red-400' : 'text-emerald-400'
+              }`}>
+                {message}
+              </span>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors font-medium"
+            >
+              <Save className="w-4 h-4" />
+              {saving ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="space-y-4">
           {/* Flow Preferences */}
           <Section
@@ -337,15 +329,15 @@ export default function Settings() {
               />
               
               {preferences.enableMorningFlow && (
-                <div className="ml-6 pl-4 border-l-2 border-emerald-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="ml-6 pl-4 border-l-2 border-emerald-500/30">
+                  <label className="block text-sm font-medium text-[var(--mg-text-secondary)] mb-2">
                     Morning Flow Time
                   </label>
                   <input
                     type="time"
                     value={preferences.morningFlowTime}
                     onChange={(e) => setPreferences({ ...preferences, morningFlowTime: e.target.value })}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
                   />
                 </div>
               )}
@@ -358,20 +350,20 @@ export default function Settings() {
               />
               
               {preferences.enableEveningFlow && (
-                <div className="ml-6 pl-4 border-l-2 border-emerald-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="ml-6 pl-4 border-l-2 border-emerald-500/30">
+                  <label className="block text-sm font-medium text-[var(--mg-text-secondary)] mb-2">
                     Evening Flow Time
                   </label>
                   <input
                     type="time"
                     value={preferences.eveningFlowTime}
                     onChange={(e) => setPreferences({ ...preferences, eveningFlowTime: e.target.value })}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
                   />
                 </div>
               )}
 
-              <div className="pt-4 border-t border-gray-100">
+              <div className="pt-4 border-t border-[var(--mg-border)]">
                 <Toggle
                   label="Voice Guidance"
                   description="Spoken instructions during flows"
@@ -388,14 +380,14 @@ export default function Settings() {
               />
               
               {preferences.enableFocusSound && (
-                <div className="ml-6 pl-4 border-l-2 border-emerald-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="ml-6 pl-4 border-l-2 border-emerald-500/30">
+                  <label className="block text-sm font-medium text-[var(--mg-text-secondary)] mb-2">
                     Sound Type
                   </label>
                   <select
                     value={preferences.focusSoundType}
                     onChange={(e) => setPreferences({ ...preferences, focusSoundType: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
                   >
                     <option value="calm-ocean">Calm Ocean</option>
                     <option value="rain">Gentle Rain</option>
@@ -418,14 +410,14 @@ export default function Settings() {
           >
             <div className="space-y-6">
               {/* PWA & Notification Status */}
-              <div className="p-4 bg-gray-50 rounded-xl space-y-3">
-                <h4 className="font-medium text-gray-800 flex items-center gap-2">
-                  <Smartphone className="w-4 h-4" />
+              <div className="p-4 bg-[var(--mg-bg-primary)] rounded-xl space-y-3">
+                <h4 className="font-medium text-[var(--mg-text-primary)] flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-emerald-400" />
                   App Status
                 </h4>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Installation</span>
-                  <span className={`flex items-center gap-1.5 font-medium ${isPWA ? 'text-emerald-600' : 'text-gray-500'}`}>
+                  <span className="text-[var(--mg-text-muted)]">Installation</span>
+                  <span className={`flex items-center gap-1.5 font-medium ${isPWA ? 'text-emerald-400' : 'text-[var(--mg-text-muted)]'}`}>
                     {isPWA ? (
                       <>
                         <CheckCircle2 className="w-4 h-4" />
@@ -440,10 +432,10 @@ export default function Settings() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Push Notifications</span>
+                  <span className="text-[var(--mg-text-muted)]">Push Notifications</span>
                   <span className={`flex items-center gap-1.5 font-medium ${
-                    notificationPermission === 'granted' && isSubscribed ? 'text-emerald-600' : 
-                    notificationPermission === 'denied' ? 'text-red-500' : 'text-gray-500'
+                    notificationPermission === 'granted' && isSubscribed ? 'text-emerald-400' : 
+                    notificationPermission === 'denied' ? 'text-red-400' : 'text-[var(--mg-text-muted)]'
                   }`}>
                     {notificationPermission === 'unsupported' ? (
                       <>
@@ -470,7 +462,7 @@ export default function Settings() {
                 </div>
                 
                 {notificationPermission === 'denied' && (
-                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                  <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded-lg border border-red-500/30">
                     Notifications are blocked. Please enable them in your browser settings for this site.
                   </p>
                 )}
@@ -478,7 +470,7 @@ export default function Settings() {
                 {notificationPermission !== 'granted' && notificationPermission !== 'denied' && notificationPermission !== 'unsupported' && (
                   <button
                     onClick={handleEnableNotifications}
-                    className="w-full py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm"
+                    className="w-full py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors font-medium text-sm"
                   >
                     Enable Push Notifications
                   </button>
@@ -489,9 +481,9 @@ export default function Settings() {
                     onClick={handleSendTestNotification}
                     disabled={sendingTest}
                     className={`w-full py-2 flex items-center justify-center gap-2 rounded-lg transition-colors font-medium text-sm ${
-                      testResult === 'success' ? 'bg-emerald-100 text-emerald-700' :
-                      testResult === 'error' ? 'bg-red-100 text-red-700' :
-                      'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      testResult === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
+                      testResult === 'error' ? 'bg-red-500/20 text-red-400' :
+                      'bg-[var(--mg-bg-card)] border border-[var(--mg-border)] text-[var(--mg-text-secondary)] hover:bg-[var(--mg-bg-primary)]'
                     }`}
                   >
                     {sendingTest ? (
@@ -529,13 +521,13 @@ export default function Settings() {
               {preferences.enableNotifications && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--mg-text-secondary)] mb-2">
                       Notification Method
                     </label>
                     <select
                       value={preferences.notificationChannel}
                       onChange={(e) => setPreferences({ ...preferences, notificationChannel: e.target.value as any })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
                     >
                       <option value="push">Push Notifications</option>
                       <option value="email">Email</option>
@@ -544,8 +536,8 @@ export default function Settings() {
                   </div>
                   
                   {/* Notification Type Toggles */}
-                  <div className="pt-4 border-t border-gray-100">
-                    <h4 className="font-medium text-gray-800 mb-4">Notification Types</h4>
+                  <div className="pt-4 border-t border-[var(--mg-border)]">
+                    <h4 className="font-medium text-[var(--mg-text-primary)] mb-4">Notification Types</h4>
                     <div className="space-y-4">
                       <Toggle
                         label="Meeting Reminders"
@@ -578,14 +570,14 @@ export default function Settings() {
                   />
 
                   {preferences.enableWellnessReminders && (
-                    <div className="ml-6 pl-4 border-l-2 border-amber-200">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="ml-6 pl-4 border-l-2 border-amber-500/30">
+                      <label className="block text-sm font-medium text-[var(--mg-text-secondary)] mb-2">
                         Reminder Frequency
                       </label>
                       <select
                         value={preferences.wellnessReminderFrequency}
                         onChange={(e) => setPreferences({ ...preferences, wellnessReminderFrequency: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
                       >
                         <option value="2">Every 2 hours</option>
                         <option value="3">Every 3 hours</option>
@@ -594,26 +586,26 @@ export default function Settings() {
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-gray-100">
-                    <h4 className="font-medium text-gray-800 mb-3">Quiet Hours</h4>
-                    <p className="text-sm text-gray-500 mb-4">No notifications during these hours</p>
+                  <div className="pt-4 border-t border-[var(--mg-border)]">
+                    <h4 className="font-medium text-[var(--mg-text-primary)] mb-3">Quiet Hours</h4>
+                    <p className="text-sm text-[var(--mg-text-muted)] mb-4">No notifications during these hours</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">Start</label>
+                        <label className="block text-sm text-[var(--mg-text-muted)] mb-1">Start</label>
                         <input
                           type="time"
                           value={preferences.quietHoursStart}
                           onChange={(e) => setPreferences({ ...preferences, quietHoursStart: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                          className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 text-[var(--mg-text-primary)]"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">End</label>
+                        <label className="block text-sm text-[var(--mg-text-muted)] mb-1">End</label>
                         <input
                           type="time"
                           value={preferences.quietHoursEnd}
                           onChange={(e) => setPreferences({ ...preferences, quietHoursEnd: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                          className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 text-[var(--mg-text-primary)]"
                         />
                       </div>
                     </div>
@@ -632,7 +624,7 @@ export default function Settings() {
             onToggle={toggleSection}
           >
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-[var(--mg-text-muted)]">
                 Connect your calendar for smart, contextual wellness moments based on your schedule.
               </p>
 
@@ -649,14 +641,14 @@ export default function Settings() {
                     const config = providerConfig[account.provider] || { bg: 'bg-gray-500', label: account.provider, letter: '?' };
                     
                     return (
-                      <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                      <div key={account.id} className="flex items-center justify-between p-4 bg-[var(--mg-bg-primary)] rounded-xl">
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold ${config.bg}`}>
                             {config.letter}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">{account.email || account.label}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="font-medium text-[var(--mg-text-primary)]">{account.email || account.label}</p>
+                            <p className="text-xs text-[var(--mg-text-muted)]">
                               {config.label}
                               {account.isPrimary && ' • Primary'}
                             </p>
@@ -664,7 +656,7 @@ export default function Settings() {
                         </div>
                         <button
                           onClick={() => handleDisconnectCalendar(account.id)}
-                          className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="px-3 py-1 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                           Disconnect
                         </button>
@@ -673,15 +665,15 @@ export default function Settings() {
                   })}
                 </div>
               ) : (
-                <div className="p-6 bg-gray-50 rounded-xl text-center">
-                  <p className="text-gray-500 mb-4">No calendars connected</p>
+                <div className="p-6 bg-[var(--mg-bg-primary)] rounded-xl text-center">
+                  <p className="text-[var(--mg-text-muted)] mb-4">No calendars connected</p>
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={connectGoogleCalendar}
-                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-colors font-medium flex items-center justify-center gap-2"
+                  className="px-4 py-3 bg-[var(--mg-bg-card)] border-2 border-[var(--mg-border)] rounded-xl hover:border-blue-400 transition-colors font-medium flex items-center justify-center gap-2 text-[var(--mg-text-primary)]"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -693,7 +685,7 @@ export default function Settings() {
                 </button>
                 <button
                   onClick={connectMicrosoftCalendar}
-                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-colors font-medium flex items-center justify-center gap-2"
+                  className="px-4 py-3 bg-[var(--mg-bg-card)] border-2 border-[var(--mg-border)] rounded-xl hover:border-blue-400 transition-colors font-medium flex items-center justify-center gap-2 text-[var(--mg-text-primary)]"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 23 23">
                     <path fill="#f35325" d="M1 1h10v10H1z"/>
@@ -705,7 +697,7 @@ export default function Settings() {
                 </button>
                 <button
                   onClick={connectWebexCalendar}
-                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-teal-300 transition-colors font-medium flex items-center justify-center gap-2"
+                  className="px-4 py-3 bg-[var(--mg-bg-card)] border-2 border-[var(--mg-border)] rounded-xl hover:border-teal-400 transition-colors font-medium flex items-center justify-center gap-2 text-[var(--mg-text-primary)]"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <circle fill="#00CF64" cx="12" cy="12" r="10"/>
@@ -715,13 +707,13 @@ export default function Settings() {
                 </button>
                 <button
                   onClick={() => setShowCalDAVModal(true)}
-                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-400 transition-colors font-medium flex items-center justify-center gap-2"
+                  className="px-4 py-3 bg-[var(--mg-bg-card)] border-2 border-[var(--mg-border)] rounded-xl hover:border-[var(--mg-text-muted)] transition-colors font-medium flex items-center justify-center gap-2 text-[var(--mg-text-primary)]"
                 >
-                  <Plus className="w-5 h-5 text-gray-600" />
+                  <Plus className="w-5 h-5 text-[var(--mg-text-muted)]" />
                   CalDAV / Other
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-3">
+              <p className="text-xs text-[var(--mg-text-muted)] mt-3">
                 CalDAV works with Apple Calendar, Fastmail, Nextcloud, and more.
               </p>
             </div>
@@ -812,18 +804,18 @@ export default function Settings() {
           >
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <p className="text-gray-900">{userEmail || 'Not set'}</p>
+                <label className="block text-sm font-medium text-[var(--mg-text-muted)] mb-1">Email</label>
+                <p className="text-[var(--mg-text-primary)]">{userEmail || 'Not set'}</p>
               </div>
 
-              <div className="pt-4 border-t border-gray-100">
-                <h4 className="font-medium text-red-600 mb-3">Danger Zone</h4>
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="pt-4 border-t border-[var(--mg-border)]">
+                <h4 className="font-medium text-red-400 mb-3">Danger Zone</h4>
+                <p className="text-sm text-[var(--mg-text-muted)] mb-4">
                   Permanently delete your account and all data. This cannot be undone.
                 </p>
                 <button
                   onClick={handleDeleteAccount}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors font-medium"
                 >
                   Delete Account
                 </button>
@@ -831,8 +823,8 @@ export default function Settings() {
             </div>
           </Section>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
@@ -852,23 +844,23 @@ function Section({
   onToggle: (id: string) => void;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="mg-card overflow-hidden">
       <button
         onClick={() => onToggle(id)}
-        className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between p-5 hover:bg-[var(--mg-bg-primary)] transition-colors"
       >
         <div className="flex items-center gap-3">
           {icon}
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-[var(--mg-text-primary)]">{title}</h2>
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-400" />
+          <ChevronUp className="w-5 h-5 text-[var(--mg-text-muted)]" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
+          <ChevronDown className="w-5 h-5 text-[var(--mg-text-muted)]" />
         )}
       </button>
       {isExpanded && (
-        <div className="px-5 pb-5 border-t border-gray-100 pt-5">
+        <div className="px-5 pb-5 border-t border-[var(--mg-border)] pt-5">
           {children}
         </div>
       )}
@@ -890,13 +882,13 @@ function Toggle({
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex-1">
-        <div className="font-medium text-gray-900">{label}</div>
-        <div className="text-sm text-gray-500 mt-0.5">{description}</div>
+        <div className="font-medium text-[var(--mg-text-primary)]">{label}</div>
+        <div className="text-sm text-[var(--mg-text-muted)] mt-0.5">{description}</div>
       </div>
       <button
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
-          checked ? 'bg-emerald-600' : 'bg-gray-200'
+          checked ? 'bg-emerald-500' : 'bg-[var(--mg-bg-primary)]'
         }`}
       >
         <span

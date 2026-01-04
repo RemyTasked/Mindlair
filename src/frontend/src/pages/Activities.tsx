@@ -2,15 +2,16 @@
  * Mind Garden - Activities Page
  * 
  * Mental health activities including:
- * - Gratitude Garden (journaling)
+ * - Daily Check-In & Gratitude
  * - Thought Reframing Lab (CBT)
  * - Breathing Garden
  * - Mindful Moments
  * - Games (Thought Popper, Zen Match, Thought Sorter)
+ * - Creative Activities (Mandala, Sound Bowls)
  */
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Heart,
@@ -29,8 +30,29 @@ import {
   Paintbrush,
   Bell,
   LucideIcon,
+  Zap,
+  Target,
+  Trophy,
 } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
+import api from '../lib/axios';
+
+// Import game components for inline play
+import ThoughtPopperGame from '../components/games/ThoughtPopperGame';
+import ZenMatchGame from '../components/games/ZenMatchGame';
+import ThoughtSorterGame from '../components/games/ThoughtSorterGame';
+import ThoughtReframingLab from '../components/games/ThoughtReframingLab';
+import MandalaGame from '../components/games/MandalaGame';
+import SoundBowlGame from '../components/games/SoundBowlGame';
+
+interface GameProgress {
+  totalCredits: number;
+  currentStreak: number;
+  longestStreak: number;
+  badges: string[];
+}
+
+type GameType = 'thought-popper' | 'zen-match' | 'thought-sorter' | 'thought-reframing' | 'mandala' | 'sound-bowl' | null;
 
 interface Activity {
   id: string;
@@ -170,11 +192,69 @@ const CATEGORIES = {
 
 export default function Activities() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [gameType, setGameType] = useState<GameType>(null);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [progress, setProgress] = useState<GameProgress | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProgress();
+    
+    // Check if we should auto-open a game from navigation state
+    const state = location.state as { openGame?: GameType } | null;
+    if (state?.openGame) {
+      setGameType(state.openGame);
+      setGameStarted(true);
+      // Clear the state to prevent re-opening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  const loadProgress = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/games/progress').catch(() => ({ 
+        data: { totalCredits: 0, currentStreak: 0, longestStreak: 0, badges: [] } 
+      }));
+      setProgress(response.data);
+    } catch (error) {
+      console.error('Error loading progress:', error);
+      setProgress({ totalCredits: 0, currentStreak: 0, longestStreak: 0, badges: [] });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGameComplete = async (credits: number, streak: number) => {
+    // Refresh progress after game completion
+    try {
+      await api.post('/api/games/progress', { credits });
+      const response = await api.get('/api/games/progress');
+      setProgress(response.data);
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      // Update local progress anyway
+      if (progress) {
+        setProgress({
+          ...progress,
+          totalCredits: progress.totalCredits + credits,
+          currentStreak: streak > 0 ? progress.currentStreak + 1 : 0,
+        });
+      }
+    }
+    setGameStarted(false);
+  };
 
   const filteredActivities = selectedCategory
     ? ACTIVITIES.filter(a => a.category === selectedCategory)
     : ACTIVITIES;
+
+  const startGame = (type: GameType) => {
+    setGameType(type);
+    setGameStarted(true);
+  };
 
   const handleActivityClick = (activity: Activity) => {
     if (!activity.available) return;
@@ -184,7 +264,7 @@ export default function Activities() {
         navigate('/activities/daily-checkin');
         break;
       case 'thought-reframing':
-        navigate('/games', { state: { openGame: 'thought-reframing' } });
+        startGame('thought-reframing');
         break;
       case 'breathing-garden':
         navigate('/flow/breathing');
@@ -193,30 +273,74 @@ export default function Activities() {
         navigate('/flows');
         break;
       case 'thought-popper':
-        navigate('/games', { state: { openGame: 'thought-popper' } });
+        startGame('thought-popper');
         break;
       case 'zen-match':
-        navigate('/games', { state: { openGame: 'zen-match' } });
+        startGame('zen-match');
         break;
       case 'thought-sorter':
-        navigate('/games', { state: { openGame: 'thought-sorter' } });
+        startGame('thought-sorter');
         break;
       case 'mandala-garden':
-        navigate('/games', { state: { openGame: 'mandala' } });
+        startGame('mandala');
         break;
       case 'sound-bowls':
-        navigate('/games', { state: { openGame: 'sound-bowl' } });
+        startGame('sound-bowl');
         break;
       default:
         break;
     }
   };
 
+  // Render active game full-screen
+  if (gameStarted && gameType) {
+    return (
+      <>
+        {gameType === 'thought-popper' && (
+          <ThoughtPopperGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+        {gameType === 'zen-match' && (
+          <ZenMatchGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+        {gameType === 'thought-sorter' && (
+          <ThoughtSorterGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+        {gameType === 'thought-reframing' && (
+          <ThoughtReframingLab 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+        {gameType === 'mandala' && (
+          <MandalaGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+        {gameType === 'sound-bowl' && (
+          <SoundBowlGame 
+            onComplete={handleGameComplete} 
+            onExit={() => setGameStarted(false)} 
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <DashboardLayout activeSection="activities">
       <div className="p-4 md:p-8 pb-32 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-[var(--mg-text-primary)] mb-2">
             Activities
           </h1>
@@ -224,6 +348,62 @@ export default function Activities() {
             Wellness exercises, games, and creative activities to nurture your mind
           </p>
         </div>
+
+        {/* Progress Stats */}
+        {progress && !loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mg-card p-4"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-5 h-5 text-yellow-500" />
+                <span className="text-sm text-[var(--mg-text-muted)]">Serenity Score</span>
+              </div>
+              <p className="text-2xl font-bold text-[var(--mg-text-primary)]">{progress.totalCredits}</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mg-card p-4"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-5 h-5 text-orange-500" />
+                <span className="text-sm text-[var(--mg-text-muted)]">Streak</span>
+              </div>
+              <p className="text-2xl font-bold text-[var(--mg-text-primary)]">{progress.currentStreak}</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mg-card p-4"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="w-5 h-5 text-amber-500" />
+                <span className="text-sm text-[var(--mg-text-muted)]">Best Streak</span>
+              </div>
+              <p className="text-2xl font-bold text-[var(--mg-text-primary)]">{progress.longestStreak}</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mg-card p-4"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-5 h-5 text-teal-500" />
+                <span className="text-sm text-[var(--mg-text-muted)]">Badges</span>
+              </div>
+              <p className="text-2xl font-bold text-[var(--mg-text-primary)]">{progress.badges.length}</p>
+            </motion.div>
+          </div>
+        )}
 
         {/* Category Filters */}
         <div className="flex flex-wrap gap-2 mb-8">
