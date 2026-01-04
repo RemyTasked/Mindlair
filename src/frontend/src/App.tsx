@@ -16,7 +16,6 @@ const GamesHub = lazy(() => import('./pages/GamesHub'));
 const FlowPage = lazy(() => import('./pages/FlowPage'));
 const FlowsLibrary = lazy(() => import('./pages/FlowsLibrary'));
 const Activities = lazy(() => import('./pages/Activities'));
-const GratitudeGarden = lazy(() => import('./pages/GratitudeGarden'));
 const EmotionalCheckIn = lazy(() => import('./components/activities/EmotionalCheckIn'));
 const Insights = lazy(() => import('./pages/Insights'));
 const Terms = lazy(() => import('./pages/Terms'));
@@ -51,8 +50,7 @@ function App() {
           <Route path="/flows" element={<FlowsLibrary />} />
           <Route path="/flow/:flowId" element={<FlowPage />} />
           <Route path="/activities" element={<Activities />} />
-          <Route path="/activities/gratitude" element={<GratitudeGarden />} />
-          <Route path="/activities/emotional-checkin" element={<EmotionalCheckIn />} />
+          <Route path="/activities/daily-checkin" element={<EmotionalCheckIn />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/focus-rooms" element={<FocusRooms />} />
           <Route path="/games" element={<GamesHub />} />

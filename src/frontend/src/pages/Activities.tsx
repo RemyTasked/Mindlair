@@ -21,6 +21,14 @@ import {
   Star,
   Sparkles,
   Flower2,
+  Brain,
+  Wind,
+  Cloud,
+  Leaf,
+  Layers,
+  Paintbrush,
+  Bell,
+  LucideIcon,
 } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
 
@@ -28,7 +36,7 @@ interface Activity {
   id: string;
   name: string;
   description: string;
-  icon: string;
+  icon: LucideIcon;
   color: string;
   gradient: string;
   category: 'wellness' | 'mindfulness' | 'games' | 'creative';
@@ -42,36 +50,24 @@ interface Activity {
 const ACTIVITIES: Activity[] = [
   // Wellness Activities
   {
-    id: 'emotional-checkin',
-    name: 'How I\'m Feeling',
-    description: 'Voice or text check-in to express your current emotional state. Your privacy is protected.',
-    icon: '💭',
+    id: 'daily-checkin',
+    name: 'Daily Check-In & Gratitude',
+    description: 'Express how you\'re feeling, then plant a seed of gratitude. Voice or text, your privacy is protected.',
+    icon: Heart,
     color: 'text-rose-400',
-    gradient: 'from-rose-500/20 to-pink-500/20',
-    category: 'wellness',
-    duration: '1-3 min',
-    serenityPoints: '+20 points',
-    available: true,
-  },
-  {
-    id: 'gratitude-garden',
-    name: 'Gratitude Garden',
-    description: 'Daily journaling to cultivate thankfulness. Each entry plants a golden flower.',
-    icon: '✨',
-    color: 'text-amber-400',
-    gradient: 'from-amber-500/20 to-yellow-500/20',
+    gradient: 'from-rose-500/20 to-amber-500/20',
     category: 'wellness',
     duration: '2-5 min',
-    plantReward: 'Golden Flower',
+    serenityPoints: '+30 points',
     available: true,
   },
   {
     id: 'thought-reframing',
     name: 'Thought Reframing Lab',
     description: 'CBT-based exercise to challenge and reframe negative thoughts.',
-    icon: '🧠',
+    icon: Brain,
     color: 'text-violet-400',
-    gradient: 'from-rose-500/20 to-pink-500/20',
+    gradient: 'from-violet-500/20 to-purple-500/20',
     category: 'wellness',
     duration: '5-10 min',
     plantReward: 'Wisdom Fern',
@@ -81,7 +77,7 @@ const ACTIVITIES: Activity[] = [
     id: 'breathing-garden',
     name: 'Breathing Garden',
     description: 'Library of breathing techniques with visual guides. Grow bamboo with practice.',
-    icon: '🌬️',
+    icon: Wind,
     color: 'text-sky-400',
     gradient: 'from-sky-500/20 to-cyan-500/20',
     category: 'mindfulness',
@@ -93,7 +89,7 @@ const ACTIVITIES: Activity[] = [
     id: 'mindful-moments',
     name: 'Mindful Moment Spotter',
     description: 'Daily mindfulness challenges to practice awareness throughout the day.',
-    icon: '👁️',
+    icon: Eye,
     color: 'text-emerald-400',
     gradient: 'from-emerald-500/20 to-green-500/20',
     category: 'mindfulness',
@@ -101,12 +97,12 @@ const ACTIVITIES: Activity[] = [
     plantReward: 'Rare Bloom',
     available: true,
   },
-  // Games - Updated to new Serenity Builders
+  // Games
   {
     id: 'thought-popper',
     name: 'Thought Popper',
     description: 'Focus and Mental Clearing Game. Visualize and dismiss intrusive thoughts by popping floating bubbles.',
-    icon: '💨',
+    icon: Cloud,
     color: 'text-blue-400',
     gradient: 'from-blue-500/20 to-cyan-500/20',
     category: 'games',
@@ -118,7 +114,7 @@ const ACTIVITIES: Activity[] = [
     id: 'zen-match',
     name: 'Zen Match',
     description: 'Cognitive Concentration Game. Find matching pairs of nature icons to sharpen focus and recall.',
-    icon: '🍃',
+    icon: Leaf,
     color: 'text-green-400',
     gradient: 'from-green-500/20 to-emerald-500/20',
     category: 'games',
@@ -130,7 +126,7 @@ const ACTIVITIES: Activity[] = [
     id: 'thought-sorter',
     name: 'Thought Sorter',
     description: 'Categorization Tool. Sort mental inputs—worries, tasks, or reflections—into Keep, Park, or Let Go.',
-    icon: '🗂️',
+    icon: Layers,
     color: 'text-cyan-400',
     gradient: 'from-cyan-500/20 to-teal-500/20',
     category: 'games',
@@ -143,7 +139,7 @@ const ACTIVITIES: Activity[] = [
     id: 'mandala-garden',
     name: 'Mandala Garden',
     description: 'Digital coloring for meditative relaxation. Create beautiful patterns while calming your mind.',
-    icon: '🎨',
+    icon: Paintbrush,
     color: 'text-rose-400',
     gradient: 'from-rose-500/20 to-pink-500/20',
     category: 'creative',
@@ -155,7 +151,7 @@ const ACTIVITIES: Activity[] = [
     id: 'sound-bowls',
     name: 'Sound Bowl Sanctuary',
     description: 'Interactive singing bowls. Create layered soundscapes for deep calm and meditation.',
-    icon: '🔔',
+    icon: Bell,
     color: 'text-purple-400',
     gradient: 'from-purple-500/20 to-pink-500/20',
     category: 'creative',
@@ -184,11 +180,8 @@ export default function Activities() {
     if (!activity.available) return;
     
     switch (activity.id) {
-      case 'emotional-checkin':
-        navigate('/activities/emotional-checkin');
-        break;
-      case 'gratitude-garden':
-        navigate('/activities/gratitude');
+      case 'daily-checkin':
+        navigate('/activities/daily-checkin');
         break;
       case 'thought-reframing':
         navigate('/games', { state: { openGame: 'thought-reframing' } });
@@ -266,29 +259,36 @@ export default function Activities() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30"
+            className="mb-6 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-rose-500/20 to-amber-500/20 border border-rose-500/30"
           >
-            <div className="flex items-start justify-between">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-5 h-5 text-amber-400" />
-                  <span className="text-sm font-medium text-amber-400">Featured</span>
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+                  <span className="text-xs sm:text-sm font-medium text-amber-400">Featured</span>
                 </div>
-                <h2 className="text-xl font-bold text-[var(--mg-text-primary)] mb-2">
-                  Gratitude Garden
+                <h2 className="text-lg sm:text-xl font-bold text-[var(--mg-text-primary)] mb-2">
+                  Daily Check-In
                 </h2>
-                <p className="text-[var(--mg-text-secondary)] mb-4 max-w-lg">
-                  Start your wellness journey by planting seeds of gratitude. Each journal entry grows a beautiful golden flower in your garden.
+                <p className="text-sm text-[var(--mg-text-secondary)] mb-4 max-w-lg">
+                  Two mindful moments: Share how you're feeling, then plant a seed of gratitude. +30 points.
                 </p>
                 <button
-                  onClick={() => navigate('/activities/gratitude')}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--mg-accent)] text-white font-medium hover:bg-[var(--mg-accent-light)] transition-colors"
+                  onClick={() => navigate('/activities/daily-checkin')}
+                  className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white font-medium hover:from-rose-600 hover:to-amber-600 transition-colors text-sm sm:text-base"
                 >
-                  Start Journaling
-                  <ChevronRight className="w-5 h-5" />
+                  Begin Check-In
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
-              <div className="hidden md:block text-6xl">✨</div>
+              <div className="flex gap-2 flex-shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500" />
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                  <Flower2 className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -303,7 +303,7 @@ export default function Activities() {
               transition={{ delay: i * 0.05 }}
               onClick={() => handleActivityClick(activity)}
               disabled={!activity.available}
-              className={`relative text-left p-5 rounded-2xl border transition-all group ${
+              className={`relative text-left p-4 sm:p-5 rounded-2xl border transition-all group ${
                 activity.available
                   ? 'mg-card hover:border-[var(--mg-accent)] cursor-pointer'
                   : 'bg-[var(--mg-bg-card)]/50 border-[var(--mg-border)] opacity-60 cursor-not-allowed'
@@ -319,7 +319,7 @@ export default function Activities() {
               {/* Icon & Category */}
               <div className="flex items-start justify-between mb-3">
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${activity.gradient}`}>
-                  <span className="text-2xl">{activity.icon}</span>
+                  <activity.icon className={`w-6 h-6 ${activity.color}`} />
                 </div>
                 {activity.available && (
                   <div className={`text-xs ${activity.color}`}>

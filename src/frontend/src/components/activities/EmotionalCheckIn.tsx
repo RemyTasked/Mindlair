@@ -1,24 +1,26 @@
 /**
- * Mind Garden - Emotional Check-In
+ * Mind Garden - Daily Check-In & Gratitude
  * 
- * "How I'm Feeling Right Now" activity
- * Voice or text input for users to express their current emotional state.
+ * Combined wellness activity:
+ * 1. Emotional check-in via voice or text
+ * 2. Gratitude journaling with prompts
  * 
  * PRIVACY-FIRST:
  * - Audio is NOT stored - only processed locally for transcription
- * - Text is anonymized before contributing to the shared thought pool
- * - Users can opt-out of sharing entirely
+ * - Diary entries saved ONLY on device (localStorage)
+ * - Keywords anonymized for game personalization (opt-out available)
  * 
- * +20 Serenity points per check-in
+ * +30 Serenity points per check-in (+20 feelings, +10 gratitude)
  */
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Mic, MicOff, Send, X, Heart, Shield, Sparkles,
+  Mic, MicOff, X, Heart, Shield, Sparkles,
   AlertCircle, CheckCircle2, Keyboard, Volume2,
-  History, Trash2, Clock, ChevronLeft
+  History, Trash2, Clock, ChevronLeft, Flower2,
+  RefreshCw, ChevronRight
 } from 'lucide-react';
 import api from '../../lib/axios';
 
@@ -32,10 +34,33 @@ interface LocalCheckIn {
   timestamp: string;
   emotion: string | null;
   text: string;
+  gratitude?: string;
   mode: 'voice' | 'text';
 }
 
+interface GratitudeEntry {
+  id: string;
+  content: string;
+  createdAt: string;
+  mood?: string;
+}
+
 const LOCAL_STORAGE_KEY = 'mindgarden_emotional_history';
+const GRATITUDE_STORAGE_KEY = 'mindgarden_gratitude_entries';
+
+// Gratitude prompts for inspiration
+const GRATITUDE_PROMPTS = [
+  "What made you smile today?",
+  "Who are you thankful for?",
+  "What small pleasure did you enjoy today?",
+  "What challenge helped you grow recently?",
+  "What are you looking forward to?",
+  "What about your body are you grateful for?",
+  "What skill or ability are you thankful to have?",
+  "What moment of peace did you experience today?",
+  "Who showed you kindness recently?",
+  "What beauty did you notice today?",
+];
 
 // Helper functions for local storage
 const loadLocalHistory = (): LocalCheckIn[] => {
@@ -71,6 +96,27 @@ const clearLocalHistory = (): void => {
   }
 };
 
+// Save gratitude entry to local storage
+const saveGratitudeEntry = (content: string, mood?: string): void => {
+  try {
+    const stored = localStorage.getItem(GRATITUDE_STORAGE_KEY);
+    const entries: GratitudeEntry[] = stored ? JSON.parse(stored) : [];
+    
+    const newEntry: GratitudeEntry = {
+      id: `gratitude-${Date.now()}`,
+      content,
+      createdAt: new Date().toISOString(),
+      mood,
+    };
+    
+    entries.unshift(newEntry);
+    const trimmed = entries.slice(0, 100); // Keep last 100 entries
+    localStorage.setItem(GRATITUDE_STORAGE_KEY, JSON.stringify(trimmed));
+  } catch (error) {
+    console.warn('Failed to save gratitude entry:', error);
+  }
+};
+
 // Format relative time
 const formatRelativeTime = (timestamp: string): string => {
   const date = new Date(timestamp);
@@ -101,11 +147,11 @@ const EMOTION_PRESETS = [
   { emoji: '💪', label: 'Motivated', color: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
 ];
 
-const POINTS_PER_CHECKIN = 20;
+const POINTS_PER_CHECKIN = 30; // +20 for feelings, +10 for gratitude
 
 export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'intro' | 'input' | 'complete' | 'history'>('intro');
+  const [step, setStep] = useState<'intro' | 'input' | 'gratitude' | 'complete' | 'history'>('intro');
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('text');
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -117,6 +163,12 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
   const [speechSupported, setSpeechSupported] = useState(false);
   const [localHistory, setLocalHistory] = useState<LocalCheckIn[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  
+  // Gratitude state
+  const [gratitudeInput, setGratitudeInput] = useState('');
+  const [currentPrompt, setCurrentPrompt] = useState(
+    GRATITUDE_PROMPTS[Math.floor(Math.random() * GRATITUDE_PROMPTS.length)]
+  );
   
   const recognitionRef = useRef<any>(null);
 
@@ -198,7 +250,8 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
     setIsRecording(false);
   };
 
-  const handleSubmit = async () => {
+  // Move to gratitude step after emotional check-in
+  const handleEmotionalSubmit = () => {
     const content = inputMode === 'voice' ? transcript.trim() : textInput.trim();
     
     if (!content && !selectedEmotion) {
@@ -206,32 +259,47 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
       return;
     }
 
+    setError(null);
+    setStep('gratitude');
+  };
+
+  // Final submission with both emotional and gratitude data
+  const handleFinalSubmit = async () => {
+    const emotionalContent = inputMode === 'voice' ? transcript.trim() : textInput.trim();
+    const gratitudeContent = gratitudeInput.trim();
+    
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Save to local storage for user's private diary
+      // Save to local storage for user's private diary (includes gratitude)
       const newEntry: LocalCheckIn = {
         id: `checkin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         timestamp: new Date().toISOString(),
         emotion: selectedEmotion,
-        text: content,
+        text: emotionalContent,
+        gratitude: gratitudeContent || undefined,
         mode: inputMode,
       };
       saveToLocalHistory(newEntry);
-      setLocalHistory(loadLocalHistory()); // Refresh history
+      setLocalHistory(loadLocalHistory());
+
+      // Save gratitude entry separately (for compatibility with old gratitude history)
+      if (gratitudeContent) {
+        saveGratitudeEntry(gratitudeContent, selectedEmotion || undefined);
+      }
 
       // Record the check-in for garden points
       await api.post('/api/garden/activity', {
-        activityType: 'emotional-checkin',
-        flowType: 'emotional-checkin',
+        activityType: 'daily-checkin',
+        flowType: 'daily-checkin',
       });
 
       // Optionally share anonymized content to community pool
-      if (shareWithCommunity && content) {
-        // Extract key phrases/words for games (no raw content stored)
-        const words = content.split(/\s+/).filter(w => w.length > 3);
-        const significantWords = words.slice(0, 5); // Only take first 5 significant words
+      if (shareWithCommunity) {
+        const allContent = `${emotionalContent} ${gratitudeContent}`;
+        const words = allContent.split(/\s+/).filter(w => w.length > 3);
+        const significantWords = words.slice(0, 5);
         
         for (const word of significantWords) {
           try {
@@ -258,6 +326,11 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
     }
   };
 
+  const getNewPrompt = () => {
+    const newPrompt = GRATITUDE_PROMPTS[Math.floor(Math.random() * GRATITUDE_PROMPTS.length)];
+    setCurrentPrompt(newPrompt);
+  };
+
   const handleComplete = () => {
     if (onComplete) {
       onComplete();
@@ -269,46 +342,62 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
   // Intro screen
   if (step === 'intro') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-pink-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-amber-50 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full"
+          className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-md w-full"
         >
           <div className="text-center mb-6">
-            <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-10 h-10 text-rose-500" />
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-rose-100 rounded-full flex items-center justify-center">
+                <Heart className="w-7 h-7 text-rose-500" />
+              </div>
+              <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
+                <Flower2 className="w-7 h-7 text-amber-500" />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">How Are You Feeling?</h2>
-            <p className="text-gray-600">
-              Take a moment to check in with yourself. Express your feelings through voice or text.
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Daily Check-In</h2>
+            <p className="text-gray-600 text-sm">
+              Two mindful moments: Share how you're feeling, then plant a seed of gratitude.
             </p>
           </div>
 
+          {/* Steps Preview */}
+          <div className="bg-gray-50 rounded-xl p-4 mb-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-6 h-6 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center">1</div>
+              <span className="text-gray-700 text-sm font-medium">How I'm Feeling</span>
+              <span className="text-rose-400 text-xs ml-auto">+20 pts</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">2</div>
+              <span className="text-gray-700 text-sm font-medium">Gratitude Moment</span>
+              <span className="text-amber-400 text-xs ml-auto">+10 pts</span>
+            </div>
+          </div>
+
           {/* Privacy Notice */}
-          <div className="bg-emerald-50 rounded-2xl p-4 mb-6 border border-emerald-200">
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-emerald-50 rounded-xl p-3 mb-5 border border-emerald-200">
+            <div className="flex items-start gap-2">
+              <Shield className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-emerald-800 text-sm mb-1">Your Privacy is Protected</h4>
-                <ul className="text-emerald-700 text-xs space-y-1">
-                  <li>• Diary entries are saved <strong>only on this device</strong></li>
-                  <li>• Voice recordings are <strong>never stored</strong> - only transcribed locally</li>
-                  <li>• Your words help personalize games (anonymized, opt-out available)</li>
-                  <li>• Mind Garden does not store your private text on our servers</li>
-                </ul>
+                <h4 className="font-semibold text-emerald-800 text-xs mb-1">Your Privacy is Protected</h4>
+                <p className="text-emerald-700 text-xs">
+                  Entries saved only on your device. Voice is never stored.
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-sm text-rose-600 mb-6">
+          <div className="flex items-center justify-center gap-2 text-sm text-rose-600 mb-5">
             <Sparkles className="w-4 h-4" />
-            <span>+{POINTS_PER_CHECKIN} Serenity points</span>
+            <span className="font-semibold">+{POINTS_PER_CHECKIN} Serenity points total</span>
           </div>
 
           <button
             onClick={() => setStep('input')}
-            className="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-xl font-bold text-lg hover:from-rose-600 hover:to-pink-700 transition-all shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-rose-500 to-amber-500 text-white rounded-xl font-bold text-lg hover:from-rose-600 hover:to-amber-600 transition-all shadow-lg"
           >
             Begin Check-In
           </button>
@@ -337,11 +426,11 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
   // Completion screen
   if (step === 'complete') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-pink-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-50 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+          className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-md w-full text-center"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -352,30 +441,41 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
             <CheckCircle2 className="w-10 h-10 text-emerald-500" />
           </motion.div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Check-In Complete</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Beautiful!</h2>
           <p className="text-gray-600 mb-4">
-            Thank you for taking time to reflect on your feelings.
+            Thank you for taking time to reflect and practice gratitude.
           </p>
 
-          {selectedEmotion && (
-            <div className="mb-4">
-              <span className="text-4xl">{EMOTION_PRESETS.find(e => e.label === selectedEmotion)?.emoji}</span>
-              <p className="text-gray-700 mt-1">You're feeling <strong>{selectedEmotion}</strong></p>
-            </div>
-          )}
+          {/* Summary */}
+          <div className="bg-gray-50 rounded-xl p-4 mb-4 text-left">
+            {selectedEmotion && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">{EMOTION_PRESETS.find(e => e.label === selectedEmotion)?.emoji}</span>
+                <span className="text-gray-700 text-sm">Feeling <strong>{selectedEmotion}</strong></span>
+              </div>
+            )}
+            {gratitudeInput.trim() && (
+              <div className="flex items-start gap-2">
+                <Flower2 className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-gray-700 text-sm line-clamp-2">"{gratitudeInput.trim()}"</p>
+              </div>
+            )}
+          </div>
 
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-rose-600 mb-6">
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-4">
             <Sparkles className="w-6 h-6" />
             <span>+{POINTS_PER_CHECKIN} Serenity</span>
           </div>
 
           <p className="text-xs text-gray-500 mb-6">
-            Your feelings contribute to your garden's growth tomorrow. 🌱
+            {gratitudeInput.trim() 
+              ? "A golden flower has been planted in your garden! 🌟"
+              : "Your feelings contribute to your garden's growth tomorrow. 🌱"}
           </p>
 
           <button
             onClick={handleComplete}
-            className="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-xl font-bold hover:from-rose-600 hover:to-pink-700 transition-all"
+            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all"
           >
             Continue
           </button>
@@ -511,22 +611,131 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
     );
   }
 
+  // Gratitude step
+  if (step === 'gratitude') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-yellow-50 p-4">
+        {/* Header */}
+        <div className="max-w-2xl mx-auto mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setStep('input')}
+                className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors shadow-sm"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Gratitude Moment</h2>
+                <p className="text-gray-600 text-sm">Step 2 of 2</p>
+              </div>
+            </div>
+            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+              <Flower2 className="w-5 h-5 text-amber-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          {/* Feeling Summary */}
+          {selectedEmotion && (
+            <div className="bg-white rounded-2xl shadow-lg p-4 mb-4 flex items-center gap-3">
+              <span className="text-2xl">
+                {EMOTION_PRESETS.find(e => e.label === selectedEmotion)?.emoji}
+              </span>
+              <div>
+                <span className="text-sm text-gray-500">You're feeling</span>
+                <span className="font-semibold text-gray-800 ml-2">{selectedEmotion}</span>
+              </div>
+              <CheckCircle2 className="w-5 h-5 text-emerald-500 ml-auto" />
+            </div>
+          )}
+
+          {/* Prompt Card */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-gray-500">Today's Prompt</span>
+              <button
+                onClick={getNewPrompt}
+                className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700"
+              >
+                <RefreshCw className="w-3 h-3" />
+                New prompt
+              </button>
+            </div>
+            <p className="text-lg text-gray-800 italic">"{currentPrompt}"</p>
+          </div>
+
+          {/* Gratitude Input */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What are you grateful for today?
+            </label>
+            <textarea
+              value={gratitudeInput}
+              onChange={(e) => setGratitudeInput(e.target.value)}
+              placeholder="I'm grateful for..."
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 text-gray-800 resize-none"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              {gratitudeInput.length} characters
+            </p>
+          </div>
+
+          {/* Skip & Submit Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleFinalSubmit}
+              disabled={isSubmitting}
+              className="flex-1 py-3 bg-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+            >
+              Skip Gratitude
+            </button>
+            <button
+              onClick={handleFinalSubmit}
+              disabled={isSubmitting}
+              className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl font-bold hover:from-amber-600 hover:to-yellow-600 transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Flower2 className="w-5 h-5" />
+                  Complete
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Input screen
   return (
     <div className="min-h-screen bg-gradient-to-b from-rose-50 to-pink-100 p-4">
       {/* Header */}
       <div className="max-w-2xl mx-auto mb-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">How Are You Feeling?</h2>
-            <p className="text-gray-600 text-sm">Express yourself freely</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setStep('intro')}
+              className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors shadow-sm"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">How Are You Feeling?</h2>
+              <p className="text-gray-600 text-sm">Step 1 of 2</p>
+            </div>
           </div>
-          <button
-            onClick={() => navigate('/activities')}
-            className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors shadow-sm"
-          >
-            <X className="w-5 h-5 text-gray-600" />
-          </button>
+          <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center">
+            <Heart className="w-5 h-5 text-rose-500" />
+          </div>
         </div>
       </div>
 
@@ -672,23 +881,14 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
           </label>
         </div>
 
-        {/* Submit Button */}
+        {/* Continue Button */}
         <button
-          onClick={handleSubmit}
-          disabled={isSubmitting || (!textInput.trim() && !transcript.trim() && !selectedEmotion)}
+          onClick={handleEmotionalSubmit}
+          disabled={!textInput.trim() && !transcript.trim() && !selectedEmotion}
           className="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-xl font-bold text-lg hover:from-rose-600 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {isSubmitting ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              Saving...
-            </>
-          ) : (
-            <>
-              <Send className="w-5 h-5" />
-              Complete Check-In
-            </>
-          )}
+          <ChevronRight className="w-5 h-5" />
+          Continue to Gratitude
         </button>
       </div>
     </div>
