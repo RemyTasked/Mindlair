@@ -85,13 +85,14 @@ interface FlowPlayerProps {
   autostart?: boolean;
 }
 
-// Breathing timing patterns - SLOWED DOWN for meditative experience
+// Breathing timing patterns - VERY SLOW for truly meditative experience
+// Each phase should feel unhurried - minimum 4 seconds, preferably 6-8 seconds per action
 const BREATHING_PATTERNS = {
-  box: { inhale: 6, holdIn: 6, exhale: 6, holdOut: 6 },                  // Increased from 4s to 6s
-  calming: { inhale: 5, holdIn: 8, exhale: 10, holdOut: 0 },             // 5-8-10 breathing (slowed)
-  'extended-exhale': { inhale: 5, holdIn: 7, exhale: 10, holdOut: 0 },   // Calms nervous system
-  energizing: { inhale: 5, holdIn: 3, exhale: 5, holdOut: 3 },           // Increased from 4s
-  cleansing: { inhale: 5, holdIn: 0, exhale: 8, holdOut: 0 },            // Increased from 4s/6s
+  box: { inhale: 8, holdIn: 8, exhale: 8, holdOut: 8 },                  // 8 seconds each = 32s cycle (very calm)
+  calming: { inhale: 6, holdIn: 7, exhale: 10, holdOut: 2 },             // Extended exhale calms nervous system
+  'extended-exhale': { inhale: 5, holdIn: 7, exhale: 12, holdOut: 2 },   // Even longer exhale for deep calm
+  energizing: { inhale: 6, holdIn: 4, exhale: 6, holdOut: 2 },           // Slightly faster but still calm
+  cleansing: { inhale: 6, holdIn: 2, exhale: 10, holdOut: 2 },           // Long exhale to release tension
 };
 
 export default function FlowPlayer({ flow, onComplete, onClose, autostart = false }: FlowPlayerProps) {
