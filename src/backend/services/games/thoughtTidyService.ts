@@ -1,6 +1,6 @@
 import { prisma } from '../../utils/prisma';
 import { logger } from '../../utils/logger';
-import * as emotionGardenService from './emotionGardenService';
+import * as gardenService from './gardenService';
 
 export interface ThoughtCard {
   id: string;
@@ -177,18 +177,11 @@ export async function recordThoughtTidySession(
 
     // Update Emotion Garden - Thought Tidy provides calm and relief
     try {
-      const totalThoughts = keptCount + parkedCount + releasedCount;
-      if (totalThoughts > 0) {
-        // More "released" thoughts = more relief
-        const releaseRatio = releasedCount / totalThoughts;
-        const emotion = releaseRatio > 0.5 ? 'calm' : 'gratitude'; // High release = calm, balanced = gratitude
-        const intensity = Math.min(10, 5 + Math.floor(releaseRatio * 5)); // 5-10 based on release ratio
-        
-        await emotionGardenService.updateGardenState(
+      if (keptCount + parkedCount + releasedCount > 0) {
+        await gardenService.updateGarden(
           userId,
-          emotion,
-          intensity,
-          'thought-tidy'
+          'thought-tidy',
+          creditsEarned
         );
       }
     } catch (error) {

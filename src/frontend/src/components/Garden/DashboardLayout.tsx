@@ -49,9 +49,9 @@ interface DashboardLayoutProps {
 
 // Navigation items
 const NAV_ITEMS = [
-  { id: 'home', label: 'Garden', icon: Home, path: '/dashboard' },
+  { id: 'home', label: 'Home', icon: Home, path: '/dashboard' },
   { id: 'flows', label: 'Flows', icon: Sparkles, path: '/flows' },
-  { id: 'activities', label: 'Activities', icon: Gamepad2, path: '/activities' },
+  { id: 'activities', label: 'Activities', icon: Gamepad2, path: '/games' },
   { id: 'insights', label: 'Insights', icon: BarChart3, path: '/insights' },
   { id: 'spotify', label: 'Music', icon: Music, path: '/focus-rooms' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },

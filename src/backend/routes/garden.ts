@@ -12,6 +12,7 @@ import express from 'express';
 import { Prisma } from '@prisma/client';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
+import * as gardenService from '../services/games/gardenService';
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
 
@@ -230,32 +231,6 @@ interface GardenData {
 // CONSTANTS
 // ============================================
 
-// Point values for activities
-const ACTIVITY_POINTS: Record<string, number> = {
-  // Micro-flows (2-3 min)
-  'micro-flow': 10,
-  'pre-meeting-focus': 10,
-  'pre-presentation-power': 10,
-  'difficult-conversation-prep': 10,
-  'quick-reset': 10,
-  'post-meeting-decompress': 10,
-  'end-of-day-transition': 10,
-  // Extended flows (10-15 min)
-  'extended-flow': 30,
-  'morning-intention': 30,
-  'evening-wind-down': 30,
-  'weekend-wellness': 30,
-  // Deep meditation (30 min)
-  'deep-meditation': 50,
-  'body-scan': 30,
-  // Activities
-  'gratitude-entry': 10,
-  'thought-reframe': 15,
-  'breathing-practice': 10,
-  'game': 15,
-  'journal': 10,
-};
-
 // Growth thresholds
 const THRESHOLDS = {
   BLOOM_ANIMATION: 10,      // Small bloom on existing plant
@@ -265,23 +240,6 @@ const THRESHOLDS = {
   GRID_EXPANSION_2: 1000,   // 7x7 -> 10x10
   GRID_EXPANSION_3: 2000,   // 10x10 -> 12x12
   GRID_EXPANSION_4: 5000,   // 12x12 -> 15x15
-};
-
-// Map flow types to activity categories
-const FLOW_TO_ACTIVITY: Record<string, keyof ActivityCounts> = {
-  'morning-intention': 'morningFlows',
-  'evening-wind-down': 'eveningFlows',
-  'weekend-wellness': 'extendedFlows',
-  'deep-meditation': 'deepMeditations',
-  'body-scan': 'extendedFlows',
-  'pre-presentation-power': 'presentationPreps',
-  'difficult-conversation-prep': 'difficultConversationPreps',
-  'gratitude': 'gratitudeEntries',
-  'breathing': 'breathingPractices',
-  'quick-reset': 'quickResets',
-  'pre-meeting-focus': 'preMeetingFocus',
-  'post-meeting-decompress': 'eveningFlows',
-  'end-of-day-transition': 'eveningFlows',
 };
 
 // Map flow types to plant types
@@ -779,141 +737,12 @@ router.post(
   authenticate,
   asyncHandler(async (req, res) => {
     const userId = req.userId!;
-    const { activityType, flowType, duration } = req.body;
+    const { activityType, flowType, duration: _duration } = req.body;
     
-    // Get current garden state
-    let gardenState = await prisma.emotionGardenState.findUnique({
-      where: { userId },
-    });
+    // Delegate to the centralized service
+    const result = await gardenService.updateGarden(userId, flowType || activityType);
     
-    let gardenData: GardenData = gardenState?.gardenData 
-      ? { ...createDefaultGardenData(), ...(gardenState.gardenData as object) }
-      : createDefaultGardenData();
-    
-    // Calculate points based on activity
-    let points = ACTIVITY_POINTS[flowType] || ACTIVITY_POINTS[activityType] || 10;
-    
-    // Bonus for longer sessions
-    if (duration && duration > 20) {
-      points = Math.floor(points * 1.5);
-    }
-    
-    // Update activity counts
-    const activityKey = FLOW_TO_ACTIVITY[flowType];
-    if (activityKey && gardenData.activityCounts[activityKey] !== undefined) {
-      gardenData.activityCounts[activityKey]++;
-    }
-    
-    // Award points
-    gardenData.growthPoints += points;
-    gardenData.totalPoints += points;
-    
-    // Track as active today
-    const today = new Date().toISOString().split('T')[0];
-    if (gardenData.lastActiveDate?.split('T')[0] !== today) {
-      gardenData.totalActiveDays++;
-    }
-    gardenData.lastActiveDate = new Date().toISOString();
-    
-    // Check for new plant threshold
-    let newPlant: Plant | null = null;
-    let growthFeedback = 'bloom'; // Default: existing plant blooms
-    
-    if (gardenData.growthPoints >= THRESHOLDS.NEW_PLANT) {
-      // Plant a new flower!
-      gardenData.growthPoints -= THRESHOLDS.NEW_PLANT;
-      
-      const plantType = FLOW_TO_PLANT[flowType] || 'daisy';
-      const position = findEmptyPosition(gardenData.plants, gardenData.gridSize);
-      
-      if (position) {
-        newPlant = {
-          id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type: plantType,
-          x: position.x,
-          y: position.y,
-          growthStage: 'sprout',
-          plantedAt: new Date().toISOString(),
-          bloomCount: 0,
-          associatedWith: flowType,
-        };
-        
-        gardenData.plants.push(newPlant);
-        gardenData.growth++;
-        growthFeedback = 'new-plant';
-      }
-    } else if (gardenData.growthPoints >= THRESHOLDS.BLOOM_ANIMATION && gardenData.plants.length > 0) {
-      // Bloom animation on existing plant
-      const randomPlant = gardenData.plants[Math.floor(Math.random() * gardenData.plants.length)];
-      if (randomPlant) {
-        randomPlant.bloomCount++;
-        growthFeedback = 'bloom';
-      }
-    }
-    
-    // Update grid size if points threshold reached
-    gardenData.gridSize = calculateGridSize(gardenData.totalPoints);
-    
-    // Check for new unlocks
-    const newUnlocks = getUnlockedPlants(
-      gardenData.activityCounts,
-      gardenData.streak,
-      gardenData.totalActiveDays
-    ).filter(p => !gardenData.unlockedPlants.includes(p));
-    
-    if (newUnlocks.length > 0) {
-      gardenData.unlockedPlants.push(...newUnlocks);
-    }
-    
-    // Check for milestone achievements
-    const milestones: string[] = [];
-    if (gardenData.totalActiveDays === 7) milestones.push('first-week');
-    if (gardenData.totalActiveDays === 30) milestones.push('first-month');
-    if (gardenData.streak === 7) milestones.push('week-streak');
-    if (gardenData.streak === 21) milestones.push('21-day-habit');
-    if (gardenData.totalPoints >= 100) milestones.push('100-points');
-    if (gardenData.totalPoints >= 500) milestones.push('500-points');
-    if (gardenData.plants.length === 10) milestones.push('10-plants');
-    
-    // Save garden state
-    if (gardenState) {
-      await prisma.emotionGardenState.update({
-        where: { userId },
-        data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
-      });
-    } else {
-      await prisma.emotionGardenState.create({
-        data: { userId, gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
-      });
-    }
-    
-    // Record the wellness check-in
-    await prisma.wellnessCheckIn.create({
-      data: {
-        userId,
-        type: `flow-${flowType}`,
-        completed: true,
-        mindState: 'flow-completed',
-        notes: `Earned ${points} points`,
-      },
-    });
-    
-    logger.info('Garden activity recorded', { userId, flowType, points, growthFeedback });
-    
-    res.json({
-      success: true,
-      pointsEarned: points,
-      totalPoints: gardenData.totalPoints,
-      growthFeedback,
-      newPlant,
-      newUnlocks,
-      milestones,
-      gardenState: {
-        visualState: gardenData.visualState,
-        gridSize: gardenData.gridSize,
-        plantCount: gardenData.plants.length,
-      },
-    });
+    res.json(result);
   })
 );
 
@@ -1058,6 +887,50 @@ router.post(
     return res.json({
       success: true,
       message: 'Garden watered! ✨',
+      pointsEarned: 2,
+    });
+  })
+);
+
+/**
+ * POST /api/garden/prune
+ * Prune the garden (cosmetic engagement)
+ */
+router.post(
+  '/prune',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId!;
+    
+    const gardenState = await prisma.emotionGardenState.findUnique({
+      where: { userId },
+    });
+    
+    if (!gardenState) {
+      return res.status(404).json({ error: 'Garden not found' });
+    }
+    
+    const gardenData = { ...createDefaultGardenData(), ...(gardenState.gardenData as object) } as GardenData;
+    
+    // Mark all plants as pruned
+    gardenData.plants = gardenData.plants.map(plant => ({
+      ...plant,
+      lastPruned: new Date().toISOString(),
+    }));
+    
+    // Small point bonus for engagement
+    gardenData.totalPoints += 2;
+    
+    await prisma.emotionGardenState.update({
+      where: { userId },
+      data: { gardenData: gardenData as Prisma.InputJsonValue, lastUpdated: new Date() },
+    });
+    
+    logger.info('Garden pruned', { userId });
+    
+    return res.json({
+      success: true,
+      message: 'Garden pruned! 🌿',
       pointsEarned: 2,
     });
   })

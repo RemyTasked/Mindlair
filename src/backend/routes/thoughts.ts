@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
-import { asyncHandler } from '../middleware/asyncHandler';
+import { asyncHandler } from '../middleware/errorHandler';
 import * as sharedThoughtService from '../services/games/sharedThoughtService';
 import { logger } from '../utils/logger';
 
@@ -99,7 +99,8 @@ router.post(
     const { text, category, suggestedBucket, distortionType, exampleReframe } = req.body;
 
     if (!text || typeof text !== 'string') {
-      return res.status(400).json({ error: 'Text is required' });
+      res.status(400).json({ error: 'Text is required' });
+      return;
     }
 
     await sharedThoughtService.shareThought(text, {
@@ -121,7 +122,7 @@ router.post(
 router.post(
   '/seed',
   authenticate,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     await sharedThoughtService.seedSystemThoughts();
     res.json({ success: true, message: 'System thoughts seeded' });
   })

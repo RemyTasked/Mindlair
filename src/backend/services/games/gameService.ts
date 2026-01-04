@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger';
 import { prisma } from '../../utils/prisma';
-import * as emotionGardenService from './emotionGardenService';
+import * as gardenService from './gardenService';
 
 export interface GameQuestion {
   id: string;
@@ -373,14 +373,10 @@ export async function recordGameSession(
 
     // Update Emotion Garden - games provide positive engagement
     try {
-      const emotion = data.perfectScore ? 'joy' : 'gratitude'; // Perfect scores = joy, completion = gratitude
-      const intensity = data.perfectScore ? 8 : 6;
-      
-      await emotionGardenService.updateGardenState(
+      await gardenService.updateGarden(
         userId,
-        emotion,
-        intensity,
-        'game'
+        gameType,
+        creditsEarned
       );
     } catch (error) {
       // Don't fail the request if garden update fails

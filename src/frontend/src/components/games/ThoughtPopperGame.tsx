@@ -3,13 +3,13 @@
  * 
  * Focus and Mental Clearing Game
  * Pop negative thought bubbles to clear your mind and earn Serenity points.
- * Now with dynamic thoughts from the community pool!
+ * Now with gamified destructive words and a session summary!
  * +2 Serenity per pop
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, Wind, Target } from 'lucide-react';
+import { X, Sparkles, Wind, Target, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
 import api from '../../lib/axios';
 
 interface ThoughtPopperGameProps {
@@ -24,23 +24,53 @@ interface Bubble {
   y: number;
   speed: number;
   size: number;
+  health: number; // For gamification: destructive words need more pops
+  maxHealth: number;
+  isDestructive: boolean;
 }
 
-// Fallback negative thoughts if API fails
+// Words that are more harmful to mental health
+const DESTRUCTIVE_WORDS = [
+  "Failure", "Worthless", "Hopeless", "Useless", "Hate", "Never", 
+  "Unloved", "Broken", "Guilty", "Ashamed", "Stupid", "Loser",
+  "Burden", "Weak", "Incompetent", "Ugly", "Alone", "Pointless"
+];
+
+// Why these words are bad - for summary
+const WORD_EXPLANATIONS: Record<string, string> = {
+  "Failure": "Labeling yourself a failure ignores your growth and potential for learning.",
+  "Worthless": "Your worth is inherent and not defined by your productivity or achievements.",
+  "Hopeless": "Hopelessness is often a temporary feeling, not a permanent reality.",
+  "Useless": "You have unique value and contribute to the world in ways you may not see.",
+  "Hate": "Self-directed hate is a destructive cycle that masks your inner strength.",
+  "Never": "Absolute words like 'never' create rigid, unrealistic mental boundaries.",
+  "Unloved": "Feeling unloved doesn't mean you aren't loved or lovable.",
+  "Broken": "You aren't broken; you're a human going through a challenging experience.",
+  "Guilty": "Excessive guilt keeps you trapped in the past instead of moving forward.",
+  "Ashamed": "Shame thrives in silence; naming it and letting go is the first step to healing.",
+  "Stupid": "One mistake or struggle doesn't define your intelligence or capability.",
+  "Loser": "Life isn't a game of winners and losers; it's a journey of individual growth.",
+  "Burden": "You are not a burden; we are all interconnected and need support sometimes.",
+  "Weak": "Vulnerability and seeking help are actually signs of immense courage.",
+  "Incompetent": "Focusing on incompetence ignores the skills you've worked hard to build.",
+  "Ugly": "Self-image is often distorted by mood; your beauty is multifaceted.",
+  "Alone": "Loneliness is a feeling, but you are part of a global human community.",
+  "Pointless": "Finding meaning is a process; even small actions have purpose.",
+  "General": "Negative self-talk creates mental clutter that blocks your natural peace."
+};
+
 const FALLBACK_THOUGHTS = [
   "Anxiety", "Doubt", "Fear", "Worry", "Panic", "Dread",
   "Burnout", "Overwhelm", "Deadline", "Pressure", "Overload",
-  "Guilt", "Shame", "Regret", "Blame", "Resentment",
   "Noise", "Chaos", "Clutter", "Distraction", "Confusion",
   "Stress", "Tension", "Fatigue", "Exhaustion", "Restless",
-  "Not enough", "Failure", "Inadequate", "Imposter", "Unworthy",
-  "Conflict", "Judgment", "Rejection", "Criticism", "Comparison",
+  "Not enough", "Conflict", "Judgment", "Rejection", "Criticism",
   "What if", "Uncertainty", "Unknown", "Tomorrow", "Later",
   "Should have", "If only", "Mistake", "Missed", "Lost",
-  "Can't", "Won't work", "Too hard", "Impossible", "Never",
+  "Can't", "Won't work", "Too hard", "Impossible"
 ];
 
-const GOAL = 15;
+const GOAL = 20; // Increased goal
 
 export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperGameProps) {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
@@ -50,21 +80,23 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
   const [gameComplete, setGameComplete] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [creditsEarned, setCreditsEarned] = useState(0);
-  const [thoughtPool, setThoughtPool] = useState<string[]>(FALLBACK_THOUGHTS);
+  const [thoughtPool, setThoughtPool] = useState<string[]>([...FALLBACK_THOUGHTS, ...DESTRUCTIVE_WORDS]);
   const [isLoading, setIsLoading] = useState(false);
+  const [poppedWords, setPoppedWords] = useState<string[]>([]);
+  const [showSummary, setShowSummary] = useState(false);
 
   // Load thoughts from API
   useEffect(() => {
     const loadThoughts = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/api/thoughts/popper', { params: { count: 30 } });
+        const response = await api.get('/api/thoughts/popper', { params: { count: 50 } });
         if (response.data.thoughts && response.data.thoughts.length > 0) {
-          setThoughtPool(response.data.thoughts);
+          // Mix API thoughts with destructive words for gamification
+          setThoughtPool([...response.data.thoughts, ...DESTRUCTIVE_WORDS]);
         }
       } catch (error) {
         console.warn('Using fallback thoughts:', error);
-        // Use fallback thoughts
       } finally {
         setIsLoading(false);
       }
@@ -77,16 +109,20 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     if (!gameActive || gameComplete) return;
 
     const spawnInterval = setInterval(() => {
-      if (bubbles.length < 6) {
+      if (bubbles.length < 8) {
         const id = Math.random().toString(36).substr(2, 9);
         const text = thoughtPool[Math.floor(Math.random() * thoughtPool.length)];
-        const x = Math.random() * 70 + 15; // 15% to 85% width
-        const speed = Math.random() * 0.8 + 0.4; // Speed 0.4-1.2
-        const size = Math.random() * 30 + 70; // 70-100px
+        const isDestructive = DESTRUCTIVE_WORDS.includes(text);
+        
+        const x = Math.random() * 70 + 15;
+        // Gamification: destructive words are faster, smaller, and have health
+        const speed = isDestructive ? Math.random() * 0.6 + 0.8 : Math.random() * 0.6 + 0.4;
+        const size = isDestructive ? Math.random() * 20 + 60 : Math.random() * 30 + 80;
+        const health = isDestructive ? 3 : 1;
 
-        setBubbles(prev => [...prev, { id, text, x, y: 100, speed, size }]);
+        setBubbles(prev => [...prev, { id, text, x, y: 100, speed, size, health, maxHealth: health, isDestructive }]);
       }
-    }, 1200);
+    }, 1000);
 
     return () => clearInterval(spawnInterval);
   }, [gameActive, gameComplete, bubbles.length, thoughtPool]);
@@ -119,24 +155,34 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     }
   }, [score, gameActive]);
 
-  // Lose condition (too many missed)
-  useEffect(() => {
-    if (missed >= 10 && gameActive) {
-      finishGame(false);
-    }
-  }, [missed, gameActive]);
-
   const handlePop = useCallback((id: string) => {
-    setBubbles(prev => prev.filter(b => b.id !== id));
-    setScore(prev => prev + 1);
+    setBubbles(prev => {
+      const bubble = prev.find(b => b.id === id);
+      if (!bubble) return prev;
+
+      if (bubble.health > 1) {
+        // Just damage it
+        return prev.map(b => b.id === id ? { ...b, health: b.health - 1 } : b);
+      } else {
+        // Actually pop it
+        setScore(s => s + 1);
+        setPoppedWords(pw => [...new Set([...pw, bubble.text])]);
+        return prev.filter(b => b.id !== id);
+      }
+    });
   }, []);
 
-  const finishGame = (won: boolean) => {
+  const finishGame = (_won: boolean) => {
     setGameActive(false);
     setGameComplete(true);
-    const credits = score * 2; // +2 points per pop
+    const credits = score * 2;
     setCreditsEarned(credits);
-    setTimeout(() => onComplete(credits, won ? 1 : 0), 2500);
+    // Show summary instead of immediate exit
+    setTimeout(() => setShowSummary(true), 1500);
+  };
+
+  const handleClaimReward = () => {
+    onComplete(creditsEarned, 1);
   };
 
   const startGame = () => {
@@ -145,6 +191,8 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     setBubbles([]);
     setScore(0);
     setMissed(0);
+    setPoppedWords([]);
+    setShowSummary(false);
   };
 
   // Onboarding
@@ -166,22 +214,18 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
           
           <div className="bg-blue-50 rounded-2xl p-5 mb-6 text-left">
             <h3 className="font-semibold text-gray-800 mb-3">How to Play:</h3>
-            <ul className="space-y-2 text-gray-600 text-sm">
+            <ul className="space-y-3 text-gray-600 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 mt-1">•</span>
-                Negative thoughts appear as floating bubbles
+                Pop negative thoughts before they drift away.
+              </li>
+              <li className="flex items-start gap-2 text-amber-600">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span><strong>Destructive thoughts</strong> (red) are smaller, faster, and require <strong>3 taps</strong> to pop!</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 mt-1">•</span>
-                Tap them quickly before they drift away
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-500 mt-1">•</span>
-                Pop {GOAL} thoughts to clear your mind
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">+2</span>
-                Serenity points per pop
+                Pop {GOAL} thoughts to clear your mind.
               </li>
             </ul>
           </div>
@@ -207,36 +251,71 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
     );
   }
 
-  // Game Complete
+  // Summary Screen
+  if (showSummary) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-100 to-teal-100 p-4">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] flex flex-col"
+        >
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-2">😌</div>
+            <h2 className="text-3xl font-bold text-gray-900">Mind Cleared!</h2>
+            <p className="text-gray-600">You've successfully cleared your mental space.</p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto mb-6 pr-2 custom-scrollbar">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Info className="w-5 h-5 text-blue-500" />
+              Why we popped these thoughts:
+            </h3>
+            <div className="space-y-3">
+              {poppedWords.map((word, i) => (
+                <div key={i} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                  <span className={`font-bold ${DESTRUCTIVE_WORDS.includes(word) ? 'text-red-500' : 'text-blue-600'}`}>
+                    {word}
+                  </span>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {WORD_EXPLANATIONS[word] || WORD_EXPLANATIONS["General"]}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 rounded-2xl p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-2xl font-bold text-blue-600">
+                <Sparkles className="w-6 h-6" />
+                <span>+{creditsEarned} Serenity</span>
+              </div>
+              <button
+                onClick={handleClaimReward}
+                className="py-3 px-8 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md flex items-center gap-2"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                Claim Reward
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Game Complete (Transition)
   if (gameComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-100 to-teal-100 p-4">
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 text-center max-w-md w-full"
+          className="text-center"
         >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
-            className="text-6xl mb-4"
-          >
-            {score >= GOAL ? '🎉' : '😌'}
-          </motion.div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {score >= GOAL ? 'Clear Mind!' : 'Good Effort!'}
-          </h2>
-          <p className="text-gray-600 mb-6">
-            You popped {score} negative thoughts
-          </p>
-          
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-blue-600 mb-6">
-            <Sparkles className="w-6 h-6" />
-            <span>+{creditsEarned} Serenity</span>
-          </div>
-          
-          <p className="text-gray-500 text-sm">Returning to Games Hub...</p>
+          <div className="text-8xl mb-4">✨</div>
+          <h2 className="text-4xl font-bold text-blue-900">Well Done</h2>
         </motion.div>
       </div>
     );
@@ -244,13 +323,13 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
 
   // Main Game
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-100 to-teal-100 p-4">
+    <div className="min-h-screen bg-gradient-to-b from-sky-100 to-teal-100 p-4 overflow-hidden touch-none">
       {/* Header */}
-      <div className="max-w-4xl mx-auto mb-4">
+      <div className="max-w-4xl mx-auto mb-4 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-full font-bold text-blue-900 shadow-sm">
-              <Target className="w-4 h-4 inline mr-2" />
+            <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-full font-bold text-blue-900 shadow-sm flex items-center gap-2">
+              <Target className="w-4 h-4 text-blue-600" />
               {score} / {GOAL}
             </div>
             <div className="bg-white/60 backdrop-blur px-3 py-1 rounded-full text-sm text-gray-600">
@@ -269,25 +348,27 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
       </div>
 
       {/* Game Area */}
-      <div className="relative w-full max-w-4xl mx-auto h-[500px] bg-gradient-to-b from-white/40 to-blue-200/40 rounded-3xl overflow-hidden shadow-inner border-4 border-white/50">
-        {/* Instruction */}
-        {bubbles.length === 0 && score === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-blue-600/60 text-lg font-medium">Bubbles are rising...</p>
-          </div>
-        )}
-
-        {/* Bubbles */}
+      <div className="relative w-full max-w-4xl mx-auto h-[70vh] bg-gradient-to-b from-white/40 to-blue-200/40 rounded-3xl overflow-hidden shadow-inner border-4 border-white/50">
         <AnimatePresence>
           {bubbles.map(bubble => (
             <motion.button
               key={bubble.id}
               initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              animate={{ 
+                scale: 1, 
+                opacity: 1,
+                rotate: bubble.health < bubble.maxHealth ? [0, -2, 2, 0] : 0
+              }}
               exit={{ scale: 1.5, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ 
+                rotate: { repeat: Infinity, duration: 0.2 },
+                default: { duration: 0.2 }
+              }}
               onClick={() => handlePop(bubble.id)}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-white/95 to-blue-100/90 backdrop-blur-md border-2 border-white/60 shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+              className={`absolute transform -translate-x-1/2 -translate-y-1/2 rounded-full backdrop-blur-md border-2 shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all
+                ${bubble.isDestructive 
+                  ? 'bg-gradient-to-br from-red-100/90 to-rose-200/80 border-red-300' 
+                  : 'bg-gradient-to-br from-white/95 to-blue-100/90 border-white/60'}`}
               style={{ 
                 top: `${bubble.y}%`, 
                 left: `${bubble.x}%`,
@@ -295,32 +376,38 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
                 height: `${bubble.size}px`,
               }}
             >
-              <span className="text-xs font-medium text-blue-800 px-2 text-center leading-tight">
-                {bubble.text}
-              </span>
+              <div className="flex flex-col items-center">
+                <span className={`text-[10px] font-bold px-2 text-center leading-tight
+                  ${bubble.isDestructive ? 'text-red-800' : 'text-blue-800'}`}>
+                  {bubble.text}
+                </span>
+                {bubble.health > 1 && (
+                  <div className="mt-1 flex gap-0.5">
+                    {Array.from({ length: bubble.health }).map((_, i) => (
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    ))}
+                  </div>
+                )}
+              </div>
             </motion.button>
           ))}
         </AnimatePresence>
         
-        {/* Bottom gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-blue-200/60 to-transparent pointer-events-none" />
-        
-        {/* Top gradient (where bubbles escape) */}
-        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-teal-200/40 to-transparent pointer-events-none" />
+        {/* Particle effects or background animations could go here */}
       </div>
 
       {/* Progress Bar */}
-      <div className="max-w-4xl mx-auto mt-4">
-        <div className="bg-white/50 rounded-full h-3 overflow-hidden">
+      <div className="max-w-4xl mx-auto mt-6 relative z-10">
+        <div className="bg-white/50 rounded-full h-4 overflow-hidden border border-white/30 p-0.5">
           <motion.div
-            className="h-full bg-gradient-to-r from-sky-500 to-teal-500"
+            className="h-full bg-gradient-to-r from-sky-500 via-blue-500 to-teal-500 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${(score / GOAL) * 100}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>
-        <p className="text-center text-blue-700/70 text-sm mt-2">
-          Pop {GOAL - score} more to clear your mind
+        <p className="text-center text-blue-900/60 text-sm mt-2 font-medium">
+          {score < GOAL ? `Pop ${GOAL - score} more thoughts to clear your mind` : 'Mind focus achieved!'}
         </p>
       </div>
     </div>

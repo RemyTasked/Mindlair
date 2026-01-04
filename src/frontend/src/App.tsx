@@ -10,7 +10,6 @@ import './styles/garden-theme.css';
 
 // Lazy load routes
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const GardenDashboard = lazy(() => import('./pages/GardenDashboard'));
 const FocusRooms = lazy(() => import('./pages/FocusRooms'));
 const Settings = lazy(() => import('./pages/Settings'));
 const GamesHub = lazy(() => import('./pages/GamesHub'));
@@ -47,7 +46,7 @@ function App() {
           
           {/* Main app routes */}
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/garden" element={<GardenDashboard />} />
+          <Route path="/garden" element={<Dashboard />} /> {/* Redirect /garden to unified dashboard */}
           <Route path="/flows" element={<FlowsLibrary />} />
           <Route path="/flow/:flowId" element={<FlowPage />} />
           <Route path="/activities" element={<Activities />} />

@@ -196,7 +196,7 @@ export default function FlowPage() {
       console.warn('Failed to log flow completion:', error);
     }
 
-    navigate('/garden');
+    navigate('/dashboard');
   };
 
   const handleClose = () => {

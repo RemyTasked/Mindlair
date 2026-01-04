@@ -370,7 +370,7 @@ export default function Activities() {
               </div>
             </div>
             <button
-              onClick={() => navigate('/garden')}
+              onClick={() => navigate('/dashboard')}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-400 transition-colors whitespace-nowrap"
             >
               View Garden

@@ -9,9 +9,9 @@
  * - Interactive elements (click, hover, zoom)
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ZoomIn, ZoomOut, RotateCcw, Droplet, Scissors, Eye } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Droplet, Scissors, Clock } from 'lucide-react';
 
 // Plant Types (aligned with Mind Garden spec)
 export type PlantType = 
@@ -127,6 +127,8 @@ interface GardenCanvasProps {
   onPrune?: () => void;
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
   interactive?: boolean;
+  isWatering?: boolean;
+  isPruning?: boolean;
 }
 
 
@@ -1026,11 +1028,56 @@ export default function GardenCanvas({
   onPrune,
   timeOfDay = 'afternoon',
   interactive = true,
+  isWatering = false,
+  isPruning = false,
 }: GardenCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
   const [showTimeLapse, setShowTimeLapse] = useState(false);
+  const [timeLapseStage, setTimeLapseStage] = useState(0);
+  
+  // Time-lapse effect - cycle through growth stages
+  useEffect(() => {
+    if (!showTimeLapse) {
+      setTimeLapseStage(0);
+      return;
+    }
+    
+    const stages = ['seed', 'sprout', 'growing', 'blooming', 'full'];
+    const interval = setInterval(() => {
+      setTimeLapseStage(prev => (prev + 1) % stages.length);
+    }, 800);
+    
+    return () => clearInterval(interval);
+  }, [showTimeLapse]);
+  
+  // Get time-lapse growth stage
+  const getTimeLapseStage = (originalStage: GrowthStage): GrowthStage => {
+    if (!showTimeLapse) return originalStage;
+    const stages: GrowthStage[] = ['seed', 'sprout', 'growing', 'blooming'];
+    return stages[timeLapseStage % stages.length];
+  };
+  
+  // Generate water droplet positions for animation
+  const waterDroplets = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: 10 + Math.random() * 80,
+    startY: -20 - Math.random() * 30,
+    endY: 80 + Math.random() * 20,
+    delay: Math.random() * 0.5,
+    duration: 0.8 + Math.random() * 0.4,
+    size: 4 + Math.random() * 4,
+  }));
+  
+  // Generate sparkle positions for pruning animation  
+  const pruneSparkles = Array.from({ length: 12 }, (_, i) => ({
+    id: i,
+    x: 20 + Math.random() * 60,
+    y: 20 + Math.random() * 60,
+    delay: Math.random() * 0.3,
+    scale: 0.5 + Math.random() * 0.5,
+  }));
 
   // Calculate cell size based on grid
   const cellSize = Math.min(80, 600 / data.gridSize);
@@ -1448,7 +1495,7 @@ export default function GardenCanvas({
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               >
-                {PlantSVG[plant.type]?.({ stage: plant.growthStage, size: cellSize * 0.9 })}
+                {PlantSVG[plant.type]?.({ stage: getTimeLapseStage(plant.growthStage), size: cellSize * 0.9 })}
               </motion.div>
             )}
           </motion.div>
@@ -1587,31 +1634,211 @@ export default function GardenCanvas({
         </div>
       )}
 
+      {/* Watering Animation Overlay */}
+      <AnimatePresence>
+        {isWatering && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 pointer-events-none z-30 overflow-hidden"
+          >
+            {/* Water droplets falling */}
+            {waterDroplets.map((drop) => (
+              <motion.div
+                key={drop.id}
+                className="absolute"
+                style={{ left: `${drop.x}%` }}
+                initial={{ y: drop.startY, opacity: 0 }}
+                animate={{ 
+                  y: drop.endY,
+                  opacity: [0, 1, 1, 0]
+                }}
+                transition={{
+                  duration: drop.duration,
+                  delay: drop.delay,
+                  repeat: Infinity,
+                  repeatDelay: 0.2,
+                  ease: 'easeIn'
+                }}
+              >
+                <svg width={drop.size} height={drop.size * 1.5} viewBox="0 0 10 15">
+                  <path 
+                    d="M5 0 Q0 7, 5 15 Q10 7, 5 0" 
+                    fill="#7dd3fc"
+                    opacity="0.8"
+                  />
+                </svg>
+              </motion.div>
+            ))}
+            
+            {/* Sparkle effect on plants */}
+            {data.plants.slice(0, 6).map((plant, i) => (
+              <motion.div
+                key={`sparkle-${plant.id}`}
+                className="absolute"
+                style={{ 
+                  left: `${(plant.x / data.gridSize) * 80 + 10}%`, 
+                  top: `${(plant.y / data.gridSize) * 80 + 10}%` 
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ 
+                  scale: [0, 1.5, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{ 
+                  delay: 0.5 + i * 0.15,
+                  duration: 0.8,
+                  repeat: Infinity,
+                  repeatDelay: 1
+                }}
+              >
+                <span className="text-2xl">💧</span>
+              </motion.div>
+            ))}
+            
+            {/* Shimmer overlay */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-b from-sky-300/20 via-transparent to-sky-400/10"
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Pruning Animation Overlay */}
+      <AnimatePresence>
+        {isPruning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 pointer-events-none z-30 overflow-hidden"
+          >
+            {/* Snip sparkles */}
+            {pruneSparkles.map((sparkle) => (
+              <motion.div
+                key={sparkle.id}
+                className="absolute"
+                style={{ left: `${sparkle.x}%`, top: `${sparkle.y}%` }}
+                initial={{ scale: 0, opacity: 0, rotate: 0 }}
+                animate={{ 
+                  scale: [0, sparkle.scale, 0],
+                  opacity: [0, 1, 0],
+                  rotate: [0, 180, 360]
+                }}
+                transition={{
+                  delay: sparkle.delay,
+                  duration: 0.6,
+                  repeat: Infinity,
+                  repeatDelay: 0.3
+                }}
+              >
+                <span className="text-lg">✂️</span>
+              </motion.div>
+            ))}
+            
+            {/* Leaf particles floating away */}
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={`leaf-${i}`}
+                className="absolute"
+                style={{ 
+                  left: `${20 + Math.random() * 60}%`,
+                  top: `${30 + Math.random() * 40}%`
+                }}
+                initial={{ y: 0, x: 0, opacity: 0, rotate: 0 }}
+                animate={{ 
+                  y: [0, -30, -80],
+                  x: [0, (Math.random() - 0.5) * 50],
+                  opacity: [0, 1, 0],
+                  rotate: [0, Math.random() * 360]
+                }}
+                transition={{
+                  delay: i * 0.1,
+                  duration: 1.2,
+                  repeat: Infinity,
+                  repeatDelay: 0.5
+                }}
+              >
+                <span className="text-sm">🍃</span>
+              </motion.div>
+            ))}
+            
+            {/* Clean shimmer overlay */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-amber-200/10 via-green-200/20 to-amber-200/10"
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Time-lapse Indicator */}
+      <AnimatePresence>
+        {showTimeLapse && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-4 right-4 px-4 py-2 rounded-xl bg-teal-600/90 text-white font-medium shadow-lg z-40 flex items-center gap-2"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            >
+              <Clock className="w-4 h-4" />
+            </motion.div>
+            <span>Time-lapse Mode</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Garden Actions */}
       {interactive && (
         <div className="absolute bottom-4 left-4 flex gap-2">
           <button
             onClick={onWater}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600/80 hover:bg-sky-500 transition-colors text-white shadow-lg"
+            disabled={isWatering}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors text-white shadow-lg ${
+              isWatering 
+                ? 'bg-sky-400 animate-pulse cursor-not-allowed' 
+                : 'bg-sky-600/80 hover:bg-sky-500'
+            }`}
             title="Water garden"
           >
-            <Droplet className="w-5 h-5" />
-            <span className="text-sm font-medium">Water</span>
+            <motion.div animate={isWatering ? { rotate: [0, -15, 15, 0] } : {}} transition={{ repeat: Infinity, duration: 0.5 }}>
+              <Droplet className="w-5 h-5" />
+            </motion.div>
+            <span className="text-sm font-medium">{isWatering ? 'Watering...' : 'Water'}</span>
           </button>
           <button
             onClick={onPrune}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600/80 hover:bg-amber-500 transition-colors text-white shadow-lg"
+            disabled={isPruning}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors text-white shadow-lg ${
+              isPruning
+                ? 'bg-amber-400 animate-pulse cursor-not-allowed'
+                : 'bg-amber-600/80 hover:bg-amber-500'
+            }`}
             title="Prune garden"
           >
-            <Scissors className="w-5 h-5" />
-            <span className="text-sm font-medium">Prune</span>
+            <motion.div animate={isPruning ? { scale: [1, 1.2, 1] } : {}} transition={{ repeat: Infinity, duration: 0.3 }}>
+              <Scissors className="w-5 h-5" />
+            </motion.div>
+            <span className="text-sm font-medium">{isPruning ? 'Pruning...' : 'Prune'}</span>
           </button>
           <button
             onClick={() => setShowTimeLapse(!showTimeLapse)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600/80 hover:bg-teal-500 transition-colors text-white shadow-lg"
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors text-white shadow-lg ${
+              showTimeLapse 
+                ? 'bg-teal-500 ring-2 ring-teal-300' 
+                : 'bg-teal-600/80 hover:bg-teal-500'
+            }`}
             title="View time-lapse"
           >
-            <Eye className="w-5 h-5" />
+            <Clock className="w-5 h-5" />
             <span className="text-sm font-medium">Time-lapse</span>
           </button>
         </div>

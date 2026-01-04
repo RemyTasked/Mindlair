@@ -664,7 +664,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, spotifyEnabled =
   // Handle navigation to garden
   const goToGarden = () => {
     handleComplete();
-    navigate('/garden');
+    navigate('/dashboard');
   };
 
   // Spotify prompt modal

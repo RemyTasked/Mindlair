@@ -2,13 +2,14 @@
  * Mind Garden - Mandala Garden Game
  * 
  * Digital coloring meditation for flow state achievement.
- * Fill a beautiful mandala pattern with calming colors.
- * +3 Serenity points per section, +20 bonus for completion.
+ * Fill a complex, beautiful mandala pattern with calming colors.
+ * Now with interactive sound and extensive patterns!
+ * +2 Serenity points per section, +50 bonus for completion.
  */
 
-import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Palette, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Palette, RotateCcw, Check, Sparkles, Volume2, VolumeX, Music } from 'lucide-react';
 
 interface MandalaGameProps {
   onComplete: (credits: number, streak: number) => void;
@@ -24,53 +25,47 @@ const COLOR_PALETTES = {
   'Sunrise Meadow': ['#F57F17', '#FBC02D', '#FFEB3B', '#FFF176', '#FFF59D', '#FFFDE7'],
 };
 
-// Mandala SVG paths - 24 sections for a balanced design
-const MANDALA_SECTIONS = Array.from({ length: 24 }, (_, i) => {
-  const angle = (i * 15) * (Math.PI / 180);
-  const nextAngle = ((i + 1) * 15) * (Math.PI / 180);
-  const innerRadius = 60;
-  const outerRadius = 140;
-  
-  const x1 = 150 + Math.cos(angle) * innerRadius;
-  const y1 = 150 + Math.sin(angle) * innerRadius;
-  const x2 = 150 + Math.cos(angle) * outerRadius;
-  const y2 = 150 + Math.sin(angle) * outerRadius;
-  const x3 = 150 + Math.cos(nextAngle) * outerRadius;
-  const y3 = 150 + Math.sin(nextAngle) * outerRadius;
-  const x4 = 150 + Math.cos(nextAngle) * innerRadius;
-  const y4 = 150 + Math.sin(nextAngle) * innerRadius;
-  
-  return {
-    id: `section-${i}`,
-    path: `M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 0 0 ${x1} ${y1} Z`,
-    ring: 'outer',
-  };
-});
+// Generate more extensive mandala sections
+const createMandala = () => {
+  const sections: any[] = [];
+  const rings = [
+    { count: 32, inner: 110, outer: 145, id: 'ring4' },
+    { count: 24, inner: 75, outer: 105, id: 'ring3' },
+    { count: 16, inner: 45, outer: 70, id: 'ring2' },
+    { count: 12, inner: 20, outer: 40, id: 'ring1' },
+  ];
 
-// Inner ring sections
-const INNER_SECTIONS = Array.from({ length: 12 }, (_, i) => {
-  const angle = (i * 30) * (Math.PI / 180);
-  const nextAngle = ((i + 1) * 30) * (Math.PI / 180);
-  const innerRadius = 25;
-  const outerRadius = 55;
-  
-  const x1 = 150 + Math.cos(angle) * innerRadius;
-  const y1 = 150 + Math.sin(angle) * innerRadius;
-  const x2 = 150 + Math.cos(angle) * outerRadius;
-  const y2 = 150 + Math.sin(angle) * outerRadius;
-  const x3 = 150 + Math.cos(nextAngle) * outerRadius;
-  const y3 = 150 + Math.sin(nextAngle) * outerRadius;
-  const x4 = 150 + Math.cos(nextAngle) * innerRadius;
-  const y4 = 150 + Math.sin(nextAngle) * innerRadius;
-  
-  return {
-    id: `inner-${i}`,
-    path: `M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 0 0 ${x1} ${y1} Z`,
-    ring: 'inner',
-  };
-});
+  rings.forEach((ring) => {
+    const angleStep = (360 / ring.count) * (Math.PI / 180);
+    for (let i = 0; i < ring.count; i++) {
+      const angle = i * angleStep;
+      const nextAngle = (i + 1) * angleStep;
+      
+      const x1 = 150 + Math.cos(angle) * ring.inner;
+      const y1 = 150 + Math.sin(angle) * ring.inner;
+      const x2 = 150 + Math.cos(angle) * ring.outer;
+      const y2 = 150 + Math.sin(angle) * ring.outer;
+      const x3 = 150 + Math.cos(nextAngle) * ring.outer;
+      const y3 = 150 + Math.sin(nextAngle) * ring.outer;
+      const x4 = 150 + Math.cos(nextAngle) * ring.inner;
+      const y4 = 150 + Math.sin(nextAngle) * ring.inner;
+      
+      sections.push({
+        id: `${ring.id}-${i}`,
+        path: `M ${x1} ${y1} L ${x2} ${y2} A ${ring.outer} ${ring.outer} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${ring.inner} ${ring.inner} 0 0 0 ${x1} ${y1} Z`,
+        ring: ring.id,
+        index: i,
+      });
+    }
+  });
 
-const ALL_SECTIONS = [...INNER_SECTIONS, ...MANDALA_SECTIONS];
+  return sections;
+};
+
+const ALL_SECTIONS = createMandala();
+
+// Frequencies for musical notes (Pentatonic scale)
+const NOTES = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
 
 export default function MandalaGame({ onComplete, onExit }: MandalaGameProps) {
   const [gameState, setGameState] = useState<'intro' | 'playing' | 'complete'>('intro');
@@ -79,12 +74,43 @@ export default function MandalaGame({ onComplete, onExit }: MandalaGameProps) {
   const [sectionColors, setSectionColors] = useState<Record<string, string>>({});
   const [score, setScore] = useState(0);
   const [sectionsColored, setSectionsColored] = useState(0);
-
-  const colors = COLOR_PALETTES[selectedPalette as keyof typeof COLOR_PALETTES];
-  const totalSections = ALL_SECTIONS.length;
+  const [isMuted, setIsMuted] = useState(false);
+  
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const totalSections = ALL_SECTIONS.length + 1; // +1 for center
   const progress = (sectionsColored / totalSections) * 100;
 
-  const handleSectionClick = useCallback((sectionId: string) => {
+  // Sound synthesis
+  const playSound = useCallback((index: number) => {
+    if (isMuted) return;
+    
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    
+    const ctx = audioCtxRef.current;
+    if (ctx.state === 'suspended') ctx.resume();
+    
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.type = 'sine';
+    // Map index to a note in the scale
+    const noteIndex = index % NOTES.length;
+    oscillator.frequency.setValueAtTime(NOTES[noteIndex], ctx.currentTime);
+    
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.5);
+  }, [isMuted]);
+
+  const handleSectionClick = useCallback((sectionId: string, index: number) => {
     if (gameState !== 'playing') return;
     
     const isNewSection = !sectionColors[sectionId];
@@ -94,18 +120,19 @@ export default function MandalaGame({ onComplete, onExit }: MandalaGameProps) {
       [sectionId]: selectedColor,
     }));
 
+    playSound(index);
+
     if (isNewSection) {
       const newSectionsColored = sectionsColored + 1;
       setSectionsColored(newSectionsColored);
-      setScore(prev => prev + 3);
+      setScore(prev => prev + 2);
 
-      // Check for completion
       if (newSectionsColored >= totalSections) {
-        setScore(prev => prev + 20); // Completion bonus
-        setTimeout(() => setGameState('complete'), 500);
+        setScore(prev => prev + 50); // Larger bonus for extensive mandala
+        setTimeout(() => setGameState('complete'), 800);
       }
     }
-  }, [gameState, sectionColors, selectedColor, sectionsColored, totalSections]);
+  }, [gameState, sectionColors, selectedColor, sectionsColored, totalSections, playSound]);
 
   const handleReset = () => {
     setSectionColors({});
@@ -117,75 +144,74 @@ export default function MandalaGame({ onComplete, onExit }: MandalaGameProps) {
     onComplete(score, 1);
   };
 
-  // Intro screen
+  // Intro
   if (gameState === 'intro') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
+          className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center"
         >
           <div className="text-6xl mb-4">🎨</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Mandala Garden</h1>
           <p className="text-gray-600 mb-6">
-            Color a beautiful mandala pattern to achieve a meditative flow state. 
-            Focus on the boundaries and colors to quiet your mind.
+            Color an intricate mandala pattern. Each section you fill creates a harmonious musical note, helping you reach a deeper state of focus.
           </p>
 
-          <div className="bg-rose-50 rounded-xl p-4 mb-6">
-            <h3 className="font-semibold text-gray-900 mb-2">How to Play</h3>
-            <ul className="text-sm text-gray-600 space-y-1 text-left">
-              <li>• Choose a color palette that speaks to you</li>
-              <li>• Tap sections to fill them with color</li>
-              <li>• +3 Serenity per section colored</li>
-              <li>• +20 bonus for completing the mandala</li>
+          <div className="bg-indigo-50 rounded-2xl p-5 mb-6 text-left border border-indigo-100">
+            <h3 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
+              <Music className="w-5 h-5" />
+              New Enhancements:
+            </h3>
+            <ul className="space-y-2 text-sm text-indigo-800">
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500">•</span>
+                <strong>Interactive Sound:</strong> Sections play musical notes when colored.
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500">•</span>
+                <strong>Extensive Pattern:</strong> {totalSections} sections for a longer meditation.
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500">•</span>
+                <strong>Better Rewards:</strong> Higher bonus for completion.
+              </li>
             </ul>
           </div>
 
-          {/* Palette Selection */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-gray-900 mb-3">Choose Your Palette</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(COLOR_PALETTES).map(([name, palette]) => (
-                <button
-                  key={name}
-                  onClick={() => {
-                    setSelectedPalette(name);
-                    setSelectedColor(palette[0]);
-                  }}
-                  className={`p-2 rounded-lg border-2 transition-all ${
-                    selectedPalette === name
-                      ? 'border-rose-500 bg-rose-50'
-                      : 'border-gray-200 hover:border-rose-300'
-                  }`}
-                >
-                  <div className="flex gap-1 mb-1">
-                    {palette.slice(0, 4).map((color, i) => (
-                      <div
-                        key={i}
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-600">{name}</span>
-                </button>
-              ))}
-            </div>
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            {Object.entries(COLOR_PALETTES).map(([name, palette]) => (
+              <button
+                key={name}
+                onClick={() => {
+                  setSelectedPalette(name);
+                  setSelectedColor(palette[0]);
+                }}
+                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                  selectedPalette === name
+                    ? 'border-rose-500 bg-rose-50 shadow-md'
+                    : 'border-gray-100 hover:border-rose-200 bg-white'
+                }`}
+              >
+                <div className="flex gap-1">
+                  {palette.slice(0, 4).map((color, i) => (
+                    <div key={i} className="w-5 h-5 rounded-full shadow-inner" style={{ backgroundColor: color }} />
+                  ))}
+                </div>
+                <span className="text-xs font-semibold text-gray-700">{name}</span>
+              </button>
+            ))}
           </div>
 
           <button
             onClick={() => setGameState('playing')}
-            className="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl font-semibold hover:from-rose-600 hover:to-pink-600 transition-all shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl font-bold text-lg hover:from-rose-600 hover:to-pink-700 transition-all shadow-lg transform hover:-translate-y-1"
           >
-            Start Coloring
+            Start Meditation
           </button>
 
-          <button
-            onClick={onExit}
-            className="mt-4 text-gray-500 hover:text-gray-700 transition-colors"
-          >
+          <button onClick={onExit} className="mt-4 text-gray-500 hover:text-gray-700 text-sm">
             ← Back to Games
           </button>
         </motion.div>
@@ -193,192 +219,147 @@ export default function MandalaGame({ onComplete, onExit }: MandalaGameProps) {
     );
   }
 
-  // Completion screen
-  if (gameState === 'complete') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', delay: 0.2 }}
-            className="text-6xl mb-4"
-          >
-            ✨
-          </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Beautiful Work!</h1>
-          <p className="text-gray-600 mb-6">
-            You've completed your mandala meditation. Your garden grows stronger.
-          </p>
-
-          <div className="bg-gradient-to-r from-rose-100 to-pink-100 rounded-xl p-6 mb-6">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Sparkles className="w-6 h-6 text-rose-500" />
-              <span className="text-3xl font-bold text-gray-900">+{score}</span>
-            </div>
-            <p className="text-sm text-gray-600">Serenity Points Earned</p>
-          </div>
-
-          {/* Show completed mandala */}
-          <div className="mb-6">
-            <svg viewBox="0 0 300 300" className="w-48 h-48 mx-auto">
-              <circle cx="150" cy="150" r="145" fill="#fef2f2" stroke="#fecaca" strokeWidth="2" />
-              {ALL_SECTIONS.map((section) => (
-                <path
-                  key={section.id}
-                  d={section.path}
-                  fill={sectionColors[section.id] || '#f5f5f5'}
-                  stroke="#e5e5e5"
-                  strokeWidth="0.5"
-                />
-              ))}
-              <circle cx="150" cy="150" r="20" fill={colors[0]} stroke="#e5e5e5" strokeWidth="0.5" />
-            </svg>
-          </div>
-
-          <button
-            onClick={handleComplete}
-            className="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl font-semibold hover:from-rose-600 hover:to-pink-600 transition-all shadow-lg flex items-center justify-center gap-2"
-          >
-            <Check className="w-5 h-5" />
-            Claim Reward
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Playing screen
+  // Playing
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 p-4">
-      {/* Header */}
-      <div className="max-w-2xl mx-auto mb-4">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={onExit}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Exit
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 p-4 lg:p-8 flex flex-col">
+      <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={onExit} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-all">
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
           </button>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-md">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span className="font-bold text-gray-900">{score}</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              <span className="font-bold text-xl text-gray-900">{score}</span>
             </div>
-
+            
             <button
-              onClick={handleReset}
-              className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
-              title="Reset"
+              onClick={() => setIsMuted(!isMuted)}
+              className="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 transition-all"
             >
-              <RotateCcw className="w-5 h-5 text-gray-600" />
+              {isMuted ? <VolumeX className="w-6 h-6 text-gray-400" /> : <Volume2 className="w-6 h-6 text-rose-500" />}
+            </button>
+
+            <button onClick={handleReset} className="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 transition-all">
+              <RotateCcw className="w-6 h-6 text-gray-600" />
             </button>
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-4 bg-white rounded-full h-3 overflow-hidden shadow-inner">
-          <motion.div
-            className="h-full bg-gradient-to-r from-rose-400 to-pink-500"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-        <p className="text-center text-sm text-gray-600 mt-2">
-          {sectionsColored} / {totalSections} sections colored
-        </p>
-      </div>
-
-      {/* Mandala */}
-      <div className="max-w-lg mx-auto mb-6">
-        <div className="bg-white rounded-3xl shadow-xl p-4">
-          <svg viewBox="0 0 300 300" className="w-full h-auto">
-            {/* Background circle */}
-            <circle cx="150" cy="150" r="145" fill="#fef2f2" stroke="#fecaca" strokeWidth="2" />
-            
-            {/* Mandala sections */}
-            {ALL_SECTIONS.map((section) => (
-              <motion.path
-                key={section.id}
-                d={section.path}
-                fill={sectionColors[section.id] || '#f5f5f5'}
-                stroke="#d4d4d4"
-                strokeWidth="0.5"
-                onClick={() => handleSectionClick(section.id)}
-                whileHover={{ scale: 1.02, opacity: 0.9 }}
-                whileTap={{ scale: 0.98 }}
-                className="cursor-pointer transition-colors"
-                style={{ transformOrigin: '150px 150px' }}
-              />
-            ))}
-
-            {/* Center circle */}
-            <circle
-              cx="150"
-              cy="150"
-              r="20"
-              fill={sectionColors['center'] || '#f5f5f5'}
-              stroke="#d4d4d4"
-              strokeWidth="0.5"
-              onClick={() => handleSectionClick('center')}
-              className="cursor-pointer"
-            />
-
-            {/* Decorative rings */}
-            <circle cx="150" cy="150" r="140" fill="none" stroke="#fecaca" strokeWidth="1" />
-            <circle cx="150" cy="150" r="55" fill="none" stroke="#fecaca" strokeWidth="1" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Color Palette */}
-      <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Palette className="w-5 h-5 text-rose-500" />
-              <span className="font-semibold text-gray-900">{selectedPalette}</span>
+        {/* Game Layout */}
+        <div className="flex-1 grid lg:grid-cols-12 gap-8 items-center">
+          {/* Palette (Left) */}
+          <div className="lg:col-span-3 order-2 lg:order-1">
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/50">
+              <div className="flex items-center gap-2 mb-6">
+                <Palette className="w-6 h-6 text-rose-500" />
+                <span className="font-bold text-gray-800">{selectedPalette}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                {COLOR_PALETTES[selectedPalette as keyof typeof COLOR_PALETTES].map((color, i) => (
+                  <motion.button
+                    key={i}
+                    onClick={() => setSelectedColor(color)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className={`aspect-square rounded-2xl shadow-inner transition-all ${
+                      selectedColor === color ? 'ring-4 ring-rose-400 scale-110' : 'hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+              
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <p className="text-xs text-gray-500 uppercase font-bold mb-3 tracking-wider">Progress</p>
+                <div className="bg-gray-100 rounded-full h-4 overflow-hidden shadow-inner p-1">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-rose-400 to-pink-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="text-right text-xs font-bold text-gray-600 mt-2">
+                  {sectionsColored} / {totalSections}
+                </p>
+              </div>
             </div>
-            
-            {/* Palette switcher */}
-            <select
-              value={selectedPalette}
-              onChange={(e) => {
-                setSelectedPalette(e.target.value);
-                setSelectedColor(COLOR_PALETTES[e.target.value as keyof typeof COLOR_PALETTES][0]);
-              }}
-              className="text-sm bg-gray-100 border-0 rounded-lg px-3 py-1 focus:ring-2 focus:ring-rose-500"
-            >
-              {Object.keys(COLOR_PALETTES).map((name) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
           </div>
 
-          <div className="flex gap-2 justify-center">
-            {colors.map((color, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedColor(color)}
-                className={`w-10 h-10 rounded-full transition-all ${
-                  selectedColor === color
-                    ? 'ring-4 ring-rose-300 scale-110'
-                    : 'hover:scale-105'
-                }`}
-                style={{ backgroundColor: color }}
-              />
-            ))}
+          {/* Mandala (Center) */}
+          <div className="lg:col-span-9 order-1 lg:order-2 flex justify-center">
+            <div className="relative w-full max-w-[min(80vw,600px)] aspect-square bg-white rounded-[40px] shadow-2xl p-4 lg:p-8 border-8 border-white">
+              <svg viewBox="0 0 300 300" className="w-full h-full drop-shadow-sm">
+                <circle cx="150" cy="150" r="148" fill="#fffcfc" stroke="#fecaca" strokeWidth="1" />
+                
+                {ALL_SECTIONS.map((section, i) => (
+                  <motion.path
+                    key={section.id}
+                    d={section.path}
+                    fill={sectionColors[section.id] || '#f9fafb'}
+                    stroke="#e2e8f0"
+                    strokeWidth="0.5"
+                    onClick={() => handleSectionClick(section.id, i)}
+                    whileHover={{ scale: 1.01, fill: selectedColor + '44' }}
+                    className="cursor-pointer transition-colors duration-300"
+                    style={{ transformOrigin: '150px 150px' }}
+                  />
+                ))}
+
+                <motion.circle
+                  cx="150" cy="150" r="18"
+                  fill={sectionColors['center'] || '#f9fafb'}
+                  stroke="#e2e8f0" strokeWidth="0.5"
+                  onClick={() => handleSectionClick('center', 0)}
+                  className="cursor-pointer"
+                  whileHover={{ scale: 1.1 }}
+                />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Completion Modal */}
+      <AnimatePresence>
+        {gameState === 'complete' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white rounded-[40px] shadow-2xl p-10 max-w-md w-full text-center"
+            >
+              <div className="text-7xl mb-6">✨</div>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Zen Achieved</h2>
+              <p className="text-gray-600 mb-8">
+                Your focus has nurtured the garden. Your mind is as balanced as your mandala.
+              </p>
+              
+              <div className="bg-rose-50 rounded-3xl p-8 mb-8">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <Sparkles className="w-8 h-8 text-rose-500" />
+                  <span className="text-5xl font-black text-gray-900">+{score}</span>
+                </div>
+                <p className="text-rose-600 font-bold tracking-widest uppercase text-xs">Serenity Earned</p>
+              </div>
+
+              <button
+                onClick={handleComplete}
+                className="w-full py-5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl font-bold text-xl hover:from-rose-600 hover:to-pink-700 transition-all shadow-xl shadow-rose-200 flex items-center justify-center gap-3"
+              >
+                <Check className="w-6 h-6" />
+                Claim Reward
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-
