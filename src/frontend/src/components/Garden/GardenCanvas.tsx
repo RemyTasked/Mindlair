@@ -2090,8 +2090,7 @@ export default function GardenCanvas({
         )}
       </AnimatePresence>
       
-      {/* Activity Burst Animation - Shows when user earns points */}
-      {/* Optimized: reduced sparkle count from 24 to 12 */}
+{/* Activity Burst Animation - Shows when user grows their plant */}
       <AnimatePresence>
         {showActivityBurst && (
           <motion.div

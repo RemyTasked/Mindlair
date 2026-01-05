@@ -28,6 +28,7 @@ import {
   Moon,
   Calendar,
 } from 'lucide-react';
+import Logo, { MindGardenIcon } from '../Logo';
 import '../../styles/garden-theme.css';
 
 interface DashboardLayoutProps {
@@ -140,15 +141,15 @@ export default function DashboardLayout({
         <div className="mg-sidebar-header">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-xl">
-                🌱
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
+                <MindGardenIcon size={28} />
               </div>
               {!sidebarCollapsed && (
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
-                  <h1 className="text-lg font-bold text-[var(--mg-accent-light)]">Mind Garden</h1>
+                  <Logo size="xs" variant="text" />
                   <p className="text-xs text-[var(--mg-text-muted)]">Grow your focus</p>
                 </motion.div>
               )}
@@ -294,10 +295,8 @@ export default function DashboardLayout({
         </button>
         
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm">
-            🌱
-          </div>
-          <span className="font-bold text-[var(--mg-accent-light)]">Mind Garden</span>
+          <MindGardenIcon size={24} />
+          <Logo size="xs" variant="text" />
         </div>
         
         <button 

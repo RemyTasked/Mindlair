@@ -190,8 +190,8 @@ export async function getFocusRoomInsights(userId: string): Promise<FocusRoomIns
     }
 
     // Audio source insights
-    if (preferredAudioSource === 'spotify' || preferredAudioSource === 'apple-music') {
-      insights.push(`You prefer ${preferredAudioSource === 'spotify' ? 'Spotify' : 'Apple Music'} playlists, showing you value curated audio experiences.`);
+    if (preferredAudioSource === 'ambient' || preferredAudioSource === 'mindgarden') {
+      insights.push(`You prefer ${preferredAudioSource === 'ambient' ? 'ambient soundscapes' : 'Mind Garden sounds'}, showing you value immersive audio experiences.`);
     }
 
     // Credits insights

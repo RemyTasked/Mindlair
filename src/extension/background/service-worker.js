@@ -24,7 +24,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     settings: {
       notificationTiming: 10, // minutes before meeting
       autoSuggestFlows: true,
-      spotifyAutoPlay: false,
+      ambientAutoPlay: false,
       theme: 'zen',
       voice: 'calm',
     },

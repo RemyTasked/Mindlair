@@ -10,14 +10,14 @@
  * - Diary entries saved ONLY on device (localStorage)
  * - Keywords anonymized for game personalization (opt-out available)
  * 
- * +30 Serenity points per check-in (+20 feelings, +10 gratitude)
+ * Each check-in adds +1 leaf to your growing plant!
  */
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Mic, MicOff, X, Heart, Shield, Sparkles,
+  Mic, MicOff, X, Heart, Shield,
   AlertCircle, CheckCircle2, Keyboard, Volume2,
   History, Trash2, Clock, ChevronLeft, Flower2,
   RefreshCw, ChevronRight
@@ -146,8 +146,6 @@ const EMOTION_PRESETS = [
   { emoji: '🤔', label: 'Uncertain', color: 'bg-amber-100 text-amber-700 border-amber-300' },
   { emoji: '💪', label: 'Motivated', color: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
 ];
-
-const POINTS_PER_CHECKIN = 30; // +20 for feelings, +10 for gratitude
 
 export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) {
   const navigate = useNavigate();
@@ -485,9 +483,9 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-sm text-rose-600 mb-5">
-            <Sparkles className="w-4 h-4" />
-            <span className="font-semibold">+{POINTS_PER_CHECKIN} Serenity points total</span>
+          <div className="flex items-center justify-center gap-2 text-sm text-emerald-600 mb-5">
+            <span>🍃</span>
+            <span className="font-semibold">+1 leaf for completing check-in</span>
           </div>
 
           <button
@@ -558,8 +556,8 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
           </div>
 
           <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-4">
-            <Sparkles className="w-6 h-6" />
-            <span>+{POINTS_PER_CHECKIN} Serenity</span>
+            <span className="text-3xl">🍃</span>
+            <span>+1 Leaf</span>
           </div>
 
           <p className="text-xs text-gray-500 mb-6">

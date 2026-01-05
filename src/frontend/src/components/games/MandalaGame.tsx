@@ -4,7 +4,7 @@
  * Digital coloring meditation for flow state achievement.
  * Fill a complex, beautiful mandala pattern with calming colors.
  * Now with interactive sound and extensive patterns!
- * +2 Serenity points per section, +50 bonus for completion.
+ * Each completed mandala adds +1 leaf to your growing plant!
  */
 
 import { useState, useCallback, useRef } from 'react';
@@ -344,9 +344,9 @@ export default function MandalaGame({ onComplete, onExit }: MandalaGameProps) {
               <div className="bg-rose-50 rounded-3xl p-8 mb-8">
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <Sparkles className="w-8 h-8 text-rose-500" />
-                  <span className="text-5xl font-black text-gray-900">+{score}</span>
+                  <span className="text-5xl font-black text-gray-900">+1</span>
                 </div>
-                <p className="text-rose-600 font-bold tracking-widest uppercase text-xs">Serenity Earned</p>
+                <p className="text-emerald-600 font-bold tracking-widest uppercase text-xs">Leaf Earned 🍃</p>
               </div>
 
               <button

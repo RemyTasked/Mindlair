@@ -144,16 +144,16 @@ async function showDashboard(user) {
         <div class="forecast-description">${forecast.description}</div>
       </div>
 
-      <div class="spotify-card" id="spotify-controls">
-        <div class="spotify-header">
-          <span class="spotify-icon">🎵</span>
-          <span class="spotify-title">Spotify</span>
+      <div class="ambient-card" id="ambient-controls">
+        <div class="ambient-header">
+          <span class="ambient-icon">🎵</span>
+          <span class="ambient-title">Ambient Sounds</span>
         </div>
-        <div class="spotify-buttons">
-          <button class="spotify-btn" id="play-focus">
+        <div class="ambient-buttons">
+          <button class="ambient-btn" id="play-focus">
             <span>🎯</span> Focus Music
           </button>
-          <button class="spotify-btn" id="play-calm">
+          <button class="ambient-btn" id="play-calm">
             <span>🧘</span> Calm Music
           </button>
         </div>
@@ -208,21 +208,21 @@ async function showDashboard(user) {
     });
   });
 
-  // Spotify controls
+  // Ambient sound controls
   document.getElementById('play-focus').addEventListener('click', async () => {
     try {
-      await chrome.runtime.sendMessage({ type: 'SPOTIFY_PLAY', mood: 'focus' });
+      await chrome.runtime.sendMessage({ type: 'AMBIENT_PLAY', mood: 'focus' });
     } catch (e) {
-      // Open dashboard with Spotify connection if not connected
-      chrome.tabs.create({ url: 'http://localhost:5173/settings?section=spotify' });
+      // Open dashboard with ambient settings if not connected
+      chrome.tabs.create({ url: 'http://localhost:5173/settings?section=audio' });
     }
   });
 
   document.getElementById('play-calm').addEventListener('click', async () => {
     try {
-      await chrome.runtime.sendMessage({ type: 'SPOTIFY_PLAY', mood: 'calm' });
+      await chrome.runtime.sendMessage({ type: 'AMBIENT_PLAY', mood: 'calm' });
     } catch (e) {
-      chrome.tabs.create({ url: 'http://localhost:5173/settings?section=spotify' });
+      chrome.tabs.create({ url: 'http://localhost:5173/settings?section=audio' });
     }
   });
 }

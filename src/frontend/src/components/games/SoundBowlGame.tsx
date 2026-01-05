@@ -3,7 +3,7 @@
  * 
  * Interactive singing bowl meditation using Web Audio API.
  * Create harmonious, sustained tones for deep relaxation.
- * +10 Serenity points for 2 minutes of sustained, harmonious play.
+ * Each session adds +1 leaf to your growing plant!
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -233,8 +233,8 @@ export default function SoundBowlGame({ onComplete, onExit }: SoundBowlGameProps
             <ul className="text-sm text-white/70 space-y-1 text-left">
               <li>• Tap any bowl to create a tone</li>
               <li>• Layer multiple bowls for rich harmonies</li>
-              <li>• +2 Serenity per bowl strike</li>
-              <li>• +10 bonus after 2 minutes of meditation</li>
+              <li>• Complete a session to grow your plant</li>
+              <li>• +1 leaf after 2 minutes of meditation 🍃</li>
             </ul>
           </div>
 
@@ -289,9 +289,9 @@ export default function SoundBowlGame({ onComplete, onExit }: SoundBowlGameProps
           <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-6 mb-6 border border-purple-500/30">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Sparkles className="w-6 h-6 text-purple-400" />
-              <span className="text-3xl font-bold text-white">+{score}</span>
+              <span className="text-3xl font-bold text-white">+1</span>
             </div>
-            <p className="text-sm text-white/60">Serenity Points Earned</p>
+            <p className="text-sm text-white/60">Leaf Earned 🍃</p>
           </div>
 
           <div className="text-white/60 text-sm mb-6">

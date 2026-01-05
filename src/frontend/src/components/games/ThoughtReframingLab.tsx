@@ -4,7 +4,7 @@
  * CBT-based Cognitive Restructuring Tool with Smart Guidance
  * Identify cognitive distortions and practice reframing negative thoughts.
  * Now with intelligent feedback on distortion selection and reframe quality!
- * +5 Serenity per reframe
+ * Each completed session adds +1 leaf to your growing plant!
  */
 
 import { useState } from 'react';
@@ -186,7 +186,6 @@ const DISTORTED_THOUGHTS: DistortedThought[] = [
   },
 ];
 
-const POINTS_PER_REFRAME = 5;
 
 // Game difficulty levels
 const DIFFICULTY_LEVELS = [
@@ -494,8 +493,8 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
 
   const finishGame = () => {
     setGameComplete(true);
-    const credits = reframedCount * POINTS_PER_REFRAME;
-    setTimeout(() => onComplete(credits, 1), 2500);
+    // Each game session = +1 leaf for plant growth
+    setTimeout(() => onComplete(1, 1), 2500);
   };
 
   // Educational Onboarding with Examples
@@ -581,8 +580,8 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                 ))}
               </ul>
               <div className="mt-4 pt-3 border-t border-indigo-200 flex items-center justify-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-500" />
-                <span className="text-sm text-indigo-700 font-medium">+{POINTS_PER_REFRAME} Serenity per reframe</span>
+                <span className="text-emerald-500">🍃</span>
+                <span className="text-sm text-emerald-700 font-medium">+1 leaf for completing a session</span>
               </div>
             </div>
           )}
@@ -698,8 +697,6 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
 
   // Game Complete
   if (gameComplete) {
-    const credits = reframedCount * POINTS_PER_REFRAME;
-    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-100 to-purple-100 p-4">
         <motion.div 
@@ -720,9 +717,9 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
             You reframed {reframedCount} thought{reframedCount !== 1 ? 's' : ''}
           </p>
           
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-indigo-600 mb-6">
-            <Sparkles className="w-6 h-6" />
-            <span>+{credits} Serenity</span>
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-6">
+            <span className="text-3xl">🍃</span>
+            <span>+1 Leaf</span>
           </div>
 
           <div className="bg-indigo-50 rounded-xl p-4 mb-6 text-left">
@@ -1031,7 +1028,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                 <div className="flex items-center justify-center gap-2 mb-6">
                   <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                   <span className="font-bold text-emerald-600">Great reframe!</span>
-                  <span className="text-indigo-600 font-bold">+{POINTS_PER_REFRAME} Serenity</span>
+                  <span className="text-emerald-600 font-bold">Progress +1 🍃</span>
                 </div>
 
                 {/* Reframe quality feedback */}

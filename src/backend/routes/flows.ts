@@ -239,9 +239,11 @@ router.post(
     
     res.json({
       success: true,
-      message: gardenResult.newPlant 
-        ? '🌱 New plant added to your garden!' 
-        : '✨ Your garden is growing!',
+      message: gardenResult.plantMatured 
+        ? '🎉 Your plant is fully grown!' 
+        : gardenResult.milestoneReached 
+          ? gardenResult.milestoneReached 
+          : '✨ Your plant is growing!',
       gardenState: gardenResult,
     });
   })

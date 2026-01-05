@@ -410,8 +410,8 @@ main {
   color: var(--text-secondary);
 }
 
-/* Spotify Card */
-.spotify-card {
+/* Ambient Sounds Card */
+.ambient-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -419,52 +419,52 @@ main {
   margin-bottom: 16px;
 }
 
-.spotify-header {
+.ambient-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
 }
 
-.spotify-icon {
+.ambient-icon {
   font-size: 16px;
 }
 
-.spotify-title {
+.ambient-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.spotify-buttons {
+.ambient-buttons {
   display: flex;
   gap: 8px;
 }
 
-.spotify-btn {
+.ambient-btn {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 10px 12px;
-  background: rgba(30, 215, 96, 0.1);
-  border: 1px solid rgba(30, 215, 96, 0.3);
+  background: rgba(5, 150, 105, 0.1);
+  border: 1px solid rgba(5, 150, 105, 0.3);
   border-radius: 8px;
-  color: #1ed760;
+  color: #059669;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.spotify-btn:hover {
-  background: rgba(30, 215, 96, 0.2);
-  border-color: #1ed760;
+.ambient-btn:hover {
+  background: rgba(5, 150, 105, 0.2);
+  border-color: #059669;
   transform: translateY(-1px);
 }
 
-.spotify-btn span {
+.ambient-btn span {
   font-size: 14px;
 }
 

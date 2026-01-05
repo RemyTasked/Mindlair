@@ -4,7 +4,7 @@
  * Cognitive Concentration Game
  * Classic memory game with nature-themed icons to sharpen focus.
  * Now with expanded variety and Harmony Levels!
- * +5 Serenity per match
+ * Each completed game adds +1 leaf to your growing plant!
  */
 
 import { useState, useEffect } from 'react';
@@ -103,7 +103,7 @@ const ICON_THEMES = {
   },
 };
 
-const POINTS_PER_MATCH = 5;
+// Game rewards: +1 leaf for completing any level
 
 export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) {
   const [cards, setCards] = useState<Card[]>([]);
@@ -221,14 +221,14 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
 
   const finishGame = () => {
     setGameComplete(true);
-    const credits = numPairs * POINTS_PER_MATCH;
     
     // Unlock next level if applicable
     if (harmonyLevel < HARMONY_LEVELS.length - 1) {
       // Could persist this to backend/localStorage in future
     }
     
-    setTimeout(() => onComplete(credits, 1), 2500);
+    // Each completed game = +1 leaf for plant growth
+    setTimeout(() => onComplete(1, 1), 2500);
   };
 
   const getIconComponent = (type: string) => {
@@ -322,7 +322,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                   </div>
                   <div className="text-right">
                     <span className="text-lg font-bold text-green-600">{level.pairs} pairs</span>
-                    <p className="text-xs text-gray-400">{level.pairs * POINTS_PER_MATCH} pts</p>
+                    <p className="text-xs text-emerald-500">+1 🍃</p>
                   </div>
                 </div>
               </button>
@@ -375,8 +375,8 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                 Choose your Harmony Level for varying difficulty
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-600 mt-1">+{POINTS_PER_MATCH}</span>
-                Serenity points per match
+                <span className="text-emerald-600 mt-1">🍃</span>
+                +1 leaf to grow your plant
               </li>
             </ul>
           </div>
@@ -412,7 +412,6 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
 
   // Game Complete
   if (gameComplete) {
-    const credits = numPairs * POINTS_PER_MATCH;
     const canLevelUp = harmonyLevel < HARMONY_LEVELS.length - 1;
     
     return (
@@ -438,9 +437,9 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
             Level: {currentLevel.name}
           </p>
           
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-green-600 mb-6">
-            <Sparkles className="w-6 h-6" />
-            <span>+{credits} Serenity</span>
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-6">
+            <Leaf className="w-6 h-6" />
+            <span>+1 Leaf 🍃</span>
           </div>
           
           {canLevelUp && (
@@ -502,8 +501,8 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           <span className="text-sm font-medium text-gray-700">
             Matched: {matchedPairs.size} / {numPairs}
           </span>
-          <span className="text-sm text-green-600 font-medium">
-            +{matchedPairs.size * POINTS_PER_MATCH} pts
+          <span className="text-sm text-emerald-600 font-medium">
+            {matchedPairs.size === numPairs ? '+1 🍃' : `${Math.round((matchedPairs.size / numPairs) * 100)}%`}
           </span>
         </div>
         <div className="bg-white/50 rounded-full h-2 overflow-hidden">

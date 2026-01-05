@@ -2,14 +2,13 @@
  * Mind Garden - Thought Popper Game
  * 
  * Focus and Mental Clearing Game
- * Pop negative thought bubbles to clear your mind and earn Serenity points.
- * Now with gamified destructive words and a session summary!
- * +2 Serenity per pop
+ * Pop negative thought bubbles to clear your mind and grow your plant.
+ * Each session adds +1 leaf to your growing plant!
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, Wind, Target, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+import { X, Wind, Target, AlertTriangle, Info, CheckCircle2, Leaf } from 'lucide-react';
 import api from '../../lib/axios';
 
 interface ThoughtPopperGameProps {
@@ -353,9 +352,9 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
           
           <div className="bg-blue-50 rounded-2xl p-6 mb-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-2xl font-bold text-blue-600">
-                <Sparkles className="w-6 h-6" />
-                <span>+{creditsEarned} Serenity</span>
+              <div className="flex items-center gap-2 text-2xl font-bold text-emerald-600">
+                <Leaf className="w-6 h-6" />
+                <span>+1 Leaf 🍃</span>
               </div>
               <button
                 onClick={handleClaimReward}

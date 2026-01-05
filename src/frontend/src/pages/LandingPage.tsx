@@ -13,7 +13,7 @@ import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { Leaf, Sparkles, Calendar, Music, Heart, Wind, Sun, Moon, ChevronDown, Bell, Smartphone, Download } from 'lucide-react';
 import CalDAVModal from '../components/CalDAVModal';
-import Logo from '../components/Logo';
+import Logo, { MindGardenIcon } from '../components/Logo';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -50,8 +50,8 @@ export default function LandingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-100">
         <div className="text-center">
-          <div className="mb-4 animate-pulse">
-            <Logo size="lg" />
+<div className="mb-4 animate-pulse flex justify-center">
+            <MindGardenIcon size={64} />
           </div>
           <p className="text-emerald-700">Loading...</p>
         </div>
@@ -108,7 +108,7 @@ export default function LandingPage() {
 
       {/* Header */}
       <header className="container mx-auto px-6 py-8 relative z-10">
-        <div className="flex justify-center animate-fade-in">
+<div className="flex justify-center items-center animate-fade-in">
           <Logo size="lg" />
         </div>
       </header>
@@ -189,7 +189,9 @@ export default function LandingPage() {
                     {/* Notification preview */}
                     <div className="bg-white rounded-xl p-4 shadow-lg mb-3">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-lg shadow-md shrink-0">🌱</div>
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center shadow-md shrink-0">
+                          <MindGardenIcon size={24} className="text-white" />
+                        </div>
                         <div className="flex-1">
                           <div className="text-gray-900 font-semibold text-sm">Mind Garden</div>
                           <div className="text-gray-600 text-xs">Board Meeting in 10 minutes</div>
@@ -197,8 +199,8 @@ export default function LandingPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button className="flex-1 py-2 bg-emerald-500 text-white rounded-lg text-xs font-semibold">
-                          🌱 Start Flow
+                        <button className="flex-1 py-2 bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
+                          <MindGardenIcon size={14} /> Start Flow
                         </button>
                         <button className="flex-1 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
                           Not Now
@@ -351,8 +353,8 @@ export default function LandingPage() {
           />
           <FeatureCard
             icon={<Music className="w-7 h-7 text-cyan-500" />}
-            title="Spotify Integration"
-            description="Calming playlists that complement your wellness practice"
+            title="Ambient Sound Rooms"
+            description="Immersive soundscapes for focus, relaxation, and deep work"
           />
         </div>
       </section>
@@ -396,9 +398,8 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="container mx-auto px-6 py-12 text-center relative z-10">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <span className="text-2xl">🌱</span>
-          <span className="text-lg font-semibold text-gray-700">Mind Garden</span>
+        <div className="flex items-center justify-center mb-4">
+          <Logo size="md" />
         </div>
         <p className="text-gray-500 text-sm mb-4">
           Cultivating calm, one moment at a time

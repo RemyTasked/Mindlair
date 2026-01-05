@@ -1,42 +1,68 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background gradient -->
   <defs>
+    <!-- Background gradient - Mind Garden emerald/teal -->
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#059669"/>
+      <stop offset="100%" style="stop-color:#0d9488"/>
     </linearGradient>
+    
+    <!-- White/light gradient for icons -->
     <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ccfbf1;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#d1fae5"/>
     </linearGradient>
   </defs>
   
-  <!-- Background with rounded corners for iOS -->
+  <!-- Background with rounded corners for iOS maskable -->
   <rect width="512" height="512" rx="110" fill="url(#bgGradient)"/>
   
-  <!-- Film reel icon (cinematic theme) -->
-  <g transform="translate(106, 106)">
-    <!-- Outer film frame -->
-    <rect x="50" y="50" width="200" height="200" rx="20" fill="none" stroke="url(#iconGradient)" stroke-width="12"/>
+  <!-- Plant/sprout icon -->
+  <g transform="translate(256, 270)">
+    <!-- Stem -->
+    <path 
+      d="M0 60 Q-8 30, 0 -10 Q8 -60, 0 -90" 
+      stroke="url(#iconGradient)" 
+      stroke-width="14" 
+      stroke-linecap="round" 
+      fill="none"
+    />
     
-    <!-- Film perforations (left side) -->
-    <rect x="20" y="80" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
-    <rect x="20" y="130" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
-    <rect x="20" y="180" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
+    <!-- Left leaf -->
+    <path 
+      d="M-8 0 Q-80 -30, -95 -80 Q-80 -50, -50 -50 Q-20 -50, -8 0" 
+      fill="url(#iconGradient)"
+    />
     
-    <!-- Film perforations (right side) -->
-    <rect x="260" y="80" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
-    <rect x="260" y="130" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
-    <rect x="260" y="180" width="20" height="20" rx="4" fill="url(#iconGradient)"/>
+    <!-- Right leaf -->
+    <path 
+      d="M8 0 Q80 -30, 95 -80 Q80 -50, 50 -50 Q20 -50, 8 0" 
+      fill="url(#iconGradient)"
+    />
     
-    <!-- Center play/focus symbol -->
-    <circle cx="150" cy="150" r="50" fill="url(#iconGradient)" opacity="0.9"/>
-    <path d="M 135 130 L 135 170 L 170 150 Z" fill="#14b8a6"/>
+    <!-- Center growing leaf -->
+    <path 
+      d="M0 -45 Q-30 -80, -22 -120 Q0 -95, 0 -45 Q0 -95, 22 -120 Q30 -80, 0 -45" 
+      fill="url(#iconGradient)"
+    />
+    
+    <!-- Small budding leaves -->
+    <ellipse cx="-32" cy="-30" rx="12" ry="20" fill="url(#iconGradient)" transform="rotate(-30 -32 -30)" opacity="0.85"/>
+    <ellipse cx="32" cy="-30" rx="12" ry="20" fill="url(#iconGradient)" transform="rotate(30 32 -30)" opacity="0.85"/>
+    
+    <!-- Pot -->
+    <path 
+      d="M-40 60 L-32 110 Q0 122, 32 110 L40 60 Z" 
+      fill="url(#iconGradient)"
+      opacity="0.95"
+    />
+    <rect x="-44" y="52" width="88" height="12" rx="4" fill="url(#iconGradient)" opacity="0.95"/>
+    
+    <!-- Soil -->
+    <ellipse cx="0" cy="62" rx="36" ry="6" fill="#059669" opacity="0.5"/>
   </g>
   
-  <!-- Subtle sparkle effect -->
-  <circle cx="400" cy="120" r="8" fill="white" opacity="0.6"/>
-  <circle cx="420" cy="140" r="4" fill="white" opacity="0.4"/>
-  <circle cx="100" cy="400" r="6" fill="white" opacity="0.5"/>
+  <!-- Sparkle accents -->
+  <circle cx="380" cy="130" r="8" fill="white" opacity="0.6"/>
+  <circle cx="395" cy="155" r="4" fill="white" opacity="0.4"/>
+  <circle cx="130" cy="370" r="6" fill="white" opacity="0.5"/>
 </svg>
-

@@ -4,14 +4,14 @@
  * Categorization Tool with Smart Feedback
  * Sort your mental inputs into actionable buckets to reduce cognitive load.
  * Now provides educational guidance when you might benefit from a different choice!
- * +3 Serenity per sort
+ * Each completed session adds +1 leaf to your growing plant!
  */
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Clock, Wind,
-  LayoutGrid, Sparkles, Heart, Plus, Lightbulb
+  LayoutGrid, Heart, Plus, Lightbulb
 } from 'lucide-react';
 import api from '../../lib/axios';
 
@@ -50,7 +50,6 @@ const FALLBACK_THOUGHTS: Thought[] = [
   { id: '15', text: "I deserve some rest", suggestedBucket: "keep", category: "positive" },
 ];
 
-const POINTS_PER_SORT = 3;
 
 type BucketType = 'keep' | 'park' | 'letGo';
 
@@ -338,8 +337,6 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
 
   const finishGame = async () => {
     setGameComplete(true);
-    const totalSorted = sortedCounts.keep + sortedCounts.park + sortedCounts.letGo + 1; // +1 for current
-    const credits = totalSorted * POINTS_PER_SORT;
 
     // Submit to backend
     try {
@@ -352,7 +349,8 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
       console.warn('Failed to submit thoughts:', error);
     }
 
-    setTimeout(() => onComplete(credits, 1), 2500);
+    // Each game session = +1 leaf for plant growth
+    setTimeout(() => onComplete(1, 1), 2500);
   };
 
   // Mode Select
@@ -507,8 +505,8 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
               <span className="text-xs text-gray-600">Choose from 3 modes and 4 themes!</span>
             </div>
             <div className="mt-2">
-              <span className="text-teal-600 font-medium">+{POINTS_PER_SORT}</span>
-              <span className="text-gray-500 text-sm"> Serenity per sort</span>
+              <span className="text-emerald-600 font-medium">🍃</span>
+              <span className="text-gray-500 text-sm"> +1 leaf for completing a session</span>
             </div>
           </div>
           
@@ -547,7 +545,6 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   // Game Complete
   if (gameComplete) {
     const totalSorted = sortedCounts.keep + sortedCounts.park + sortedCounts.letGo;
-    const credits = totalSorted * POINTS_PER_SORT;
     
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
@@ -593,9 +590,9 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-teal-600 mb-6">
-            <Sparkles className="w-6 h-6" />
-            <span>+{credits} Serenity</span>
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-6">
+            <span className="text-3xl">🍃</span>
+            <span>+1 Leaf</span>
           </div>
           
           <p className="text-gray-500 text-sm">Returning to Games Hub...</p>

@@ -37,7 +37,7 @@ const startSessionSchema = z.object({
   roomId: z.string(),
   roomName: z.string(),
   timerOption: z.enum(['5', '10', '20', '∞']),
-  audioSource: z.enum(['spotify', 'meetcute']),
+  audioSource: z.enum(['ambient', 'mindgarden']),
 });
 
 router.post(

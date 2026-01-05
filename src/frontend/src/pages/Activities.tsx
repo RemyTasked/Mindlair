@@ -30,7 +30,6 @@ import {
   Paintbrush,
   Bell,
   LucideIcon,
-  Zap,
   Target,
   Trophy,
 } from 'lucide-react';
@@ -63,8 +62,7 @@ interface Activity {
   gradient: string;
   category: 'wellness' | 'mindfulness' | 'games' | 'creative';
   duration?: string;
-  plantReward?: string;
-  serenityPoints?: string;
+  growthReward?: string; // What this activity does for your plant
   available: boolean;
   comingSoon?: boolean;
 }
@@ -80,7 +78,7 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-rose-500/20 to-amber-500/20',
     category: 'wellness',
     duration: '2-5 min',
-    serenityPoints: '+30 points',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
   {
@@ -92,19 +90,19 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-violet-500/20 to-purple-500/20',
     category: 'wellness',
     duration: '5-10 min',
-    plantReward: 'Wisdom Fern',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
   {
     id: 'breathing-garden',
     name: 'Breathing Garden',
-    description: 'Library of breathing techniques with visual guides. Grow bamboo with practice.',
+    description: 'Library of breathing techniques with visual guides.',
     icon: Wind,
     color: 'text-sky-400',
     gradient: 'from-sky-500/20 to-cyan-500/20',
     category: 'mindfulness',
     duration: '1-10 min',
-    plantReward: 'Bamboo',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
   {
@@ -116,7 +114,7 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-emerald-500/20 to-green-500/20',
     category: 'mindfulness',
     duration: 'Throughout day',
-    plantReward: 'Rare Bloom',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
   // Games
@@ -129,7 +127,7 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-blue-500/20 to-cyan-500/20',
     category: 'games',
     duration: '1-2 min',
-    serenityPoints: '+2 per pop',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
   {
@@ -141,7 +139,7 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-green-500/20 to-emerald-500/20',
     category: 'games',
     duration: '3-5 min',
-    serenityPoints: '+5 per match',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
   {
@@ -153,7 +151,7 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-cyan-500/20 to-teal-500/20',
     category: 'games',
     duration: '5-10 min',
-    serenityPoints: '+3 per sort',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
   // Creative Activities
@@ -166,7 +164,7 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-rose-500/20 to-pink-500/20',
     category: 'creative',
     duration: '10-20 min',
-    serenityPoints: '+3 per section',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
   {
@@ -178,7 +176,7 @@ const ACTIVITIES: Activity[] = [
     gradient: 'from-purple-500/20 to-pink-500/20',
     category: 'creative',
     duration: '5-15 min',
-    serenityPoints: '+2 per strike',
+    growthReward: '+1 leaf 🍃',
     available: true,
   },
 ];
@@ -358,8 +356,8 @@ export default function Activities() {
               className="mg-card p-4"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5 text-yellow-500" />
-                <span className="text-sm text-[var(--mg-text-muted)]">Serenity Score</span>
+                <Leaf className="w-5 h-5 text-emerald-500" />
+                <span className="text-sm text-[var(--mg-text-muted)]">Total Activities</span>
               </div>
               <p className="text-2xl font-bold text-[var(--mg-text-primary)]">{progress.totalCredits}</p>
             </motion.div>
@@ -451,7 +449,7 @@ export default function Activities() {
                   Daily Check-In
                 </h2>
                 <p className="text-sm text-[var(--mg-text-secondary)] mb-4 max-w-lg">
-                  Two mindful moments: Share how you're feeling, then plant a seed of gratitude. +30 points.
+                  Two mindful moments: Share how you're feeling, then plant a seed of gratitude. Grows your plant +1 leaf 🍃
                 </p>
                 <button
                   onClick={() => navigate('/activities/daily-checkin')}
@@ -521,16 +519,10 @@ export default function Activities() {
                 <div className="text-xs text-[var(--mg-text-muted)]">
                   {activity.duration}
                 </div>
-                {activity.plantReward && activity.available && (
+                {activity.growthReward && activity.available && (
                   <div className="flex items-center gap-1 text-xs text-emerald-400">
-                    <Flower2 className="w-3 h-3" />
-                    {activity.plantReward}
-                  </div>
-                )}
-                {activity.serenityPoints && activity.available && (
-                  <div className="flex items-center gap-1 text-xs text-amber-400">
-                    <Sparkles className="w-3 h-3" />
-                    {activity.serenityPoints}
+                    <Leaf className="w-3 h-3" />
+                    {activity.growthReward}
                   </div>
                 )}
               </div>

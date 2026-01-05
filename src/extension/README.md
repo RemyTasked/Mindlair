@@ -9,7 +9,7 @@ Calendar-integrated mental fitness tool that provides contextual micro-intervent
 - **Smart Meeting Analysis**: Parses calendar events and calculates daily stress forecast
 - **Micro-Flows**: Quick 30s-3min breathing/mindfulness exercises
 - **Garden Visualization**: Mini garden showing wellness progress
-- **Spotify Integration**: Quick-play focus music
+- **Ambient Sounds**: Quick-play focus music and soundscapes
 
 ## Development
 

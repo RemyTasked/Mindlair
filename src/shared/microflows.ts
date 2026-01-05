@@ -45,8 +45,8 @@ export type BreathingPattern =
   | 'energizing'    // 4-2-4-2 (quick, energizing)
   | 'cleansing';    // 4-0-6-0 (in-out focus)
 
-// Spotify mood for pairing
-export type SpotifyMood = 
+// Audio mood for pairing
+export type AudioMood = 
   | 'neutral-instrumental'      // 70 BPM, minimal melody
   | 'confidence-uplifting'      // 90-100 BPM, building energy
   | 'calming-reassuring'        // 60 BPM, reassuring tones
@@ -93,8 +93,8 @@ export interface MicroFlow {
   duration: number;           // total seconds
   bestFor: string[];          // Meeting/context types
   breathingPattern: BreathingPattern;
-  spotifyMood: SpotifyMood;
-  spotifyBPM: string;         // BPM description
+  audioMood: AudioMood;
+  audioBPM: string;         // BPM description
   gardenPlant: GardenPlant;   // Plant that grows
   steps: FlowStep[];
   benefits: string[];
@@ -119,8 +119,8 @@ const preMeetingFocus: MicroFlow = {
   duration: 120,
   bestFor: ['Standard meetings', 'Check-ins', 'Team calls', 'One-on-ones'],
   breathingPattern: 'box',
-  spotifyMood: 'neutral-instrumental',
-  spotifyBPM: '70 BPM, minimal melody',
+  audioMood: 'neutral-instrumental',
+  audioBPM: '70 BPM, minimal melody',
   gardenPlant: 'daisy',
   icon: '🎯',
   benefits: ['Increased presence', 'Better listening', 'Clearer thinking'],
@@ -192,8 +192,8 @@ const prePresentationPower: MicroFlow = {
   duration: 180,
   bestFor: ['Presentations', 'Pitches', 'Speeches', 'Demos', 'Webinars'],
   breathingPattern: 'energizing',
-  spotifyMood: 'confidence-uplifting',
-  spotifyBPM: '90-100 BPM, building energy',
+  audioMood: 'confidence-uplifting',
+  audioBPM: '90-100 BPM, building energy',
   gardenPlant: 'sunflower',
   icon: '⚡',
   benefits: ['Increased confidence', 'Better projection', 'Reduced anxiety'],
@@ -264,8 +264,8 @@ const difficultConversationPrep: MicroFlow = {
   duration: 180,
   bestFor: ['Performance reviews', 'Conflict resolution', 'Hard feedback', 'Terminations', 'Negotiations'],
   breathingPattern: 'extended-exhale',
-  spotifyMood: 'calming-reassuring',
-  spotifyBPM: '60 BPM, calming',
+  audioMood: 'calming-reassuring',
+  audioBPM: '60 BPM, calming',
   gardenPlant: 'lavender',
   icon: '🌿',
   benefits: ['Emotional regulation', 'Better listening', 'Clearer communication'],
@@ -337,8 +337,8 @@ const quickReset: MicroFlow = {
   duration: 90,
   bestFor: ['Between meetings', 'Context switching', 'Mental fatigue', 'Overwhelm'],
   breathingPattern: 'cleansing',
-  spotifyMood: 'energizing-refresh',
-  spotifyBPM: 'Brief energizing pulse',
+  audioMood: 'energizing-refresh',
+  audioBPM: 'Brief energizing pulse',
   gardenPlant: 'chamomile',
   icon: '🔄',
   benefits: ['Mental clarity', 'Energy boost', 'Context shift'],
@@ -410,8 +410,8 @@ const postMeetingDecompress: MicroFlow = {
   duration: 120,
   bestFor: ['After difficult meetings', 'Long meetings', 'Emotionally draining sessions'],
   breathingPattern: 'calming',
-  spotifyMood: 'soothing-release',
-  spotifyBPM: 'Soothing, releasing tones, gentle melody',
+  audioMood: 'soothing-release',
+  audioBPM: 'Soothing, releasing tones, gentle melody',
   gardenPlant: 'evening-primrose',
   icon: '🌊',
   benefits: ['Tension release', 'Emotional processing', 'Return to baseline'],
@@ -482,8 +482,8 @@ const endOfDayTransition: MicroFlow = {
   duration: 180,
   bestFor: ['After last meeting', 'Before commute', 'Work-life boundary setting'],
   breathingPattern: 'calming',
-  spotifyMood: 'calming-transition',
-  spotifyBPM: 'Calming, transitional, golden hour vibes',
+  audioMood: 'calming-transition',
+  audioBPM: 'Calming, transitional, golden hour vibes',
   gardenPlant: 'moonflower',
   icon: '🌅',
   benefits: ['Work-life boundary', 'Mental closure', 'Evening presence'],
@@ -558,8 +558,8 @@ const morningIntention: MicroFlow = {
   duration: 600,
   bestFor: ['Morning routine', '6:00-9:00 AM', 'Before workday begins'],
   breathingPattern: 'energizing',
-  spotifyMood: 'morning-energize',
-  spotifyBPM: 'Starts soft (50 BPM), gradually energizes to uplifting (100 BPM)',
+  audioMood: 'morning-energize',
+  audioBPM: 'Starts soft (50 BPM), gradually energizes to uplifting (100 BPM)',
   gardenPlant: 'morning-glory',
   icon: '☀️',
   benefits: ['Clear intention', 'Positive mindset', 'Day preparation'],
@@ -640,8 +640,8 @@ const eveningWindDown: MicroFlow = {
   duration: 900,
   bestFor: ['Evening routine', '7:00-10:00 PM', 'Before bedtime routine'],
   breathingPattern: 'calming',
-  spotifyMood: 'evening-wind-down',
-  spotifyBPM: 'Starts moderate (70 BPM), progressively calms to sleep-ready (40 BPM)',
+  audioMood: 'evening-wind-down',
+  audioBPM: 'Starts moderate (70 BPM), progressively calms to sleep-ready (40 BPM)',
   gardenPlant: 'night-jasmine',
   icon: '🌙',
   benefits: ['Work-life separation', 'Better sleep', 'Day closure'],
@@ -722,8 +722,8 @@ const weekendWellness: MicroFlow = {
   duration: 1200,
   bestFor: ['Weekends', 'Saturday or Sunday morning/afternoon', 'Deep relaxation'],
   breathingPattern: 'calming',
-  spotifyMood: 'ambient-spacious',
-  spotifyBPM: 'Ambient, spacious soundscapes, nature sounds, 60 BPM steady',
+  audioMood: 'ambient-spacious',
+  audioBPM: 'Ambient, spacious soundscapes, nature sounds, 60 BPM steady',
   gardenPlant: 'lotus',
   icon: '🧘',
   benefits: ['Deep relaxation', 'Week closure', 'Self-compassion'],
@@ -795,8 +795,8 @@ const deepMeditation: MicroFlow = {
   duration: 1800,
   bestFor: ['Deep practice', 'After 2 weeks consistency', 'Experienced meditators'],
   breathingPattern: 'calming',
-  spotifyMood: 'meditation-deep',
-  spotifyBPM: 'Ambient drones, binaural beats, nature sounds, or silence option',
+  audioMood: 'meditation-deep',
+  audioBPM: 'Ambient drones, binaural beats, nature sounds, or silence option',
   gardenPlant: 'mature-tree',
   icon: '🌳',
   benefits: ['Deep calm', 'Mental clarity', 'Profound relaxation'],
@@ -867,8 +867,8 @@ const simpleBreathing: MicroFlow = {
   duration: 60,
   bestFor: ['Quick calm', 'Anxiety relief', 'Focus boost'],
   breathingPattern: 'box',
-  spotifyMood: 'calming-reassuring',
-  spotifyBPM: '60 BPM',
+  audioMood: 'calming-reassuring',
+  audioBPM: '60 BPM',
   gardenPlant: 'chamomile',
   icon: '🌬️',
   benefits: ['Instant calm', 'Focus', 'Stress relief'],
@@ -919,8 +919,8 @@ const fullBodyScan: MicroFlow = {
   duration: 1500,
   bestFor: ['Physical tension', 'Body awareness', 'Deep relaxation'],
   breathingPattern: 'calming',
-  spotifyMood: 'soothing-release',
-  spotifyBPM: 'Gentle ambient, 50 BPM',
+  audioMood: 'soothing-release',
+  audioBPM: 'Gentle ambient, 50 BPM',
   gardenPlant: 'lotus',
   icon: '✨',
   benefits: ['Tension release', 'Body awareness', 'Deep relaxation'],
@@ -1215,10 +1215,10 @@ export function getBreathingTiming(pattern: BreathingPattern): {
 }
 
 /**
- * Map flow to Spotify search query
+ * Map flow to audio search query for ambient sounds
  */
-export function getSpotifySearchQuery(mood: SpotifyMood): string {
-  const queries: Record<SpotifyMood, string> = {
+export function getAudioSearchQuery(mood: AudioMood): string {
+  const queries: Record<AudioMood, string> = {
     'neutral-instrumental': 'instrumental focus ambient lo-fi 70 bpm',
     'confidence-uplifting': 'uplifting motivational instrumental energy',
     'calming-reassuring': 'calming ambient meditation peaceful 60 bpm',

@@ -26,7 +26,7 @@ browserAPI.runtime.onInstalled.addListener(async (details) => {
     settings: {
       notificationTiming: 10,
       autoSuggestFlows: true,
-      spotifyAutoPlay: false,
+      ambientAutoPlay: false,
       theme: 'zen',
     },
     flowHistory: [],

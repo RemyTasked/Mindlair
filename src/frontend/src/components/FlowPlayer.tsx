@@ -42,22 +42,6 @@ interface MicroFlow {
   icon: string;
 }
 
-// Map flow types to plant names for display
-const FLOW_PLANT_NAMES: Record<string, string> = {
-  'pre-meeting-focus': 'a small daisy',
-  'pre-presentation-power': 'a bold sunflower',
-  'difficult-conversation-prep': 'resilient lavender',
-  'quick-reset': 'quick-blooming chamomile',
-  'post-meeting-decompress': 'calming evening primrose',
-  'end-of-day-transition': 'a twilight moonflower',
-  'morning-intention': 'a morning glory vine',
-  'evening-wind-down': 'serene night jasmine',
-  'weekend-wellness': 'a contemplative lotus',
-  'deep-meditation': 'your meditation tree',
-  'breathing': 'gentle bamboo',
-  'body-scan': 'a peaceful lotus',
-};
-
 // Get flow completion count from localStorage
 const getFlowCount = (): number => {
   try {
@@ -464,9 +448,6 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     }
   };
 
-  // Get plant name for this flow
-  const plantName = FLOW_PLANT_NAMES[flow.id] || 'a new plant';
-
   // Handle navigation to garden
   const goToGarden = () => {
     handleComplete();
@@ -548,8 +529,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             transition={{ delay: 0.8 }}
           >
             <h2 className="text-3xl font-bold text-emerald-300 mb-2">Flow Complete!</h2>
-            <p className="text-emerald-100/70 mb-2">Your garden grew 🌱</p>
-            <p className="text-emerald-400/80 text-sm mb-6">You planted {plantName}</p>
+            <p className="text-emerald-100/70 mb-2">Your plant grew a new leaf! 🍃</p>
+            <p className="text-emerald-400/80 text-sm mb-6">+1 growth towards maturity</p>
           </motion.div>
 
           {/* Cross-promotion prompt (shown every 3rd flow) */}
@@ -561,10 +542,10 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
               className="mb-6 p-4 bg-emerald-900/30 border border-emerald-700/30 rounded-xl"
             >
               <p className="text-emerald-200 font-medium mb-1">
-                🎉 {flowCount} flows completed!
+                🎉 {flowCount} actions completed!
               </p>
               <p className="text-emerald-300/70 text-sm">
-                Your garden is growing beautifully. Check it out!
+                Your plant is growing beautifully. Check your garden!
               </p>
             </motion.div>
           )}

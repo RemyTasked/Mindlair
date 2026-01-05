@@ -1,13 +1,15 @@
 /**
- * Mind Garden - Garden Dashboard
+ * Mind Garden - One Plant Dashboard
  * 
- * The main dashboard featuring the full garden visualization,
- * quick actions, and today's summary.
+ * The main dashboard featuring the one-plant garden system:
+ * - Shows PlantSelector when user needs to choose a seed
+ * - Shows OneGardenDisplay with the growing plant
+ * - Quick actions and flow suggestions
  */
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
   Sparkles,
@@ -22,12 +24,17 @@ import {
   Sunset,
 } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
-import GardenCanvas, { GardenData, Plant } from '../components/Garden/GardenCanvas';
+import PlantSelector from '../components/Garden/PlantSelector';
+import OneGardenDisplay from '../components/Garden/OneGardenDisplay';
+import MaturityCelebration from '../components/Garden/MaturityCelebration';
+import MilestoneToast, { MilestoneNotification, useMilestoneToast } from '../components/Garden/MilestoneToast';
+import GardenOnboarding from '../components/Garden/GardenOnboarding';
 import PWAInstallBanner from '../components/PWAInstallBanner';
 import Logo from '../components/Logo';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { pushNotificationService } from '../services/pushNotificationService';
+import { PlantType } from '../components/Garden/OnePlantSVG';
 
 // Get time of day
 function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
@@ -98,14 +105,38 @@ const SUGGESTED_FLOWS = {
   ],
 };
 
-interface DashboardStats {
-  flowsToday: number;
-  flowsThisWeek: number;
-  currentStreak: number;
-  totalFlows: number;
-  gardenHealth: number;
-  plantsGrown: number;
-  pendingPoints: number;
+// One Plant interface matching backend
+interface OnePlant {
+  id: string;
+  type: PlantType;
+  actionsCount: number;
+  leavesCount: number;
+  flowersCount: number;
+  flowerBudsCount: number;
+  growthStage: string;
+  plantedAt: string;
+  maturedAt?: string;
+  position: number;
+}
+
+interface GardenState {
+  plants: OnePlant[];              // ALL plants in the garden
+  activePlantId: string | null;    // ID of plant being grown
+  activePlant: OnePlant | null;    // The active plant object
+  needsSeedSelection: boolean;
+  canAddNewPlant: boolean;         // Can add a new plant (when active is mature)
+  premiumUnlocked: boolean;        // Premium plants available
+  progressToMature: number;
+  nextMilestone: { action: number; description: string } | null;
+  streak: number;
+  longestStreak: number;
+  totalActions: number;
+  totalActiveDays: number;
+  totalPlants: number;
+  maturePlantsCount: number;
+  growingPlantsCount: number;
+  stateTitle: string;
+  stateMessage: string;
 }
 
 interface Meeting {
@@ -113,19 +144,6 @@ interface Meeting {
   title: string;
   startTime: string;
   endTime: string;
-}
-
-interface GardenInsights {
-  stateTitle: string;
-  stateMessage: string;
-  recommendations: string[];
-  nextUnlocks: Array<{ type: string; name: string; requirement: string }>;
-}
-
-// Check if notifications are enabled
-function areNotificationsEnabled(): boolean {
-  return localStorage.getItem('mindgarden_notifications_enabled') === 'true' || 
-         (typeof Notification !== 'undefined' && Notification.permission === 'granted');
 }
 
 // Time-based reminder messages
@@ -156,43 +174,62 @@ const TIME_REMINDERS = {
   },
 };
 
+// Check if notifications are enabled
+function areNotificationsEnabled(): boolean {
+  return localStorage.getItem('mindgarden_notifications_enabled') === 'true' || 
+         (typeof Notification !== 'undefined' && Notification.permission === 'granted');
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [selectingPlant, setSelectingPlant] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [stats, setStats] = useState<DashboardStats>({
-    flowsToday: 0,
-    flowsThisWeek: 0,
-    currentStreak: 0,
-    totalFlows: 0,
-    gardenHealth: 50,
-    plantsGrown: 0,
-    pendingPoints: 0,
-  });
-  const [gardenData, setGardenData] = useState<GardenData>({
+  const [gardenState, setGardenState] = useState<GardenState>({
     plants: [],
-    gridSize: 5,
-    visualState: 'stable',
-    weather: 'sunny',
-    season: getCurrentSeason(),
-    health: 50,
-    decorations: [],
-    theme: 'cottage',
+    activePlantId: null,
+    activePlant: null,
+    needsSeedSelection: true,
+    canAddNewPlant: true,
+    premiumUnlocked: false,
+    progressToMature: 0,
+    nextMilestone: null,
+    streak: 0,
+    longestStreak: 0,
+    totalActions: 0,
+    totalActiveDays: 0,
+    totalPlants: 0,
+    maturePlantsCount: 0,
+    growingPlantsCount: 0,
+    stateTitle: 'Welcome to Mind Garden',
+    stateMessage: 'Plant a seed to begin.',
   });
   const [upcomingMeetings, setUpcomingMeetings] = useState<Meeting[]>([]);
   const [timeOfDay, setTimeOfDay] = useState(getTimeOfDay());
-  const [insights, setInsights] = useState<GardenInsights>({
-    stateTitle: 'Your garden is growing',
-    stateMessage: 'Keep nurturing your practice.',
-    recommendations: [],
-    nextUnlocks: [],
-  });
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(!areNotificationsEnabled());
-  const [isWatering, setIsWatering] = useState(false);
-  const [isPruning, setIsPruning] = useState(false);
   const [isEnablingNotifications, setIsEnablingNotifications] = useState(false);
   const [notificationError, setNotificationError] = useState<string | null>(null);
+  const [showExpansionModal, setShowExpansionModal] = useState(false);
+  const [showMaturityCelebration, setShowMaturityCelebration] = useState(false);
+  const [previousActionsCount, setPreviousActionsCount] = useState(0);
+  
+  // Milestone toast hook
+  const { milestones, showMilestones, dismissAll } = useMilestoneToast();
+  
   const timeReminder = TIME_REMINDERS[timeOfDay];
+
+  // Check for plant maturity to trigger celebration
+  useEffect(() => {
+    const activePlant = gardenState.activePlant;
+    if (activePlant) {
+      const currentActions = activePlant.actionsCount;
+      // Check if we just crossed the maturity threshold (30 actions)
+      if (previousActionsCount < 30 && currentActions >= 30) {
+        setShowMaturityCelebration(true);
+      }
+      setPreviousActionsCount(currentActions);
+    }
+  }, [gardenState.activePlant?.actionsCount, previousActionsCount]);
 
   // Load data
   useEffect(() => {
@@ -256,72 +293,23 @@ export default function Dashboard() {
       const userResponse = await api.get('/api/user/profile');
       setUser(userResponse.data.user);
       
-      // Load garden state
+      // Load garden state (new one-plant system)
       try {
         const gardenResponse = await api.get('/api/garden/state');
-        const gardenState = gardenResponse.data;
+        setGardenState(gardenResponse.data);
         
-        setStats(prev => ({
-          ...prev,
-          flowsToday: gardenState.flowsToday || 0,
-          currentStreak: gardenState.streak || 0,
-          totalFlows: gardenState.totalFlows || 0,
-          gardenHealth: gardenState.health || 50,
-          plantsGrown: gardenState.plants?.length || 0,
-          pendingPoints: gardenState.pendingPoints || 0,
-        }));
-        
-        // Map garden state to GardenData format
-        const visualState = gardenState.visualState || getVisualStateFromActivity(
-          gardenState.activitiesThisWeek || 0,
-          gardenState.daysSinceActive || 0
-        );
-        
-        // Ensure plants array exists and has content
-        let plants = gardenState.plants;
-        if (!plants || !Array.isArray(plants) || plants.length === 0) {
-          // Generate starter plants if user has done any flows
-          if (gardenState.totalFlows > 0 || gardenState.flowsToday > 0) {
-            plants = generateStarterPlants(gardenState.totalFlows || 1);
-          } else {
-            plants = generateDemoPlants();
-          }
+        // If needsSeedSelection is true, show the plant selector
+        if (gardenResponse.data.needsSeedSelection) {
+          setSelectingPlant(true);
         }
-        
-        setGardenData({
-          plants,
-          gridSize: gardenState.gridSize || calculateGridSize(gardenState.totalFlows || 0),
-          visualState,
-          weather: gardenState.weather || getWeatherFromState(visualState),
-          season: gardenState.season || getCurrentSeason(),
-          health: gardenState.health || 50,
-          decorations: gardenState.decorations || [],
-          theme: gardenState.theme || 'cottage',
-          streak: gardenState.streak,
-          totalPoints: gardenState.totalPoints,
-          activitiesThisWeek: gardenState.activitiesThisWeek,
-          stateTitle: gardenState.stateTitle,
-          stateMessage: gardenState.stateMessage,
-        });
       } catch (gardenError) {
-        console.warn('Garden state not available, using defaults');
-        setGardenData({
-          plants: generateDemoPlants(),
-          gridSize: 5,
-          visualState: 'stable',
-          weather: 'sunny',
-          season: getCurrentSeason(),
-          health: 50,
-          decorations: [],
-          theme: 'cottage',
-        });
+        console.warn('Garden state not available, showing seed selection');
+        setSelectingPlant(true);
       }
       
       // Load upcoming meetings
-      // Use user's local timezone for accurate date boundaries
       try {
         const now = new Date();
-        // Get end of tomorrow in user's local time
         const endOfTomorrow = new Date(now);
         endOfTomorrow.setDate(endOfTomorrow.getDate() + 2);
         endOfTomorrow.setHours(0, 0, 0, 0);
@@ -333,7 +321,6 @@ export default function Dashboard() {
           },
         });
         
-        // Filter to only show meetings that are actually today in user's local time
         const todayStart = new Date(now);
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date(now);
@@ -348,19 +335,6 @@ export default function Dashboard() {
         setUpcomingMeetings(todaysMeetings.slice(0, 3));
       } catch (meetingError) {
         console.warn('Meetings not available');
-      }
-      
-      // Load garden insights
-      try {
-        const insightsResponse = await api.get('/api/garden/insights');
-        setInsights({
-          stateTitle: insightsResponse.data.stateInfo?.title || 'Your garden is growing',
-          stateMessage: insightsResponse.data.stateInfo?.message || 'Keep nurturing your practice.',
-          recommendations: insightsResponse.data.recommendations || [],
-          nextUnlocks: insightsResponse.data.nextUnlocks || [],
-        });
-      } catch (insightsError) {
-        console.warn('Insights not available');
       }
       
     } catch (error: any) {
@@ -383,34 +357,52 @@ export default function Dashboard() {
     navigate('/');
   };
 
+  const handleSelectSeed = async (plantType: PlantType) => {
+    try {
+      const response = await api.post('/api/garden/select-seed', { plantType });
+      if (response.data.success) {
+        // Reload full garden state to get updated plants array
+        const gardenResponse = await api.get('/api/garden/state');
+        setGardenState(gardenResponse.data);
+        setSelectingPlant(false);
+        setShowExpansionModal(false);
+      }
+    } catch (error) {
+      console.error('Failed to select seed:', error);
+    }
+  };
+
   const handleWaterGarden = async () => {
-    setIsWatering(true);
-    // Trigger watering animation for 3 seconds
-    setTimeout(() => setIsWatering(false), 3000);
-    
-    // Call backend to record watering (optional, for garden health)
     try {
       await api.post('/api/garden/water');
     } catch (error) {
-      console.warn('Could not record watering:', error);
+      console.warn('Could not water garden:', error);
     }
   };
 
-  const handlePruneGarden = async () => {
-    setIsPruning(true);
-    // Trigger pruning animation for 2 seconds
-    setTimeout(() => setIsPruning(false), 2000);
-    
-    // Call backend to record pruning (optional)
-    try {
-      await api.post('/api/garden/prune');
-    } catch (error) {
-      console.warn('Could not record pruning:', error);
+  // Check for pending milestones from flow completion (stored in sessionStorage)
+  useEffect(() => {
+    const pendingMilestones = sessionStorage.getItem('mindgarden_pending_milestones');
+    if (pendingMilestones) {
+      try {
+        const milestoneData = JSON.parse(pendingMilestones) as MilestoneNotification[];
+        if (milestoneData.length > 0) {
+          showMilestones(milestoneData);
+        }
+      } catch (e) {
+        console.warn('Failed to parse pending milestones:', e);
+      }
+      sessionStorage.removeItem('mindgarden_pending_milestones');
     }
+  }, [showMilestones]);
+
+  const handleAddPlant = () => {
+    setShowExpansionModal(true);
   };
 
-  const handlePlantClick = (plant: Plant) => {
-    console.log('Plant clicked:', plant);
+  const handleConfirmAddPlant = async (plantType: PlantType) => {
+    // Use the same logic as selecting first seed
+    await handleSelectSeed(plantType);
   };
 
   if (loading) {
@@ -430,6 +422,49 @@ export default function Dashboard() {
     );
   }
 
+  // Show full onboarding for first-time users
+  const hasCompletedOnboarding = localStorage.getItem('mindgarden_onboarding_completed') === 'true';
+  
+  if (selectingPlant && !hasCompletedOnboarding) {
+    return (
+      <GardenOnboarding
+        onComplete={(plantType: PlantType) => {
+          handleSelectSeed(plantType);
+        }}
+        onSkip={() => {
+          // Skip to simple plant selector
+          localStorage.setItem('mindgarden_onboarding_completed', 'true');
+          // Stay in selectingPlant mode but show simple selector
+          setSelectingPlant(true);
+        }}
+      />
+    );
+  }
+  
+  // Show simple plant selector if user skipped onboarding or is adding a new plant
+  if (selectingPlant) {
+    return (
+      <DashboardLayout
+        activeSection="home"
+        gardenState={{
+          health: 50,
+          visualState: 'stable',
+          flowsToday: 0,
+          streak: 0,
+        }}
+        user={user}
+        onLogout={handleLogout}
+      >
+        <div className="min-h-[calc(100vh-80px)] bg-gradient-to-b from-emerald-950 to-[#022c22]">
+          <PlantSelector
+            onSelect={handleSelectSeed}
+            mode="initial"
+          />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Filter out completed once-per-day flows
   const suggestedFlows = SUGGESTED_FLOWS[timeOfDay].filter(
     flow => !isFlowCompletedToday(flow.id)
@@ -443,548 +478,381 @@ export default function Dashboard() {
       <DashboardLayout
         activeSection="home"
         gardenState={{
-          health: stats.gardenHealth,
-          visualState: getVisualState(stats.gardenHealth, stats.currentStreak),
-          flowsToday: stats.flowsToday,
-          streak: stats.currentStreak,
+          health: gardenState.progressToMature,
+          visualState: gardenState.streak >= 3 ? 'thriving' : gardenState.activePlant ? 'growing' : 'stable',
+          flowsToday: gardenState.activePlant?.actionsCount || 0,
+          streak: gardenState.streak,
         }}
         user={user}
         onLogout={handleLogout}
       >
-        {/* PWA Install Banner - at top of content area */}
+        {/* PWA Install Banner */}
         <PWAInstallBanner variant="banner" />
         
         <div className="p-4 md:p-8 pb-32">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-1">
-            <TimeIcon />
-            <span className="text-sm text-[var(--mg-text-muted)]">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            </span>
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <TimeIcon />
+              <span className="text-sm text-[var(--mg-text-muted)]">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--mg-text-primary)]">
+              {getGreeting(user?.name?.split(' ')[0])}
+            </h1>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[var(--mg-text-primary)]">
-            {getGreeting(user?.name?.split(' ')[0])}
-          </h1>
-        </div>
 
-        {/* Quick Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mg-card flex items-center gap-3"
-          >
-            <div className="p-2 rounded-xl bg-emerald-500/20">
-              <Sparkles className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{stats.flowsToday}</div>
-              <div className="text-xs text-[var(--mg-text-muted)]">Flows Today</div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mg-card flex items-center gap-3"
-          >
-            <div className="p-2 rounded-xl bg-amber-500/20">
-              <Zap className="w-5 h-5 text-amber-400" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{stats.currentStreak}</div>
-              <div className="text-xs text-[var(--mg-text-muted)]">Day Streak</div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mg-card flex items-center gap-3"
-          >
-            <div className="p-2 rounded-xl bg-rose-500/20">
-              <Target className="w-5 h-5 text-rose-400" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{stats.totalFlows}</div>
-              <div className="text-xs text-[var(--mg-text-muted)]">Total Flows</div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mg-card flex items-center gap-3"
-          >
-            <div className="p-2 rounded-xl bg-violet-500/20">
-              <TrendingUp className="w-5 h-5 text-violet-400" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{stats.plantsGrown}</div>
-              <div className="text-xs text-[var(--mg-text-muted)]">Plants Grown</div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Pending Points Banner */}
-        {stats.pendingPoints > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-900/30 to-yellow-900/30 border border-amber-700/30"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/20">
-                <Sparkles className="w-5 h-5 text-amber-400" />
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mg-card flex items-center gap-3"
+            >
+              <div className="p-2 rounded-xl bg-emerald-500/20">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
               </div>
-              <div className="flex-1">
-                <p className="text-amber-200 font-medium">
-                  🌱 {stats.pendingPoints} points ready for tomorrow's growth!
-                </p>
-                <p className="text-amber-300/60 text-xs mt-0.5">
-                  Points earned today will be applied to your garden when you return tomorrow.
-                </p>
+              <div>
+                <div className="text-2xl font-bold">{gardenState.activePlant?.actionsCount || 0}/30</div>
+                <div className="text-xs text-[var(--mg-text-muted)]">Active Plant</div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
 
-        {/* Garden State Message */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="mg-card bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-700/30"
-        >
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-emerald-500/20">
-              <Sparkles className="w-6 h-6 text-emerald-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-emerald-300 mb-1">{insights.stateTitle}</h3>
-              <p className="text-emerald-100/70 text-sm">{insights.stateMessage}</p>
-            </div>
-            {isTimeReminderCompleted ? (
-              <div className="px-4 py-2 rounded-xl bg-emerald-500/30 text-emerald-300 text-sm font-medium flex items-center gap-2">
-                <span>✓</span> Done
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mg-card flex items-center gap-3"
+            >
+              <div className="p-2 rounded-xl bg-amber-500/20">
+                <Zap className="w-5 h-5 text-amber-400" />
               </div>
-            ) : (
-              <button
-                onClick={() => navigate(`/flow/${timeReminder.action}`)}
-                className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-sm font-medium transition-colors"
-              >
-                {timeReminder.actionLabel}
-              </button>
-            )}
+              <div>
+                <div className="text-2xl font-bold">{gardenState.streak}</div>
+                <div className="text-xs text-[var(--mg-text-muted)]">Day Streak</div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mg-card flex items-center gap-3"
+            >
+              <div className="p-2 rounded-xl bg-rose-500/20">
+                <Target className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{gardenState.totalActions}</div>
+                <div className="text-xs text-[var(--mg-text-muted)]">Total Actions</div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mg-card flex items-center gap-3"
+            >
+              <div className="p-2 rounded-xl bg-violet-500/20">
+                <TrendingUp className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{gardenState.plants.length}</div>
+                <div className="text-xs text-[var(--mg-text-muted)]">{gardenState.maturePlantsCount} Mature</div>
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
 
-        {/* Notification Permission Prompt */}
-        {showNotificationPrompt && (
+          {/* Garden State Message */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mg-card bg-gradient-to-r from-sky-900/30 to-slate-900/30 border border-sky-700/30"
+            transition={{ delay: 0.35 }}
+            className="mg-card bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-700/30 mb-6"
           >
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-sky-500/20">
-                <Calendar className="w-6 h-6 text-sky-400" />
+              <div className="p-3 rounded-xl bg-emerald-500/20">
+                <Sparkles className="w-6 h-6 text-emerald-400" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-sky-300 mb-1">Get meeting prep reminders</h3>
-                <p className="text-sky-100/70 text-sm mb-3">
-                  Enable notifications to receive mindfulness prompts before stressful meetings. 
-                  Never enter a meeting unprepared.
-                </p>
-                
-                {/* Check if notifications are blocked */}
-                {typeof Notification !== 'undefined' && Notification.permission === 'denied' && (
-                  <div className="mb-3 p-3 rounded-lg bg-red-500/20 border border-red-500/30">
-                    <p className="text-red-300 text-sm">
-                      <strong>Notifications are blocked.</strong> Please enable them in your browser/device settings for this site, then refresh the page.
-                    </p>
-                  </div>
-                )}
-                
-                {/* Error message */}
-                {notificationError && (
-                  <div className="mb-3 p-3 rounded-lg bg-amber-500/20 border border-amber-500/30">
-                    <p className="text-amber-300 text-sm">{notificationError}</p>
-                  </div>
-                )}
-                
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    disabled={isEnablingNotifications || (typeof Notification !== 'undefined' && Notification.permission === 'denied')}
-                    onClick={async () => {
-                      setIsEnablingNotifications(true);
-                      setNotificationError(null);
-                      
-                      try {
-                        // Check if notifications are supported
-                        if (!pushNotificationService.isSupported()) {
-                          // Check if it's iOS and not a PWA
-                          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                              (window.navigator as any).standalone === true;
-                          
-                          if (isIOS && !isStandalone) {
-                            setNotificationError('On iOS, please install Mind Garden as an app first: tap Share → "Add to Home Screen", then try again.');
+                <h3 className="font-semibold text-emerald-300 mb-1">{gardenState.stateTitle}</h3>
+                <p className="text-emerald-100/70 text-sm">{gardenState.stateMessage}</p>
+              </div>
+              {isTimeReminderCompleted ? (
+                <div className="px-4 py-2 rounded-xl bg-emerald-500/30 text-emerald-300 text-sm font-medium flex items-center gap-2">
+                  <span>✓</span> Done
+                </div>
+              ) : (
+                <button
+                  onClick={() => navigate(`/flow/${timeReminder.action}`)}
+                  className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-sm font-medium transition-colors"
+                >
+                  {timeReminder.actionLabel}
+                </button>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Notification Permission Prompt */}
+          {showNotificationPrompt && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="mg-card bg-gradient-to-r from-sky-900/30 to-slate-900/30 border border-sky-700/30 mb-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-sky-500/20">
+                  <Calendar className="w-6 h-6 text-sky-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sky-300 mb-1">Get reminders to grow your plant</h3>
+                  <p className="text-sky-100/70 text-sm mb-3">
+                    Enable notifications to receive mindfulness prompts that help your plant grow.
+                  </p>
+                  
+                  {notificationError && (
+                    <div className="mb-3 p-3 rounded-lg bg-amber-500/20 border border-amber-500/30">
+                      <p className="text-amber-300 text-sm">{notificationError}</p>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      disabled={isEnablingNotifications}
+                      onClick={async () => {
+                        setIsEnablingNotifications(true);
+                        setNotificationError(null);
+                        
+                        try {
+                          if (!pushNotificationService.isSupported()) {
+                            setNotificationError('Push notifications are not supported on this device/browser.');
                             setIsEnablingNotifications(false);
                             return;
                           }
                           
-                          setNotificationError('Push notifications are not supported on this device/browser.');
-                          setIsEnablingNotifications(false);
-                          return;
-                        }
-                        
-                        // Use pushNotificationService for proper PWA/iOS support
-                        const token = localStorage.getItem('mindgarden_token') || localStorage.getItem('meetcute_token');
-                        if (token) {
-                          const subscribed = await pushNotificationService.subscribe(token);
-                          if (subscribed) {
-                            localStorage.setItem('mindgarden_notifications_enabled', 'true');
-                            setShowNotificationPrompt(false);
-                          } else {
-                            // Check if permission was denied
-                            if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
-                              setNotificationError('Permission denied. Please enable notifications in your browser settings.');
-                            } else {
-                              // Fallback: just request permission
-                              if (typeof Notification !== 'undefined') {
-                                const permission = await Notification.requestPermission();
-                                if (permission === 'granted') {
-                                  localStorage.setItem('mindgarden_notifications_enabled', 'true');
-                                  setShowNotificationPrompt(false);
-                                } else if (permission === 'denied') {
-                                  setNotificationError('Permission denied. Please enable notifications in your browser settings.');
-                                }
-                              }
+                          const token = localStorage.getItem('mindgarden_token') || localStorage.getItem('meetcute_token');
+                          if (token) {
+                            const subscribed = await pushNotificationService.subscribe(token);
+                            if (subscribed) {
+                              localStorage.setItem('mindgarden_notifications_enabled', 'true');
+                              setShowNotificationPrompt(false);
                             }
                           }
-                        } else {
-                          setNotificationError('Please log in again to enable notifications.');
+                        } catch (error) {
+                          console.warn('Failed to enable notifications:', error);
+                          setNotificationError('Failed to enable notifications. Please try again.');
+                        } finally {
+                          setIsEnablingNotifications(false);
                         }
-                      } catch (error) {
-                        console.warn('Failed to enable notifications:', error);
-                        setNotificationError('Failed to enable notifications. Please try again.');
-                      } finally {
-                        setIsEnablingNotifications(false);
-                      }
-                    }}
-                    className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:bg-sky-500/50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors inline-flex items-center gap-2"
-                  >
-                    {isEnablingNotifications ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Enabling...
-                      </>
-                    ) : (
-                      <>🔔 Enable Notifications</>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowNotificationPrompt(false)}
-                    className="px-4 py-2 text-sky-400/70 hover:text-sky-300 text-sm transition-colors"
-                  >
-                    Maybe later
-                  </button>
+                      }}
+                      className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:bg-sky-500/50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors inline-flex items-center gap-2"
+                    >
+                      {isEnablingNotifications ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Enabling...
+                        </>
+                      ) : (
+                        <>🔔 Enable Notifications</>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowNotificationPrompt(false)}
+                      className="px-4 py-2 text-sky-400/70 hover:text-sky-300 text-sm transition-colors"
+                    >
+                      Maybe later
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* Time-Based Recommendation */}
-        {!showNotificationPrompt && insights.recommendations.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mg-card"
-          >
-            <h3 className="mg-card-title flex items-center gap-2 mb-3">
-              <Target className="w-5 h-5 text-amber-400" />
-              Recommendations
-            </h3>
-            <div className="space-y-2">
-              {insights.recommendations.slice(0, 2).map((rec, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-[var(--mg-text-secondary)]">
-                  <span className="text-amber-400">💡</span>
-                  <span>{rec}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Garden Canvas (takes 2 columns on large screens) */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-2"
-          >
-            <GardenCanvas
-              data={gardenData}
-              timeOfDay={timeOfDay}
-              onPlantClick={handlePlantClick}
-              onWater={handleWaterGarden}
-              onPrune={handlePruneGarden}
-              isWatering={isWatering}
-              isPruning={isPruning}
-              pendingPoints={stats.pendingPoints}
-              recentActivity={stats.flowsThisWeek > 0}
-            />
-          </motion.div>
-
-          {/* Sidebar Content */}
-          <div className="space-y-6">
-            {/* Suggested Flows */}
+          {/* Main Content Grid */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Garden Canvas (takes 2 columns on large screens) */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mg-card"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="lg:col-span-2"
             >
-              <h3 className="mg-card-title flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[var(--mg-accent)]" />
-                Suggested for You
-              </h3>
-              
-              <div className="space-y-2">
-                {suggestedFlows.map((flow) => (
-                  <button
-                    key={flow.id}
-                    onClick={() => navigate(`/flow/${flow.id}`)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--mg-bg-primary)] hover:bg-[var(--mg-accent)]/10 transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{flow.icon}</span>
-                      <div className="text-left">
-                        <div className="font-medium text-[var(--mg-text-primary)]">{flow.name}</div>
-                        <div className="text-xs text-[var(--mg-text-muted)]">{flow.duration}</div>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--mg-text-muted)] group-hover:text-[var(--mg-accent)] transition-colors" />
-                  </button>
-                ))}
-              </div>
+              <OneGardenDisplay
+                plants={gardenState.plants}
+                activePlantId={gardenState.activePlantId}
+                streak={gardenState.streak}
+                totalActions={gardenState.totalActions}
+                progressToMature={gardenState.progressToMature}
+                nextMilestone={gardenState.nextMilestone}
+                timeOfDay={timeOfDay}
+                canAddNewPlant={gardenState.canAddNewPlant}
+                premiumUnlocked={gardenState.premiumUnlocked}
+                onWater={handleWaterGarden}
+                onAddPlant={handleAddPlant}
+                className="min-h-[500px] bg-gradient-to-b from-emerald-900/20 to-teal-900/20 border border-emerald-800/30"
+              />
+            </motion.div>
 
-              <button
-                onClick={() => navigate('/flows')}
-                className="mt-4 w-full py-2 text-sm font-medium text-[var(--mg-accent)] hover:underline"
+            {/* Sidebar Content */}
+            <div className="space-y-6">
+              {/* Suggested Flows */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mg-card"
               >
-                Browse All Flows →
-              </button>
-            </motion.div>
-
-            {/* Upcoming Meetings */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mg-card"
-            >
-              <h3 className="mg-card-title flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[var(--mg-accent)]" />
-                Upcoming
-              </h3>
-              
-              {upcomingMeetings.length > 0 ? (
+                <h3 className="mg-card-title flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[var(--mg-accent)]" />
+                  Grow Your Plant
+                </h3>
+                
+                <p className="text-xs text-emerald-400/60 mb-4">
+                  Each activity = +1 growth for your plant
+                </p>
+                
                 <div className="space-y-2">
-                  {upcomingMeetings.map((meeting) => {
-                    const startTime = new Date(meeting.startTime);
-                    const now = new Date();
-                    const minutesUntil = Math.round((startTime.getTime() - now.getTime()) / (1000 * 60));
-                    const hoursUntil = Math.round(minutesUntil / 60);
-                    
-                    // Check if meeting is today
-                    const isToday = startTime.toDateString() === now.toDateString();
-                    const isTomorrow = startTime.toDateString() === new Date(now.getTime() + 86400000).toDateString();
-                    
-                    return (
-                      <div
-                        key={meeting.id}
-                        className="p-3 rounded-xl bg-[var(--mg-bg-primary)] border border-[var(--mg-border)]"
-                      >
-                        <div className="font-medium text-[var(--mg-text-primary)] truncate">
-                          {meeting.title}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-[var(--mg-text-muted)]">
-                          <Clock className="w-3 h-3" />
-                          <span>
-                            {isToday ? 'Today' : isTomorrow ? 'Tomorrow' : startTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}{' '}
-                            at {startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                          </span>
-                          {isToday && minutesUntil > 0 && minutesUntil <= 60 && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">
-                              in {minutesUntil}m
-                            </span>
-                          )}
-                          {isToday && minutesUntil > 60 && hoursUntil <= 4 && (
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
-                              in {hoursUntil}h
-                            </span>
-                          )}
+                  {suggestedFlows.map((flow) => (
+                    <button
+                      key={flow.id}
+                      onClick={() => navigate(`/flow/${flow.id}`)}
+                      className="w-full flex items-center justify-between p-3 rounded-xl bg-[var(--mg-bg-primary)] hover:bg-[var(--mg-accent)]/10 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{flow.icon}</span>
+                        <div className="text-left">
+                          <div className="font-medium text-[var(--mg-text-primary)]">{flow.name}</div>
+                          <div className="text-xs text-[var(--mg-text-muted)]">{flow.duration}</div>
                         </div>
                       </div>
-                    );
-                  })}
+                      <ChevronRight className="w-5 h-5 text-[var(--mg-text-muted)] group-hover:text-[var(--mg-accent)] transition-colors" />
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                <div className="text-center py-6 text-[var(--mg-text-muted)]">
-                  <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No upcoming meetings</p>
-                </div>
-              )}
-            </motion.div>
+
+                <button
+                  onClick={() => navigate('/flows')}
+                  className="mt-4 w-full py-2 text-sm font-medium text-[var(--mg-accent)] hover:underline"
+                >
+                  Browse All Flows →
+                </button>
+              </motion.div>
+
+              {/* Upcoming Meetings */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mg-card"
+              >
+                <h3 className="mg-card-title flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-[var(--mg-accent)]" />
+                  Upcoming
+                </h3>
+                
+                {upcomingMeetings.length > 0 ? (
+                  <div className="space-y-2">
+                    {upcomingMeetings.map((meeting) => {
+                      const startTime = new Date(meeting.startTime);
+                      const now = new Date();
+                      const minutesUntil = Math.round((startTime.getTime() - now.getTime()) / (1000 * 60));
+                      const hoursUntil = Math.round(minutesUntil / 60);
+                      const isToday = startTime.toDateString() === now.toDateString();
+                      
+                      return (
+                        <div
+                          key={meeting.id}
+                          className="p-3 rounded-xl bg-[var(--mg-bg-primary)] border border-[var(--mg-border)]"
+                        >
+                          <div className="font-medium text-[var(--mg-text-primary)] truncate">
+                            {meeting.title}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-[var(--mg-text-muted)]">
+                            <Clock className="w-3 h-3" />
+                            <span>
+                              {isToday ? 'Today' : startTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}{' '}
+                              at {startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                            </span>
+                            {isToday && minutesUntil > 0 && minutesUntil <= 60 && (
+                              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">
+                                in {minutesUntil}m
+                              </span>
+                            )}
+                            {isToday && minutesUntil > 60 && hoursUntil <= 4 && (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                                in {hoursUntil}h
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-[var(--mg-text-muted)]">
+                    <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No upcoming meetings</p>
+                  </div>
+                )}
+              </motion.div>
+            </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+      </DashboardLayout>
+
+      {/* Add Plant Modal */}
+      <AnimatePresence>
+        {showExpansionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={() => setShowExpansionModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-b from-emerald-950 to-[#022c22] rounded-3xl border border-emerald-800/50"
+              onClick={e => e.stopPropagation()}
+            >
+              <PlantSelector
+                onSelect={handleConfirmAddPlant}
+                mode="expand"
+                premiumUnlocked={gardenState.premiumUnlocked}
+                totalPlants={gardenState.plants.length}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Maturity Celebration */}
+      {gardenState.activePlant && (
+        <MaturityCelebration
+          isVisible={showMaturityCelebration}
+          plantType={gardenState.activePlant.type}
+          totalActions={gardenState.totalActions}
+          totalPlantsGrown={gardenState.maturePlantsCount}
+          streak={gardenState.streak}
+          onClose={() => setShowMaturityCelebration(false)}
+          onExpand={() => {
+            setShowMaturityCelebration(false);
+            setShowExpansionModal(true);
+          }}
+        />
+      )}
+
+      {/* Milestone Toast Notifications */}
+      <MilestoneToast
+        milestones={milestones}
+        onDismissAll={dismissAll}
+        autoHideDuration={6000}
+      />
     </>
   );
 }
-
-// Helper functions
-
-function getVisualState(health: number, streak: number): 'thriving' | 'growing' | 'stable' | 'idle' | 'dormant' {
-  if (health >= 80 && streak >= 3) return 'thriving';
-  if (health >= 60 || streak >= 1) return 'growing';
-  if (health >= 40) return 'stable';
-  if (health >= 20) return 'idle';
-  return 'dormant';
-}
-
-function calculateGridSize(totalFlows: number): number {
-  if (totalFlows >= 200) return 15;
-  if (totalFlows >= 100) return 12;
-  if (totalFlows >= 50) return 10;
-  if (totalFlows >= 20) return 7;
-  return 5;
-}
-
-// Get weather type based on garden state (all weather is beautiful)
-function getWeatherFromState(visualState?: string): 'sunny' | 'partly-cloudy' | 'cloudy' | 'golden-hour' | 'mist' | 'gentle-rain' | 'soft-snow' {
-  switch (visualState) {
-    case 'thriving':
-      return 'sunny';
-    case 'growing':
-      return 'partly-cloudy';
-    case 'stable':
-      return 'cloudy';
-    case 'idle':
-      return 'golden-hour'; // Beautiful sunset
-    case 'dormant':
-      return getCurrentSeason() === 'winter' ? 'soft-snow' : 'mist';
-    default:
-      return 'sunny';
-  }
-}
-
-// Get current season based on date
-function getCurrentSeason(): 'spring' | 'summer' | 'fall' | 'winter' {
-  const month = new Date().getMonth();
-  if (month >= 2 && month <= 4) return 'spring';
-  if (month >= 5 && month <= 7) return 'summer';
-  if (month >= 8 && month <= 10) return 'fall';
-  return 'winter';
-}
-
-// Get visual state from activity (non-punitive)
-function getVisualStateFromActivity(activitiesThisWeek: number, daysSinceActive: number): 'thriving' | 'growing' | 'stable' | 'idle' | 'dormant' {
-  if (daysSinceActive >= 14) return 'dormant';
-  if (activitiesThisWeek === 0) return 'idle';
-  if (activitiesThisWeek >= 5) return 'thriving';
-  if (activitiesThisWeek >= 3) return 'growing';
-  return 'stable';
-}
-
-function generateDemoPlants(): Plant[] {
-  // Generate some demo plants for new users who haven't done any flows
-  const plantTypes: Array<Plant['type']> = ['lavender', 'daisy', 'chamomile'];
-  const plants: Plant[] = [];
-  
-  // Start with just a few plants to show the concept
-  const positions = [
-    { x: 2, y: 2 },
-  ];
-  
-  positions.forEach((pos, i) => {
-    plants.push({
-      id: `demo-${i}`,
-      type: plantTypes[i % plantTypes.length],
-      x: pos.x,
-      y: pos.y,
-      growthStage: 'sprout',
-      plantedAt: new Date().toISOString(),
-      bloomCount: 0,
-      associatedWith: 'Welcome Plant',
-    });
-  });
-  
-  return plants;
-}
-
-function generateStarterPlants(flowCount: number): Plant[] {
-  // Generate plants based on how many flows user has completed
-  const plantTypes: Array<Plant['type']> = ['daisy', 'lavender', 'chamomile', 'fern', 'succulent', 'marigold'];
-  const plants: Plant[] = [];
-  
-  // Calculate how many plants to show (at least 1, scale with flows)
-  const plantCount = Math.max(1, Math.min(Math.floor(flowCount / 2) + 1, 8));
-  
-  // Generate positions in a nice pattern
-  const gridSize = 5;
-  const usedPositions = new Set<string>();
-  
-  for (let i = 0; i < plantCount; i++) {
-    // Try to find a position
-    let x = 1 + (i % 3);
-    let y = 1 + Math.floor(i / 3);
-    
-    // Ensure within grid
-    x = Math.min(x, gridSize - 1);
-    y = Math.min(y, gridSize - 1);
-    
-    // Skip if position used
-    const posKey = `${x},${y}`;
-    if (usedPositions.has(posKey)) {
-      // Find next available
-      for (let px = 0; px < gridSize; px++) {
-        for (let py = 0; py < gridSize; py++) {
-          const key = `${px},${py}`;
-          if (!usedPositions.has(key)) {
-            x = px;
-            y = py;
-            break;
-          }
-        }
-      }
-    }
-    usedPositions.add(`${x},${y}`);
-    
-    plants.push({
-      id: `starter-${i}`,
-      type: plantTypes[i % plantTypes.length],
-      x,
-      y,
-      growthStage: i === 0 ? 'blooming' : i < 3 ? 'growing' : 'sprout',
-      plantedAt: new Date(Date.now() - i * 12 * 60 * 60 * 1000).toISOString(),
-      bloomCount: Math.max(0, 3 - i),
-      associatedWith: 'Your practice',
-    });
-  }
-  
-  return plants;
-}
-

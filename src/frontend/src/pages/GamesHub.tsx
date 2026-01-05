@@ -1,16 +1,16 @@
 /**
  * Mind Garden - Games Hub
  * 
- * Interactive Serenity Builders
+ * Interactive Wellness Games
  * Gamified activities and cognitive tools to help manage focus, anxiety, and stress.
- * Each successful interaction contributes to your garden's Serenity Score.
+ * Each completed activity adds a leaf to grow your plant!
  */
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Trophy, Zap, Target, Sparkles,
+  Trophy, Target, Sparkles,
   Wind, Leaf, LayoutGrid,
   Palette, Music
 } from 'lucide-react';
@@ -163,7 +163,7 @@ export default function GamesHub() {
         {/* Header Section */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-[var(--mg-text-primary)] mb-2">
-            Interactive Serenity Builders
+            Wellness Games
           </h1>
           <p className="text-[var(--mg-text-secondary)]">
             Gamified activities to help you manage focus, anxiety, and stress
@@ -179,8 +179,8 @@ export default function GamesHub() {
               className="mg-card p-4"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5 text-yellow-500" />
-                <span className="text-sm text-[var(--mg-text-muted)]">Serenity Score</span>
+                <Leaf className="w-5 h-5 text-emerald-500" />
+                <span className="text-sm text-[var(--mg-text-muted)]">Games Completed</span>
               </div>
               <p className="text-2xl font-bold text-[var(--mg-text-primary)]">{progress.totalCredits}</p>
             </motion.div>
@@ -226,8 +226,8 @@ export default function GamesHub() {
           </div>
         )}
 
-        {/* Serenity Games */}
-        <h2 className="text-xl font-bold text-[var(--mg-text-primary)] mb-4">Serenity Games</h2>
+        {/* Wellness Games */}
+        <h2 className="text-xl font-bold text-[var(--mg-text-primary)] mb-4">Wellness Games</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {/* Thought Popper */}
           <motion.button
@@ -248,8 +248,8 @@ export default function GamesHub() {
               Focus and Mental Clearing Game. Pop floating bubbles representing intrusive thoughts.
             </p>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-blue-400 bg-blue-500/20 px-3 py-1 rounded-full">
-                +2 Serenity / Pop
+              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+                +1 🍃
               </span>
               <span className="text-xs text-[var(--mg-text-muted)]">1-2 min</span>
             </div>
@@ -275,8 +275,8 @@ export default function GamesHub() {
               Cognitive Concentration Game. Find matching pairs of nature icons.
             </p>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-green-400 bg-green-500/20 px-3 py-1 rounded-full">
-                +5 Serenity / Match
+              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+                +1 🍃
               </span>
               <span className="text-xs text-[var(--mg-text-muted)]">3-5 min</span>
             </div>
@@ -302,8 +302,8 @@ export default function GamesHub() {
               Categorization Tool. Sort thoughts into Keep, Park, or Let Go buckets.
             </p>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-teal-400 bg-teal-500/20 px-3 py-1 rounded-full">
-                +3 Serenity / Sort
+              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+                +1 🍃
               </span>
               <span className="text-xs text-[var(--mg-text-muted)]">5-10 min</span>
             </div>
@@ -335,8 +335,8 @@ export default function GamesHub() {
                   CBT-based cognitive restructuring. Identify distortions and practice balanced thinking.
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-400 bg-indigo-500/20 px-3 py-1 rounded-full">
-                    +5 Serenity / Reframe
+                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+                    +1 🍃
                   </span>
                   <span className="text-xs text-[var(--mg-text-muted)]">5-10 min</span>
                 </div>
