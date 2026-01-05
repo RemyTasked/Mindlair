@@ -4,6 +4,7 @@ import { getToken, removeToken } from '../utils/persistentStorage';
 // Create axios instance with proper configuration
 const api = axios.create({
   baseURL: '', // Use relative URLs (same origin in production)
+  timeout: 10000, // 10 second timeout to prevent hanging when backend is down
   headers: {
     'Content-Type': 'application/json',
   },

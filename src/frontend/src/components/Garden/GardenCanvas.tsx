@@ -1033,55 +1033,69 @@ interface FillerElement {
 }
 
 // Generate procedural filler elements based on health and pending points
+// Optimized: limit total elements to prevent performance issues
 function generateFillerElements(gridSize: number, health: number, pendingPoints: number, plants: Plant[]): FillerElement[] {
   const elements: FillerElement[] = [];
   const occupiedCells = new Set(plants.map(p => `${p.x},${p.y}`));
   
-  // More filler as health increases
-  const density = Math.floor((health / 100) * 3) + 1; // 1-4 elements per empty cell
-  const wildflowerChance = Math.min(0.4, (health / 100) * 0.5 + (pendingPoints > 0 ? 0.2 : 0));
+  // Limit total elements to prevent performance issues (max ~60 elements)
+  const MAX_ELEMENTS = 60;
+  const emptyCells: {x: number, y: number}[] = [];
   
   for (let y = 0; y < gridSize; y++) {
     for (let x = 0; x < gridSize; x++) {
-      if (occupiedCells.has(`${x},${y}`)) continue;
-      
-      // Add grass tufts
-      for (let i = 0; i < density; i++) {
-        if (Math.random() < 0.7) {
-          elements.push({
-            id: `grass-${x}-${y}-${i}`,
-            type: 'grass',
-            x: x + (Math.random() * 0.8 - 0.4),
-            y: y + (Math.random() * 0.8 - 0.4),
-            variant: Math.floor(Math.random() * 3),
-            delay: Math.random() * 2,
-          });
-        }
+      if (!occupiedCells.has(`${x},${y}`)) {
+        emptyCells.push({x, y});
       }
-      
-      // Add wildflowers (more common with higher health)
-      if (Math.random() < wildflowerChance) {
+    }
+  }
+  
+  // Randomly sample empty cells to keep element count manageable
+  const sampled = emptyCells.sort(() => Math.random() - 0.5).slice(0, Math.min(emptyCells.length, 15));
+  
+  // More filler as health increases, but capped
+  const density = Math.min(2, Math.floor((health / 100) * 2) + 1);
+  const wildflowerChance = Math.min(0.35, (health / 100) * 0.4 + (pendingPoints > 0 ? 0.15 : 0));
+  
+  for (const {x, y} of sampled) {
+    if (elements.length >= MAX_ELEMENTS) break;
+    
+    // Add grass tufts (limited)
+    for (let i = 0; i < density && elements.length < MAX_ELEMENTS; i++) {
+      if (Math.random() < 0.6) {
         elements.push({
-          id: `flower-${x}-${y}`,
-          type: 'wildflower',
-          x: x + (Math.random() * 0.6 - 0.3),
-          y: y + (Math.random() * 0.6 - 0.3),
-          variant: Math.floor(Math.random() * 5),
-          delay: Math.random() * 1.5,
-        });
-      }
-      
-      // Add occasional pebbles
-      if (Math.random() < 0.15) {
-        elements.push({
-          id: `pebble-${x}-${y}`,
-          type: 'pebble',
-          x: x + (Math.random() * 0.6 - 0.3),
-          y: y + (Math.random() * 0.6 - 0.3),
+          id: `grass-${x}-${y}-${i}`,
+          type: 'grass',
+          x: x + (Math.random() * 0.8 - 0.4),
+          y: y + (Math.random() * 0.8 - 0.4),
           variant: Math.floor(Math.random() * 3),
-          delay: 0,
+          delay: Math.random() * 2,
         });
       }
+    }
+    
+    // Add wildflowers (more common with higher health)
+    if (Math.random() < wildflowerChance && elements.length < MAX_ELEMENTS) {
+      elements.push({
+        id: `flower-${x}-${y}`,
+        type: 'wildflower',
+        x: x + (Math.random() * 0.6 - 0.3),
+        y: y + (Math.random() * 0.6 - 0.3),
+        variant: Math.floor(Math.random() * 5),
+        delay: Math.random() * 1.5,
+      });
+    }
+    
+    // Add occasional pebbles
+    if (Math.random() < 0.1 && elements.length < MAX_ELEMENTS) {
+      elements.push({
+        id: `pebble-${x}-${y}`,
+        type: 'pebble',
+        x: x + (Math.random() * 0.6 - 0.3),
+        y: y + (Math.random() * 0.6 - 0.3),
+        variant: Math.floor(Math.random() * 3),
+        delay: 0,
+      });
     }
   }
   
@@ -1556,34 +1570,36 @@ export default function GardenCanvas({
   };
 
   // Render vitality overlay (sunbeams, sparkles when pendingPoints > 0)
+  // Optimized: reduced number of animated elements
   const renderVitalityOverlay = () => {
     if (pendingPoints <= 0 && !recentActivity) return null;
     
-    const sparkleCount = Math.min(20, Math.floor(pendingPoints / 5) + 8);
+    // Reduced sparkle count for better performance
+    const sparkleCount = Math.min(8, Math.floor(pendingPoints / 10) + 3);
     
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 15 }}>
-        {/* Sunbeams */}
-        {[0, 1, 2].map((i) => (
+        {/* Sunbeams - reduced to 2 */}
+        {[0, 1].map((i) => (
           <div
             key={`sunbeam-${i}`}
             className="mg-sunbeam"
             style={{
-              left: `${-30 + i * 40}%`,
+              left: `${-20 + i * 60}%`,
               top: '-20%',
-              animationDelay: `${i * 4}s`,
+              animationDelay: `${i * 5}s`,
             }}
           />
         ))}
         
-        {/* Energy sparkles */}
+        {/* Energy sparkles - reduced count */}
         {[...Array(sparkleCount)].map((_, i) => (
           <motion.div
             key={`energy-${i}`}
             className="absolute"
             style={{
-              left: `${10 + Math.random() * 80}%`,
-              top: `${20 + Math.random() * 60}%`,
+              left: `${15 + (i % 4) * 20}%`,
+              top: `${25 + Math.floor(i / 4) * 25}%`,
             }}
             animate={{
               y: [0, -20, -40],
@@ -1591,10 +1607,10 @@ export default function GardenCanvas({
               scale: [0.8, 1.2, 0.6],
             }}
             transition={{
-              duration: 2.5,
-              delay: i * 0.2,
+              duration: 3,
+              delay: i * 0.4,
               repeat: Infinity,
-              repeatDelay: Math.random() * 2,
+              repeatDelay: 2,
             }}
           >
             <svg width="8" height="8" viewBox="0 0 8 8">
@@ -1604,12 +1620,8 @@ export default function GardenCanvas({
           </motion.div>
         ))}
         
-        {/* Ambient glow overlay */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-t from-emerald-400/5 via-emerald-300/10 to-amber-200/5"
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        {/* Ambient glow overlay - CSS only, no JS animation */}
+        <div className="absolute inset-0 bg-gradient-to-t from-emerald-400/5 via-emerald-300/10 to-amber-200/5 animate-pulse" />
       </div>
     );
   };
@@ -2079,6 +2091,7 @@ export default function GardenCanvas({
       </AnimatePresence>
       
       {/* Activity Burst Animation - Shows when user earns points */}
+      {/* Optimized: reduced sparkle count from 24 to 12 */}
       <AnimatePresence>
         {showActivityBurst && (
           <motion.div
@@ -2087,14 +2100,14 @@ export default function GardenCanvas({
             exit={{ opacity: 0 }}
             className="absolute inset-0 pointer-events-none z-35 overflow-hidden"
           >
-            {/* Sparkle particles across garden */}
-            {[...Array(24)].map((_, i) => (
+            {/* Sparkle particles across garden - reduced from 24 to 12 */}
+            {[...Array(12)].map((_, i) => (
               <motion.div
                 key={`activity-sparkle-${i}`}
                 className="absolute text-2xl"
                 style={{ 
-                  left: `${10 + (i % 6) * 15}%`,
-                  top: `${15 + Math.floor(i / 6) * 20}%`,
+                  left: `${15 + (i % 4) * 22}%`,
+                  top: `${20 + Math.floor(i / 4) * 25}%`,
                 }}
                 initial={{ scale: 0, opacity: 0, rotate: 0 }}
                 animate={{ 
@@ -2104,7 +2117,7 @@ export default function GardenCanvas({
                   y: [0, -20],
                 }}
                 transition={{ 
-                  delay: i * 0.05,
+                  delay: i * 0.08,
                   duration: 1.2,
                   ease: 'easeOut'
                 }}
@@ -2134,12 +2147,8 @@ export default function GardenCanvas({
               </motion.div>
             )}
             
-            {/* Garden shimmer overlay */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-t from-emerald-300/20 via-transparent to-emerald-200/10"
-              animate={{ opacity: [0, 0.6, 0] }}
-              transition={{ duration: 1.5 }}
-            />
+            {/* Garden shimmer overlay - using CSS animation instead */}
+            <div className="absolute inset-0 bg-gradient-to-t from-emerald-300/20 via-transparent to-emerald-200/10 animate-pulse" />
           </motion.div>
         )}
       </AnimatePresence>

@@ -329,13 +329,22 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     setIsMuted(!isMuted);
   }, [isMuted]);
 
-  // Main animation/progress loop
+  // Main animation/progress loop - optimized with throttling
   useEffect(() => {
     if (!isPlaying || showCompletion) return;
 
-    const animate = () => {
+    let lastUpdate = 0;
+    const THROTTLE_MS = 50; // Update at ~20fps instead of 60fps for smoother performance
 
+    const animate = (timestamp: number) => {
       if (!currentStep) return;
+
+      // Throttle updates to reduce CPU usage
+      if (timestamp - lastUpdate < THROTTLE_MS) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastUpdate = timestamp;
 
       // Update step progress
       const elapsed = (Date.now() - stepStartTimeRef.current) / 1000;
@@ -346,19 +355,28 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
       if (isBreathingStep) {
         const cyclePosition = elapsed % breathCycleDuration;
         
+        let newPhase: typeof breathPhase;
+        let newProgress: number;
+        
         if (cyclePosition < breathTiming.inhale) {
-          setBreathPhase('inhale');
-          setBreathProgress(cyclePosition / breathTiming.inhale);
+          newPhase = 'inhale';
+          newProgress = cyclePosition / breathTiming.inhale;
         } else if (cyclePosition < breathTiming.inhale + breathTiming.holdIn) {
-          setBreathPhase('holdIn');
-          setBreathProgress((cyclePosition - breathTiming.inhale) / breathTiming.holdIn);
+          newPhase = 'holdIn';
+          newProgress = (cyclePosition - breathTiming.inhale) / breathTiming.holdIn;
         } else if (cyclePosition < breathTiming.inhale + breathTiming.holdIn + breathTiming.exhale) {
-          setBreathPhase('exhale');
-          setBreathProgress((cyclePosition - breathTiming.inhale - breathTiming.holdIn) / breathTiming.exhale);
+          newPhase = 'exhale';
+          newProgress = (cyclePosition - breathTiming.inhale - breathTiming.holdIn) / breathTiming.exhale;
         } else {
-          setBreathPhase('holdOut');
-          setBreathProgress((cyclePosition - breathTiming.inhale - breathTiming.holdIn - breathTiming.exhale) / breathTiming.holdOut);
+          newPhase = 'holdOut';
+          newProgress = (cyclePosition - breathTiming.inhale - breathTiming.holdIn - breathTiming.exhale) / breathTiming.holdOut;
         }
+        
+        // Only update state if phase actually changed to reduce re-renders
+        if (newPhase !== breathPhase) {
+          setBreathPhase(newPhase);
+        }
+        setBreathProgress(newProgress);
       }
 
       // Check if step is complete
@@ -377,7 +395,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isPlaying, showCompletion, currentStep, isBreathingStep, breathCycleDuration, breathTiming, nextStep]);
+  }, [isPlaying, showCompletion, currentStep, isBreathingStep, breathCycleDuration, breathTiming, nextStep, breathPhase]);
 
   // Speak guidance when step changes
   useEffect(() => {
