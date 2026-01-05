@@ -365,8 +365,8 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
       >
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            {/* Logo with high contrast background */}
-            <div className="p-2 bg-white rounded-xl flex-shrink-0 shadow-md">
+            {/* Logo with translucent background */}
+            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl flex-shrink-0">
               <span className="text-2xl">🌱</span>
             </div>
             <div className="min-w-0">

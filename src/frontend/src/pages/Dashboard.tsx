@@ -24,6 +24,7 @@ import {
 import DashboardLayout from '../components/Garden/DashboardLayout';
 import GardenCanvas, { GardenData, Plant } from '../components/Garden/GardenCanvas';
 import PWAInstallBanner from '../components/PWAInstallBanner';
+import Logo from '../components/Logo';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { pushNotificationService } from '../services/pushNotificationService';
@@ -414,16 +415,16 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#022c22] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-teal-50 flex items-center justify-center">
         <div className="text-center">
           <motion.div
-            className="text-6xl mb-4"
-            animate={{ scale: [1, 1.1, 1] }}
+            className="mb-4"
+            animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
-            🌱
+            <Logo size="lg" />
           </motion.div>
-          <p className="text-emerald-300/70">Growing your garden...</p>
+          <p className="text-emerald-700">Growing your garden...</p>
         </div>
       </div>
     );
