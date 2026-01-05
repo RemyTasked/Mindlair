@@ -155,8 +155,9 @@ class PushNotificationService {
     
     return this.sendToUser(userId, {
       title: `🌱 ${meetingTitle} in 10 minutes`,
-      body: cueMessage || 'Take 3 minutes to prepare',
+      body: cueMessage || 'Ready for a quick pre-meeting flow?',
       icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
       url: `/flow/${flowType}?autostart=true${meetingId ? `&meetingId=${meetingId}` : ''}`,
       tag: 'pre-meeting-cue',
       data: {
@@ -189,7 +190,8 @@ class PushNotificationService {
     return this.sendToUser(userId, {
       title,
       body,
-      icon: '/logo.png',
+      icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
       url: presleyFlowUrl,
       tag: 'presley-flow',
       data: {
@@ -213,7 +215,8 @@ class PushNotificationService {
     return this.sendToUser(userId, {
       title: '💡 Meeting Cue',
       body: cueText,
-      icon: '/logo.png',
+      icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
       url: '/dashboard',
       tag: `cue-${cueId}`,
       requireInteraction: true, // Keep notification visible
@@ -237,7 +240,8 @@ class PushNotificationService {
     return this.sendToUser(userId, {
       title: '☀️ Good Morning - Your Day Ahead',
       body: `First meeting at ${firstMeetingTime}. ${recapMessage}`,
-      icon: '/logo.png',
+      icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
       url: '/dashboard',
       tag: 'morning-recap',
       data: {
@@ -258,7 +262,8 @@ class PushNotificationService {
     return this.sendToUser(userId, {
       title: '🌙 Daily Wrap-Up',
       body: wrapUpMessage,
-      icon: '/logo.png',
+      icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
       url: '/dashboard',
       tag: 'daily-wrap-up',
       data: {
@@ -279,7 +284,8 @@ class PushNotificationService {
     return this.sendToUser(userId, {
       title: '💭 How did your meeting go?',
       body: `Share your thoughts on "${meetingTitle}"`,
-      icon: '/logo.png',
+      icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
       url: ratingUrl,
       tag: 'post-meeting-insight',
       data: {
@@ -309,7 +315,8 @@ class PushNotificationService {
     return this.sendToUser(userId, {
       title: titles[type],
       body: message,
-      icon: '/logo.png',
+      icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
       url: '/dashboard',
       tag: 'wellness-reminder',
       data: {
@@ -407,7 +414,8 @@ class PushNotificationService {
     return this.sendToUser(userId, {
       title: '🌙 Time to Wind Down',
       body: 'Your evening ritual awaits. Take a few minutes for deep breathing and relaxation.',
-      icon: '/logo.png',
+      icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
       url: windingDownUrl,
       tag: 'winding-down',
       data: {

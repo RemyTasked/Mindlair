@@ -163,6 +163,7 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
   const [speechSupported, setSpeechSupported] = useState(false);
   const [localHistory, setLocalHistory] = useState<LocalCheckIn[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [micActive, setMicActive] = useState(false); // Visual indicator for active mic
   
   // Gratitude state
   const [gratitudeInput, setGratitudeInput] = useState('');
@@ -183,7 +184,7 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
     setSpeechSupported(!!SpeechRecognition);
   }, []);
 
-  const startRecording = () => {
+  const startRecording = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
@@ -195,9 +196,33 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
     // Check if we're on iOS - Web Speech API has limited support
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isStandalonePWA = window.matchMedia('(display-mode: standalone)').matches || 
+                           (window.navigator as any).standalone === true;
     
     if (isIOS && !isSafari) {
       setError('Voice input on iOS works best in Safari. Please switch to Safari or use text input.');
+      setInputMode('text');
+      return;
+    }
+
+    // Check for microphone permission first
+    try {
+      // Request microphone permission explicitly before starting speech recognition
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // We got permission - stop the stream as speech recognition will use its own
+      stream.getTracks().forEach(track => track.stop());
+      console.log('✅ Microphone permission granted');
+    } catch (micError: any) {
+      console.error('Microphone permission error:', micError);
+      if (micError.name === 'NotAllowedError' || micError.name === 'PermissionDeniedError') {
+        setError('Microphone access denied. Please allow microphone access in your browser settings and try again.');
+      } else if (micError.name === 'NotFoundError') {
+        setError('No microphone found. Please connect a microphone or use text input.');
+      } else if (micError.name === 'NotSupportedError') {
+        setError('Microphone access is not supported. Please use text input instead.');
+      } else {
+        setError(`Microphone error: ${micError.message || 'Unknown error'}. Please use text input.`);
+      }
       setInputMode('text');
       return;
     }
@@ -207,62 +232,110 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
+        console.log('🎤 Speech recognition started');
         setIsRecording(true);
+        setMicActive(true);
         setError(null);
+      };
+
+      recognition.onaudiostart = () => {
+        console.log('🔊 Audio capture started');
+        setMicActive(true);
+      };
+
+      recognition.onsoundstart = () => {
+        console.log('🔉 Sound detected');
+      };
+
+      recognition.onspeechstart = () => {
+        console.log('🗣️ Speech detected');
       };
 
       recognition.onresult = (event: any) => {
         let finalTranscript = '';
+        let interimTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
             finalTranscript += result[0].transcript + ' ';
+          } else {
+            interimTranscript += result[0].transcript;
           }
         }
 
         if (finalTranscript) {
           setTranscript(prev => prev + finalTranscript);
         }
+        
+        // Flash mic indicator when we detect speech
+        if (interimTranscript || finalTranscript) {
+          setMicActive(true);
+        }
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
+        console.error('Speech recognition error:', event.error, event);
         setIsRecording(false);
+        setMicActive(false);
         
         switch (event.error) {
           case 'not-allowed':
           case 'permission-denied':
-            setError('Microphone access denied. Please allow microphone access in your browser settings, or use text input.');
+            setError('Microphone access denied. Please allow microphone access in your browser settings, then refresh and try again.');
             break;
           case 'no-speech':
-            setError('No speech detected. Please try again or use text input.');
+            // This is common when user pauses - don't show as error, just stop recording
+            if (!transcript) {
+              setError('No speech detected. Tap the microphone to try again, or use text input.');
+            }
             break;
           case 'audio-capture':
-            setError('No microphone found. Please connect a microphone or use text input.');
+            setError('Could not capture audio. Please check your microphone is working and not in use by another app.');
             break;
           case 'network':
-            setError('Network error during voice recognition. Please check your connection or use text input.');
+            setError('Network error during voice recognition. Please check your internet connection or use text input.');
+            break;
+          case 'service-not-allowed':
+            // PWA or browser restriction
+            if (isStandalonePWA && isIOS) {
+              setError('Voice input may not work in this PWA. Please open Mind Garden in Safari and try again.');
+            } else {
+              setError('Voice recognition service not available. Please try again or use text input.');
+            }
             break;
           case 'aborted':
-            // User cancelled - not an error
+            // User cancelled - not an error, don't show message
+            console.log('Speech recognition aborted by user');
+            break;
+          case 'language-not-supported':
+            setError('Language not supported. Please use text input instead.');
             break;
           default:
-            setError(`Voice recognition error: ${event.error}. Please try again or use text input.`);
+            setError(`Voice recognition error (${event.error}). Please try again or use text input.`);
         }
       };
 
       recognition.onend = () => {
+        console.log('🎤 Speech recognition ended');
         setIsRecording(false);
+        setMicActive(false);
       };
 
       recognitionRef.current = recognition;
       recognition.start();
     } catch (err: any) {
       console.error('Failed to start speech recognition:', err);
-      setError(`Could not start voice input: ${err.message || 'Unknown error'}. Please use text input instead.`);
+      setMicActive(false);
+      
+      if (err.message?.includes('not allowed') || err.message?.includes('permission')) {
+        setError('Microphone permission required. Please allow access in your browser settings.');
+      } else {
+        setError(`Could not start voice input: ${err.message || 'Unknown error'}. Please use text input instead.`);
+      }
       setInputMode('text');
     }
   };
@@ -273,6 +346,7 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
       recognitionRef.current = null;
     }
     setIsRecording(false);
+    setMicActive(false);
   };
 
   // Move to gratitude step after emotional check-in
@@ -854,20 +928,43 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
                 {isRecording ? 'Listening... Speak freely about how you feel.' : 'Tap the microphone to start speaking'}
               </p>
 
-              <button
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`w-24 h-24 rounded-full flex items-center justify-center transition-all mx-auto mb-4 ${
-                  isRecording
-                    ? 'bg-red-500 animate-pulse'
-                    : 'bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600'
-                }`}
-              >
-                {isRecording ? (
-                  <MicOff className="w-10 h-10 text-white" />
-                ) : (
-                  <Mic className="w-10 h-10 text-white" />
+              {/* Microphone button with activity indicator */}
+              <div className="relative inline-block mb-4">
+                <button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
+                    isRecording
+                      ? 'bg-red-500'
+                      : 'bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600'
+                  }`}
+                >
+                  {isRecording ? (
+                    <MicOff className="w-10 h-10 text-white" />
+                  ) : (
+                    <Mic className="w-10 h-10 text-white" />
+                  )}
+                </button>
+                
+                {/* Animated ring when microphone is active */}
+                {isRecording && (
+                  <>
+                    <span className="absolute inset-0 rounded-full border-4 border-red-400 animate-ping opacity-75" />
+                    {micActive && (
+                      <span className="absolute -inset-2 rounded-full border-2 border-red-300 animate-pulse" />
+                    )}
+                  </>
                 )}
-              </button>
+              </div>
+
+              {/* Recording status indicator */}
+              {isRecording && (
+                <div className="flex items-center justify-center gap-2 mb-4 text-sm">
+                  <span className={`w-2 h-2 rounded-full ${micActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                  <span className={micActive ? 'text-green-600' : 'text-gray-500'}>
+                    {micActive ? 'Hearing you...' : 'Waiting for speech...'}
+                  </span>
+                </div>
+              )}
 
               {transcript && (
                 <div className="bg-gray-50 rounded-xl p-4 text-left">

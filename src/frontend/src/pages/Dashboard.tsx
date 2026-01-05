@@ -205,6 +205,37 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-resubscribe to push notifications if permission is granted but no subscription exists
+  useEffect(() => {
+    const checkAndResubscribe = async () => {
+      // Only check if notifications are supposedly enabled
+      if (!areNotificationsEnabled()) return;
+      
+      // Check if permission is actually granted
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      
+      // Check if we have an active subscription
+      const isSubscribed = await pushNotificationService.isSubscribed();
+      
+      if (!isSubscribed) {
+        console.log('🔔 Notifications enabled but no subscription found, resubscribing...');
+        const token = localStorage.getItem('mindgarden_token') || localStorage.getItem('meetcute_token');
+        if (token) {
+          const success = await pushNotificationService.subscribe(token);
+          if (success) {
+            console.log('✅ Successfully resubscribed to push notifications');
+          } else {
+            console.warn('⚠️ Failed to resubscribe to push notifications');
+          }
+        }
+      }
+    };
+    
+    // Run after a short delay to not block initial load
+    const timeout = setTimeout(checkAndResubscribe, 2000);
+    return () => clearTimeout(timeout);
+  }, []);
+
   const loadDashboard = async () => {
     try {
       setLoading(true);

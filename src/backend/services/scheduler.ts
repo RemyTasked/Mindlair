@@ -224,13 +224,20 @@ async function checkUpcomingMeetings() {
         })),
       });
 
-      // Process each event (exclude single-attendee meetings - likely personal tasks/reminders)
+      // Process each event
+      // Note: We no longer skip single-attendee meetings to support personal focus blocks
+      // and meetings where the calendar provider doesn't populate full attendee lists
       for (const event of allEvents) {
-        // Skip if only 1 or 0 attendees (user only or no attendees)
-        if (!event.attendees || event.attendees.length <= 1) {
-          logger.info('⏭️ Skipping single-attendee event', {
+        // Skip events with generic/placeholder titles that are clearly not real meetings
+        const lowerTitle = (event.summary || '').toLowerCase().trim();
+        const isPlaceholder = ['busy', 'tentative', 'block', 'hold', 'no title'].some(
+          placeholder => lowerTitle === placeholder || lowerTitle === ''
+        );
+        
+        if (isPlaceholder && (!event.attendees || event.attendees.length <= 1)) {
+          logger.info('⏭️ Skipping placeholder/block event', {
             userId: user.id,
-            event: event.summary,
+            event: event.summary || '(no title)',
             attendeeCount: event.attendees?.length || 0,
           });
           continue;
