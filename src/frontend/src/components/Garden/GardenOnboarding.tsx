@@ -31,8 +31,10 @@ import { pushNotificationService } from '../../services/pushNotificationService'
 import api from '../../lib/axios';
 
 interface GardenOnboardingProps {
-  onComplete: (plantType: PlantType) => void;
+  onComplete: (plantType: PlantType | null) => void;  // null if user already has a plant
   onSkip?: () => void;
+  existingPlantType?: PlantType;  // If user already has a plant, skip selection
+  hasExistingGarden?: boolean;    // Whether user has any plants
 }
 
 interface BeforeInstallPromptEvent extends Event {
@@ -163,9 +165,14 @@ const PLANT_DETAILS: Record<string, {
   },
 };
 
-export default function GardenOnboarding({ onComplete, onSkip }: GardenOnboardingProps) {
+export default function GardenOnboarding({ 
+  onComplete, 
+  onSkip,
+  existingPlantType,
+  hasExistingGarden = false,
+}: GardenOnboardingProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedPlant, setSelectedPlant] = useState<PlantType | null>(null);
+  const [selectedPlant, setSelectedPlant] = useState<PlantType | null>(existingPlantType || null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -173,7 +180,9 @@ export default function GardenOnboarding({ onComplete, onSkip }: GardenOnboardin
   const [isLoading, setIsLoading] = useState(false);
   const [animatingPlant, setAnimatingPlant] = useState(0);
 
-  const totalSteps = 5;
+  // Adjust steps based on whether user already has a plant
+  // If they have a plant, skip plant selection step (4 steps instead of 5)
+  const totalSteps = hasExistingGarden ? 4 : 5;
 
   useEffect(() => {
     // Check notification permission
@@ -239,16 +248,16 @@ export default function GardenOnboarding({ onComplete, onSkip }: GardenOnboardin
   };
 
   const handleComplete = async () => {
-    if (!selectedPlant) return;
+    // For existing users, they don't need to select a plant
+    if (!hasExistingGarden && !selectedPlant) return;
     
     setIsLoading(true);
     try {
-      // Save onboarding completion
-      localStorage.setItem('mindgarden_onboarding_completed', 'true');
-      localStorage.setItem('mindgarden_first_plant', selectedPlant);
-      
-      // Call API to select seed
-      await api.post('/api/garden/select-seed', { plantType: selectedPlant });
+      // Only call API to select seed if user doesn't have a garden yet
+      if (!hasExistingGarden && selectedPlant) {
+        localStorage.setItem('mindgarden_first_plant', selectedPlant);
+        await api.post('/api/garden/select-seed', { plantType: selectedPlant });
+      }
       
       onComplete(selectedPlant);
     } catch (error) {
@@ -275,6 +284,9 @@ export default function GardenOnboarding({ onComplete, onSkip }: GardenOnboardin
   };
 
   const canProceed = () => {
+    // For existing users, skip plant selection validation
+    if (hasExistingGarden) return true;
+    // For new users, require plant selection on step 2
     if (currentStep === 2) return selectedPlant !== null;
     return true;
   };
@@ -738,13 +750,21 @@ export default function GardenOnboarding({ onComplete, onSkip }: GardenOnboardin
     </motion.div>
   );
 
-  const steps = [
-    <WelcomeStep key="welcome" />,
-    <HowItWorksStep key="howitworks" />,
-    <PlantSelectionStep key="plantselection" />,
-    <NotificationsStep key="notifications" />,
-    <InstallStep key="install" />,
-  ];
+  // Build steps array - skip plant selection for existing users
+  const steps = hasExistingGarden
+    ? [
+        <WelcomeStep key="welcome" />,
+        <HowItWorksStep key="howitworks" />,
+        <NotificationsStep key="notifications" />,
+        <InstallStep key="install" />,
+      ]
+    : [
+        <WelcomeStep key="welcome" />,
+        <HowItWorksStep key="howitworks" />,
+        <PlantSelectionStep key="plantselection" />,
+        <NotificationsStep key="notifications" />,
+        <InstallStep key="install" />,
+      ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-teal-50 flex flex-col">

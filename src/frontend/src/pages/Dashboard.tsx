@@ -422,21 +422,39 @@ export default function Dashboard() {
     );
   }
 
-  // Show full onboarding for first-time users
-  const hasCompletedOnboarding = localStorage.getItem('mindgarden_onboarding_completed') === 'true';
+  // Show full onboarding for ALL users who haven't completed the new v2 onboarding
+  // Using versioned key so existing users also see the new onboarding flow
+  const ONBOARDING_VERSION = 'mindgarden_onboarding_v2_completed';
+  const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_VERSION) === 'true';
   
-  if (selectingPlant && !hasCompletedOnboarding) {
+  // Check if user already has a garden (existing user)
+  const hasExistingGarden = gardenState.plants && gardenState.plants.length > 0;
+  const existingPlantType = hasExistingGarden && gardenState.activePlant 
+    ? gardenState.activePlant.type as PlantType 
+    : undefined;
+  
+  // Force onboarding for everyone who hasn't completed v2, regardless of plant status
+  if (!hasCompletedOnboarding) {
     return (
       <GardenOnboarding
-        onComplete={(plantType: PlantType) => {
-          handleSelectSeed(plantType);
+        onComplete={(plantType: PlantType | null) => {
+          localStorage.setItem(ONBOARDING_VERSION, 'true');
+          // Only select seed if user doesn't already have a garden
+          if (plantType && !hasExistingGarden) {
+            handleSelectSeed(plantType);
+          } else {
+            // Existing user, just reload to show their garden
+            window.location.reload();
+          }
         }}
         onSkip={() => {
-          // Skip to simple plant selector
-          localStorage.setItem('mindgarden_onboarding_completed', 'true');
-          // Stay in selectingPlant mode but show simple selector
-          setSelectingPlant(true);
+          // Skip to dashboard (they may already have a plant)
+          localStorage.setItem(ONBOARDING_VERSION, 'true');
+          // Reload to show dashboard with existing garden
+          window.location.reload();
         }}
+        hasExistingGarden={hasExistingGarden}
+        existingPlantType={existingPlantType}
       />
     );
   }
