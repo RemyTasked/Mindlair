@@ -178,7 +178,6 @@ export default function GardenOnboarding({
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [animatingPlant, setAnimatingPlant] = useState(0);
 
   // Adjust steps based on whether user already has a plant
   // If they have a plant, skip plant selection step (4 steps instead of 5)
@@ -206,14 +205,8 @@ export default function GardenOnboarding({
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Animate plant growth preview
-    const interval = setInterval(() => {
-      setAnimatingPlant(prev => (prev + 1) % 31);
-    }, 200);
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      clearInterval(interval);
     };
   }, []);
 
@@ -293,29 +286,19 @@ export default function GardenOnboarding({
 
   // Step 1: Welcome
   const WelcomeStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="text-center space-y-8 px-4"
-    >
-      <motion.div
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200 }}
-        className="relative inline-block"
-      >
+    <div className="text-center space-y-8 px-4">
+      <div className="relative inline-block">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 blur-3xl rounded-full scale-150" />
         <div className="relative">
           <OnePlantSVG 
             plantType="classic" 
-            actionsCount={animatingPlant} 
+            actionsCount={25} 
             size={180} 
-            animated={true}
+            animated={false}
             showPot={true}
           />
         </div>
-      </motion.div>
+      </div>
 
       <div className="space-y-4 max-w-lg mx-auto">
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
@@ -340,17 +323,12 @@ export default function GardenOnboarding({
           <p className="text-sm text-amber-700 font-medium">Celebrate Growth</p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   // Step 2: How It Works
   const HowItWorksStep = () => (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      className="space-y-6 px-4"
-    >
+    <div className="space-y-6 px-4">
       <div className="text-center mb-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">How Your Garden Grows</h2>
         <p className="text-gray-600">Every mindful action nurtures your plant</p>
@@ -466,7 +444,7 @@ export default function GardenOnboarding({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   // Step 3: Plant Selection
@@ -532,12 +510,7 @@ export default function GardenOnboarding({
     };
 
     return (
-      <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -50 }}
-        className="space-y-6 px-4"
-      >
+      <div className="space-y-6 px-4">
         <div className="text-center mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Choose Your First Plant</h2>
           <p className="text-gray-600">Each plant has a unique personality. Pick one that resonates with you!</p>
@@ -618,18 +591,13 @@ export default function GardenOnboarding({
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
     );
   };
 
   // Step 4: Notifications
   const NotificationsStep = () => (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      className="space-y-6 px-4"
-    >
+    <div className="space-y-6 px-4">
       <div className="text-center space-y-4">
         <div className="w-20 h-20 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
           <Bell className="w-10 h-10 text-emerald-600" />
@@ -680,17 +648,12 @@ export default function GardenOnboarding({
           </ul>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   // Step 5: Install PWA
   const InstallStep = () => (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      className="space-y-6 px-4"
-    >
+    <div className="space-y-6 px-4">
       <div className="text-center space-y-4">
         <div className="w-20 h-20 mx-auto bg-teal-100 rounded-full flex items-center justify-center">
           <Download className="w-10 h-10 text-teal-600" />
@@ -747,24 +710,32 @@ export default function GardenOnboarding({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
-  // Build steps array - skip plant selection for existing users
-  const steps = hasExistingGarden
-    ? [
-        <WelcomeStep key="welcome" />,
-        <HowItWorksStep key="howitworks" />,
-        <NotificationsStep key="notifications" />,
-        <InstallStep key="install" />,
-      ]
-    : [
-        <WelcomeStep key="welcome" />,
-        <HowItWorksStep key="howitworks" />,
-        <PlantSelectionStep key="plantselection" />,
-        <NotificationsStep key="notifications" />,
-        <InstallStep key="install" />,
-      ];
+  // Determine which step to render based on current step and user status
+  const renderCurrentStep = () => {
+    if (hasExistingGarden) {
+      // Existing users: Welcome (0), HowItWorks (1), Notifications (2), Install (3)
+      switch (currentStep) {
+        case 0: return <WelcomeStep />;
+        case 1: return <HowItWorksStep />;
+        case 2: return <NotificationsStep />;
+        case 3: return <InstallStep />;
+        default: return <InstallStep />;
+      }
+    } else {
+      // New users: Welcome (0), HowItWorks (1), PlantSelection (2), Notifications (3), Install (4)
+      switch (currentStep) {
+        case 0: return <WelcomeStep />;
+        case 1: return <HowItWorksStep />;
+        case 2: return <PlantSelectionStep />;
+        case 3: return <NotificationsStep />;
+        case 4: return <InstallStep />;
+        default: return <InstallStep />;
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-teal-50 flex flex-col">
@@ -785,21 +756,18 @@ export default function GardenOnboarding({
             )}
           </div>
           <div className="h-2 bg-emerald-100 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300"
+              style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
             />
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center py-8">
+      <div className="flex-1 flex items-center justify-center py-8 overflow-y-auto">
         <div className="w-full max-w-3xl">
-          <AnimatePresence mode="wait">
-            {steps[currentStep]}
-          </AnimatePresence>
+          {renderCurrentStep()}
         </div>
       </div>
 
