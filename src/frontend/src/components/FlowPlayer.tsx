@@ -18,20 +18,22 @@ const AMBIENT_SOUNDS: Record<string, string> = {
   energize: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3', // Uplifting tone
 };
 
-// Voice narration audio files (B. Patrone - Peaceful & Meditative)
+// Voice narration audio files (ElevenLabs - Peaceful & Meditative)
+// Cache-busted with version to ensure fresh audio after updates
+const NARRATION_VERSION = 'v2';
 const NARRATION_AUDIO: Record<string, string> = {
-  'pre-meeting-focus': '/audio/flows/pre-meeting-focus.mp3',
-  'pre-presentation-power': '/audio/flows/pre-presentation-power.mp3',
-  'difficult-conversation-prep': '/audio/flows/difficult-conversation-prep.mp3',
-  'quick-reset': '/audio/flows/quick-reset.mp3',
-  'post-meeting-decompress': '/audio/flows/post-meeting-decompress.mp3',
-  'end-of-day-transition': '/audio/flows/end-of-day-transition.mp3',
-  'morning-intention': '/audio/flows/morning-intention.mp3',
-  'evening-wind-down': '/audio/flows/evening-wind-down.mp3',
-  'weekend-wellness': '/audio/flows/weekend-wellness.mp3',
-  'deep-meditation': '/audio/flows/deep-meditation.mp3',
-  'breathing': '/audio/flows/breathing.mp3',
-  'body-scan': '/audio/flows/body-scan.mp3',
+  'pre-meeting-focus': `/audio/flows/pre-meeting-focus.mp3?${NARRATION_VERSION}`,
+  'pre-presentation-power': `/audio/flows/pre-presentation-power.mp3?${NARRATION_VERSION}`,
+  'difficult-conversation-prep': `/audio/flows/difficult-conversation-prep.mp3?${NARRATION_VERSION}`,
+  'quick-reset': `/audio/flows/quick-reset.mp3?${NARRATION_VERSION}`,
+  'post-meeting-decompress': `/audio/flows/post-meeting-decompress.mp3?${NARRATION_VERSION}`,
+  'end-of-day-transition': `/audio/flows/end-of-day-transition.mp3?${NARRATION_VERSION}`,
+  'morning-intention': `/audio/flows/morning-intention.mp3?${NARRATION_VERSION}`,
+  'evening-wind-down': `/audio/flows/evening-wind-down.mp3?${NARRATION_VERSION}`,
+  'weekend-wellness': `/audio/flows/weekend-wellness.mp3?${NARRATION_VERSION}`,
+  'deep-meditation': `/audio/flows/deep-meditation.mp3?${NARRATION_VERSION}`,
+  'breathing': `/audio/flows/breathing.mp3?${NARRATION_VERSION}`,
+  'body-scan': `/audio/flows/body-scan.mp3?${NARRATION_VERSION}`,
 };
 
 // Types from shared (simplified for frontend)
@@ -204,6 +206,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
       console.warn('No narration audio found for flow:', flow.id);
       return;
     }
+    
+    console.log('🎵 Starting narration audio for flow:', flow.id, narrationUrl);
     
     const audio = new Audio(narrationUrl);
     audio.volume = isMuted ? 0 : 0.9; // Main narration volume
@@ -471,12 +475,15 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     };
   }, [isPlaying, showCompletion, currentStep, isBreathingStep, breathCycleDuration, breathTiming, nextStep, breathPhase]);
 
-  // Speak guidance when step changes
+  // Speak guidance when step changes - ONLY if no MP3 narration exists for this flow
+  // The MP3 files contain the full flow narration, so we don't need per-step TTS
   useEffect(() => {
-    if (currentStep?.guidance && isPlaying && !showCompletion) {
+    const hasMP3Narration = !!NARRATION_AUDIO[flow.id];
+    if (currentStep?.guidance && isPlaying && !showCompletion && !hasMP3Narration) {
+      // Only use TTS fallback if no MP3 exists for this flow
       speakGuidance(currentStep.guidance);
     }
-  }, [currentStepIndex, isPlaying, showCompletion, speakGuidance, currentStep?.guidance]);
+  }, [currentStepIndex, isPlaying, showCompletion, speakGuidance, currentStep?.guidance, flow.id]);
 
   // Start ambient sound and narration when flow begins
   useEffect(() => {
