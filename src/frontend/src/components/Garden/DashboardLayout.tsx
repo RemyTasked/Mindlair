@@ -141,15 +141,15 @@ export default function DashboardLayout({
         <div className="mg-sidebar-header">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
-                <MindGardenIcon size={28} />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
+                <MindGardenIcon size={32} />
               </div>
               {!sidebarCollapsed && (
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
-                  <Logo size="xs" variant="text" />
+                  <Logo size="sm" variant="text" />
                   <p className="text-xs text-[var(--mg-text-muted)]">Grow your focus</p>
                 </motion.div>
               )}
@@ -295,8 +295,8 @@ export default function DashboardLayout({
         </button>
         
         <div className="flex items-center gap-2">
-          <MindGardenIcon size={24} />
-          <Logo size="xs" variant="text" />
+          <MindGardenIcon size={32} />
+          <Logo size="sm" variant="text" />
         </div>
         
         <button 

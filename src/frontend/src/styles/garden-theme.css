@@ -1010,9 +1010,48 @@
 }
 
 /* ========================================
-   Performance-Optimized Page Animations
-   GPU-accelerated with will-change hints
+   Game Showcase Animations
    ======================================== */
+
+@keyframes mg-bubble-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(10px, -15px) scale(1.05); }
+  66% { transform: translate(-10px, -25px) scale(0.95); }
+}
+
+.mg-bubble-animated {
+  animation: mg-bubble-float 4s ease-in-out infinite;
+}
+
+@keyframes mg-bowl-vibrate {
+  0%, 100% { transform: scale(1) rotate(0); }
+  25% { transform: scale(1.02) rotate(-1deg); }
+  75% { transform: scale(1.02) rotate(1deg); }
+}
+
+.mg-bowl-animated {
+  animation: mg-bowl-vibrate 0.1s linear infinite;
+}
+
+@keyframes mg-pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.mg-pulse-ring {
+  animation: mg-pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+@keyframes mg-seed-sort {
+  0% { transform: translateY(100px); opacity: 0; }
+  50% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-50px); opacity: 0; }
+}
+
+.mg-seed-animated {
+  animation: mg-seed-sort 3s ease-in-out infinite;
+}
+
 
 /* Fade in */
 @keyframes fadeIn {

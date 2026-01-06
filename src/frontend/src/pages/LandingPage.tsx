@@ -9,9 +9,10 @@
 
 import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
-import { Leaf, Sparkles, Calendar, Music, Heart, Wind, Sun, Moon, ChevronDown, Bell, Smartphone, Download } from 'lucide-react';
+import { Leaf, Sparkles, Calendar, Music, Heart, Wind, Sun, Moon, ChevronDown, Bell, Smartphone, Download, Circle, Target, Gamepad2 } from 'lucide-react';
 import CalDAVModal from '../components/CalDAVModal';
 import Logo, { MindGardenIcon } from '../components/Logo';
 
@@ -55,6 +56,41 @@ export default function LandingPage() {
     
     checkExistingAuth();
   }, [navigate]);
+
+  const { scrollYProgress } = useScroll();
+  const springScroll = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  
+  // Floating botanical elements
+  const FloatingElements = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <motion.div 
+        style={{ y: useTransform(springScroll, [0, 1], [0, -200]) }}
+        className="absolute top-20 left-10 text-6xl opacity-30 animate-float-slow"
+      >🌿</motion.div>
+      <motion.div 
+        style={{ y: useTransform(springScroll, [0, 1], [0, -400]) }}
+        className="absolute top-40 right-20 text-5xl opacity-25 animate-float-medium"
+      >🌸</motion.div>
+      <motion.div 
+        style={{ y: useTransform(springScroll, [0, 1], [0, -600]) }}
+        className="absolute top-[800px] left-[5%] text-4xl opacity-20 animate-float-fast"
+      >🍃</motion.div>
+      <motion.div 
+        style={{ y: useTransform(springScroll, [0, 1], [0, -300]) }}
+        className="absolute top-[1200px] right-[10%] text-5xl opacity-15 animate-float-slow"
+      >🌼</motion.div>
+      <motion.div 
+        style={{ y: useTransform(springScroll, [0, 1], [0, -500]) }}
+        className="absolute top-[1800px] left-[15%] text-4xl opacity-20 animate-float-medium"
+      >🌱</motion.div>
+      <motion.div 
+        style={{ y: useTransform(springScroll, [0, 1], [0, -700]) }}
+        className="absolute top-[2500px] right-[5%] text-6xl opacity-10 animate-float-fast"
+      >🌷</motion.div>
+      <div className="absolute bottom-40 left-1/4 text-4xl opacity-20 animate-float-fast">🦋</div>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white/20" />
+    </div>
+  );
 
   if (checkingAuth) {
     return (
@@ -109,17 +145,12 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50 to-cyan-50 relative overflow-hidden">
       {/* Ambient Background - CSS animations for performance */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="absolute top-20 left-10 text-6xl opacity-30 animate-float-slow">🌿</div>
-        <div className="absolute top-40 right-20 text-5xl opacity-25 animate-float-medium">🌸</div>
-        <div className="absolute bottom-40 left-1/4 text-4xl opacity-20 animate-float-fast">🦋</div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white/20" />
-      </div>
+      <FloatingElements />
 
       {/* Header */}
-      <header className="container mx-auto px-6 py-8 relative z-10">
-<div className="flex justify-center items-center animate-fade-in">
-          <Logo size="lg" />
+      <header className="container mx-auto px-6 py-6 relative z-10">
+        <div className="flex justify-start items-center animate-fade-in">
+          <Logo size="lg" variant="icon" />
         </div>
       </header>
 
@@ -146,7 +177,13 @@ export default function LandingPage() {
           </p>
 
           {/* PWA App Feature */}
-          <div className="mb-12 animate-fade-in-up animation-delay-200">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="mb-12"
+          >
             <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
               {/* Static gradient orbs - no animation for perf */}
               <div className="absolute inset-0 opacity-15 pointer-events-none" aria-hidden="true">
@@ -225,10 +262,16 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Garden Preview */}
-          <div className="mb-12 bg-white/60 rounded-3xl p-8 shadow-xl border border-emerald-100 animate-fade-in-up animation-delay-300">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mb-12 bg-white/60 rounded-3xl p-8 shadow-xl border border-emerald-100"
+          >
             <div className="grid grid-cols-3 gap-6 mb-6">
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center">
@@ -257,7 +300,119 @@ export default function LandingPage() {
               <Sparkles className="w-5 h-5" />
               <span className="font-medium">Your garden grows with every moment of mindfulness</span>
             </div>
-          </div>
+          </motion.div>
+
+          {/* Game Showcase Section */}
+          <section className="py-16 px-6">
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-16">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full text-sm font-medium mb-4"
+                >
+                  <Gamepad2 className="w-4 h-4" />
+                  Playful Mind Fitness
+                </motion.div>
+                <motion.h3
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 }}
+                  className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6"
+                >
+                  Activities for Every Mood
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 }}
+                  className="text-lg text-gray-600 max-w-2xl mx-auto"
+                >
+                  Lower your cortisol and boost your focus with interactive games designed by wellness experts.
+                </motion.p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                {/* Thought Popper */}
+                <GameCard
+                  title="Thought Popper"
+                  description="Visualize stressful thoughts as bubbles and pop them to clear your mind."
+                  icon={<Circle className="w-8 h-8 text-sky-500" />}
+                  color="sky"
+                  animation={
+                    <div className="relative h-32 w-full flex items-center justify-center overflow-hidden">
+                      {[...Array(5)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-8 h-8 rounded-full bg-sky-400/30 border border-sky-300 backdrop-blur-sm mg-bubble-animated"
+                          style={{
+                            left: `${20 + i * 15}%`,
+                            top: `${10 + (i % 3) * 20}%`,
+                            animationDelay: `${i * 0.8}s`
+                          }}
+                          whileHover={{ scale: 1.5, opacity: 0, transition: { duration: 0.2 } }}
+                        />
+                      ))}
+                    </div>
+                  }
+                />
+
+                {/* Sound Bowl */}
+                <GameCard
+                  title="Sound Bowl"
+                  description="Resonate with healing frequencies through an interactive singing bowl."
+                  icon={<Wind className="w-8 h-8 text-amber-500" />}
+                  color="amber"
+                  animation={
+                    <div className="relative h-32 w-full flex items-center justify-center overflow-hidden">
+                      <div className="relative">
+                        <motion.div
+                          className="w-16 h-16 rounded-full border-4 border-amber-400/30 mg-pulse-ring"
+                        />
+                        <motion.div
+                          className="absolute inset-0 w-16 h-16 rounded-full border-2 border-amber-400/20 mg-pulse-ring"
+                          style={{ animationDelay: '0.5s' }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-12 h-8 bg-amber-600 rounded-b-full rounded-t-sm shadow-lg hover:mg-bowl-animated transition-all" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                />
+
+                {/* Emotion Sorter */}
+                <GameCard
+                  title="Emotion Sorter"
+                  description="Categorize your feelings into colorful seeds to gain clarity and perspective."
+                  icon={<Target className="w-8 h-8 text-teal-500" />}
+                  color="teal"
+                  animation={
+                    <div className="relative h-32 w-full flex items-center justify-center gap-4 overflow-hidden">
+                      {[
+                        { color: 'bg-rose-400', delay: '0s' },
+                        { color: 'bg-emerald-400', delay: '1s' },
+                        { color: 'bg-amber-400', delay: '2s' }
+                      ].map((seed, i) => (
+                        <motion.div
+                          key={i}
+                          className={`w-6 h-8 rounded-full ${seed.color} mg-seed-animated`}
+                          style={{ animationDelay: seed.delay }}
+                        />
+                      ))}
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-32 h-4 border-b-2 border-teal-200 flex justify-around">
+                        <div className="w-8 h-8 bg-teal-100/50 border border-teal-200 rounded-t-lg" />
+                        <div className="w-8 h-8 bg-teal-100/50 border border-teal-200 rounded-t-lg" />
+                      </div>
+                    </div>
+                  }
+                />
+              </div>
+            </div>
+          </section>
 
           {/* Auth Buttons - Primary */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4 animate-fade-in-up animation-delay-400">
@@ -341,9 +496,14 @@ export default function LandingPage() {
 
       {/* Features */}
       <section className="container mx-auto px-6 py-16 relative z-10">
-        <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">
+        <motion.h3 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-3xl font-bold text-center mb-12 text-gray-900"
+        >
           Nurture Your Mental Wellness
-        </h3>
+        </motion.h3>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
           <FeatureCard
@@ -369,9 +529,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Garden Preview */}
+      {/* Garden Progress */}
       <section className="container mx-auto px-6 py-16 relative z-10">
-        <div className="max-w-4xl mx-auto bg-gradient-to-br from-emerald-100 to-teal-100 rounded-3xl p-8 sm:p-12 border border-emerald-200">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-4xl mx-auto bg-gradient-to-br from-emerald-100 to-teal-100 rounded-3xl p-8 sm:p-12 border border-emerald-200"
+        >
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
               Watch Your Progress Bloom
@@ -383,12 +548,17 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-5 gap-4 mb-8">
             {['🌱', '🌿', '🌷', '🌻', '🌳'].map((emoji, i) => (
-              <div
+              <motion.div
                 key={i}
-                className="aspect-square bg-white/60 rounded-2xl flex items-center justify-center text-3xl shadow-sm"
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="aspect-square bg-white/60 rounded-2xl flex items-center justify-center text-3xl shadow-sm cursor-default"
               >
                 {emoji}
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -403,13 +573,13 @@ export default function LandingPage() {
               🧘 Meditation = Lotus
             </span>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Footer */}
       <footer className="container mx-auto px-6 py-12 text-center relative z-10">
         <div className="flex items-center justify-center mb-4">
-          <Logo size="md" />
+          <Logo size="lg" />
         </div>
         <p className="text-gray-500 text-sm mb-4">
           Cultivating calm, one moment at a time
@@ -433,6 +603,44 @@ export default function LandingPage() {
     </div>
   );
 }
+
+const GameCard = memo(function GameCard({ 
+  title, 
+  description, 
+  icon, 
+  color, 
+  animation 
+}: { 
+  title: string; 
+  description: string; 
+  icon: React.ReactNode; 
+  color: string;
+  animation: React.ReactNode;
+}) {
+  const colorMap: Record<string, string> = {
+    sky: 'from-sky-50 to-sky-100 border-sky-200 text-sky-700',
+    amber: 'from-amber-50 to-amber-100 border-amber-200 text-amber-700',
+    teal: 'from-teal-50 to-teal-100 border-teal-200 text-teal-700',
+    emerald: 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-700',
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ y: -8 }}
+      className={`bg-gradient-to-br ${colorMap[color]} rounded-3xl p-8 border shadow-sm hover:shadow-xl transition-all duration-300`}
+    >
+      <div className="mb-6">{icon}</div>
+      <h4 className="text-xl font-bold mb-3">{title}</h4>
+      <p className="text-gray-600 mb-8 text-sm leading-relaxed">{description}</p>
+      <div className="bg-white/50 rounded-2xl p-4 border border-white/20">
+        {animation}
+      </div>
+    </motion.div>
+  );
+});
 
 const FeatureCard = memo(function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (

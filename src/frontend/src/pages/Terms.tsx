@@ -18,7 +18,7 @@ export default function Terms() {
             Back to Home
           </button>
           <div className="flex items-center gap-3">
-            <Logo size="md" />
+            <Logo size="lg" />
           </div>
         </div>
       </header>
@@ -195,6 +195,9 @@ export default function Terms() {
 
       {/* Footer */}
       <footer className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-600">
+        <div className="flex justify-center mb-6">
+          <Logo size="lg" />
+        </div>
         <div className="flex justify-center gap-6 mb-4 text-sm">
           <a href="/" className="hover:text-teal-600 transition-colors">Home</a>
           <span>·</span>

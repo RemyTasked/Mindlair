@@ -10,8 +10,8 @@
  * - Automatic updates with cache busting
  */
 
-const CACHE_NAME = 'mind-garden-v1';
-const RUNTIME_CACHE = 'mind-garden-runtime-v1';
+const CACHE_NAME = 'mind-garden-v2';
+const RUNTIME_CACHE = 'mind-garden-runtime-v2';
 
 // Core assets to cache on install for offline use
 const PRECACHE_ASSETS = [

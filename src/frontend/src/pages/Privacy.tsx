@@ -20,7 +20,7 @@ export default function Privacy() {
               <h1 className="text-xl font-bold text-gray-800">Privacy & Security</h1>
             </div>
             <div className="flex items-center gap-2">
-              <Logo size="md" />
+              <Logo size="lg" />
             </div>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function Privacy() {
         </div>
 
         {/* Contact */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">Questions or Concerns?</h3>
           <p className="text-gray-700 mb-4">
             We're committed to transparency and protecting your privacy. If you have any questions 
@@ -250,6 +250,18 @@ export default function Privacy() {
           <p className="text-sm text-gray-500 mt-6">
             Last updated: November 3, 2025
           </p>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center py-8">
+          <div className="flex justify-center mb-6">
+            <Logo size="lg" />
+          </div>
+          <div className="flex justify-center gap-6 text-sm text-gray-500">
+            <a href="/" className="hover:text-emerald-600 transition-colors">Home</a>
+            <span>·</span>
+            <a href="/terms" className="hover:text-emerald-600 transition-colors">Terms of Use</a>
+          </div>
         </div>
       </main>
     </div>

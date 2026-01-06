@@ -26,7 +26,7 @@ const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-50">
     <div className="text-center">
       <div className="mx-auto mb-4">
-        <Logo size="lg" />
+        <Logo size="xl" />
       </div>
       <p className="text-emerald-700">Loading...</p>
     </div>

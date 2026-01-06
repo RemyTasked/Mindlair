@@ -419,7 +419,7 @@ export default function Dashboard() {
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
-            <Logo size="lg" />
+            <Logo size="xl" />
           </motion.div>
           <p className="text-emerald-700">Growing your garden...</p>
         </div>
