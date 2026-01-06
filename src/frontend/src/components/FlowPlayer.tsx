@@ -20,7 +20,7 @@ const AMBIENT_SOUNDS: Record<string, string> = {
 
 // Voice narration audio files (ElevenLabs - Peaceful & Meditative)
 // Cache-busted with version to ensure fresh audio after updates
-const NARRATION_VERSION = 'v2';
+const NARRATION_VERSION = 'v3';
 const NARRATION_AUDIO: Record<string, string> = {
   'pre-meeting-focus': `/audio/flows/pre-meeting-focus.mp3?${NARRATION_VERSION}`,
   'pre-presentation-power': `/audio/flows/pre-presentation-power.mp3?${NARRATION_VERSION}`,
@@ -212,9 +212,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     const audio = new Audio(narrationUrl);
     audio.volume = isMuted ? 0 : 0.9; // Main narration volume
     
-    // Slow down playback for meditative pacing (0.85 = 15% slower)
-    // This creates a calm, unhurried feel perfect for wellness flows
-    audio.playbackRate = 0.85;
+    // Normal playback - audio files are now properly paced with extended scripts
+    audio.playbackRate = 1.0;
     
     // Preserve pitch when slowing down (if supported)
     if ('preservesPitch' in audio) {
