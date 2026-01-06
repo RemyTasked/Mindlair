@@ -9,7 +9,7 @@
 
 import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { Leaf, Sparkles, Calendar, Music, Heart, Wind, Sun, Moon, ChevronDown, Bell, Smartphone, Download, Circle, Target, Gamepad2 } from 'lucide-react';
