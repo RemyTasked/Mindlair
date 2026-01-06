@@ -22,6 +22,10 @@ import {
   Moon,
   Sunrise,
   Sunset,
+  Gift,
+  Share2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
 import PlantSelector from '../components/Garden/PlantSelector';
@@ -212,6 +216,7 @@ export default function Dashboard() {
   const [showExpansionModal, setShowExpansionModal] = useState(false);
   const [showMaturityCelebration, setShowMaturityCelebration] = useState(false);
   const [previousActionsCount, setPreviousActionsCount] = useState(0);
+  const [shareUrlCopied, setShareUrlCopied] = useState(false);
   
   // Milestone toast hook
   const { milestones, showMilestones, dismissAll } = useMilestoneToast();
@@ -815,6 +820,85 @@ export default function Dashboard() {
                     <p className="text-sm">No upcoming meetings</p>
                   </div>
                 )}
+              </motion.div>
+
+              {/* Share a Seedling */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mg-card bg-gradient-to-br from-amber-900/20 to-orange-900/20 border border-amber-700/30"
+              >
+                <h3 className="mg-card-title flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-amber-400" />
+                  Share a Seedling
+                </h3>
+                
+                <p className="text-sm text-amber-100/70 mb-4">
+                  Invite a friend to Mind Garden! They get +2 bonus leaves on their first flow, and you get +1 leaf plus game level unlocks.
+                </p>
+                
+                <div className="space-y-2">
+                  <button
+                    onClick={async () => {
+                      const shareUrl = `${window.location.origin}/?ref=${user?.id}`;
+                      const shareText = "I'm gifting you a Seedling in Mind Garden! 🌱 Plant it and complete your first flow to start with 3 leaves instead of 1.";
+                      
+                      // Try native share API first
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({
+                            title: 'Mind Garden Seedling Gift',
+                            text: shareText,
+                            url: shareUrl,
+                          });
+                          return;
+                        } catch (err) {
+                          // User cancelled or share failed, fall back to copy
+                        }
+                      }
+                      
+                      // Fallback: copy to clipboard
+                      try {
+                        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+                        setShareUrlCopied(true);
+                        setTimeout(() => setShareUrlCopied(false), 2000);
+                      } catch (err) {
+                        console.error('Failed to copy:', err);
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium transition-colors"
+                  >
+                    {shareUrlCopied ? (
+                      <>
+                        <Check className="w-5 h-5" />
+                        Copied to Clipboard!
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-5 h-5" />
+                        Share Seedling Link
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      const shareUrl = `${window.location.origin}/?ref=${user?.id}`;
+                      try {
+                        await navigator.clipboard.writeText(shareUrl);
+                        setShareUrlCopied(true);
+                        setTimeout(() => setShareUrlCopied(false), 2000);
+                      } catch (err) {
+                        console.error('Failed to copy:', err);
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 p-2 rounded-xl text-amber-400/70 hover:text-amber-300 text-sm transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy Link Only
+                  </button>
+                </div>
               </motion.div>
             </div>
           </div>

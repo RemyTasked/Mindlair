@@ -18,6 +18,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Referral System
+  referredById String?
+  referredBy   User?   @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals    User[]  @relation("UserReferrals")
+
   // Onboarding
   onboardingCompleted Boolean @default(false)
   onboardingData      Json? // Stores: workStart, workEnd, focusGoals, customGoal, meetingComfort, meetingsPerDay, directorsNote

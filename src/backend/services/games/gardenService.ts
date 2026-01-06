@@ -125,7 +125,8 @@ export type MilestoneType =
   | 'morning_master'      // 10 morning flows
   | 'breathing_champion'  // 20 breathing exercises
   | 'meeting_prep_pro'    // 15 meeting preps
-  | 'game_enthusiast';    // 25 games played
+  | 'game_enthusiast'     // 25 games played
+  | 'referral_success';   // Referred someone who completed their first flow
 
 // Milestone notification data
 export interface MilestoneNotification {
@@ -175,6 +176,9 @@ export const MILESTONE_DEFINITIONS: Record<MilestoneType, Omit<MilestoneNotifica
   breathing_champion: { title: 'Breathing Champion! 🌬️', message: '20 breathing exercises done!', emoji: '🌬️', points: 3 },
   meeting_prep_pro: { title: 'Meeting Prep Pro! 🎯', message: '15 meeting preparations!', emoji: '🎯', points: 3 },
   game_enthusiast: { title: 'Game Enthusiast! 🎮', message: '25 mindfulness games played!', emoji: '🎮', points: 3 },
+  
+  // Referral milestone
+  referral_success: { title: 'Seedling Shared! 🌱', message: 'Someone you invited completed their first flow! +1 leaf & game levels unlocked!', emoji: '🎁', points: 1 },
 };
 
 // Milestone bonuses (streak-based) - kept for backward compat
@@ -660,6 +664,7 @@ export async function recordActivity(userId: string, activityType: string): Prom
   plantMatured?: boolean;
   premiumJustUnlocked?: boolean;
   canAddNewPlant?: boolean;
+  referralBonusApplied?: boolean;
 }> {
   try {
     const gardenData = await getGardenState(userId);
@@ -704,6 +709,28 @@ export async function recordActivity(userId: string, activityType: string): Prom
       maturePlants: gardenData.plants.filter(p => p.actionsCount >= 30).length,
       activePlantActions: activePlant.actionsCount,
     };
+    
+    // CHECK FOR REFERRAL BONUS (first action by a referred user)
+    let referralBonusApplied = false;
+    if (previousState.totalActions === 0) {
+      // This is the user's very first action - check for referral
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { referredById: true },
+      });
+      
+      if (user?.referredById) {
+        // Grant +2 bonus leaves for referred users on first action
+        activePlant.actionsCount += 2;
+        referralBonusApplied = true;
+        logger.info('🌱 Referral bonus applied: +2 leaves', { userId, referrerId: user.referredById });
+        
+        // Reward the referrer (async, don't wait)
+        processReferrerReward(user.referredById).catch(err => {
+          logger.error('Error processing referrer reward:', err);
+        });
+      }
+    }
     
     // 1. INCREMENT ACTION COUNT (core mechanic) - ONLY on growing plant
     activePlant.actionsCount += 1;
@@ -811,11 +838,14 @@ export async function recordActivity(userId: string, activityType: string): Prom
     return {
       success: true,
       plant: activePlant,
-      message,
+      message: referralBonusApplied 
+        ? '🎁 Your seedling gift has bloomed! +3 leaves total (1 + 2 bonus)' 
+        : message,
       milestones,
       plantMatured,
       premiumJustUnlocked,
       canAddNewPlant: canAddNewPlant(gardenData),
+      referralBonusApplied,
     };
   } catch (error) {
     logger.error('Error recording activity:', error);
@@ -904,6 +934,72 @@ export async function completeOnboarding(userId: string): Promise<void> {
       lastUpdated: new Date(),
     },
   });
+}
+
+/**
+ * Process reward for the referrer when their referred user completes their first action
+ * Rewards: +1 leaf on active plant + unlock game levels 2 & 3
+ */
+export async function processReferrerReward(referrerId: string): Promise<void> {
+  try {
+    const gardenData = await getGardenState(referrerId);
+    const activePlant = getActivePlant(gardenData);
+    
+    if (activePlant && activePlant.actionsCount < GROWTH_THRESHOLDS.MATURE) {
+      // Grant +1 leaf to referrer's active plant
+      activePlant.actionsCount += 1;
+      const updated = updatePlantVisuals(activePlant);
+      Object.assign(activePlant, updated);
+      
+      // Check for maturity
+      if (activePlant.actionsCount >= GROWTH_THRESHOLDS.MATURE && !activePlant.maturedAt) {
+        activePlant.maturedAt = new Date().toISOString();
+      }
+      
+      // Add referral milestone if not already achieved
+      if (!gardenData.achievedMilestones.includes('referral_success' as MilestoneType)) {
+        gardenData.achievedMilestones.push('referral_success' as MilestoneType);
+      }
+      
+      // Save garden state
+      await prisma.emotionGardenState.upsert({
+        where: { userId: referrerId },
+        update: {
+          gardenData: gardenData as any,
+          lastUpdated: new Date(),
+        },
+        create: {
+          userId: referrerId,
+          gardenData: gardenData as any,
+          lastUpdated: new Date(),
+        },
+      });
+      
+      logger.info('🎁 Referrer reward applied: +1 leaf', { referrerId, newActionsCount: activePlant.actionsCount });
+    }
+    
+    // Unlock game levels 2 & 3 for the referrer
+    try {
+      await prisma.userGameProgress.upsert({
+        where: { userId: referrerId },
+        update: {
+          level2Unlocked: true,
+          level3Unlocked: true,
+        },
+        create: {
+          userId: referrerId,
+          level2Unlocked: true,
+          level3Unlocked: true,
+        },
+      });
+      logger.info('🎮 Game levels 2 & 3 unlocked for referrer', { referrerId });
+    } catch (gameErr) {
+      logger.error('Error unlocking game levels for referrer:', gameErr);
+    }
+  } catch (error) {
+    logger.error('Error processing referrer reward:', error);
+    throw error;
+  }
 }
 
 // Legacy compatibility - maps old updateGarden calls to new system

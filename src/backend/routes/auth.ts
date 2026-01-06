@@ -487,6 +487,82 @@ router.get('/verify', asyncHandler(async (req, res) => {
   res.json({ user });
 }));
 
+// Link referral code to user (called after OAuth callback)
+router.post(
+  '/link-referral',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.userId;
+    const { referralCode } = req.body;
+
+    if (!userId) {
+      throw new AppError('User ID is required', 400);
+    }
+
+    if (!referralCode) {
+      throw new AppError('Referral code is required', 400);
+    }
+
+    // Check if user already has a referrer
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { referredById: true, createdAt: true },
+    });
+
+    if (!currentUser) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Only allow linking if user doesn't already have a referrer
+    if (currentUser.referredById) {
+      return res.json({
+        success: false,
+        message: 'Referral already linked',
+        alreadyLinked: true,
+      });
+    }
+
+    // Validate that the referrer exists and is not the same user
+    const referrer = await prisma.user.findUnique({
+      where: { id: referralCode },
+      select: { id: true, name: true },
+    });
+
+    if (!referrer) {
+      logger.warn('🌱 Invalid referral code', { userId, referralCode });
+      return res.json({
+        success: false,
+        message: 'Invalid referral code',
+      });
+    }
+
+    if (referrer.id === userId) {
+      return res.json({
+        success: false,
+        message: 'Cannot refer yourself',
+      });
+    }
+
+    // Link the referral
+    await prisma.user.update({
+      where: { id: userId },
+      data: { referredById: referrer.id },
+    });
+
+    logger.info('🌱 Referral linked successfully', {
+      userId,
+      referrerId: referrer.id,
+      referrerName: referrer.name,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Referral linked! Complete your first flow to unlock your +2 bonus leaves.',
+      referrerName: referrer.name,
+    });
+  })
+);
+
 // Disconnect calendar
 router.delete(
   '/calendar/:accountId',

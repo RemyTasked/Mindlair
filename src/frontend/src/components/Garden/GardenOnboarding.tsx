@@ -25,6 +25,7 @@ import {
   Clock,
   Heart,
   Share,
+  Gift,
 } from 'lucide-react';
 import OnePlantSVG, { PlantType } from './OnePlantSVG';
 import { pushNotificationService } from '../../services/pushNotificationService';
@@ -178,6 +179,9 @@ export default function GardenOnboarding({
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Check if user has a pending referral gift
+  const hasReferralGift = localStorage.getItem('mindgarden_has_referral_gift') === 'true';
 
   // Adjust steps based on whether user already has a plant
   // If they have a plant, skip plant selection step (4 steps instead of 5)
@@ -297,6 +301,21 @@ export default function GardenOnboarding({
   // Step 1: Welcome
   const WelcomeStep = () => (
     <div className="text-center space-y-8 px-4">
+      {/* Referral Gift Banner */}
+      {hasReferralGift && !hasExistingGarden && (
+        <div className="max-w-md mx-auto bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 rounded-2xl p-4 shadow-lg">
+          <div className="flex items-center justify-center gap-3">
+            <Gift className="w-8 h-8 text-amber-600" />
+            <div className="text-left">
+              <p className="font-bold text-amber-800">Seedling Gift Received! 🎁</p>
+              <p className="text-sm text-amber-700">
+                Complete your first flow to unlock <span className="font-semibold">+2 bonus leaves</span>!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="relative inline-block">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 blur-3xl rounded-full scale-150" />
         <div className="relative">

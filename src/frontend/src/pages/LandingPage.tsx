@@ -22,6 +22,16 @@ export default function LandingPage() {
   const [showMoreCalendars, setShowMoreCalendars] = useState(false);
   const [showCalDAVModal, setShowCalDAVModal] = useState(false);
 
+  // Capture referral code from URL (?ref=USER_ID) and store for use after signup
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      localStorage.setItem('mindgarden_referral_code', refCode);
+      console.log('🌱 Referral code captured:', refCode);
+    }
+  }, []);
+
   useEffect(() => {
     const checkExistingAuth = async () => {
       try {

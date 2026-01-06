@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { saveToken } from '../utils/persistentStorage';
+import api from '../lib/axios';
 import Logo from '../components/Logo';
 
 export default function AuthCallback() {
@@ -41,6 +42,26 @@ export default function AuthCallback() {
             stored: !!storedToken,
             matches: storedToken === token,
           });
+          
+          // Check for referral code and link it to the user
+          const referralCode = localStorage.getItem('mindgarden_referral_code');
+          if (referralCode) {
+            try {
+              console.log('🌱 Linking referral code:', referralCode);
+              const response = await api.post('/api/auth/link-referral', { referralCode });
+              if (response.data.success) {
+                console.log('✅ Referral linked:', response.data.message);
+                // Store flag to show gift message in onboarding
+                localStorage.setItem('mindgarden_has_referral_gift', 'true');
+              } else {
+                console.log('ℹ️ Referral not linked:', response.data.message);
+              }
+            } catch (refErr) {
+              console.warn('⚠️ Could not link referral:', refErr);
+            }
+            // Clear the referral code regardless of success
+            localStorage.removeItem('mindgarden_referral_code');
+          }
           
           console.log('🚀 Navigating to /dashboard');
           navigate('/dashboard', { replace: true });
