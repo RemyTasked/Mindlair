@@ -1,0 +1,159 @@
+{
+  "voiceId": "p28fY1cl6tovhD2M4WEH",
+  "voiceName": "B. Patrone - Peaceful & Meditative",
+  "totalFiles": 62,
+  "flows": [
+    {
+      "flowId": "pre-meeting-focus",
+      "flowName": "Pre-Meeting Focus",
+      "duration": "2 min",
+      "steps": [
+        { "stepId": "intro", "file": "pre-meeting-focus_intro.mp3", "text": "Let's take two minutes to prepare for your meeting." },
+        { "stepId": "settle", "file": "pre-meeting-focus_settle.mp3", "text": "Find a comfortable seated position. Close your eyes or soften your gaze." },
+        { "stepId": "breathing", "file": "pre-meeting-focus_breathing.mp3", "text": "Breathe in for 4… hold for 4… out for 4… hold for 4." },
+        { "stepId": "body-scan", "file": "pre-meeting-focus_body-scan.mp3", "text": "Scan your body. Release tension in your shoulders, jaw, and hands." },
+        { "stepId": "intention", "file": "pre-meeting-focus_intention.mp3", "text": "Set one intention for this meeting. You are prepared and present." }
+      ]
+    },
+    {
+      "flowId": "pre-presentation-power",
+      "flowName": "Pre-Presentation Power",
+      "duration": "3 min",
+      "steps": [
+        { "stepId": "intro", "file": "pre-presentation-power_intro.mp3", "text": "You're about to step into the spotlight. Let's build your confidence." },
+        { "stepId": "power-pose", "file": "pre-presentation-power_power-pose.mp3", "text": "Stand tall. Expand your body. Take up space. Hold for 30 seconds." },
+        { "stepId": "visualization", "file": "pre-presentation-power_visualization.mp3", "text": "Picture yourself presenting with confidence. See the audience engaged. Hear your clear, steady voice." },
+        { "stepId": "voice-warmup", "file": "pre-presentation-power_voice-warmup.mp3", "text": "Hum gently. Say 'I am ready' three times, louder each time." },
+        { "stepId": "closing", "file": "pre-presentation-power_closing.mp3", "text": "Take a deep breath. You've got this. Walk in with power." }
+      ]
+    },
+    {
+      "flowId": "difficult-conversation-prep",
+      "flowName": "Difficult Conversation Prep",
+      "duration": "3 min",
+      "steps": [
+        { "stepId": "intro", "file": "difficult-conversation-prep_intro.mp3", "text": "Difficult conversations are challenging. Let's approach with calm and clarity." },
+        { "stepId": "breathing", "file": "difficult-conversation-prep_breathing.mp3", "text": "Breathe in for 4… hold for 6… out for 8." },
+        { "stepId": "perspective", "file": "difficult-conversation-prep_perspective.mp3", "text": "Consider their viewpoint. What might they be feeling? What outcome do you both want?" },
+        { "stepId": "intention", "file": "difficult-conversation-prep_intention.mp3", "text": "Choose one word for how you want to show up: Patient? Clear? Compassionate?" },
+        { "stepId": "closing", "file": "difficult-conversation-prep_closing.mp3", "text": "Ground yourself. You can handle this with grace." }
+      ]
+    },
+    {
+      "flowId": "quick-reset",
+      "flowName": "Quick Reset",
+      "duration": "90 sec",
+      "steps": [
+        { "stepId": "intro", "file": "quick-reset_intro.mp3", "text": "Let's clear the mental clutter in 90 seconds." },
+        { "stepId": "shake-out", "file": "quick-reset_shake-out.mp3", "text": "Shake out your hands. Roll your shoulders. Wiggle in your seat." },
+        { "stepId": "breathing", "file": "quick-reset_breathing.mp3", "text": "Big inhale through nose… Audible exhale through mouth. Again. Once more." },
+        { "stepId": "mental-clear", "file": "quick-reset_mental-clear.mp3", "text": "Imagine closing a browser tab. That meeting is over. Open a fresh, blank page." },
+        { "stepId": "closing", "file": "quick-reset_closing.mp3", "text": "One centering breath. You're ready for what's next." }
+      ]
+    },
+    {
+      "flowId": "post-meeting-decompress",
+      "flowName": "Post-Meeting Decompress",
+      "duration": "2 min",
+      "steps": [
+        { "stepId": "intro", "file": "post-meeting-decompress_intro.mp3", "text": "That meeting is over. Let's release what you're carrying." },
+        { "stepId": "tension-release", "file": "post-meeting-decompress_tension-release.mp3", "text": "Breathe deeply. On exhale, drop your shoulders. Unclench your jaw. Relax your hands." },
+        { "stepId": "stretches", "file": "post-meeting-decompress_stretches.mp3", "text": "Gently roll your neck. Shrug shoulders up and drop. Side to side." },
+        { "stepId": "letting-go", "file": "post-meeting-decompress_letting-go.mp3", "text": "Breathe out stress you can't control. What's done is done." },
+        { "stepId": "closing", "file": "post-meeting-decompress_closing.mp3", "text": "Return to this moment. You're here now." }
+      ]
+    },
+    {
+      "flowId": "end-of-day-transition",
+      "flowName": "End-of-Day Transition",
+      "duration": "3 min",
+      "steps": [
+        { "stepId": "intro", "file": "end-of-day-transition_intro.mp3", "text": "The workday is ending. Let's create a boundary between work and home." },
+        { "stepId": "acknowledgment", "file": "end-of-day-transition_acknowledgment.mp3", "text": "Think of one thing you accomplished today. Something you're proud of, big or small." },
+        { "stepId": "letting-go", "file": "end-of-day-transition_letting-go.mp3", "text": "Visualize closing your laptop. Work stays here. You're transitioning to personal time." },
+        { "stepId": "breathing", "file": "end-of-day-transition_breathing.mp3", "text": "Breathe in calm. Breathe out work stress. You're shifting modes now." },
+        { "stepId": "closing", "file": "end-of-day-transition_closing.mp3", "text": "Set one intention for your evening. You've earned this time." }
+      ]
+    },
+    {
+      "flowId": "morning-intention",
+      "flowName": "Morning Intention Flow",
+      "duration": "10 min",
+      "steps": [
+        { "stepId": "gentle-wake", "file": "morning-intention_gentle-wake.mp3", "text": "Awareness of breathing, body sensations, transitioning from sleep." },
+        { "stepId": "gratitude", "file": "morning-intention_gratitude.mp3", "text": "Name three things you're grateful for. They can be small." },
+        { "stepId": "calendar-review", "file": "morning-intention_calendar-review.mp3", "text": "Look at your schedule with curiosity, not judgment. Notice what's ahead." },
+        { "stepId": "intention", "file": "morning-intention_intention.mp3", "text": "What's one thing you want to prioritize? How do you want to feel today?" },
+        { "stepId": "movement", "file": "morning-intention_movement.mp3", "text": "Gentle stretches, shoulder rolls, standing poses, optional sun salutation." },
+        { "stepId": "centering", "file": "morning-intention_centering.mp3", "text": "Final breaths, affirmation - \"I am ready. I am capable. I begin with intention.\"" }
+      ]
+    },
+    {
+      "flowId": "evening-wind-down",
+      "flowName": "Evening Wind-Down Flow",
+      "duration": "15 min",
+      "steps": [
+        { "stepId": "transition", "file": "evening-wind-down_transition.mp3", "text": "The workday is over. Give yourself permission to let go." },
+        { "stepId": "body-scan", "file": "evening-wind-down_body-scan.mp3", "text": "Head to toe, noticing and releasing tension in each area." },
+        { "stepId": "reflection", "file": "evening-wind-down_reflection.mp3", "text": "What went well? What was challenging? No judgment, just notice." },
+        { "stepId": "gratitude", "file": "evening-wind-down_gratitude.mp3", "text": "Prompted questions, can write or think through." },
+        { "stepId": "letting-go", "file": "evening-wind-down_letting-go.mp3", "text": "Imagine stress leaving your body like sand through fingers." },
+        { "stepId": "sleep-prep", "file": "evening-wind-down_sleep-prep.mp3", "text": "4-7-8 breathing (4 in, 7 hold, 8 out), activates parasympathetic nervous system." }
+      ]
+    },
+    {
+      "flowId": "weekend-wellness",
+      "flowName": "Weekend Wellness Flow",
+      "duration": "20 min",
+      "steps": [
+        { "stepId": "settling", "file": "weekend-wellness_settling.mp3", "text": "Arriving in the moment, letting go of week's momentum." },
+        { "stepId": "week-reflection", "file": "weekend-wellness_week-reflection.mp3", "text": "Guided questions about the week without judgment." },
+        { "stepId": "meditation", "file": "weekend-wellness_meditation.mp3", "text": "Choice of breath focus, body scan, or loving-kindness." },
+        { "stepId": "self-compassion", "file": "weekend-wellness_self-compassion.mp3", "text": "How would you talk to a friend who had your week? Offer yourself that kindness." },
+        { "stepId": "intention", "file": "weekend-wellness_intention.mp3", "text": "Light planning, hopes for the coming week (not work tasks)." }
+      ]
+    },
+    {
+      "flowId": "deep-meditation",
+      "flowName": "Deep Meditation",
+      "duration": "30 min",
+      "steps": [
+        { "stepId": "settling", "file": "deep-meditation_settling.mp3", "text": "Find your comfortable position. This is your sanctuary for the next 30 minutes." },
+        { "stepId": "breath-anchor", "file": "deep-meditation_breath-anchor.mp3", "text": "Attention on natural breath, returning when mind wanders." },
+        { "stepId": "main-practice", "file": "deep-meditation_main-practice.mp3", "text": "Choose your focus: breath, body scan, loving-kindness, open awareness, or visualization." },
+        { "stepId": "integration", "file": "deep-meditation_integration.mp3", "text": "Gradually expand awareness. Notice sounds, sensations, the space around you." },
+        { "stepId": "return", "file": "deep-meditation_return.mp3", "text": "Begin to return. Gentle movements. Carry this peace with you." }
+      ]
+    },
+    {
+      "flowId": "breathing",
+      "flowName": "Simple Breathing",
+      "duration": "1 min",
+      "steps": [
+        { "stepId": "intro", "file": "breathing_intro.mp3", "text": "Close your eyes if comfortable." },
+        { "stepId": "breathing", "file": "breathing_breathing.mp3", "text": "In for 4... hold for 4... out for 4... hold for 4." },
+        { "stepId": "closing", "file": "breathing_closing.mp3", "text": "You are centered." }
+      ]
+    },
+    {
+      "flowId": "body-scan",
+      "flowName": "Full Body Scan",
+      "duration": "25 min",
+      "steps": [
+        { "stepId": "intro", "file": "body-scan_intro.mp3", "text": "Lie down or sit comfortably. This is a journey through your body." },
+        { "stepId": "settling", "file": "body-scan_settling.mp3", "text": "A few deep breaths to settle in." },
+        { "stepId": "feet", "file": "body-scan_feet.mp3", "text": "Bring attention to your feet. Notice sensations in your toes, soles, heels." },
+        { "stepId": "legs", "file": "body-scan_legs.mp3", "text": "Move up to your ankles, calves, knees, thighs. Release any tension." },
+        { "stepId": "hips", "file": "body-scan_hips.mp3", "text": "Notice your hips, lower back. Let them sink into support." },
+        { "stepId": "abdomen", "file": "body-scan_abdomen.mp3", "text": "Feel your belly rise and fall. Notice your chest, ribs." },
+        { "stepId": "hands", "file": "body-scan_hands.mp3", "text": "Awareness to your fingertips, hands, forearms, upper arms." },
+        { "stepId": "shoulders", "file": "body-scan_shoulders.mp3", "text": "Common tension areas. Soften your shoulders. Release your neck." },
+        { "stepId": "face", "file": "body-scan_face.mp3", "text": "Relax your jaw, eyes, forehead. Let your face be soft." },
+        { "stepId": "whole-body", "file": "body-scan_whole-body.mp3", "text": "Feel your entire body as one. A sense of wholeness and peace." },
+        { "stepId": "reawaken", "file": "body-scan_reawaken.mp3", "text": "Slowly wiggle fingers and toes. Gentle movements to return." },
+        { "stepId": "closing", "file": "body-scan_closing.mp3", "text": "You are renewed. Take your time opening your eyes." }
+      ]
+    }
+  ]
+}
+

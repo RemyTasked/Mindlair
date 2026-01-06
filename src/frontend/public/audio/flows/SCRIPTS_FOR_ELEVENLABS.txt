@@ -1,0 +1,260 @@
+MIND GARDEN - VOICE NARRATION SCRIPTS
+Voice ID: p28fY1cl6tovhD2M4WEH
+=====================================
+
+Copy each script below into ElevenLabs and save with the filename shown.
+
+=====================================
+FLOW 1: PRE-MEETING FOCUS
+=====================================
+
+[pre-meeting-focus_intro.mp3]
+Let's take two minutes to prepare for your meeting.
+
+[pre-meeting-focus_settle.mp3]
+Find a comfortable seated position. Close your eyes or soften your gaze.
+
+[pre-meeting-focus_breathing.mp3]
+Breathe in for 4… hold for 4… out for 4… hold for 4.
+
+[pre-meeting-focus_body-scan.mp3]
+Scan your body. Release tension in your shoulders, jaw, and hands.
+
+[pre-meeting-focus_intention.mp3]
+Set one intention for this meeting. You are prepared and present.
+
+=====================================
+FLOW 2: PRE-PRESENTATION POWER
+=====================================
+
+[pre-presentation-power_intro.mp3]
+You're about to step into the spotlight. Let's build your confidence.
+
+[pre-presentation-power_power-pose.mp3]
+Stand tall. Expand your body. Take up space. Hold for 30 seconds.
+
+[pre-presentation-power_visualization.mp3]
+Picture yourself presenting with confidence. See the audience engaged. Hear your clear, steady voice.
+
+[pre-presentation-power_voice-warmup.mp3]
+Hum gently. Say 'I am ready' three times, louder each time.
+
+[pre-presentation-power_closing.mp3]
+Take a deep breath. You've got this. Walk in with power.
+
+=====================================
+FLOW 3: DIFFICULT CONVERSATION PREP
+=====================================
+
+[difficult-conversation-prep_intro.mp3]
+Difficult conversations are challenging. Let's approach with calm and clarity.
+
+[difficult-conversation-prep_breathing.mp3]
+Breathe in for 4… hold for 6… out for 8.
+
+[difficult-conversation-prep_perspective.mp3]
+Consider their viewpoint. What might they be feeling? What outcome do you both want?
+
+[difficult-conversation-prep_intention.mp3]
+Choose one word for how you want to show up: Patient? Clear? Compassionate?
+
+[difficult-conversation-prep_closing.mp3]
+Ground yourself. You can handle this with grace.
+
+=====================================
+FLOW 4: QUICK RESET
+=====================================
+
+[quick-reset_intro.mp3]
+Let's clear the mental clutter in 90 seconds.
+
+[quick-reset_shake-out.mp3]
+Shake out your hands. Roll your shoulders. Wiggle in your seat.
+
+[quick-reset_breathing.mp3]
+Big inhale through nose… Audible exhale through mouth. Again. Once more.
+
+[quick-reset_mental-clear.mp3]
+Imagine closing a browser tab. That meeting is over. Open a fresh, blank page.
+
+[quick-reset_closing.mp3]
+One centering breath. You're ready for what's next.
+
+=====================================
+FLOW 5: POST-MEETING DECOMPRESS
+=====================================
+
+[post-meeting-decompress_intro.mp3]
+That meeting is over. Let's release what you're carrying.
+
+[post-meeting-decompress_tension-release.mp3]
+Breathe deeply. On exhale, drop your shoulders. Unclench your jaw. Relax your hands.
+
+[post-meeting-decompress_stretches.mp3]
+Gently roll your neck. Shrug shoulders up and drop. Side to side.
+
+[post-meeting-decompress_letting-go.mp3]
+Breathe out stress you can't control. What's done is done.
+
+[post-meeting-decompress_closing.mp3]
+Return to this moment. You're here now.
+
+=====================================
+FLOW 6: END-OF-DAY TRANSITION
+=====================================
+
+[end-of-day-transition_intro.mp3]
+The workday is ending. Let's create a boundary between work and home.
+
+[end-of-day-transition_acknowledgment.mp3]
+Think of one thing you accomplished today. Something you're proud of, big or small.
+
+[end-of-day-transition_letting-go.mp3]
+Visualize closing your laptop. Work stays here. You're transitioning to personal time.
+
+[end-of-day-transition_breathing.mp3]
+Breathe in calm. Breathe out work stress. You're shifting modes now.
+
+[end-of-day-transition_closing.mp3]
+Set one intention for your evening. You've earned this time.
+
+=====================================
+FLOW 7: MORNING INTENTION
+=====================================
+
+[morning-intention_gentle-wake.mp3]
+Awareness of breathing, body sensations, transitioning from sleep.
+
+[morning-intention_gratitude.mp3]
+Name three things you're grateful for. They can be small.
+
+[morning-intention_calendar-review.mp3]
+Look at your schedule with curiosity, not judgment. Notice what's ahead.
+
+[morning-intention_intention.mp3]
+What's one thing you want to prioritize? How do you want to feel today?
+
+[morning-intention_movement.mp3]
+Gentle stretches, shoulder rolls, standing poses, optional sun salutation.
+
+[morning-intention_centering.mp3]
+Final breaths, affirmation - "I am ready. I am capable. I begin with intention."
+
+=====================================
+FLOW 8: EVENING WIND-DOWN
+=====================================
+
+[evening-wind-down_transition.mp3]
+The workday is over. Give yourself permission to let go.
+
+[evening-wind-down_body-scan.mp3]
+Head to toe, noticing and releasing tension in each area.
+
+[evening-wind-down_reflection.mp3]
+What went well? What was challenging? No judgment, just notice.
+
+[evening-wind-down_gratitude.mp3]
+Prompted questions, can write or think through.
+
+[evening-wind-down_letting-go.mp3]
+Imagine stress leaving your body like sand through fingers.
+
+[evening-wind-down_sleep-prep.mp3]
+4-7-8 breathing (4 in, 7 hold, 8 out), activates parasympathetic nervous system.
+
+=====================================
+FLOW 9: WEEKEND WELLNESS
+=====================================
+
+[weekend-wellness_settling.mp3]
+Arriving in the moment, letting go of week's momentum.
+
+[weekend-wellness_week-reflection.mp3]
+Guided questions about the week without judgment.
+
+[weekend-wellness_meditation.mp3]
+Choice of breath focus, body scan, or loving-kindness.
+
+[weekend-wellness_self-compassion.mp3]
+How would you talk to a friend who had your week? Offer yourself that kindness.
+
+[weekend-wellness_intention.mp3]
+Light planning, hopes for the coming week (not work tasks).
+
+=====================================
+FLOW 10: DEEP MEDITATION
+=====================================
+
+[deep-meditation_settling.mp3]
+Find your comfortable position. This is your sanctuary for the next 30 minutes.
+
+[deep-meditation_breath-anchor.mp3]
+Attention on natural breath, returning when mind wanders.
+
+[deep-meditation_main-practice.mp3]
+Choose your focus: breath, body scan, loving-kindness, open awareness, or visualization.
+
+[deep-meditation_integration.mp3]
+Gradually expand awareness. Notice sounds, sensations, the space around you.
+
+[deep-meditation_return.mp3]
+Begin to return. Gentle movements. Carry this peace with you.
+
+=====================================
+FLOW 11: SIMPLE BREATHING
+=====================================
+
+[breathing_intro.mp3]
+Close your eyes if comfortable.
+
+[breathing_breathing.mp3]
+In for 4... hold for 4... out for 4... hold for 4.
+
+[breathing_closing.mp3]
+You are centered.
+
+=====================================
+FLOW 12: FULL BODY SCAN
+=====================================
+
+[body-scan_intro.mp3]
+Lie down or sit comfortably. This is a journey through your body.
+
+[body-scan_settling.mp3]
+A few deep breaths to settle in.
+
+[body-scan_feet.mp3]
+Bring attention to your feet. Notice sensations in your toes, soles, heels.
+
+[body-scan_legs.mp3]
+Move up to your ankles, calves, knees, thighs. Release any tension.
+
+[body-scan_hips.mp3]
+Notice your hips, lower back. Let them sink into support.
+
+[body-scan_abdomen.mp3]
+Feel your belly rise and fall. Notice your chest, ribs.
+
+[body-scan_hands.mp3]
+Awareness to your fingertips, hands, forearms, upper arms.
+
+[body-scan_shoulders.mp3]
+Common tension areas. Soften your shoulders. Release your neck.
+
+[body-scan_face.mp3]
+Relax your jaw, eyes, forehead. Let your face be soft.
+
+[body-scan_whole-body.mp3]
+Feel your entire body as one. A sense of wholeness and peace.
+
+[body-scan_reawaken.mp3]
+Slowly wiggle fingers and toes. Gentle movements to return.
+
+[body-scan_closing.mp3]
+You are renewed. Take your time opening your eyes.
+
+=====================================
+END OF SCRIPTS
+Total: 62 audio files needed
+=====================================
+

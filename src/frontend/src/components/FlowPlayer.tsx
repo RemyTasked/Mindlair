@@ -18,6 +18,22 @@ const AMBIENT_SOUNDS: Record<string, string> = {
   energize: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3', // Uplifting tone
 };
 
+// Voice narration audio files (B. Patrone - Peaceful & Meditative)
+const NARRATION_AUDIO: Record<string, string> = {
+  'pre-meeting-focus': '/audio/flows/pre-meeting-focus.mp3',
+  'pre-presentation-power': '/audio/flows/pre-presentation-power.mp3',
+  'difficult-conversation-prep': '/audio/flows/difficult-conversation-prep.mp3',
+  'quick-reset': '/audio/flows/quick-reset.mp3',
+  'post-meeting-decompress': '/audio/flows/post-meeting-decompress.mp3',
+  'end-of-day-transition': '/audio/flows/end-of-day-transition.mp3',
+  'morning-intention': '/audio/flows/morning-intention.mp3',
+  'evening-wind-down': '/audio/flows/evening-wind-down.mp3',
+  'weekend-wellness': '/audio/flows/weekend-wellness.mp3',
+  'deep-meditation': '/audio/flows/deep-meditation.mp3',
+  'breathing': '/audio/flows/breathing.mp3',
+  'body-scan': '/audio/flows/body-scan.mp3',
+};
+
 // Types from shared (simplified for frontend)
 interface FlowStep {
   id: string;
@@ -98,6 +114,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
   const animationFrameRef = useRef<number>();
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+  const narrationAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentStep = flow.steps[currentStepIndex];
   const totalSteps = flow.steps.length;
@@ -146,12 +163,18 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
         }
       }, 50);
     }
+    // Also stop narration
+    if (narrationAudioRef.current) {
+      narrationAudioRef.current.pause();
+      narrationAudioRef.current.currentTime = 0;
+      narrationAudioRef.current = null;
+    }
   }, []);
 
   // Duck ambient volume when speaking
   const duckAmbientVolume = useCallback((duck: boolean) => {
     if (ambientAudioRef.current) {
-      const targetVolume = duck ? 0.08 : 0.3; // Very quiet during speech, louder after
+      const targetVolume = duck ? 0.08 : 0.2; // Very quiet during narration
       const audio = ambientAudioRef.current;
       const step = duck ? -0.02 : 0.02;
       const fadeDuration = duck ? 300 : 800; // Faster fade down, slower fade up
@@ -168,6 +191,45 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
       }, stepTime);
     }
   }, []);
+
+  // Start voice narration audio (ElevenLabs MP3)
+  const startNarrationAudio = useCallback(() => {
+    if (narrationAudioRef.current) {
+      narrationAudioRef.current.pause();
+      narrationAudioRef.current = null;
+    }
+    
+    const narrationUrl = NARRATION_AUDIO[flow.id];
+    if (!narrationUrl) {
+      console.warn('No narration audio found for flow:', flow.id);
+      return;
+    }
+    
+    const audio = new Audio(narrationUrl);
+    audio.volume = isMuted ? 0 : 0.9; // Main narration volume
+    
+    // Duck ambient sound while narration plays
+    audio.onplay = () => {
+      duckAmbientVolume(true);
+    };
+    
+    audio.onended = () => {
+      duckAmbientVolume(false);
+      narrationAudioRef.current = null;
+    };
+    
+    audio.onerror = (e) => {
+      console.warn('Narration audio failed to load:', e);
+      // Fallback to TTS if MP3 fails
+    };
+    
+    audio.play().catch(err => {
+      console.warn('Narration audio blocked:', err);
+    });
+    
+    narrationAudioRef.current = audio;
+  }, [flow.id, isMuted, duckAmbientVolume]);
+
 
   // Speak guidance text - VERY SLOW pacing for meditative delivery
   const speakGuidance = useCallback((text: string) => {
@@ -281,6 +343,12 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
   // Restart flow
   const restartFlow = useCallback(() => {
     window.speechSynthesis.cancel();
+    // Stop current narration
+    if (narrationAudioRef.current) {
+      narrationAudioRef.current.pause();
+      narrationAudioRef.current.currentTime = 0;
+      narrationAudioRef.current = null;
+    }
     setCurrentStepIndex(0);
     setStepProgress(0);
     setBreathPhase('inhale');
@@ -293,7 +361,11 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     if (!ambientAudioRef.current) {
       startAmbientSound();
     }
-  }, [startAmbientSound]);
+    // Restart narration after a short delay
+    setTimeout(() => {
+      startNarrationAudio();
+    }, 1000);
+  }, [startAmbientSound, startNarrationAudio]);
 
   // Toggle play/pause
   const togglePlayPause = useCallback(() => {
@@ -307,10 +379,19 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
 
   // Toggle mute
   const toggleMute = useCallback(() => {
-    if (!isMuted) {
+    const newMuted = !isMuted;
+    if (newMuted) {
       window.speechSynthesis.cancel();
     }
-    setIsMuted(!isMuted);
+    // Update narration audio volume
+    if (narrationAudioRef.current) {
+      narrationAudioRef.current.volume = newMuted ? 0 : 0.9;
+    }
+    // Update ambient audio volume
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.volume = newMuted ? 0 : 0.2;
+    }
+    setIsMuted(newMuted);
   }, [isMuted]);
 
   // Main animation/progress loop - optimized with throttling
@@ -388,17 +469,21 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     }
   }, [currentStepIndex, isPlaying, showCompletion, speakGuidance, currentStep?.guidance]);
 
-  // Start ambient sound when flow begins
+  // Start ambient sound and narration when flow begins
   useEffect(() => {
     // Start ambient sound after a short delay to allow user gesture
     const timer = setTimeout(() => {
       if (isPlaying && !showCompletion) {
         startAmbientSound();
+        // Start voice narration shortly after ambient begins
+        setTimeout(() => {
+          startNarrationAudio();
+        }, 1000); // 1 second delay for smooth start
       }
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [isPlaying, showCompletion, startAmbientSound]);
+  }, [isPlaying, showCompletion, startAmbientSound, startNarrationAudio]);
 
   // Cleanup speech synthesis and ambient audio on unmount
   useEffect(() => {
