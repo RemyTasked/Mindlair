@@ -19,8 +19,8 @@ export class EmailService {
   private isConfigured: boolean;
 
   constructor() {
-    this.fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@meetcuteai.com';
-    this.fromName = process.env.SENDGRID_FROM_NAME || 'Meet Cute';
+    this.fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@mind-garden.app';
+    this.fromName = process.env.SENDGRID_FROM_NAME || 'Mind Garden';
     this.isConfigured = !!(
       process.env.SENDGRID_API_KEY && 
       process.env.SENDGRID_API_KEY.startsWith('SG.')

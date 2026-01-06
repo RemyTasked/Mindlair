@@ -723,7 +723,7 @@ async function sendPostMeetingInsights() {
         }
 
         // Generate rating URL
-        const ratingUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/rate/${meeting.userId}/${meeting.id}`;
+        const ratingUrl = `${process.env.FRONTEND_URL || 'https://www.mind-garden.app'}/rate/${meeting.userId}/${meeting.id}`;
 
         // Send post-meeting insight email
         let sent = false;
@@ -891,7 +891,7 @@ async function sendPresleyFlowSessions() {
 
         // Generate Presley Flow URL
         const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
-        const presleyFlowUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/presley-flow/${user.id}/${targetDateStr}`;
+        const presleyFlowUrl = `${process.env.FRONTEND_URL || 'https://www.mind-garden.app'}/presley-flow/${user.id}/${targetDateStr}`;
 
         // Send via email with correct flowType
         const flowType = isMorningTime ? 'morning' : 'evening';
@@ -1343,7 +1343,7 @@ async function sendWindingDownNotifications() {
           continue;
         }
         
-        const windingDownUrl = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/winding-down/${user.id}`;
+        const windingDownUrl = `${process.env.FRONTEND_URL || 'https://www.mind-garden.app'}/winding-down/${user.id}`;
         
         let sent = false;
         

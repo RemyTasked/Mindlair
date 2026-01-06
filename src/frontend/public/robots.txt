@@ -1,11 +1,11 @@
-# Meet Cute - Robots.txt
+# Mind Garden - Robots.txt
 # Allow all search engines to crawl the site
 
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://www.meetcuteai.com/sitemap.xml
+Sitemap: https://www.mind-garden.app/sitemap.xml
 
 # Disallow admin/API routes from indexing
 Disallow: /api/

@@ -185,8 +185,8 @@ export default function Terms() {
                 If you have any questions about these Terms, please contact us:
               </p>
               <p className="text-gray-700 leading-relaxed">
-                Email: <a href="mailto:support@meetcuteai.com" className="text-teal-600 hover:text-teal-700">support@meetcuteai.com</a><br />
-                Website: <a href="https://www.meetcuteai.com" className="text-teal-600 hover:text-teal-700">www.meetcuteai.com</a>
+                Email: <a href="mailto:support@mind-garden.app" className="text-teal-600 hover:text-teal-700">support@mind-garden.app</a><br />
+                Website: <a href="https://www.mind-garden.app" className="text-teal-600 hover:text-teal-700">www.mind-garden.app</a>
               </p>
             </section>
           </div>
@@ -200,7 +200,7 @@ export default function Terms() {
           <span>·</span>
           <a href="/privacy" className="hover:text-teal-600 transition-colors">Privacy Policy</a>
           <span>·</span>
-          <a href="mailto:support@meetcuteai.com" className="hover:text-teal-600 transition-colors">Contact</a>
+          <a href="mailto:support@mind-garden.app" className="hover:text-teal-600 transition-colors">Contact</a>
         </div>
         <p className="text-sm">© 2025 Mind Garden. All rights reserved.</p>
       </footer>

@@ -241,10 +241,10 @@ export default function Privacy() {
           </p>
           <div className="space-y-2">
             <p className="text-gray-700">
-              <strong>Email:</strong> <a href="mailto:privacy@meetcuteai.com" className="text-teal-600 hover:underline">privacy@meetcuteai.com</a>
+              <strong>Email:</strong> <a href="mailto:privacy@mind-garden.app" className="text-teal-600 hover:underline">privacy@mind-garden.app</a>
             </p>
             <p className="text-gray-700">
-              <strong>Security Issues:</strong> <a href="mailto:security@meetcuteai.com" className="text-teal-600 hover:underline">security@meetcuteai.com</a>
+              <strong>Security Issues:</strong> <a href="mailto:security@mind-garden.app" className="text-teal-600 hover:underline">security@mind-garden.app</a>
             </p>
           </div>
           <p className="text-sm text-gray-500 mt-6">

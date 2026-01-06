@@ -30,7 +30,7 @@ router.get('/oauth/callback', authenticate, async (req, res): Promise<void> => {
     // Exchange code for access token
     const clientId = process.env.SLACK_CLIENT_ID;
     const clientSecret = process.env.SLACK_CLIENT_SECRET;
-    const redirectUri = `${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/api/slack/oauth/callback`;
+    const redirectUri = `${process.env.FRONTEND_URL || 'https://www.mind-garden.app'}/api/slack/oauth/callback`;
 
     if (!clientId || !clientSecret) {
       logger.error('Slack OAuth credentials not configured');
@@ -90,10 +90,10 @@ router.get('/oauth/callback', authenticate, async (req, res): Promise<void> => {
     });
 
     // Redirect back to settings with success message
-    res.redirect(`${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/settings?slack=success`);
+    res.redirect(`${process.env.FRONTEND_URL || 'https://www.mind-garden.app'}/settings?slack=success`);
   } catch (error: any) {
     logger.error('Error in Slack OAuth callback', { error: error.message });
-    res.redirect(`${process.env.FRONTEND_URL || 'https://www.meetcuteai.com'}/settings?slack=error`);
+    res.redirect(`${process.env.FRONTEND_URL || 'https://www.mind-garden.app'}/settings?slack=error`);
   }
 });
 
