@@ -208,6 +208,15 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     const audio = new Audio(narrationUrl);
     audio.volume = isMuted ? 0 : 0.9; // Main narration volume
     
+    // Slow down playback for meditative pacing (0.85 = 15% slower)
+    // This creates a calm, unhurried feel perfect for wellness flows
+    audio.playbackRate = 0.85;
+    
+    // Preserve pitch when slowing down (if supported)
+    if ('preservesPitch' in audio) {
+      (audio as any).preservesPitch = true;
+    }
+    
     // Duck ambient sound while narration plays
     audio.onplay = () => {
       duckAmbientVolume(true);

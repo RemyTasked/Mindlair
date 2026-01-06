@@ -241,8 +241,16 @@ export default function GardenOnboarding({
   };
 
   const handleComplete = async () => {
-    // For existing users, they don't need to select a plant
-    if (!hasExistingGarden && !selectedPlant) return;
+    console.log('🌱 handleComplete called', { hasExistingGarden, selectedPlant });
+    
+    // For new users without a plant selected, don't proceed
+    // (but this shouldn't happen since canProceed blocks them)
+    if (!hasExistingGarden && !selectedPlant) {
+      console.warn('⚠️ New user tried to complete without selecting plant');
+      // Force them back to plant selection
+      setCurrentStep(2);
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -252,10 +260,12 @@ export default function GardenOnboarding({
         await api.post('/api/garden/select-seed', { plantType: selectedPlant });
       }
       
+      console.log('✅ Calling onComplete with:', selectedPlant);
       onComplete(selectedPlant);
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      // Still proceed even if API fails
+      // Still proceed even if API fails - user should not be stuck
+      console.log('⚠️ Error occurred but still completing onboarding');
       onComplete(selectedPlant);
     } finally {
       setIsLoading(false);
