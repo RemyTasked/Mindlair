@@ -1014,7 +1014,12 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
                 {currentStep?.text}
               </h3>
               
-              {currentStep?.guidance && (
+              {/* When MP3 narration exists, show simplified text; otherwise show full guidance */}
+              {NARRATION_AUDIO[flow.id] ? (
+                <p className={`text-lg leading-relaxed italic ${showFieldBackground ? 'text-emerald-700/70' : 'text-emerald-400/60'}`}>
+                  Follow along with the voice guidance...
+                </p>
+              ) : currentStep?.guidance && (
                 <p className={`text-lg leading-relaxed ${showFieldBackground ? 'text-emerald-800' : 'text-emerald-300/80'}`}>
                   {currentStep.guidance}
                 </p>
