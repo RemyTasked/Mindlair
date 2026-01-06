@@ -223,16 +223,17 @@ export default function FocusRooms() {
       detail: { source: 'focus-rooms-before-start', fadeOut: false }
     }));
     
-    // Small delay then start the new sound
+    // Start the new sound - dispatch event with specific sound type
+    // The AmbientSound component will handle the actual playback
     setTimeout(() => {
-      localStorage.setItem('meetcute_autoplay_sound', 'true');
+      console.log('🎵 Dispatching ambient-sound-play for:', room.soundType);
       window.dispatchEvent(new CustomEvent('ambient-sound-play', {
         detail: { 
           source: 'focus-rooms-mindgarden', 
           soundType: room.soundType
         }
       }));
-    }, 150);
+    }, 100);
   };
 
   const formatTime = (seconds: number) => {

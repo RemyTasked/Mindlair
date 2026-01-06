@@ -948,22 +948,46 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
         return;
       }
       
-      // Update event soundType state
+      // Update event soundType state FIRST
       if (eventSoundTypeValue) {
         setEventSoundType(eventSoundTypeValue);
       }
       
-      // Stop any current audio immediately (no fade for faster response)
-      cleanupSource();
-      cleanupFallback();
+      // Force stop ALL audio sources completely before starting new sound
+      // This prevents any overlap or multiple sounds playing
+      if (sourceRef.current) {
+        try {
+          sourceRef.current.stop(0);
+        } catch (e) { /* ignore */ }
+        sourceRef.current.disconnect();
+        sourceRef.current = null;
+      }
+      if (gainRef.current) {
+        try {
+          gainRef.current.gain.setValueAtTime(0, audioContextRef.current?.currentTime || 0);
+        } catch (e) { /* ignore */ }
+        gainRef.current.disconnect();
+        gainRef.current = null;
+      }
+      if (fallbackAudioRef.current) {
+        try {
+          fallbackAudioRef.current.pause();
+          fallbackAudioRef.current.currentTime = 0;
+          fallbackAudioRef.current.src = '';
+        } catch (e) { /* ignore */ }
+        fallbackAudioRef.current = null;
+      }
+      
       setIsPlaying(false);
       
       // Small delay to ensure cleanup completes
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 50));
       
-      // Start new audio
+      // Start new audio - for event-triggered sounds, try to play even if needsInteraction was true
       console.log('🎵 Starting audio with soundType:', soundToPlay);
       try {
+        // Clear needsInteraction flag since user triggered an event (implies interaction)
+        setNeedsInteraction(false);
         await startAudio('event-dispatch', soundToPlay);
       } catch (startError: any) {
         console.error('❌ Failed to start audio:', startError);
@@ -979,7 +1003,8 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
       console.log('🛑 ambient-sound-stop event received', { shouldFadeOut, source: customEvent.detail?.source });
       // Stop audio with fade if requested
       stopAudio(shouldFadeOut);
-      setNeedsInteraction(true);
+      // DON'T set needsInteraction to true here - user has already interacted
+      // This was causing sounds to not restart after being stopped
     };
 
     const volumeHandler = (e: Event) => {
@@ -1055,36 +1080,26 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
   }, [enabled, stopAudio]);
 
   // Handle soundType prop changes (for direct prop usage, not event-based)
-  // Note: Event-based sounds take priority, so only use prop if no event soundType is set
+  // Note: This component is primarily event-driven, prop changes are secondary
   useEffect(() => {
+    // Event-based sounds take priority - don't interfere with them
+    if (eventSoundType) {
+      return;
+    }
+    
     if (!enabled || soundType === 'none') {
-      // Only stop if we're not using event-based sound
-      if (!eventSoundType) {
-        stopAudio();
+      // Only stop if we don't have an event-based sound playing
+      if (isPlaying) {
+        stopAudio(true);
       }
       return;
     }
 
-    // If we have an eventSoundType, don't override it with prop changes
-    // Events take priority over props
-    if (eventSoundType) {
-      return;
+    // For prop-based sound changes (less common), start the audio
+    if (!needsInteraction && enabled) {
+      startAudio('prop-change');
     }
-
-    // Always stop ALL previous audio completely before starting new sound
-    // Use fade out to prevent clicking
-    stopAudio(true).then(() => {
-      // Longer delay to ensure fade out fully completes before starting new sound
-      const timer = setTimeout(() => {
-        if (!needsInteraction && enabled) {
-          // Double-check we're still supposed to play
-          startAudio('sound-change');
-        }
-      }, 300); // Increased delay for smoother transition
-
-      return () => clearTimeout(timer);
-    });
-  }, [enabled, soundType, eventSoundType, needsInteraction, startAudio, stopAudio]);
+  }, [enabled, soundType, eventSoundType, needsInteraction, isPlaying, startAudio, stopAudio]);
 
   useEffect(() => {
     const volume = getVolume(isMuted);
@@ -1135,11 +1150,16 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     };
   }, [location.key, stopOnNavigation, stopAudio]);
 
-  if (!enabled || soundType === 'none') {
+  // ALWAYS keep component mounted to listen for events
+  // Only show UI elements conditionally
+  
+  if (!enabled) {
     return null;
   }
 
-  if (needsInteraction && !isPlaying) {
+  // Show play button if audio needs user interaction to start
+  // But only if we're not already playing (event-triggered sounds bypass this)
+  if (needsInteraction && !isPlaying && (soundType !== 'none' || eventSoundType)) {
     return (
       <button
         onClick={handlePlayClick}
@@ -1151,6 +1171,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     );
   }
 
+  // Show mute button when playing
   if (isPlaying) {
     return (
       <button
@@ -1167,6 +1188,7 @@ export default function AmbientSound({ soundType, enabled, dimVolume = false, st
     );
   }
 
-  return null;
+  // Return empty div to keep component mounted for event listeners
+  return <div className="hidden" />;
 }
 

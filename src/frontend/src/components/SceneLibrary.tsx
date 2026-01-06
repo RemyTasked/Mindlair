@@ -11,12 +11,11 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
 
   // Change sound type based on active scene
   useEffect(() => {
-    // Always stop any previous sound first (ambient or lofi)
+    // Stop any previous sound first (ambient or lofi)
     window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-      detail: { source: 'scene-library' }
+      detail: { source: 'scene-library', fadeOut: false }
     }));
     
-    // Stop any previous sound first
     if (!activeScene) {
       onSoundTypeChange('none');
       localStorage.removeItem('meetcute_autoplay_sound');
@@ -33,16 +32,16 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       soundType = 'rain';
     }
 
-    // Longer delay to ensure previous sound fully stops before starting new one
-    // This prevents ambient and lofi sounds from playing simultaneously
-    setTimeout(() => {
+    // Start new sound after brief delay for cleanup
+    const timer = setTimeout(() => {
       onSoundTypeChange(soundType);
-      localStorage.setItem('meetcute_autoplay_sound', 'true');
       console.log('🎵 SceneLibrary dispatching ambient-sound-play event:', { sceneId: activeScene, soundType });
       window.dispatchEvent(new CustomEvent('ambient-sound-play', {
         detail: { source: 'scene-library', sceneId: activeScene, soundType }
       }));
-    }, 300);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [activeScene, onSoundTypeChange]);
 
   // Time-of-day aware content
