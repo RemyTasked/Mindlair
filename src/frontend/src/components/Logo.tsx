@@ -32,78 +32,28 @@ export default function Logo({
     backgroundClip: 'text',
   };
 
-  const IconSVG = () => (
-    <svg 
+  const IconImage = () => (
+    <img 
+      src="/icon-new.png" 
+      alt="Mind Garden Icon" 
       className={config.icon}
-      viewBox="0 0 32 32" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <linearGradient id={`${gradientId}-leaf`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#059669" />
-          <stop offset="100%" stopColor="#14b8a6" />
-        </linearGradient>
-      </defs>
-      
-      {/* Main sprout/plant icon */}
-      <g transform="translate(16, 17)">
-        {/* Stem */}
-        <path 
-          d="M0 7 Q-1 4, 0 0 Q1 -4, 0 -7" 
-          stroke={`url(#${gradientId}-leaf)`}
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          fill="none"
-        />
-        
-        {/* Left leaf */}
-        <path 
-          d="M-1 1 Q-8 -2, -10 -7 Q-8 -5, -5 -5 Q-2 -5, -1 1" 
-          fill={`url(#${gradientId}-leaf)`}
-        />
-        
-        {/* Right leaf */}
-        <path 
-          d="M1 1 Q8 -2, 10 -7 Q8 -5, 5 -5 Q2 -5, 1 1" 
-          fill={`url(#${gradientId}-leaf)`}
-        />
-        
-        {/* Center growing tip */}
-        <path 
-          d="M0 -4 Q-3 -7, -2 -11 Q0 -9, 0 -4 Q0 -9, 2 -11 Q3 -7, 0 -4" 
-          fill={`url(#${gradientId}-leaf)`}
-        />
-        
-        {/* Pot */}
-        <path 
-          d="M-4 7 L-3 11 Q0 12, 3 11 L4 7 Z" 
-          fill={`url(#${gradientId}-leaf)`}
-          opacity="0.85"
-        />
-        <rect x="-4.5" y="6" width="9" height="1.5" rx="0.5" fill={`url(#${gradientId}-leaf)`} opacity="0.85"/>
-      </g>
-    </svg>
+      style={{ objectFit: 'contain' }}
+    />
   );
 
-  const TextLogo = () => (
-    <span 
-      className={`${config.text} font-bold tracking-tight`}
-      style={{
-        fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        fontWeight: 700,
-        letterSpacing: '-0.02em',
-      }}
-    >
-      <span style={gradientStyle}>Mind</span>
-      <span style={{ ...gradientStyle, marginLeft: '0.1em' }}>Garden</span>
-    </span>
+  const LogoImage = () => (
+    <img 
+      src="/logo-new.png" 
+      alt="Mind Garden Logo" 
+      className={config.icon.replace('w-', 'w-auto h-').replace('h-', 'h-')}
+      style={{ maxHeight: '100%', objectFit: 'contain' }}
+    />
   );
 
   if (variant === 'icon') {
     return (
       <div className={className}>
-        <IconSVG />
+        <IconImage />
       </div>
     );
   }
@@ -118,7 +68,7 @@ export default function Logo({
 
   return (
     <div className={`inline-flex items-center ${config.gap} ${className}`}>
-      <IconSVG />
+      <IconImage />
       {showText && <TextLogo />}
     </div>
   );
@@ -132,51 +82,14 @@ export function MindGardenIcon({
   className?: string; 
   size?: number;
 }) {
-  const gradientId = useId();
-  
   return (
-    <svg 
+    <img 
+      src="/icon-new.png" 
+      alt="Mind Garden" 
       className={className}
       width={size}
       height={size}
-      viewBox="0 0 32 32" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <linearGradient id={`${gradientId}-leaf`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#059669" />
-          <stop offset="100%" stopColor="#14b8a6" />
-        </linearGradient>
-      </defs>
-      
-      <g transform="translate(16, 17)">
-        <path 
-          d="M0 7 Q-1 4, 0 0 Q1 -4, 0 -7" 
-          stroke={`url(#${gradientId}-leaf)`}
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          fill="none"
-        />
-        <path 
-          d="M-1 1 Q-8 -2, -10 -7 Q-8 -5, -5 -5 Q-2 -5, -1 1" 
-          fill={`url(#${gradientId}-leaf)`}
-        />
-        <path 
-          d="M1 1 Q8 -2, 10 -7 Q8 -5, 5 -5 Q2 -5, 1 1" 
-          fill={`url(#${gradientId}-leaf)`}
-        />
-        <path 
-          d="M0 -4 Q-3 -7, -2 -11 Q0 -9, 0 -4 Q0 -9, 2 -11 Q3 -7, 0 -4" 
-          fill={`url(#${gradientId}-leaf)`}
-        />
-        <path 
-          d="M-4 7 L-3 11 Q0 12, 3 11 L4 7 Z" 
-          fill={`url(#${gradientId}-leaf)`}
-          opacity="0.85"
-        />
-        <rect x="-4.5" y="6" width="9" height="1.5" rx="0.5" fill={`url(#${gradientId}-leaf)`} opacity="0.85"/>
-      </g>
-    </svg>
+      style={{ objectFit: 'contain' }}
+    />
   );
 }
