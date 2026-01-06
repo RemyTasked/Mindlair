@@ -107,7 +107,7 @@ export interface MicroFlow {
 // ============================================
 
 /**
- * PRE-MEETING FOCUS (2 min)
+ * PRE-MEETING FOCUS (3 min)
  * Box breathing + quick body scan + intention setting
  * Plants: Small daisy
  */
@@ -116,7 +116,7 @@ const preMeetingFocus: MicroFlow = {
   name: 'Pre-Meeting Focus',
   shortName: 'Focus',
   description: 'Center yourself before any meeting with focused breathing and intention setting.',
-  duration: 120,
+  duration: 180,
   bestFor: ['Standard meetings', 'Check-ins', 'Team calls', 'One-on-ones'],
   breathingPattern: 'box',
   audioMood: 'neutral-instrumental',
@@ -325,7 +325,7 @@ const difficultConversationPrep: MicroFlow = {
 };
 
 /**
- * QUICK RESET (90 sec)
+ * QUICK RESET (75 sec)
  * Shake-out + cleansing breath + mental clear
  * Plants: Quick-blooming chamomile
  */
@@ -333,8 +333,8 @@ const quickReset: MicroFlow = {
   id: 'quick-reset',
   name: 'Quick Reset',
   shortName: 'Reset',
-  description: 'A rapid 90-second reset to clear your mind between meetings.',
-  duration: 90,
+  description: 'A quick reset to clear your mind between meetings.',
+  duration: 75,
   bestFor: ['Between meetings', 'Context switching', 'Mental fatigue', 'Overwhelm'],
   breathingPattern: 'cleansing',
   audioMood: 'energizing-refresh',
@@ -407,7 +407,7 @@ const postMeetingDecompress: MicroFlow = {
   name: 'Post-Meeting Decompress',
   shortName: 'Decompress',
   description: 'Release tension and transition after difficult or long meetings.',
-  duration: 120,
+  duration: 130,
   bestFor: ['After difficult meetings', 'Long meetings', 'Emotionally draining sessions'],
   breathingPattern: 'calming',
   audioMood: 'soothing-release',
@@ -470,7 +470,7 @@ const postMeetingDecompress: MicroFlow = {
 };
 
 /**
- * END-OF-DAY TRANSITION (3 min)
+ * END-OF-DAY TRANSITION (2.5 min)
  * Work-life boundary + acknowledgment + evening intention
  * Plants: Twilight moonflower
  */
@@ -479,7 +479,7 @@ const endOfDayTransition: MicroFlow = {
   name: 'End-of-Day Transition',
   shortName: 'Transition',
   description: 'Create a mental boundary between work and personal life.',
-  duration: 180,
+  duration: 150,
   bestFor: ['After last meeting', 'Before commute', 'Work-life boundary setting'],
   breathingPattern: 'calming',
   audioMood: 'calming-transition',
@@ -546,7 +546,7 @@ const endOfDayTransition: MicroFlow = {
 // ============================================
 
 /**
- * MORNING INTENTION FLOW (10 min)
+ * MORNING INTENTION FLOW (11 min)
  * Gentle wake-up + gratitude + calendar review + intention + movement + centering
  * Plants: Morning glory vine
  */
@@ -555,7 +555,7 @@ const morningIntention: MicroFlow = {
   name: 'Morning Intention Flow',
   shortName: 'Morning',
   description: 'Start your day with gratitude, intention setting, and gentle energizing movement.',
-  duration: 600,
+  duration: 690,
   bestFor: ['Morning routine', '6:00-9:00 AM', 'Before workday begins'],
   breathingPattern: 'energizing',
   audioMood: 'morning-energize',
@@ -628,7 +628,7 @@ const morningIntention: MicroFlow = {
 };
 
 /**
- * EVENING WIND-DOWN FLOW (15 min)
+ * EVENING WIND-DOWN FLOW (6 min)
  * Transition + body scan + reflection + gratitude + sleep prep
  * Plants: Serene night jasmine
  */
@@ -637,7 +637,7 @@ const eveningWindDown: MicroFlow = {
   name: 'Evening Wind-Down Flow',
   shortName: 'Wind Down',
   description: 'Transition from work mode with body scan, reflection, and sleep preparation.',
-  duration: 900,
+  duration: 360,
   bestFor: ['Evening routine', '7:00-10:00 PM', 'Before bedtime routine'],
   breathingPattern: 'calming',
   audioMood: 'evening-wind-down',
@@ -710,7 +710,7 @@ const eveningWindDown: MicroFlow = {
 };
 
 /**
- * WEEKEND WELLNESS FLOW (20 min)
+ * WEEKEND WELLNESS FLOW (5.5 min)
  * Settling + week reflection + meditation + self-compassion + intention
  * Plants: Contemplative lotus
  */
@@ -718,8 +718,8 @@ const weekendWellness: MicroFlow = {
   id: 'weekend-wellness',
   name: 'Weekend Wellness Flow',
   shortName: 'Weekend',
-  description: 'Longer meditation session for weekends with week reflection and self-compassion.',
-  duration: 1200,
+  description: 'Meditation session for weekends with week reflection and self-compassion.',
+  duration: 330,
   bestFor: ['Weekends', 'Saturday or Sunday morning/afternoon', 'Deep relaxation'],
   breathingPattern: 'calming',
   audioMood: 'ambient-spacious',
@@ -782,7 +782,7 @@ const weekendWellness: MicroFlow = {
 };
 
 /**
- * DEEP MEDITATION (30 min)
+ * DEEP MEDITATION (5.5 min)
  * Multiple meditation type options with minimal or light guidance
  * Plants: Mature tree (grows slowly over multiple sessions)
  * Unlocked: After 2 weeks of consistent practice
@@ -791,8 +791,8 @@ const deepMeditation: MicroFlow = {
   id: 'deep-meditation',
   name: 'Deep Meditation',
   shortName: 'Deep',
-  description: 'Extended meditation session with multiple style options. Minimal guidance for experienced practitioners.',
-  duration: 1800,
+  description: 'Guided deep meditation with settling, breathing, and integration.',
+  duration: 330,
   bestFor: ['Deep practice', 'After 2 weeks consistency', 'Experienced meditators'],
   breathingPattern: 'calming',
   audioMood: 'meditation-deep',
@@ -856,15 +856,15 @@ const deepMeditation: MicroFlow = {
 };
 
 /**
- * SIMPLE BREATHING (1 min)
+ * SIMPLE BREATHING (2 min)
  * Quick breathing exercise for immediate calm
  */
 const simpleBreathing: MicroFlow = {
   id: 'breathing',
   name: 'Simple Breathing',
   shortName: 'Breathe',
-  description: 'A calming breathing exercise to center your mind.',
-  duration: 60,
+  description: 'A calming box breathing exercise to center your mind.',
+  duration: 105,
   bestFor: ['Quick calm', 'Anxiety relief', 'Focus boost'],
   breathingPattern: 'box',
   audioMood: 'calming-reassuring',
@@ -908,7 +908,7 @@ const simpleBreathing: MicroFlow = {
 };
 
 /**
- * FULL BODY SCAN (25 min)
+ * FULL BODY SCAN (8 min)
  * Complete body awareness meditation for tension release
  */
 const fullBodyScan: MicroFlow = {
@@ -916,7 +916,7 @@ const fullBodyScan: MicroFlow = {
   name: 'Full Body Scan',
   shortName: 'Body Scan',
   description: 'Complete body awareness meditation for tension release and deep relaxation.',
-  duration: 1500,
+  duration: 460,
   bestFor: ['Physical tension', 'Body awareness', 'Deep relaxation'],
   breathingPattern: 'calming',
   audioMood: 'soothing-release',
