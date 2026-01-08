@@ -1621,7 +1621,7 @@ export default function GardenCanvas({
         ))}
         
         {/* Ambient glow overlay - CSS only, no JS animation */}
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-400/5 via-emerald-300/10 to-amber-200/5 animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-t from-teal-400/5 via-teal-300/10 to-amber-200/5 animate-pulse" />
       </div>
     );
   };
@@ -2062,7 +2062,7 @@ export default function GardenCanvas({
             
             {/* Clean shimmer overlay */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-amber-200/10 via-green-200/20 to-amber-200/10"
+              className="absolute inset-0 bg-gradient-to-r from-amber-200/10 via-cyan-200/20 to-amber-200/10"
               animate={{ opacity: [0.2, 0.5, 0.2] }}
               transition={{ duration: 1, repeat: Infinity }}
             />
@@ -2137,17 +2137,17 @@ export default function GardenCanvas({
                 }}
                 transition={{ duration: 2, ease: 'easeOut' }}
               >
-                <div className="text-4xl font-bold text-emerald-500 drop-shadow-lg">
+                <div className="text-4xl font-bold text-teal-500 drop-shadow-lg">
                   +{floatingPoints}
                 </div>
-                <div className="text-lg font-medium text-emerald-600 drop-shadow">
+                <div className="text-lg font-medium text-teal-600 drop-shadow">
                   Serenity Points
                 </div>
               </motion.div>
             )}
             
             {/* Garden shimmer overlay - using CSS animation instead */}
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-300/20 via-transparent to-emerald-200/10 animate-pulse" />
+            <div className="absolute inset-0 bg-gradient-to-t from-teal-300/20 via-transparent to-teal-200/10 animate-pulse" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -2156,7 +2156,7 @@ export default function GardenCanvas({
       {(recentActivity || pendingPoints > 0) && (
         <div className="absolute inset-0 pointer-events-none">
           <motion.div
-            className="absolute inset-0 bg-gradient-to-t from-emerald-400/10 via-transparent to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-teal-400/10 via-transparent to-transparent"
             animate={{ opacity: [0.3, 0.5, 0.3] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           />

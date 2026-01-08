@@ -346,7 +346,7 @@ export default function MandalaGame({ onComplete, onExit }: MandalaGameProps) {
                   <Sparkles className="w-8 h-8 text-rose-500" />
                   <span className="text-5xl font-black text-gray-900">+1</span>
                 </div>
-                <p className="text-emerald-600 font-bold tracking-widest uppercase text-xs">Leaf Earned 🍃</p>
+                <p className="text-teal-600 font-bold tracking-widest uppercase text-xs">Leaf Earned 🍃</p>
               </div>
 
               <button

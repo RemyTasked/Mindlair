@@ -99,8 +99,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       title: 'Focus',
       subtitle: 'Deep work mode',
       description: 'White noise to block distractions',
-      gradient: 'from-teal-500 to-emerald-500',
-      bgGradient: 'from-teal-50 to-emerald-50',
+      gradient: 'from-teal-500 to-teal-500',
+      bgGradient: 'from-teal-50 to-teal-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
@@ -140,8 +140,8 @@ export default function SceneLibrary({ timeOfDay, onSoundTypeChange }: SceneLibr
       title: 'Reflect',
       subtitle: 'Gentle journaling',
       description: 'Rain sounds for introspection',
-      gradient: 'from-teal-500 to-green-500',
-      bgGradient: 'from-teal-50 to-green-50',
+      gradient: 'from-teal-500 to-cyan-500',
+      bgGradient: 'from-teal-50 to-cyan-50',
       content: (
         <div className="space-y-6">
           <div className="text-center">
@@ -358,7 +358,7 @@ function BreathingExercise() {
     ready: { text: 'Ready to begin?', emoji: '✨', color: 'text-gray-600', scale: 'scale-100' },
     inhale: { text: 'Breathe in...', emoji: '🌬️', color: 'text-blue-600', scale: 'scale-110' },
     hold: { text: 'Hold...', emoji: '⏸️', color: 'text-teal-600', scale: 'scale-110' },
-    exhale: { text: 'Breathe out...', emoji: '💨', color: 'text-green-600', scale: 'scale-90' },
+    exhale: { text: 'Breathe out...', emoji: '💨', color: 'text-cyan-600', scale: 'scale-90' },
   };
 
   const config = phaseConfig[phase];

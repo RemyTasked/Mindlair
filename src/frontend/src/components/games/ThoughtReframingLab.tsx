@@ -553,8 +553,8 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
               </div>
               
               {/* Reframe */}
-              <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-                <p className="text-xs text-emerald-600 font-medium mb-1">Balanced Reframe:</p>
+              <div className="bg-teal-50 rounded-xl p-3 border border-teal-100">
+                <p className="text-xs text-teal-600 font-medium mb-1">Balanced Reframe:</p>
                 <p className="text-gray-800 text-sm italic">{currentIntro.example.reframe}</p>
               </div>
               
@@ -580,8 +580,8 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                 ))}
               </ul>
               <div className="mt-4 pt-3 border-t border-indigo-200 flex items-center justify-center gap-2">
-                <span className="text-emerald-500">🍃</span>
-                <span className="text-sm text-emerald-700 font-medium">+1 leaf for completing a session</span>
+                <span className="text-teal-500">🍃</span>
+                <span className="text-sm text-teal-700 font-medium">+1 leaf for completing a session</span>
               </div>
             </div>
           )}
@@ -717,7 +717,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
             You reframed {reframedCount} thought{reframedCount !== 1 ? 's' : ''}
           </p>
           
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-6">
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-teal-600 mb-6">
             <span className="text-3xl">🍃</span>
             <span>+1 Leaf</span>
           </div>
@@ -981,8 +981,8 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
               {/* Reframe Input */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <RefreshCw className="w-5 h-5 text-emerald-500" />
-                  <span className="text-sm font-medium text-emerald-600">Your Balanced Reframe</span>
+                  <RefreshCw className="w-5 h-5 text-teal-500" />
+                  <span className="text-sm font-medium text-teal-600">Your Balanced Reframe</span>
                 </div>
                 
                 <p className="text-sm text-gray-600 mb-4">
@@ -994,7 +994,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                   onChange={(e) => setUserReframe(e.target.value)}
                   placeholder="Try to find a more balanced perspective..."
                   rows={4}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 text-gray-800 resize-none mb-4"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-200 text-gray-800 resize-none mb-4"
                 />
 
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
@@ -1007,7 +1007,7 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                 <button
                   onClick={handleSubmitReframe}
                   disabled={userReframe.trim().length < 10}
-                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl font-bold hover:from-teal-600 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Check My Reframe
                   <ArrowRight className="w-5 h-5" />
@@ -1026,20 +1026,20 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
             >
               <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
                 <div className="flex items-center justify-center gap-2 mb-6">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                  <span className="font-bold text-emerald-600">Great reframe!</span>
-                  <span className="text-emerald-600 font-bold">Progress +1 🍃</span>
+                  <CheckCircle2 className="w-6 h-6 text-teal-500" />
+                  <span className="font-bold text-teal-600">Great reframe!</span>
+                  <span className="text-teal-600 font-bold">Progress +1 🍃</span>
                 </div>
 
                 {/* Reframe quality feedback */}
                 {reframeFeedback?.isGood && reframeFeedback.tips.length > 0 && (
-                  <div className="bg-emerald-50 rounded-xl p-4 mb-6 border border-emerald-200">
+                  <div className="bg-teal-50 rounded-xl p-4 mb-6 border border-teal-200">
                     <div className="flex items-start gap-2">
-                      <ThumbsUp className="w-4 h-4 text-emerald-600 mt-0.5" />
+                      <ThumbsUp className="w-4 h-4 text-teal-600 mt-0.5" />
                       <div>
-                        <p className="text-sm text-emerald-700 font-medium">{reframeFeedback.message}</p>
+                        <p className="text-sm text-teal-700 font-medium">{reframeFeedback.message}</p>
                         {reframeFeedback.tips.length > 0 && (
-                          <p className="text-xs text-emerald-600 mt-1">Tip for next time: {reframeFeedback.tips[0]}</p>
+                          <p className="text-xs text-teal-600 mt-1">Tip for next time: {reframeFeedback.tips[0]}</p>
                         )}
                       </div>
                     </div>
@@ -1055,8 +1055,8 @@ export default function ThoughtReframingLab({ onComplete, onExit }: ThoughtRefra
                   </div>
 
                   {/* After */}
-                  <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-                    <span className="text-xs font-medium text-emerald-600 uppercase mb-2 block">Your Reframe</span>
+                  <div className="bg-teal-50 rounded-xl p-4 border border-teal-200">
+                    <span className="text-xs font-medium text-teal-600 uppercase mb-2 block">Your Reframe</span>
                     <p className="text-gray-800 text-sm">"{userReframe}"</p>
                   </div>
                 </div>

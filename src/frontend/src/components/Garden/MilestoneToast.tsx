@@ -74,7 +74,7 @@ export default function MilestoneToast({
               damping: 25,
               delay: index * 0.1,
             }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-900 to-teal-900 border border-emerald-700/50 shadow-xl shadow-emerald-500/20"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-900 to-teal-900 border border-teal-700/50 shadow-xl shadow-teal-500/20"
           >
             {/* Shimmer effect */}
             <motion.div
@@ -101,7 +101,7 @@ export default function MilestoneToast({
                 <h4 className="font-bold text-white text-sm">
                   {milestone.title}
                 </h4>
-                <p className="text-emerald-200/80 text-xs mt-0.5">
+                <p className="text-teal-200/80 text-xs mt-0.5">
                   {milestone.message}
                 </p>
                 {milestone.points && milestone.points > 0 && (
@@ -124,13 +124,13 @@ export default function MilestoneToast({
                 onClick={() => handleDismiss(milestone.type)}
                 className="p-1 rounded-full hover:bg-white/10 transition-colors"
               >
-                <X className="w-4 h-4 text-emerald-300/60 hover:text-emerald-200" />
+                <X className="w-4 h-4 text-teal-300/60 hover:text-teal-200" />
               </button>
             </div>
             
             {/* Progress bar */}
             <motion.div
-              className="h-0.5 bg-emerald-400/50"
+              className="h-0.5 bg-teal-400/50"
               initial={{ width: '100%' }}
               animate={{ width: '0%' }}
               transition={{ duration: autoHideDuration / 1000, ease: 'linear' }}

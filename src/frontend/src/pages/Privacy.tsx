@@ -49,7 +49,7 @@ export default function Privacy() {
           <h3 className="text-2xl font-bold text-gray-900">Security Features</h3>
           
           <SecurityFeature
-            icon={<Lock className="w-8 h-8 text-green-600" />}
+            icon={<Lock className="w-8 h-8 text-cyan-600" />}
             title="End-to-End Encryption"
             description="All data transmitted between your browser and our servers uses industry-standard TLS 1.3 encryption. Your calendar data is encrypted at rest in our database."
           />
@@ -258,9 +258,9 @@ export default function Privacy() {
             <Logo size="lg" />
           </div>
           <div className="flex justify-center gap-6 text-sm text-gray-500">
-            <a href="/" className="hover:text-emerald-600 transition-colors">Home</a>
+            <a href="/" className="hover:text-teal-600 transition-colors">Home</a>
             <span>·</span>
-            <a href="/terms" className="hover:text-emerald-600 transition-colors">Terms of Use</a>
+            <a href="/terms" className="hover:text-teal-600 transition-colors">Terms of Use</a>
           </div>
         </div>
       </main>
@@ -283,9 +283,9 @@ function SecurityFeature({ icon, title, description }: { icon: React.ReactNode; 
 function AccessItem({ allowed, title, description }: { allowed: boolean; title: string; description: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${allowed ? 'bg-green-100' : 'bg-red-100'}`}>
+      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${allowed ? 'bg-cyan-100' : 'bg-red-100'}`}>
         {allowed ? (
-          <span className="text-green-600 text-sm font-bold">✓</span>
+          <span className="text-cyan-600 text-sm font-bold">✓</span>
         ) : (
           <span className="text-red-600 text-sm font-bold">✗</span>
         )}

@@ -356,7 +356,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   // Mode Select
   if (showModeSelect) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-teal-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -410,7 +410,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   // Category Select
   if (showCategorySelect) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-teal-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -455,7 +455,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   // Onboarding
   if (showOnboarding) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-teal-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -473,11 +473,11 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
             <h3 className="font-semibold text-gray-800 mb-3">How to Play:</h3>
             <ul className="space-y-3 text-gray-600 text-sm">
               <li className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Heart className="w-4 h-4 text-green-600" />
+                <div className="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Heart className="w-4 h-4 text-cyan-600" />
                 </div>
                 <div>
-                  <span className="font-medium text-green-700">Keep</span>
+                  <span className="font-medium text-cyan-700">Keep</span>
                   <p className="text-xs text-gray-500">Positive thoughts to cherish</p>
                 </div>
               </li>
@@ -505,14 +505,14 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
               <span className="text-xs text-gray-600">Choose from 3 modes and 4 themes!</span>
             </div>
             <div className="mt-2">
-              <span className="text-emerald-600 font-medium">🍃</span>
+              <span className="text-teal-600 font-medium">🍃</span>
               <span className="text-gray-500 text-sm"> +1 leaf for completing a session</span>
             </div>
           </div>
           
           <button
             onClick={() => setShowModeSelect(true)}
-            className="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-teal-600 hover:to-emerald-700 transition-all shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-teal-600 hover:to-teal-700 transition-all shadow-lg"
           >
             Choose Mode
           </button>
@@ -533,7 +533,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
   // Loading
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-teal-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
           <p className="text-teal-700">Loading your thoughts...</p>
@@ -547,7 +547,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
     const totalSorted = sortedCounts.keep + sortedCounts.park + sortedCounts.letGo;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-emerald-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-100 to-teal-100 p-4">
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -568,10 +568,10 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           
           <div className="flex justify-center gap-6 text-sm mb-6">
             <div className="text-center">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-1">
-                <Heart className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                <Heart className="w-5 h-5 text-cyan-600" />
               </div>
-              <p className="font-bold text-green-700">{sortedCounts.keep}</p>
+              <p className="font-bold text-cyan-700">{sortedCounts.keep}</p>
               <p className="text-gray-500 text-xs">Kept</p>
             </div>
             <div className="text-center">
@@ -590,7 +590,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-6">
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-teal-600 mb-6">
             <span className="text-3xl">🍃</span>
             <span>+1 Leaf</span>
           </div>
@@ -603,7 +603,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
 
   // Main Game
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-100 to-emerald-100 p-4 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-teal-100 to-teal-100 p-4 flex flex-col">
       {/* Header */}
       <div className="max-w-2xl mx-auto w-full mb-6">
         <div className="flex items-center justify-between">
@@ -690,7 +690,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${((currentIndex) / totalThoughts) * 100}%` }}
-            className="bg-gradient-to-r from-teal-500 to-emerald-500 h-2 rounded-full"
+            className="bg-gradient-to-r from-teal-500 to-teal-500 h-2 rounded-full"
           />
         </div>
       </div>
@@ -781,7 +781,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
           <motion.button
             onClick={() => handleSort('keep')}
             disabled={!!animatingTo || !!feedbackMessage}
-            className="bg-gradient-to-br from-green-400 to-emerald-500 text-white rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 transition-all shadow-lg disabled:opacity-50"
+            className="bg-gradient-to-br from-cyan-400 to-teal-500 text-white rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 transition-all shadow-lg disabled:opacity-50"
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -820,7 +820,7 @@ export default function ThoughtSorterGame({ onComplete, onExit }: ThoughtSorterG
 
       {/* Bucket counts */}
       <div className="max-w-2xl mx-auto w-full text-center text-sm text-gray-500">
-        <span className="text-green-600">{sortedCounts.keep} kept</span>
+        <span className="text-cyan-600">{sortedCounts.keep} kept</span>
         {' • '}
         <span className="text-amber-600">{sortedCounts.park} parked</span>
         {' • '}

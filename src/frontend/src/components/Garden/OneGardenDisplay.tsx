@@ -53,8 +53,8 @@ const STAGE_INFO = {
 
 // Time-based backgrounds
 const TIME_BACKGROUNDS = {
-  morning: 'from-amber-100/20 via-sky-100/10 to-emerald-100/20',
-  afternoon: 'from-sky-100/20 via-white/10 to-emerald-100/20',
+  morning: 'from-amber-100/20 via-sky-100/10 to-teal-100/20',
+  afternoon: 'from-sky-100/20 via-white/10 to-teal-100/20',
   evening: 'from-orange-200/30 via-rose-100/20 to-purple-100/20',
   night: 'from-slate-900/50 via-indigo-900/30 to-slate-900/50',
 };
@@ -186,9 +186,9 @@ export default function OneGardenDisplay({
             </div>
             
             {/* Total actions */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm font-medium text-emerald-200">{totalActions} actions</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/20 border border-teal-500/30">
+              <TrendingUp className="w-4 h-4 text-teal-400" />
+              <span className="text-sm font-medium text-teal-200">{totalActions} actions</span>
             </div>
             
             {/* Plants count */}
@@ -234,7 +234,7 @@ export default function OneGardenDisplay({
                         layoutId="plant-highlight"
                         className={`absolute -inset-3 rounded-2xl ${
                           isActive 
-                            ? 'bg-emerald-500/20 border-2 border-emerald-400/50' 
+                            ? 'bg-teal-500/20 border-2 border-teal-400/50' 
                             : 'bg-sky-500/10 border border-sky-400/30'
                         }`}
                         initial={false}
@@ -245,7 +245,7 @@ export default function OneGardenDisplay({
                     {/* Mature glow */}
                     {isMature && (
                       <motion.div
-                        className="absolute inset-0 -m-4 rounded-full bg-emerald-400/10 blur-lg"
+                        className="absolute inset-0 -m-4 rounded-full bg-teal-400/10 blur-lg"
                         animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
                         transition={{ duration: 3, repeat: Infinity }}
                       />
@@ -253,7 +253,7 @@ export default function OneGardenDisplay({
                     
                     {/* Active badge */}
                     {isActive && (
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider z-30">
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-teal-500 text-white text-[10px] font-bold uppercase tracking-wider z-30">
                         Growing
                       </div>
                     )}
@@ -270,9 +270,9 @@ export default function OneGardenDisplay({
                     {/* Progress indicator for active plant */}
                     {isActive && (
                       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-24">
-                        <div className="h-1.5 bg-emerald-900/40 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-teal-900/40 rounded-full overflow-hidden">
                           <motion.div
-                            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                            className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full"
                             initial={{ width: 0 }}
                             animate={{ width: `${Math.min(100, (plant.actionsCount / 30) * 100)}%` }}
                           />
@@ -291,14 +291,14 @@ export default function OneGardenDisplay({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={onAddPlant}
-                  className="flex flex-col items-center justify-end h-[160px] w-[100px] p-3 rounded-2xl border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 hover:bg-emerald-500/10 transition-all group"
+                  className="flex flex-col items-center justify-end h-[160px] w-[100px] p-3 rounded-2xl border-2 border-dashed border-teal-500/40 hover:border-teal-400 hover:bg-teal-500/10 transition-all group"
                 >
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 group-hover:bg-emerald-500/30 flex items-center justify-center transition-colors">
-                      <Plus className="w-6 h-6 text-emerald-400" />
+                    <div className="w-12 h-12 rounded-full bg-teal-500/20 group-hover:bg-teal-500/30 flex items-center justify-center transition-colors">
+                      <Plus className="w-6 h-6 text-teal-400" />
                     </div>
                   </div>
-                  <span className="text-xs font-medium text-emerald-400 mt-2">Add Plant</span>
+                  <span className="text-xs font-medium text-teal-400 mt-2">Add Plant</span>
                 </motion.button>
               )}
             </div>
@@ -308,16 +308,16 @@ export default function OneGardenDisplay({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 rounded-2xl bg-emerald-900/20 border border-emerald-800/30"
+                className="mt-4 p-4 rounded-2xl bg-teal-900/20 border border-teal-800/30"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{stageInfo.emoji}</span>
                     <div>
-                      <h3 className="font-semibold text-emerald-100">
+                      <h3 className="font-semibold text-teal-100">
                         {PLANT_CONFIGS[detailPlant.type].name}
                       </h3>
-                      <p className="text-xs text-emerald-400/70">
+                      <p className="text-xs text-teal-400/70">
                         {stageInfo.label} • {detailPlant.actionsCount} actions
                       </p>
                     </div>
@@ -325,7 +325,7 @@ export default function OneGardenDisplay({
                   
                   {visuals && (
                     <div className="flex items-center gap-3 text-sm">
-                      <span className="text-emerald-400">🌿 {visuals.leavesCount}</span>
+                      <span className="text-teal-400">🌿 {visuals.leavesCount}</span>
                       {visuals.flowers > 0 && <span className="text-pink-400">🌸 {visuals.flowers}</span>}
                       {visuals.flowerBuds > 0 && <span className="text-yellow-400">🌼 {visuals.flowerBuds}</span>}
                     </div>
@@ -335,13 +335,13 @@ export default function OneGardenDisplay({
                 {/* Progress bar (only for active plant) */}
                 {detailPlant.id === activePlantId && detailPlant.actionsCount < 30 && (
                   <div>
-                    <div className="flex justify-between text-xs text-emerald-300/70 mb-1">
+                    <div className="flex justify-between text-xs text-teal-300/70 mb-1">
                       <span>Progress to maturity</span>
                       <span>{30 - detailPlant.actionsCount} actions remaining</span>
                     </div>
-                    <div className="h-2 bg-emerald-900/40 rounded-full overflow-hidden">
+                    <div className="h-2 bg-teal-900/40 rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                        className="h-full rounded-full bg-gradient-to-r from-teal-500 to-teal-400"
                         initial={{ width: 0 }}
                         animate={{ width: `${progressToMature}%` }}
                         transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -355,8 +355,8 @@ export default function OneGardenDisplay({
                           key={milestone}
                           className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium transition-all ${
                             detailPlant.actionsCount >= milestone
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-900/40 text-emerald-400/50'
+                              ? 'bg-teal-500 text-white'
+                              : 'bg-teal-900/40 text-teal-400/50'
                           }`}
                           title={
                             milestone === 10 ? 'Seedling complete' :
@@ -375,8 +375,8 @@ export default function OneGardenDisplay({
                 
                 {/* Mature message */}
                 {detailPlant.actionsCount >= 30 && (
-                  <p className="text-sm text-emerald-300/70 flex items-center gap-2">
-                    <Award className="w-4 h-4 text-emerald-400" />
+                  <p className="text-sm text-teal-300/70 flex items-center gap-2">
+                    <Award className="w-4 h-4 text-teal-400" />
                     Fully grown! {detailPlant.id === activePlantId && canAddNewPlant && 'Ready for a new plant?'}
                   </p>
                 )}
@@ -404,16 +404,16 @@ export default function OneGardenDisplay({
           // No plants yet - prompt to select
           <div className="flex flex-col items-center justify-center py-12">
             <div className="text-6xl mb-4">🌱</div>
-            <h3 className="text-xl font-semibold text-emerald-100 mb-2">
+            <h3 className="text-xl font-semibold text-teal-100 mb-2">
               Your garden awaits!
             </h3>
-            <p className="text-emerald-300/70 text-center max-w-sm mb-6">
+            <p className="text-teal-300/70 text-center max-w-sm mb-6">
               Plant your first seed to begin your mental wellness journey.
             </p>
             {onAddPlant && (
               <button
                 onClick={onAddPlant}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center gap-2"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-500 text-white font-medium shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 transition-all flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
                 Plant Your First Seed
@@ -443,7 +443,7 @@ export default function OneGardenDisplay({
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 onClick={onAddPlant}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium bg-gradient-to-r from-teal-500 to-teal-500 text-white shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 transition-all"
               >
                 <Plus className="w-4 h-4" />
                 Add New Plant

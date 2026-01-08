@@ -142,7 +142,7 @@ export default function InsightCards({ hasData, userData, meetingData, stressFor
     // Stress forecast insights
     if (stressForecast) {
       const stressColors = {
-        light: { gradient: 'from-green-500 to-emerald-500', bg: 'from-green-500/10 to-emerald-500/10' },
+        light: { gradient: 'from-cyan-500 to-teal-500', bg: 'from-cyan-500/10 to-teal-500/10' },
         moderate: { gradient: 'from-amber-500 to-yellow-500', bg: 'from-amber-500/10 to-yellow-500/10' },
         heavy: { gradient: 'from-orange-500 to-red-500', bg: 'from-orange-500/10 to-red-500/10' },
       };
@@ -207,8 +207,8 @@ export default function InsightCards({ hasData, userData, meetingData, stressFor
         cards.push({
           id: 'garden-thriving',
           icon: <Heart className="w-5 h-5" />,
-          gradient: 'from-emerald-500 to-teal-500',
-          bgGradient: 'from-emerald-500/10 to-teal-500/10',
+          gradient: 'from-teal-500 to-teal-500',
+          bgGradient: 'from-teal-500/10 to-teal-500/10',
           title: 'Garden Health',
           stat: `${userData.gardenHealth}%`,
           label: 'thriving',
@@ -237,8 +237,8 @@ export default function InsightCards({ hasData, userData, meetingData, stressFor
         {
           id: 'prep-benefit',
           icon: <Brain className="w-5 h-5" />,
-          gradient: 'from-teal-500 to-emerald-500',
-          bgGradient: 'from-teal-500/10 to-emerald-500/10',
+          gradient: 'from-teal-500 to-teal-500',
+          bgGradient: 'from-teal-500/10 to-teal-500/10',
           title: 'Science Says',
           stat: '2 min',
           label: 'of prep',

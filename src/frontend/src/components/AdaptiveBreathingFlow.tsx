@@ -69,8 +69,8 @@ const BREATHING_FLOWS: Record<MindState, BreathingPhase[]> = {
     { action: 'Breathe Out', duration: 7, instruction: '', color: 'from-teal-400 to-teal-400' },
   ],
   stressed: [
-    { action: 'Breathe In', duration: 5, instruction: '', color: 'from-green-400 to-emerald-400' },
-    { action: 'Hold', duration: 8, instruction: '', color: 'from-teal-400 to-green-400' },
+    { action: 'Breathe In', duration: 5, instruction: '', color: 'from-cyan-400 to-teal-400' },
+    { action: 'Hold', duration: 8, instruction: '', color: 'from-teal-400 to-cyan-400' },
     { action: 'Breathe Out', duration: 10, instruction: '', color: 'from-blue-400 to-teal-400' },
   ],
   focused: [
@@ -226,7 +226,7 @@ export default function AdaptiveBreathingFlow({ mindState, onComplete }: Adaptiv
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-colors ${
-                i < currentCycle ? 'bg-green-400' : 
+                i < currentCycle ? 'bg-cyan-400' : 
                 i === currentCycle ? 'bg-white' : 
                 'bg-white/30'
               }`}

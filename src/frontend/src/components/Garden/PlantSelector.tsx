@@ -166,14 +166,14 @@ export default function PlantSelector({
         <div className="text-5xl mb-4">
           {mode === 'initial' ? '🌱' : '🎉'}
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-emerald-100 mb-2">
+        <h2 className="text-2xl md:text-3xl font-bold text-teal-100 mb-2">
           {mode === 'initial' 
             ? "Let's plant your first seed!"
             : totalPlants === 1 
               ? "Add your second plant!"
               : `Add plant #${totalPlants + 1} to your garden!`}
         </h2>
-        <p className="text-emerald-300/70 max-w-md">
+        <p className="text-teal-300/70 max-w-md">
           {mode === 'initial'
             ? "Choose a plant to grow through your mental wellness practice. Each action you take will help it grow."
             : premiumUnlocked 
@@ -189,7 +189,7 @@ export default function PlantSelector({
         transition={{ delay: 0.1 }}
         className="w-full max-w-3xl mb-8"
       >
-        <h3 className="text-sm font-medium text-emerald-400 uppercase tracking-wider mb-4 text-center">
+        <h3 className="text-sm font-medium text-teal-400 uppercase tracking-wider mb-4 text-center">
           Choose Your Plant
         </h3>
         
@@ -205,8 +205,8 @@ export default function PlantSelector({
               className={`
                 relative p-6 rounded-2xl border-2 transition-all duration-300
                 ${selectedPlant === plant.type
-                  ? 'border-emerald-400 bg-emerald-900/40 shadow-lg shadow-emerald-500/20'
-                  : 'border-emerald-800/50 bg-emerald-900/20 hover:border-emerald-600/50 hover:bg-emerald-900/30'
+                  ? 'border-teal-400 bg-teal-900/40 shadow-lg shadow-teal-500/20'
+                  : 'border-teal-800/50 bg-teal-900/20 hover:border-teal-600/50 hover:bg-teal-900/30'
                 }
                 ${!plant.isUnlocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
@@ -216,7 +216,7 @@ export default function PlantSelector({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center"
+                  className="absolute top-3 right-3 w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center"
                 >
                   <Check className="w-4 h-4 text-white" />
                 </motion.div>
@@ -234,10 +234,10 @@ export default function PlantSelector({
               </div>
               
               {/* Plant info */}
-              <h4 className="text-lg font-semibold text-emerald-100 mb-1">
+              <h4 className="text-lg font-semibold text-teal-100 mb-1">
                 {plant.name}
               </h4>
-              <p className="text-sm text-emerald-300/60">
+              <p className="text-sm text-teal-300/60">
                 {plant.description}
               </p>
               
@@ -278,7 +278,7 @@ export default function PlantSelector({
           className={`flex items-center justify-center gap-2 w-full py-3 text-sm font-medium transition-colors ${
             premiumUnlocked 
               ? 'text-purple-400 hover:text-purple-300' 
-              : 'text-emerald-400/70 hover:text-emerald-400'
+              : 'text-teal-400/70 hover:text-teal-400'
           }`}
         >
           {premiumUnlocked ? (
@@ -310,8 +310,8 @@ export default function PlantSelector({
                       relative p-3 rounded-xl border transition-all
                       ${plant.isUnlocked
                         ? selectedPlant === plant.type
-                          ? 'border-emerald-400 bg-emerald-900/40'
-                          : 'border-emerald-800/50 bg-emerald-900/20 hover:border-emerald-600/50 cursor-pointer'
+                          ? 'border-teal-400 bg-teal-900/40'
+                          : 'border-teal-800/50 bg-teal-900/20 hover:border-teal-600/50 cursor-pointer'
                         : 'border-slate-700/50 bg-slate-800/20 opacity-60'
                       }
                     `}
@@ -329,7 +329,7 @@ export default function PlantSelector({
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center"
+                        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center"
                       >
                         <Check className="w-3 h-3 text-white" />
                       </motion.div>
@@ -346,7 +346,7 @@ export default function PlantSelector({
                       />
                     </div>
                     
-                    <p className="text-xs text-center text-emerald-200/80 font-medium truncate">
+                    <p className="text-xs text-center text-teal-200/80 font-medium truncate">
                       {plant.name}
                     </p>
                   </motion.div>
@@ -377,7 +377,7 @@ export default function PlantSelector({
             w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300
             flex items-center justify-center gap-3
             ${selectedPlant
-              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-500/30'
+              ? 'bg-gradient-to-r from-teal-600 to-teal-600 hover:from-teal-500 hover:to-teal-500 text-white shadow-lg shadow-teal-500/30'
               : 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
             }
           `}
@@ -404,7 +404,7 @@ export default function PlantSelector({
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center text-sm text-emerald-300/60 mt-3"
+            className="text-center text-sm text-teal-300/60 mt-3"
           >
             Complete your first flow to help your seed sprout!
           </motion.p>
@@ -418,23 +418,23 @@ export default function PlantSelector({
         transition={{ delay: 0.7 }}
         className="mt-8 text-center"
       >
-        <div className="inline-flex items-center gap-6 px-6 py-3 rounded-xl bg-emerald-900/20 border border-emerald-800/30">
+        <div className="inline-flex items-center gap-6 px-6 py-3 rounded-xl bg-teal-900/20 border border-teal-800/30">
           <div className="text-center">
-            <div className="text-xs text-emerald-400/60">Seedling</div>
-            <div className="text-sm font-medium text-emerald-300">1-10</div>
+            <div className="text-xs text-teal-400/60">Seedling</div>
+            <div className="text-sm font-medium text-teal-300">1-10</div>
           </div>
-          <ChevronRight className="w-4 h-4 text-emerald-600" />
+          <ChevronRight className="w-4 h-4 text-teal-600" />
           <div className="text-center">
-            <div className="text-xs text-emerald-400/60">Growing</div>
-            <div className="text-sm font-medium text-emerald-300">11-20</div>
+            <div className="text-xs text-teal-400/60">Growing</div>
+            <div className="text-sm font-medium text-teal-300">11-20</div>
           </div>
-          <ChevronRight className="w-4 h-4 text-emerald-600" />
+          <ChevronRight className="w-4 h-4 text-teal-600" />
           <div className="text-center">
-            <div className="text-xs text-emerald-400/60">Mature</div>
-            <div className="text-sm font-medium text-emerald-300">30+</div>
+            <div className="text-xs text-teal-400/60">Mature</div>
+            <div className="text-sm font-medium text-teal-300">30+</div>
           </div>
         </div>
-        <p className="text-xs text-emerald-400/50 mt-2">
+        <p className="text-xs text-teal-400/50 mt-2">
           Each action = 1 growth. No time pressure, just practice.
         </p>
       </motion.div>

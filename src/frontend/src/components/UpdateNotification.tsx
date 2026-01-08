@@ -24,8 +24,8 @@ export const UpdateToast: React.FC<UpdateToastProps> = ({ message, onClose }) =>
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 animate-slide-up">
-      <div className="bg-emerald-600 text-white rounded-xl shadow-lg p-4 flex items-center gap-3">
-        <CheckCircle className="w-5 h-5 text-emerald-200 shrink-0" />
+      <div className="bg-teal-600 text-white rounded-xl shadow-lg p-4 flex items-center gap-3">
+        <CheckCircle className="w-5 h-5 text-teal-200 shrink-0" />
         <p className="text-sm font-medium">{message}</p>
       </div>
     </div>
@@ -37,7 +37,7 @@ export const UpdateSpinner: React.FC = () => {
   return (
     <div className="fixed bottom-4 right-4 z-50">
       <div className="bg-slate-800/90 text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
-        <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin" />
+        <RefreshCw className="w-4 h-4 text-teal-400 animate-spin" />
         <p className="text-xs">Updating...</p>
       </div>
     </div>

@@ -110,8 +110,8 @@ const ACTIVITIES: Activity[] = [
     name: 'Mindful Moment Spotter',
     description: 'Daily mindfulness challenges to practice awareness throughout the day.',
     icon: Eye,
-    color: 'text-emerald-400',
-    gradient: 'from-emerald-500/20 to-green-500/20',
+    color: 'text-teal-400',
+    gradient: 'from-teal-500/20 to-cyan-500/20',
     category: 'mindfulness',
     duration: 'Throughout day',
     growthReward: '+1 leaf 🍃',
@@ -135,8 +135,8 @@ const ACTIVITIES: Activity[] = [
     name: 'Zen Match',
     description: 'Cognitive Concentration Game. Find matching pairs of nature icons to sharpen focus and recall.',
     icon: Leaf,
-    color: 'text-green-400',
-    gradient: 'from-green-500/20 to-emerald-500/20',
+    color: 'text-cyan-400',
+    gradient: 'from-cyan-500/20 to-teal-500/20',
     category: 'games',
     duration: '3-5 min',
     growthReward: '+1 leaf 🍃',
@@ -356,7 +356,7 @@ export default function Activities() {
               className="mg-card p-4"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Leaf className="w-5 h-5 text-emerald-500" />
+                <Leaf className="w-5 h-5 text-teal-500" />
                 <span className="text-sm text-[var(--mg-text-muted)]">Total Activities</span>
               </div>
               <p className="text-2xl font-bold text-[var(--mg-text-primary)]">{progress.totalCredits}</p>
@@ -520,7 +520,7 @@ export default function Activities() {
                   {activity.duration}
                 </div>
                 {activity.growthReward && activity.available && (
-                  <div className="flex items-center gap-1 text-xs text-emerald-400">
+                  <div className="flex items-center gap-1 text-xs text-teal-400">
                     <Leaf className="w-3 h-3" />
                     {activity.growthReward}
                   </div>
@@ -542,7 +542,7 @@ export default function Activities() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-green-500/20 to-teal-500/20 border border-green-500/30"
+          className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30"
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -558,7 +558,7 @@ export default function Activities() {
             </div>
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-400 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-400 transition-colors whitespace-nowrap"
             >
               View Garden
               <ChevronRight className="w-5 h-5" />

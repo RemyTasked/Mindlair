@@ -566,7 +566,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950 flex items-center justify-center p-6"
+        className="fixed inset-0 z-50 bg-gradient-to-b from-teal-950 via-teal-950 to-slate-950 flex items-center justify-center p-6"
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -595,7 +595,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
               animate={{ scaleY: 1 }}
               transition={{ delay: 0.5, duration: 0.6, ease: 'easeOut' }}
             >
-              <Leaf className="w-16 h-16 text-emerald-400" />
+              <Leaf className="w-16 h-16 text-teal-400" />
             </motion.div>
             {/* Sparkles */}
             {[...Array(6)].map((_, i) => (
@@ -615,7 +615,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             ))}
             {/* Glow effect */}
             <motion.div
-              className="absolute inset-0 rounded-full bg-emerald-400/20 blur-xl"
+              className="absolute inset-0 rounded-full bg-teal-400/20 blur-xl"
               initial={{ scale: 0 }}
               animate={{ scale: 1.5 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -628,9 +628,9 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
           >
-            <h2 className="text-3xl font-bold text-emerald-300 mb-2">Flow Complete!</h2>
-            <p className="text-emerald-100/70 mb-2">Your plant grew a new leaf! 🍃</p>
-            <p className="text-emerald-400/80 text-sm mb-6">+1 growth towards maturity</p>
+            <h2 className="text-3xl font-bold text-teal-300 mb-2">Flow Complete!</h2>
+            <p className="text-teal-100/70 mb-2">Your plant grew a new leaf! 🍃</p>
+            <p className="text-teal-400/80 text-sm mb-6">+1 growth towards maturity</p>
           </motion.div>
 
           {/* Cross-promotion prompt (shown every 3rd flow) */}
@@ -639,12 +639,12 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className="mb-6 p-4 bg-emerald-900/30 border border-emerald-700/30 rounded-xl"
+              className="mb-6 p-4 bg-teal-900/30 border border-teal-700/30 rounded-xl"
             >
-              <p className="text-emerald-200 font-medium mb-1">
+              <p className="text-teal-200 font-medium mb-1">
                 🎉 {flowCount} actions completed!
               </p>
-              <p className="text-emerald-300/70 text-sm">
+              <p className="text-teal-300/70 text-sm">
                 Your plant is growing beautifully. Check your garden!
               </p>
             </motion.div>
@@ -657,7 +657,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             animate={{ opacity: 1 }}
             transition={{ delay: 1.1 }}
           >
-            <p className="text-sm text-emerald-200/60 mb-3">How do you feel?</p>
+            <p className="text-sm text-teal-200/60 mb-3">How do you feel?</p>
             <div className="flex justify-center gap-3">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
@@ -665,8 +665,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
                   onClick={() => setRating(value)}
                   className={`w-12 h-12 rounded-full transition-all ${
                     rating === value
-                      ? 'bg-emerald-500 text-white scale-110'
-                      : 'bg-emerald-900/30 text-emerald-300 hover:bg-emerald-800/50'
+                      ? 'bg-teal-500 text-white scale-110'
+                      : 'bg-teal-900/30 text-teal-300 hover:bg-teal-800/50'
                   }`}
                 >
                   {value === 1 ? '😔' : value === 2 ? '😐' : value === 3 ? '🙂' : value === 4 ? '😊' : '🌟'}
@@ -686,7 +686,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any thoughts? (optional)"
-              className="w-full px-4 py-3 bg-emerald-900/20 border border-emerald-800/30 rounded-xl text-emerald-100 placeholder-emerald-500/50 focus:outline-none focus:border-emerald-500/50 resize-none"
+              className="w-full px-4 py-3 bg-teal-900/20 border border-teal-800/30 rounded-xl text-teal-100 placeholder-teal-500/50 focus:outline-none focus:border-teal-500/50 resize-none"
               rows={2}
             />
           </motion.div>
@@ -702,7 +702,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             {showCrossPromo && (
               <button
                 onClick={goToGarden}
-                className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-400 hover:to-teal-400 transition-colors font-medium flex items-center justify-center gap-2"
+                className="w-full px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-500 text-white rounded-xl hover:from-teal-400 hover:to-teal-400 transition-colors font-medium flex items-center justify-center gap-2"
               >
                 <Leaf className="w-5 h-5" />
                 View My Garden
@@ -712,7 +712,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             <div className="flex gap-3">
               <button
                 onClick={restartFlow}
-                className="flex-1 px-6 py-3 bg-emerald-900/30 text-emerald-300 rounded-xl hover:bg-emerald-800/50 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-teal-900/30 text-teal-300 rounded-xl hover:bg-teal-800/50 transition-colors flex items-center justify-center gap-2"
               >
                 <RotateCcw className="w-5 h-5" />
                 Repeat
@@ -721,8 +721,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
                 onClick={handleComplete}
                 className={`flex-1 px-6 py-3 rounded-xl transition-colors font-medium ${
                   showCrossPromo
-                    ? 'bg-emerald-900/30 text-emerald-300 hover:bg-emerald-800/50'
-                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400'
+                    ? 'bg-teal-900/30 text-teal-300 hover:bg-teal-800/50'
+                    : 'bg-gradient-to-r from-teal-500 to-teal-500 text-white hover:from-teal-400 hover:to-teal-400'
                 }`}
               >
                 {showCrossPromo ? 'Close' : 'Done'}
@@ -733,7 +733,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             {!showCrossPromo && (
               <button
                 onClick={goToGarden}
-                className="w-full text-emerald-400/70 hover:text-emerald-300 text-sm transition-colors flex items-center justify-center gap-1"
+                className="w-full text-teal-400/70 hover:text-teal-300 text-sm transition-colors flex items-center justify-center gap-1"
               >
                 <Leaf className="w-4 h-4" />
                 View my garden
@@ -901,7 +901,7 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
         </div>
       ) : (
         /* Default dark gradient background for other flows */
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-teal-950 via-teal-950 to-slate-950" />
       )}
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between p-4 safe-area-top">
@@ -909,18 +909,18 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
           onClick={onClose}
           className={`p-2 transition-colors rounded-lg ${
             showFieldBackground 
-              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/30 backdrop-blur-sm' 
-              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+              ? 'text-teal-800/70 hover:text-teal-900 hover:bg-white/30 backdrop-blur-sm' 
+              : 'text-teal-300/60 hover:text-teal-300 hover:bg-teal-900/30'
           }`}
         >
           <X className="w-6 h-6" />
         </button>
 
         <div className={`text-center px-4 py-2 rounded-xl ${showFieldBackground ? 'bg-white/40 backdrop-blur-sm' : ''}`}>
-          <h2 className={`text-lg font-semibold ${showFieldBackground ? 'text-emerald-900' : 'text-emerald-200'}`}>
+          <h2 className={`text-lg font-semibold ${showFieldBackground ? 'text-teal-900' : 'text-teal-200'}`}>
             {flow.name}
           </h2>
-          <p className={`text-sm ${showFieldBackground ? 'text-emerald-700' : 'text-emerald-400/60'}`}>
+          <p className={`text-sm ${showFieldBackground ? 'text-teal-700' : 'text-teal-400/60'}`}>
             {formatTime(totalRemaining)} remaining
           </p>
         </div>
@@ -929,8 +929,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
           onClick={toggleMute}
           className={`p-2 transition-colors rounded-lg ${
             showFieldBackground 
-              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/30 backdrop-blur-sm' 
-              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+              ? 'text-teal-800/70 hover:text-teal-900 hover:bg-white/30 backdrop-blur-sm' 
+              : 'text-teal-300/60 hover:text-teal-300 hover:bg-teal-900/30'
           }`}
         >
           {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
@@ -944,10 +944,10 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
             key={step.id}
             className={`h-1.5 rounded-full transition-all ${
               index < currentStepIndex
-                ? showFieldBackground ? 'bg-emerald-700 w-8' : 'bg-emerald-400 w-8'
+                ? showFieldBackground ? 'bg-teal-700 w-8' : 'bg-teal-400 w-8'
                 : index === currentStepIndex
-                ? showFieldBackground ? 'bg-emerald-800 w-12' : 'bg-emerald-500 w-12'
-                : showFieldBackground ? 'bg-emerald-500/40 w-8' : 'bg-emerald-900/50 w-8'
+                ? showFieldBackground ? 'bg-teal-800 w-12' : 'bg-teal-500 w-12'
+                : showFieldBackground ? 'bg-teal-500/40 w-8' : 'bg-teal-900/50 w-8'
             }`}
           />
         ))}
@@ -969,14 +969,14 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
               <motion.div
                 className={`w-48 h-48 mx-auto mb-8 rounded-full flex items-center justify-center ${
                   showFieldBackground
-                    ? 'bg-white/50 backdrop-blur-md border-2 border-white/70 shadow-xl shadow-emerald-500/20'
-                    : 'bg-gradient-to-br from-emerald-400/30 to-teal-500/30 border-2 border-emerald-400/50'
+                    ? 'bg-white/50 backdrop-blur-md border-2 border-white/70 shadow-xl shadow-teal-500/20'
+                    : 'bg-gradient-to-br from-teal-400/30 to-teal-500/30 border-2 border-teal-400/50'
                 }`}
                 animate={{ scale: getBreathScale() }}
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
               >
                 <div className="text-center">
-                  <p className={`text-2xl font-medium ${showFieldBackground ? 'text-emerald-800' : 'text-emerald-200'}`}>
+                  <p className={`text-2xl font-medium ${showFieldBackground ? 'text-teal-800' : 'text-teal-200'}`}>
                     {getBreathInstruction()}
                   </p>
                 </div>
@@ -1009,17 +1009,17 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
 
             {/* Step Text */}
             <div className={`${showFieldBackground ? 'bg-white/60 backdrop-blur-sm rounded-2xl px-6 py-4' : ''}`}>
-              <h3 className={`text-2xl font-semibold mb-4 ${showFieldBackground ? 'text-emerald-900' : 'text-emerald-100'}`}>
+              <h3 className={`text-2xl font-semibold mb-4 ${showFieldBackground ? 'text-teal-900' : 'text-teal-100'}`}>
                 {currentStep?.text}
               </h3>
               
               {/* When MP3 narration exists, show simplified text; otherwise show full guidance */}
               {NARRATION_AUDIO[flow.id] ? (
-                <p className={`text-lg leading-relaxed italic ${showFieldBackground ? 'text-emerald-700/70' : 'text-emerald-400/60'}`}>
+                <p className={`text-lg leading-relaxed italic ${showFieldBackground ? 'text-teal-700/70' : 'text-teal-400/60'}`}>
                   Follow along with the voice guidance...
                 </p>
               ) : currentStep?.guidance && (
-                <p className={`text-lg leading-relaxed ${showFieldBackground ? 'text-emerald-800' : 'text-emerald-300/80'}`}>
+                <p className={`text-lg leading-relaxed ${showFieldBackground ? 'text-teal-800' : 'text-teal-300/80'}`}>
                   {currentStep.guidance}
                 </p>
               )}
@@ -1030,9 +1030,9 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
 
       {/* Step Progress Bar */}
       <div className="relative z-10 px-6 mb-4">
-        <div className={`h-1 rounded-full overflow-hidden ${showFieldBackground ? 'bg-white/40' : 'bg-emerald-900/50'}`}>
+        <div className={`h-1 rounded-full overflow-hidden ${showFieldBackground ? 'bg-white/40' : 'bg-teal-900/50'}`}>
           <motion.div
-            className={`h-full ${showFieldBackground ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-emerald-400 to-teal-400'}`}
+            className={`h-full ${showFieldBackground ? 'bg-gradient-to-r from-teal-600 to-teal-600' : 'bg-gradient-to-r from-teal-400 to-teal-400'}`}
             style={{ width: `${stepProgress * 100}%` }}
           />
         </div>
@@ -1046,8 +1046,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
           onClick={toggleMute}
           className={`p-3 transition-colors rounded-full ${
             showFieldBackground 
-              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/40 backdrop-blur-sm' 
-              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+              ? 'text-teal-800/70 hover:text-teal-900 hover:bg-white/40 backdrop-blur-sm' 
+              : 'text-teal-300/60 hover:text-teal-300 hover:bg-teal-900/30'
           }`}
         >
           {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
@@ -1057,8 +1057,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
           onClick={restartFlow}
           className={`p-3 transition-colors rounded-full ${
             showFieldBackground 
-              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/40 backdrop-blur-sm' 
-              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+              ? 'text-teal-800/70 hover:text-teal-900 hover:bg-white/40 backdrop-blur-sm' 
+              : 'text-teal-300/60 hover:text-teal-300 hover:bg-teal-900/30'
           }`}
         >
           <RotateCcw className="w-6 h-6" />
@@ -1068,8 +1068,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
           onClick={togglePlayPause}
           className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95 ${
             showFieldBackground
-              ? 'bg-gradient-to-br from-emerald-600 to-teal-600 shadow-emerald-600/40 hover:from-emerald-500 hover:to-teal-500'
-              : 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-400'
+              ? 'bg-gradient-to-br from-teal-600 to-teal-600 shadow-teal-600/40 hover:from-teal-500 hover:to-teal-500'
+              : 'bg-gradient-to-br from-teal-500 to-teal-500 shadow-teal-500/30 hover:from-teal-400 hover:to-teal-400'
           }`}
         >
           {isPlaying ? (
@@ -1083,8 +1083,8 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
           onClick={skipStep}
           className={`p-3 transition-colors rounded-full ${
             showFieldBackground 
-              ? 'text-emerald-800/70 hover:text-emerald-900 hover:bg-white/40 backdrop-blur-sm' 
-              : 'text-emerald-300/60 hover:text-emerald-300 hover:bg-emerald-900/30'
+              ? 'text-teal-800/70 hover:text-teal-900 hover:bg-white/40 backdrop-blur-sm' 
+              : 'text-teal-300/60 hover:text-teal-300 hover:bg-teal-900/30'
           }`}
         >
           <SkipForward className="w-6 h-6" />

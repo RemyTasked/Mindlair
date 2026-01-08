@@ -339,7 +339,7 @@ export default function FocusRooms() {
                             {room.icon}
                           </div>
                           {activeRoom === room.id && isPlaying && (
-                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
                           )}
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 mb-1">
@@ -435,7 +435,7 @@ export default function FocusRooms() {
                                         setIsPlaying(true);
                                       }
                                     }}
-                                    className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md"
+                                    className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-teal-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-teal-700 transition-all shadow-md"
                                   >
                                     {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                                   </button>

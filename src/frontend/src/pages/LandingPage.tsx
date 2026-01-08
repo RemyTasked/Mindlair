@@ -166,7 +166,7 @@ export default function LandingPage() {
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-tight animate-fade-in-up">
             Cultivate Calm.
             <br />
-            <span className="bg-gradient-to-r from-sky-500 via-teal-500 to-green-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent">
               Watch Your Garden Grow.
             </span>
           </h2>
@@ -212,7 +212,7 @@ export default function LandingPage() {
                       <span className="text-xs font-medium text-teal-50">2-Min Resets</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
-                      <Smartphone className="w-5 h-5 text-green-300" />
+                      <Smartphone className="w-5 h-5 text-cyan-300" />
                       <span className="text-xs font-medium text-teal-50">Desktop & Mobile</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
@@ -236,7 +236,7 @@ export default function LandingPage() {
                     {/* Notification preview */}
                     <div className="bg-white rounded-xl p-4 shadow-lg mb-3">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-sky-500 via-teal-500 to-green-500 rounded-lg flex items-center justify-center shadow-md shrink-0">
+                        <div className="w-10 h-10 bg-gradient-to-br from-sky-500 via-teal-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-md shrink-0">
                           <MindGardenIcon size={24} className="text-white" />
                         </div>
                         <div className="flex-1">
@@ -395,7 +395,7 @@ export default function LandingPage() {
                       {[
                         { color: 'bg-sky-400', delay: '0s' },
                         { color: 'bg-teal-400', delay: '1s' },
-                        { color: 'bg-green-400', delay: '2s' }
+                        { color: 'bg-cyan-400', delay: '2s' }
                       ].map((seed, i) => (
                         <motion.div
                           key={i}
@@ -621,7 +621,7 @@ const GameCard = memo(function GameCard({
     sky: 'from-sky-50 to-sky-100 border-sky-200 text-sky-700',
     amber: 'from-amber-50 to-amber-100 border-amber-200 text-amber-700',
     teal: 'from-teal-50 to-teal-100 border-teal-200 text-teal-700',
-    green: 'from-green-50 to-green-100 border-green-200 text-green-700',
+    green: 'from-cyan-50 to-cyan-100 border-cyan-200 text-cyan-700',
     coral: 'from-rose-50 to-rose-100 border-rose-200 text-rose-700',
   };
 

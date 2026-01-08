@@ -110,7 +110,7 @@ export default function CalDAVModal({ isOpen, onClose, onSuccess }: CalDAVModalP
                   animate={{ scale: 1 }}
                   className="text-center py-8"
                 >
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <CheckCircle className="w-16 h-16 text-cyan-500 mx-auto mb-4" />
                   <h4 className="text-xl font-bold text-gray-900 mb-2">Connected!</h4>
                   <p className="text-gray-600">Your calendar has been connected successfully.</p>
                 </motion.div>

@@ -112,7 +112,7 @@ const ALL_FLOWS: Flow[] = [
     category: 'calm',
     bestFor: ['Performance reviews', 'Conflicts', 'Hard feedback'],
     icon: '🌿',
-    color: 'from-emerald-500 to-green-500',
+    color: 'from-teal-500 to-cyan-500',
   },
   {
     id: 'post-meeting-decompress',
@@ -170,7 +170,7 @@ const ALL_FLOWS: Flow[] = [
     category: 'deep',
     bestFor: ['Weekends', 'Deep relaxation', 'Self-care'],
     icon: '🧘',
-    color: 'from-teal-500 to-emerald-500',
+    color: 'from-teal-500 to-teal-500',
     new: true,
   },
   // Deep Sessions (20-45min)
@@ -183,7 +183,7 @@ const ALL_FLOWS: Flow[] = [
     category: 'deep',
     bestFor: ['Deep relaxation', 'Stress relief', 'Mental clarity'],
     icon: '🍃',
-    color: 'from-green-500 to-teal-500',
+    color: 'from-cyan-500 to-teal-500',
   },
   {
     id: 'body-scan',
@@ -424,7 +424,7 @@ export default function FlowsLibrary() {
         {!searchQuery && !selectedCategory && selectedDuration === 0 && (
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-[var(--mg-text-primary)] mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-400" />
+              <Sparkles className="w-5 h-5 text-teal-400" />
               New Extended Flows
             </h2>
             <div className="grid md:grid-cols-3 gap-4">
@@ -439,7 +439,7 @@ export default function FlowsLibrary() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <span className="text-3xl">{flow.icon}</span>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
+                    <span className="px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-400 text-xs font-medium">
                       NEW
                     </span>
                   </div>
@@ -487,7 +487,7 @@ export default function FlowsLibrary() {
                     disabled={isCompleted}
                     className={`mg-card transition-colors text-left group ${
                       isCompleted 
-                        ? 'opacity-60 cursor-not-allowed border-emerald-500/30' 
+                        ? 'opacity-60 cursor-not-allowed border-teal-500/30' 
                         : 'hover:border-[var(--mg-accent)]'
                     }`}
                   >
@@ -495,7 +495,7 @@ export default function FlowsLibrary() {
                       <span className="text-2xl">{flow.icon}</span>
                       <div className="flex items-center gap-2">
                         {isCompleted && (
-                          <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium">
+                          <div className="flex items-center gap-1 text-teal-400 text-xs font-medium">
                             <CheckCircle className="w-4 h-4" />
                             Done
                           </div>
@@ -521,8 +521,8 @@ export default function FlowsLibrary() {
                         <span>{formatDuration(flow.duration)}</span>
                       </div>
                       {isCompleted ? (
-                        <div className="p-2 rounded-full bg-emerald-500/20">
-                          <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        <div className="p-2 rounded-full bg-teal-500/20">
+                          <CheckCircle className="w-4 h-4 text-teal-400" />
                         </div>
                       ) : (
                         <div className="p-2 rounded-full bg-[var(--mg-bg-primary)] group-hover:bg-[var(--mg-accent)]/20 transition-colors">

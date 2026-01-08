@@ -209,15 +209,15 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
           className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full"
         >
           <div className="text-center mb-6">
-            <Target className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+            <Target className="w-16 h-16 text-teal-600 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Mind Match</h2>
             <p className="text-gray-600">Learn winning skill combinations through pairing</p>
           </div>
           
           <div className="space-y-4 mb-6">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-emerald-600 font-bold">1</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">1</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Flip Cards</h3>
@@ -226,8 +226,8 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-emerald-600 font-bold">2</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">2</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Find Matches</h3>
@@ -236,8 +236,8 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-emerald-600 font-bold">3</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">3</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Unlock Teaching</h3>
@@ -246,8 +246,8 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-emerald-600 font-bold">4</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-teal-600 font-bold">4</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Match All Pairs</h3>
@@ -261,7 +261,7 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
               localStorage.setItem('mind-match-onboarding-seen', 'true');
               setShowOnboarding(false);
             }}
-            className="w-full px-6 py-3 bg-gradient-to-r from-emerald-600 to-pink-600 text-white rounded-lg hover:from-emerald-700 hover:to-pink-700 transition-all font-semibold"
+            className="w-full px-6 py-3 bg-gradient-to-r from-teal-600 to-pink-600 text-white rounded-lg hover:from-teal-700 hover:to-pink-700 transition-all font-semibold"
           >
             Let's Play!
           </button>
@@ -357,7 +357,7 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${(matchedPairs.size / pairs.length) * 100}%` }}
-              className="bg-gradient-to-r from-emerald-600 to-pink-600 h-2 rounded-full"
+              className="bg-gradient-to-r from-teal-600 to-pink-600 h-2 rounded-full"
             />
           </div>
         </div>
@@ -394,9 +394,9 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
               disabled={card.isFlipped || card.isMatched}
               className={`aspect-[4/3] rounded-xl p-3 sm:p-4 font-semibold text-xs sm:text-sm md:text-base transition-all touch-manipulation ${
                 card.isMatched
-                  ? 'bg-gradient-to-br from-green-400 to-green-600 text-white'
+                  ? 'bg-gradient-to-br from-cyan-400 to-cyan-600 text-white'
                   : card.isFlipped
-                  ? 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white'
+                  ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white'
                   : 'bg-gradient-to-br from-gray-200 to-gray-300 text-gray-600 hover:from-gray-300 hover:to-gray-400 active:from-gray-400 active:to-gray-500'
               } ${card.isFlipped || card.isMatched ? 'cursor-default' : 'cursor-pointer'}`}
               whileHover={!card.isFlipped && !card.isMatched ? { scale: 1.05 } : {}}
@@ -434,7 +434,7 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-gradient-to-r from-emerald-50 to-pink-50 rounded-2xl p-6 sm:p-8 mb-6 border-l-4 border-emerald-500"
+              className="bg-gradient-to-r from-teal-50 to-pink-50 rounded-2xl p-6 sm:p-8 mb-6 border-l-4 border-teal-500"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-3">💡 Micro-Teaching</h3>
               <p className="text-gray-700 leading-relaxed italic">
@@ -442,7 +442,7 @@ export default function MindMatchGame({ onComplete, onExit }: MindMatchGameProps
               </p>
               <button
                 onClick={() => setShowMicroTeach(null)}
-                className="mt-4 text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-2"
+                className="mt-4 text-sm text-teal-600 hover:text-teal-700 flex items-center gap-2"
               >
                 <RotateCcw className="w-4 h-4" />
                 Continue matching

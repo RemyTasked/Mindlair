@@ -364,7 +364,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
                   className={`w-full text-left p-4 sm:p-5 rounded-lg border-2 transition-all touch-manipulation ${
                     showResult
                       ? isCorrectOption
-                        ? 'border-green-500 bg-green-50'
+                        ? 'border-cyan-500 bg-cyan-50'
                         : isSelected
                         ? 'border-red-500 bg-red-50'
                         : 'border-gray-200 bg-gray-50'
@@ -384,7 +384,7 @@ export default function SceneSenseGame({ onComplete, onExit }: SceneSenseGamePro
                         animate={{ scale: 1 }}
                       >
                         {isCorrectOption ? (
-                          <CheckCircle className="w-6 h-6 text-green-500" />
+                          <CheckCircle className="w-6 h-6 text-cyan-500" />
                         ) : isSelected ? (
                           <XCircle className="w-6 h-6 text-red-500" />
                         ) : null}

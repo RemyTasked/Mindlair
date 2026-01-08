@@ -189,8 +189,8 @@ export default function Insights() {
 
   // Get health status styling
   const getHealthStatus = (health: number) => {
-    if (health >= 80) return { label: 'Thriving', color: 'text-emerald-400', bg: 'bg-emerald-500/20', emoji: '🌻' };
-    if (health >= 60) return { label: 'Growing', color: 'text-green-400', bg: 'bg-green-500/20', emoji: '🌿' };
+    if (health >= 80) return { label: 'Thriving', color: 'text-teal-400', bg: 'bg-teal-500/20', emoji: '🌻' };
+    if (health >= 60) return { label: 'Growing', color: 'text-cyan-400', bg: 'bg-cyan-500/20', emoji: '🌿' };
     if (health >= 40) return { label: 'Stable', color: 'text-sky-400', bg: 'bg-sky-500/20', emoji: '🌱' };
     if (health >= 20) return { label: 'Idle', color: 'text-amber-400', bg: 'bg-amber-500/20', emoji: '🍂' };
     return { label: 'Needs Care', color: 'text-gray-400', bg: 'bg-gray-500/20', emoji: '💤' };
@@ -287,26 +287,26 @@ export default function Insights() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className={`mg-card mb-6 border ${
-              stressForecast.color === 'green' ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-900/20 to-teal-900/20' :
+              stressForecast.color === 'green' ? 'border-teal-500/30 bg-gradient-to-r from-teal-900/20 to-teal-900/20' :
               stressForecast.color === 'yellow' ? 'border-amber-500/30 bg-gradient-to-r from-amber-900/20 to-yellow-900/20' :
               'border-orange-500/30 bg-gradient-to-r from-orange-900/20 to-red-900/20'
             }`}
           >
             <div className="flex items-start gap-4">
               <div className={`p-3 rounded-xl ${
-                stressForecast.color === 'green' ? 'bg-emerald-500/20' :
+                stressForecast.color === 'green' ? 'bg-teal-500/20' :
                 stressForecast.color === 'yellow' ? 'bg-amber-500/20' :
                 'bg-orange-500/20'
               }`}>
                 <AlertCircle className={`w-6 h-6 ${
-                  stressForecast.color === 'green' ? 'text-emerald-400' :
+                  stressForecast.color === 'green' ? 'text-teal-400' :
                   stressForecast.color === 'yellow' ? 'text-amber-400' :
                   'text-orange-400'
                 }`} />
               </div>
               <div className="flex-1">
                 <h3 className={`font-semibold mb-1 ${
-                  stressForecast.color === 'green' ? 'text-emerald-300' :
+                  stressForecast.color === 'green' ? 'text-teal-300' :
                   stressForecast.color === 'yellow' ? 'text-amber-300' :
                   'text-orange-300'
                 }`}>
@@ -348,8 +348,8 @@ export default function Insights() {
             className="mg-card"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-xl bg-emerald-500/20">
-                <Flower2 className="w-5 h-5 text-emerald-400" />
+              <div className="p-2 rounded-xl bg-teal-500/20">
+                <Flower2 className="w-5 h-5 text-teal-400" />
               </div>
               <span className="text-sm text-[var(--mg-text-muted)]">Garden Health</span>
             </div>
@@ -636,16 +636,16 @@ export default function Insights() {
               <h3 className="font-semibold text-[var(--mg-text-primary)]">Weekly Summary</h3>
             </div>
             
-            <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-teal-500/10 to-teal-500/10 border border-teal-500/20">
               <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <Info className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
                 <div className="text-[var(--mg-text-secondary)]">
                   {insights.insights.map((insight, i) => (
                     <p key={i} className="mb-2">{insight}</p>
                   ))}
                   
                   {insights.recommendations.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-emerald-500/20">
+                    <div className="mt-4 pt-4 border-t border-teal-500/20">
                       <p className="font-medium text-[var(--mg-text-primary)] mb-2">💡 Recommendations:</p>
                       <ul className="space-y-1 text-sm">
                         {insights.recommendations.map((rec, i) => (

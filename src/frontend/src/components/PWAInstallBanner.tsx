@@ -153,8 +153,8 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <Smartphone className="w-6 h-6 text-emerald-600" />
+                <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                  <Smartphone className="w-6 h-6 text-teal-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Install Mind Garden</h3>
               </div>
@@ -210,7 +210,7 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
 
             <button
               onClick={() => setShowIOSInstructions(false)}
-              className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+              className="w-full py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors"
             >
               Got it
             </button>
@@ -244,7 +244,7 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl">
+                <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center text-2xl">
                   🌱
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Install Mind Garden</h3>
@@ -344,7 +344,7 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
 
             <button
               onClick={() => setShowDesktopInstructions(false)}
-              className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+              className="w-full py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors"
             >
               Got it
             </button>
@@ -423,7 +423,7 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
           onClick={(e) => e.stopPropagation()}
         >
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
               🌱
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Install Mind Garden</h3>
@@ -451,7 +451,7 @@ export default function PWAInstallBanner({ variant = 'banner', onDismiss }: PWAI
             <button
               onClick={handleInstall}
               disabled={installing}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-700 hover:to-teal-700 transition-colors disabled:opacity-50"
             >
               {installing ? (
                 <>

@@ -352,7 +352,7 @@ export default function ThoughtPopperGame({ onComplete, onExit }: ThoughtPopperG
           
           <div className="bg-blue-50 rounded-2xl p-6 mb-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-2xl font-bold text-emerald-600">
+              <div className="flex items-center gap-2 text-2xl font-bold text-teal-600">
                 <Leaf className="w-6 h-6" />
                 <span>+1 Leaf 🍃</span>
               </div>

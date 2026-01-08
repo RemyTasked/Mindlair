@@ -138,13 +138,13 @@ const formatRelativeTime = (timestamp: string): string => {
 // Emotion categories for quick selection
 const EMOTION_PRESETS = [
   { emoji: '😊', label: 'Happy', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
-  { emoji: '😌', label: 'Calm', color: 'bg-green-100 text-green-700 border-green-300' },
+  { emoji: '😌', label: 'Calm', color: 'bg-cyan-100 text-cyan-700 border-cyan-300' },
   { emoji: '😔', label: 'Sad', color: 'bg-blue-100 text-blue-700 border-blue-300' },
   { emoji: '😰', label: 'Anxious', color: 'bg-purple-100 text-purple-700 border-purple-300' },
   { emoji: '😤', label: 'Frustrated', color: 'bg-red-100 text-red-700 border-red-300' },
   { emoji: '😴', label: 'Tired', color: 'bg-slate-100 text-slate-700 border-slate-300' },
   { emoji: '🤔', label: 'Uncertain', color: 'bg-amber-100 text-amber-700 border-amber-300' },
-  { emoji: '💪', label: 'Motivated', color: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
+  { emoji: '💪', label: 'Motivated', color: 'bg-teal-100 text-teal-700 border-teal-300' },
 ];
 
 export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) {
@@ -471,19 +471,19 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
           </div>
 
           {/* Privacy Notice */}
-          <div className="bg-emerald-50 rounded-xl p-3 mb-5 border border-emerald-200">
+          <div className="bg-teal-50 rounded-xl p-3 mb-5 border border-teal-200">
             <div className="flex items-start gap-2">
-              <Shield className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <Shield className="w-4 h-4 text-teal-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-emerald-800 text-xs mb-1">Your Privacy is Protected</h4>
-                <p className="text-emerald-700 text-xs">
+                <h4 className="font-semibold text-teal-800 text-xs mb-1">Your Privacy is Protected</h4>
+                <p className="text-teal-700 text-xs">
                   Entries saved only on your device. Voice is never stored.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-sm text-emerald-600 mb-5">
+          <div className="flex items-center justify-center gap-2 text-sm text-teal-600 mb-5">
             <span>🍃</span>
             <span className="font-semibold">+1 leaf for completing check-in</span>
           </div>
@@ -519,7 +519,7 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
   // Completion screen
   if (step === 'complete') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-50 to-teal-50 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -529,9 +529,9 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4"
+            className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4"
           >
-            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+            <CheckCircle2 className="w-10 h-10 text-teal-500" />
           </motion.div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Beautiful!</h2>
@@ -555,7 +555,7 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-4">
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-teal-600 mb-4">
             <span className="text-3xl">🍃</span>
             <span>+1 Leaf</span>
           </div>
@@ -568,7 +568,7 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
 
           <button
             onClick={handleComplete}
-            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all"
+            className="w-full py-3 bg-gradient-to-r from-teal-500 to-teal-500 text-white rounded-xl font-bold hover:from-teal-600 hover:to-teal-600 transition-all"
           >
             Continue
           </button>
@@ -608,7 +608,7 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
         <div className="max-w-2xl mx-auto">
           {/* Privacy Reminder */}
           <div className="bg-white/80 backdrop-blur rounded-xl p-3 mb-4 flex items-center gap-2 text-sm text-gray-600">
-            <Shield className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <Shield className="w-4 h-4 text-teal-600 flex-shrink-0" />
             <span>These entries are stored only on your device. Mind Garden cannot access them.</span>
           </div>
 
@@ -740,7 +740,7 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
                 <span className="text-sm text-gray-500">You're feeling</span>
                 <span className="font-semibold text-gray-800 ml-2">{selectedEmotion}</span>
               </div>
-              <CheckCircle2 className="w-5 h-5 text-emerald-500 ml-auto" />
+              <CheckCircle2 className="w-5 h-5 text-teal-500 ml-auto" />
             </div>
           )}
 
@@ -957,8 +957,8 @@ export default function EmotionalCheckIn({ onComplete }: EmotionalCheckInProps) 
               {/* Recording status indicator */}
               {isRecording && (
                 <div className="flex items-center justify-center gap-2 mb-4 text-sm">
-                  <span className={`w-2 h-2 rounded-full ${micActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                  <span className={micActive ? 'text-green-600' : 'text-gray-500'}>
+                  <span className={`w-2 h-2 rounded-full ${micActive ? 'bg-cyan-500 animate-pulse' : 'bg-gray-400'}`} />
+                  <span className={micActive ? 'text-cyan-600' : 'text-gray-500'}>
                     {micActive ? 'Hearing you...' : 'Waiting for speech...'}
                   </span>
                 </div>

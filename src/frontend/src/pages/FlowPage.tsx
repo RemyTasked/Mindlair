@@ -297,12 +297,12 @@ export default function FlowPage() {
 
   if (!flow) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-b from-teal-950 via-teal-950 to-slate-950 flex items-center justify-center p-6">
         <div className="text-center">
-          <p className="text-2xl text-emerald-200 mb-4">Flow not found</p>
+          <p className="text-2xl text-teal-200 mb-4">Flow not found</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-400 transition-colors"
+            className="px-6 py-3 bg-teal-500 text-white rounded-xl hover:bg-teal-400 transition-colors"
           >
             Go to Dashboard
           </button>

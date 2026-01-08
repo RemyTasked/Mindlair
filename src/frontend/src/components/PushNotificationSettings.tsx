@@ -162,7 +162,7 @@ export default function PushNotificationSettings() {
       {/* Status Card */}
       <div className={`rounded-lg p-4 border-2 ${
         isSubscribed 
-          ? 'bg-green-50 border-green-200' 
+          ? 'bg-cyan-50 border-cyan-200' 
           : 'bg-gray-50 border-gray-200'
       }`}>
         <div className="flex items-start gap-3">
@@ -184,7 +184,7 @@ export default function PushNotificationSettings() {
               <span className="font-medium">Status:</span>
               <span className={`px-2 py-1 rounded-full ${
                 permission === 'granted' 
-                  ? 'bg-green-100 text-green-700'
+                  ? 'bg-cyan-100 text-cyan-700'
                   : permission === 'denied'
                   ? 'bg-red-100 text-red-700'
                   : 'bg-gray-100 text-gray-700'

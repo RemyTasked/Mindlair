@@ -459,22 +459,22 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Links to Mind Garden Features */}
-        <div className="mb-6 sm:mb-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-6 border border-emerald-200">
+        <div className="mb-6 sm:mb-8 bg-gradient-to-br from-teal-50 to-teal-50 rounded-2xl p-4 sm:p-6 border border-teal-200">
           <div className="flex items-center gap-3 mb-3">
-            <Flower2 className="w-6 h-6 text-emerald-600" />
+            <Flower2 className="w-6 h-6 text-teal-600" />
             <h3 className="text-lg font-bold text-gray-900">Your Mind Garden</h3>
           </div>
           <p className="text-gray-600 text-sm mb-4">
             Nurture your mental wellness with flows, games, and activities.
           </p>
           <div className="flex flex-wrap gap-2">
-            <a href="/dashboard" className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+            <a href="/dashboard" className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors">
               🌱 View Garden
             </a>
-            <a href="/flows" className="px-4 py-2 bg-white text-emerald-700 border border-emerald-300 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors">
+            <a href="/flows" className="px-4 py-2 bg-white text-teal-700 border border-teal-300 rounded-lg text-sm font-medium hover:bg-teal-50 transition-colors">
               🧘 Browse Flows
             </a>
-            <a href="/insights" className="px-4 py-2 bg-white text-emerald-700 border border-emerald-300 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors">
+            <a href="/insights" className="px-4 py-2 bg-white text-teal-700 border border-teal-300 rounded-lg text-sm font-medium hover:bg-teal-50 transition-colors">
               📊 Insights
             </a>
             <a 
@@ -595,7 +595,7 @@ export default function Dashboard() {
                     )}
                   </h3>
                   {isLocked ? (
-                    <div className="p-6 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-lg border-2 border-teal-200 text-center">
+                    <div className="p-6 bg-gradient-to-br from-teal-50 to-teal-50 rounded-lg border-2 border-teal-200 text-center">
                       <div className="text-4xl mb-3">🌙</div>
                       <p className="text-gray-700 font-medium mb-2">
                         Tomorrow's meetings are hidden until evening
@@ -806,7 +806,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
 
       <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
         {isCompleted ? (
-          <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium">
+          <span className="px-2 sm:px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs sm:text-sm whitespace-nowrap font-medium">
             ✓ Prep Complete
           </span>
         ) : (
@@ -822,7 +822,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                     detail: { source: 'dashboard', flow: 'focus-session', meetingId: meeting.id }
                   }));
                 }}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg text-center whitespace-nowrap"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-teal-700 hover:to-teal-700 transition-all shadow-md hover:shadow-lg text-center whitespace-nowrap"
               >
                 🎬 Start Focus Session
               </a>

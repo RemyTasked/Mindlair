@@ -203,7 +203,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         transition={{ delay: 0.3, duration: 1 }}
         className="relative"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 blur-3xl rounded-full"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-teal-500/20 blur-3xl rounded-full"></div>
         <div className="text-8xl relative z-10">🌱</div>
       </motion.div>
       
@@ -213,7 +213,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         transition={{ delay: 0.6 }}
         className="space-y-4"
       >
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent">
           Welcome to Mind Garden
         </h1>
         <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
@@ -234,7 +234,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Bell className="w-16 h-16 mx-auto text-emerald-600" />
+        <Bell className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Stay on Track</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           Get gentle reminders before your meetings to help you prepare mentally. 
@@ -244,9 +244,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
       <div className="max-w-md mx-auto space-y-6">
         {notificationPermission === 'granted' ? (
-          <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-            <Check className="w-6 h-6 text-emerald-600" />
-            <span className="text-emerald-800 font-medium">Notifications enabled!</span>
+          <div className="flex items-center gap-3 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+            <Check className="w-6 h-6 text-teal-600" />
+            <span className="text-teal-800 font-medium">Notifications enabled!</span>
           </div>
         ) : notificationPermission === 'denied' ? (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
@@ -258,7 +258,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <button
             onClick={handleEnableNotifications}
             disabled={isLoading}
-            className="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg disabled:opacity-50"
+            className="w-full py-4 px-6 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-700 hover:to-teal-700 transition-all shadow-lg disabled:opacity-50"
           >
             {isLoading ? 'Enabling...' : '🔔 Allow Notifications'}
           </button>
@@ -291,7 +291,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Download className="w-16 h-16 mx-auto text-emerald-600" />
+        <Download className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Install Mind Garden</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           Add Mind Garden to your home screen for instant access. 
@@ -301,9 +301,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
       <div className="max-w-md mx-auto space-y-6">
         {isStandalone ? (
-          <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-            <Check className="w-6 h-6 text-emerald-600" />
-            <span className="text-emerald-800 font-medium">Already installed!</span>
+          <div className="flex items-center gap-3 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+            <Check className="w-6 h-6 text-teal-600" />
+            <span className="text-teal-800 font-medium">Already installed!</span>
           </div>
         ) : isIOS ? (
           <div className="bg-gray-50 rounded-xl p-6 space-y-4">
@@ -326,7 +326,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         ) : deferredPrompt ? (
           <button
             onClick={handleInstallPWA}
-            className="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg"
+            className="w-full py-4 px-6 bg-gradient-to-r from-teal-600 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-700 hover:to-teal-700 transition-all shadow-lg"
           >
             📱 Install Mind Garden
           </button>
@@ -371,7 +371,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Calendar className="w-16 h-16 mx-auto text-emerald-600" />
+        <Calendar className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Connect Your Calendar</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           Link your calendar so we can send you timely prep reminders before important meetings.
@@ -381,7 +381,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       <div className="max-w-md mx-auto space-y-4">
         <button
           onClick={() => handleConnectCalendar('google')}
-          className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-white border-2 border-gray-200 rounded-xl font-semibold hover:border-emerald-300 hover:bg-emerald-50 transition-all"
+          className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-white border-2 border-gray-200 rounded-xl font-semibold hover:border-teal-300 hover:bg-teal-50 transition-all"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -394,7 +394,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
         <button
           onClick={() => handleConnectCalendar('microsoft')}
-          className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-white border-2 border-gray-200 rounded-xl font-semibold hover:border-emerald-300 hover:bg-emerald-50 transition-all"
+          className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-white border-2 border-gray-200 rounded-xl font-semibold hover:border-teal-300 hover:bg-teal-50 transition-all"
         >
           <svg className="w-5 h-5" viewBox="0 0 23 23">
             <path fill="#f25022" d="M1 1h10v10H1z"/>
@@ -427,7 +427,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Clock className="w-16 h-16 mx-auto text-emerald-600" />
+        <Clock className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Your Schedule</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           When does your workday typically begin and end?
@@ -443,7 +443,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             type="time"
             value={data.workStart}
             onChange={(e) => setData({ ...data, workStart: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
         </div>
 
@@ -455,7 +455,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             type="time"
             value={data.workEnd}
             onChange={(e) => setData({ ...data, workEnd: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
         </div>
 
@@ -483,7 +483,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Target className="w-16 h-16 mx-auto text-emerald-600" />
+        <Target className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Your Focus Goals</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           What do you most want to improve during meetings?
@@ -497,8 +497,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             onClick={() => toggleGoal(goal)}
             className={`p-4 rounded-xl border-2 transition-all ${
               data.focusGoals.includes(goal)
-                ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                : 'border-gray-200 hover:border-emerald-300'
+                ? 'border-teal-600 bg-teal-50 text-teal-700'
+                : 'border-gray-200 hover:border-teal-300'
             }`}
           >
             <span className="font-semibold">{goal}</span>
@@ -516,7 +516,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Heart className="w-16 h-16 mx-auto text-emerald-600" />
+        <Heart className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">How Do Meetings Feel?</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           This helps us personalize the tone of your flows.
@@ -562,7 +562,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       className="space-y-8"
     >
       <div className="text-center space-y-4">
-        <Sparkles className="w-16 h-16 mx-auto text-emerald-600" />
+        <Sparkles className="w-16 h-16 mx-auto text-teal-600" />
         <h2 className="text-3xl font-bold text-gray-900">Evening Wind-Down</h2>
         <p className="text-gray-600 max-w-xl mx-auto">
           When would you like your evening flow reminder?
@@ -578,7 +578,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             type="time"
             value={data.presleyFlowTime}
             onChange={(e) => setData({ ...data, presleyFlowTime: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
           <p className="text-xs text-gray-500 mt-2">
             A gentle reminder to transition from work mode
@@ -617,19 +617,19 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       </motion.div>
 
       <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
-        <div className="p-4 bg-emerald-50 rounded-xl">
+        <div className="p-4 bg-teal-50 rounded-xl">
           <div className="text-2xl mb-2">🔔</div>
           <div className="text-xs text-gray-600">
             {data.notificationsEnabled ? 'Notifications On' : 'Notifications Off'}
           </div>
         </div>
-        <div className="p-4 bg-emerald-50 rounded-xl">
+        <div className="p-4 bg-teal-50 rounded-xl">
           <div className="text-2xl mb-2">📱</div>
           <div className="text-xs text-gray-600">
             {data.pwaInstalled ? 'App Installed' : 'Web App'}
           </div>
         </div>
-        <div className="p-4 bg-emerald-50 rounded-xl">
+        <div className="p-4 bg-teal-50 rounded-xl">
           <div className="text-2xl mb-2">📅</div>
           <div className="text-xs text-gray-600">
             {data.calendarConnected ? 'Calendar Synced' : 'No Calendar'}
@@ -640,7 +640,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-emerald-50/30 to-teal-50/30 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-teal-50/30 to-teal-50/30 z-50 overflow-y-auto">
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
           {/* Progress Bar */}
@@ -655,7 +655,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-emerald-600 to-teal-500"
+                className="h-full bg-gradient-to-r from-teal-600 to-teal-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentScene + 1) / totalScenes) * 100}%` }}
                 transition={{ duration: 0.5 }}
@@ -684,7 +684,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
               <button
                 onClick={nextScene}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-700 hover:to-teal-600 transition-all shadow-lg hover:shadow-xl"
+                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-teal-600 to-teal-500 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-teal-600 transition-all shadow-lg hover:shadow-xl"
               >
                 {currentScene === totalScenes - 1 ? 'Start Growing 🌱' : 'Continue'}
                 <ChevronRight className="w-5 h-5" />

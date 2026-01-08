@@ -295,7 +295,7 @@ export default function Settings() {
           <div className="flex items-center gap-3">
             {message && (
               <span className={`text-sm font-medium ${
-                message.includes('Error') ? 'text-red-400' : 'text-emerald-400'
+                message.includes('Error') ? 'text-red-400' : 'text-teal-400'
               }`}>
                 {message}
               </span>
@@ -303,7 +303,7 @@ export default function Settings() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors font-medium"
+              className="flex items-center gap-2 px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-500 disabled:opacity-50 transition-colors font-medium"
             >
               <Save className="w-4 h-4" />
               {saving ? 'Saving...' : 'Save'}
@@ -316,7 +316,7 @@ export default function Settings() {
           <Section
             id="flows"
             title="Flow Preferences"
-            icon={<Leaf className="w-5 h-5 text-emerald-600" />}
+            icon={<Leaf className="w-5 h-5 text-teal-600" />}
             isExpanded={expandedSections.has('flows')}
             onToggle={toggleSection}
           >
@@ -329,7 +329,7 @@ export default function Settings() {
               />
               
               {preferences.enableMorningFlow && (
-                <div className="ml-6 pl-4 border-l-2 border-emerald-500/30">
+                <div className="ml-6 pl-4 border-l-2 border-teal-500/30">
                   <label className="block text-sm font-medium text-[var(--mg-text-secondary)] mb-2">
                     Morning Flow Time
                   </label>
@@ -337,7 +337,7 @@ export default function Settings() {
                     type="time"
                     value={preferences.morningFlowTime}
                     onChange={(e) => setPreferences({ ...preferences, morningFlowTime: e.target.value })}
-                    className="px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
+                    className="px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-[var(--mg-text-primary)]"
                   />
                 </div>
               )}
@@ -350,7 +350,7 @@ export default function Settings() {
               />
               
               {preferences.enableEveningFlow && (
-                <div className="ml-6 pl-4 border-l-2 border-emerald-500/30">
+                <div className="ml-6 pl-4 border-l-2 border-teal-500/30">
                   <label className="block text-sm font-medium text-[var(--mg-text-secondary)] mb-2">
                     Evening Flow Time
                   </label>
@@ -358,7 +358,7 @@ export default function Settings() {
                     type="time"
                     value={preferences.eveningFlowTime}
                     onChange={(e) => setPreferences({ ...preferences, eveningFlowTime: e.target.value })}
-                    className="px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
+                    className="px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-[var(--mg-text-primary)]"
                   />
                 </div>
               )}
@@ -380,14 +380,14 @@ export default function Settings() {
               />
               
               {preferences.enableFocusSound && (
-                <div className="ml-6 pl-4 border-l-2 border-emerald-500/30">
+                <div className="ml-6 pl-4 border-l-2 border-teal-500/30">
                   <label className="block text-sm font-medium text-[var(--mg-text-secondary)] mb-2">
                     Sound Type
                   </label>
                   <select
                     value={preferences.focusSoundType}
                     onChange={(e) => setPreferences({ ...preferences, focusSoundType: e.target.value })}
-                    className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
+                    className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-[var(--mg-text-primary)]"
                   >
                     <option value="calm-ocean">Calm Ocean</option>
                     <option value="rain">Gentle Rain</option>
@@ -412,12 +412,12 @@ export default function Settings() {
               {/* PWA & Notification Status */}
               <div className="p-4 bg-[var(--mg-bg-primary)] rounded-xl space-y-3">
                 <h4 className="font-medium text-[var(--mg-text-primary)] flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-emerald-400" />
+                  <Smartphone className="w-4 h-4 text-teal-400" />
                   App Status
                 </h4>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[var(--mg-text-muted)]">Installation</span>
-                  <span className={`flex items-center gap-1.5 font-medium ${isPWA ? 'text-emerald-400' : 'text-[var(--mg-text-muted)]'}`}>
+                  <span className={`flex items-center gap-1.5 font-medium ${isPWA ? 'text-teal-400' : 'text-[var(--mg-text-muted)]'}`}>
                     {isPWA ? (
                       <>
                         <CheckCircle2 className="w-4 h-4" />
@@ -434,7 +434,7 @@ export default function Settings() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[var(--mg-text-muted)]">Push Notifications</span>
                   <span className={`flex items-center gap-1.5 font-medium ${
-                    notificationPermission === 'granted' && isSubscribed ? 'text-emerald-400' : 
+                    notificationPermission === 'granted' && isSubscribed ? 'text-teal-400' : 
                     notificationPermission === 'denied' ? 'text-red-400' : 'text-[var(--mg-text-muted)]'
                   }`}>
                     {notificationPermission === 'unsupported' ? (
@@ -470,7 +470,7 @@ export default function Settings() {
                 {notificationPermission !== 'granted' && notificationPermission !== 'denied' && notificationPermission !== 'unsupported' && (
                   <button
                     onClick={handleEnableNotifications}
-                    className="w-full py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors font-medium text-sm"
+                    className="w-full py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors font-medium text-sm"
                   >
                     Enable Push Notifications
                   </button>
@@ -481,7 +481,7 @@ export default function Settings() {
                     onClick={handleSendTestNotification}
                     disabled={sendingTest}
                     className={`w-full py-2 flex items-center justify-center gap-2 rounded-lg transition-colors font-medium text-sm ${
-                      testResult === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
+                      testResult === 'success' ? 'bg-teal-500/20 text-teal-400' :
                       testResult === 'error' ? 'bg-red-500/20 text-red-400' :
                       'bg-[var(--mg-bg-card)] border border-[var(--mg-border)] text-[var(--mg-text-secondary)] hover:bg-[var(--mg-bg-primary)]'
                     }`}
@@ -527,7 +527,7 @@ export default function Settings() {
                     <select
                       value={preferences.notificationChannel}
                       onChange={(e) => setPreferences({ ...preferences, notificationChannel: e.target.value as any })}
-                      className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
+                      className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-[var(--mg-text-primary)]"
                     >
                       <option value="push">Push Notifications</option>
                       <option value="email">Email</option>
@@ -577,7 +577,7 @@ export default function Settings() {
                       <select
                         value={preferences.wellnessReminderFrequency}
                         onChange={(e) => setPreferences({ ...preferences, wellnessReminderFrequency: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[var(--mg-text-primary)]"
+                        className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-[var(--mg-text-primary)]"
                       >
                         <option value="2">Every 2 hours</option>
                         <option value="3">Every 3 hours</option>
@@ -596,7 +596,7 @@ export default function Settings() {
                           type="time"
                           value={preferences.quietHoursStart}
                           onChange={(e) => setPreferences({ ...preferences, quietHoursStart: e.target.value })}
-                          className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 text-[var(--mg-text-primary)]"
+                          className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-teal-500 text-[var(--mg-text-primary)]"
                         />
                       </div>
                       <div>
@@ -605,7 +605,7 @@ export default function Settings() {
                           type="time"
                           value={preferences.quietHoursEnd}
                           onChange={(e) => setPreferences({ ...preferences, quietHoursEnd: e.target.value })}
-                          className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-emerald-500 text-[var(--mg-text-primary)]"
+                          className="w-full px-4 py-2 bg-[var(--mg-bg-primary)] border border-[var(--mg-border)] rounded-lg focus:ring-2 focus:ring-teal-500 text-[var(--mg-text-primary)]"
                         />
                       </div>
                     </div>
@@ -634,7 +634,7 @@ export default function Settings() {
                     const providerConfig: Record<string, { bg: string; label: string; letter: string }> = {
                       google: { bg: 'bg-blue-500', label: 'Google Calendar', letter: 'G' },
                       microsoft: { bg: 'bg-blue-600', label: 'Outlook', letter: 'M' },
-                      webex: { bg: 'bg-green-500', label: 'Webex', letter: 'W' },
+                      webex: { bg: 'bg-cyan-500', label: 'Webex', letter: 'W' },
                       caldav: { bg: 'bg-gray-600', label: 'CalDAV', letter: 'C' },
                       apple: { bg: 'bg-gray-800', label: 'Apple Calendar', letter: 'A' },
                     };
@@ -735,7 +735,7 @@ export default function Settings() {
                       placeholder="https://caldav.example.com"
                       value={caldavForm.serverUrl}
                       onChange={(e) => setCaldavForm({ ...caldavForm, serverUrl: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     />
                   </div>
                   <div>
@@ -745,7 +745,7 @@ export default function Settings() {
                       placeholder="your@email.com"
                       value={caldavForm.username}
                       onChange={(e) => setCaldavForm({ ...caldavForm, username: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     />
                   </div>
                   <div>
@@ -755,7 +755,7 @@ export default function Settings() {
                       placeholder="••••••••"
                       value={caldavForm.password}
                       onChange={(e) => setCaldavForm({ ...caldavForm, password: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       For iCloud, use an app-specific password from appleid.apple.com
@@ -768,7 +768,7 @@ export default function Settings() {
                       placeholder="Work, Personal, etc."
                       value={caldavForm.calendarName}
                       onChange={(e) => setCaldavForm({ ...caldavForm, calendarName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     />
                   </div>
                 </div>
@@ -785,7 +785,7 @@ export default function Settings() {
                   <button
                     onClick={connectCalDAV}
                     disabled={!caldavForm.serverUrl || !caldavForm.username || !caldavForm.password}
-                    className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Connect
                   </button>
@@ -888,7 +888,7 @@ function Toggle({
       <button
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
-          checked ? 'bg-emerald-500' : 'bg-[var(--mg-bg-primary)]'
+          checked ? 'bg-teal-500' : 'bg-[var(--mg-bg-primary)]'
         }`}
       >
         <span

@@ -179,7 +179,7 @@ export default function GamesHub() {
               className="mg-card p-4"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Leaf className="w-5 h-5 text-emerald-500" />
+                <Leaf className="w-5 h-5 text-teal-500" />
                 <span className="text-sm text-[var(--mg-text-muted)]">Games Completed</span>
               </div>
               <p className="text-2xl font-bold text-[var(--mg-text-primary)]">{progress.totalCredits}</p>
@@ -248,7 +248,7 @@ export default function GamesHub() {
               Focus and Mental Clearing Game. Pop floating bubbles representing intrusive thoughts.
             </p>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-teal-400 bg-teal-500/20 px-3 py-1 rounded-full">
                 +1 🍃
               </span>
               <span className="text-xs text-[var(--mg-text-muted)]">1-2 min</span>
@@ -261,21 +261,21 @@ export default function GamesHub() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             whileHover={{ y: -5 }}
-            className="mg-card p-5 text-left cursor-pointer border-b-4 border-green-500 hover:border-green-400 transition-all"
+            className="mg-card p-5 text-left cursor-pointer border-b-4 border-cyan-500 hover:border-cyan-400 transition-all"
             onClick={() => {
               setGameType('zen-match');
               setGameStarted(true);
             }}
           >
-            <div className="bg-green-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-              <Leaf className="w-6 h-6 text-green-400" />
+            <div className="bg-cyan-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+              <Leaf className="w-6 h-6 text-cyan-400" />
             </div>
             <h3 className="text-lg font-bold text-[var(--mg-text-primary)] mb-2">Zen Match</h3>
             <p className="text-[var(--mg-text-muted)] text-sm mb-4">
               Cognitive Concentration Game. Find matching pairs of nature icons.
             </p>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-teal-400 bg-teal-500/20 px-3 py-1 rounded-full">
                 +1 🍃
               </span>
               <span className="text-xs text-[var(--mg-text-muted)]">3-5 min</span>
@@ -302,7 +302,7 @@ export default function GamesHub() {
               Categorization Tool. Sort thoughts into Keep, Park, or Let Go buckets.
             </p>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-teal-400 bg-teal-500/20 px-3 py-1 rounded-full">
                 +1 🍃
               </span>
               <span className="text-xs text-[var(--mg-text-muted)]">5-10 min</span>
@@ -335,7 +335,7 @@ export default function GamesHub() {
                   CBT-based cognitive restructuring. Identify distortions and practice balanced thinking.
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+                  <span className="text-xs font-bold text-teal-400 bg-teal-500/20 px-3 py-1 rounded-full">
                     +1 🍃
                   </span>
                   <span className="text-xs text-[var(--mg-text-muted)]">5-10 min</span>
@@ -416,7 +416,7 @@ export default function GamesHub() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="p-6 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30"
+          className="p-6 rounded-2xl bg-gradient-to-r from-teal-500/20 to-teal-500/20 border border-teal-500/30"
         >
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -432,7 +432,7 @@ export default function GamesHub() {
             </div>
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-400 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-400 transition-colors whitespace-nowrap"
             >
               View Garden
             </button>

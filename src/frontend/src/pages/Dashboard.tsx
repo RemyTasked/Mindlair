@@ -412,7 +412,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-teal-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-teal-50 to-teal-50 flex items-center justify-center">
         <div className="text-center">
           <motion.div
             className="mb-4"
@@ -478,7 +478,7 @@ export default function Dashboard() {
         user={user}
         onLogout={handleLogout}
       >
-        <div className="min-h-[calc(100vh-80px)] bg-gradient-to-b from-emerald-950 to-[#022c22]">
+        <div className="min-h-[calc(100vh-80px)] bg-gradient-to-b from-teal-950 to-[#022c22]">
           <PlantSelector
             onSelect={handleSelectSeed}
             mode="initial"
@@ -533,8 +533,8 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="mg-card flex items-center gap-3"
             >
-              <div className="p-2 rounded-xl bg-emerald-500/20">
-                <Sparkles className="w-5 h-5 text-emerald-400" />
+              <div className="p-2 rounded-xl bg-teal-500/20">
+                <Sparkles className="w-5 h-5 text-teal-400" />
               </div>
               <div>
                 <div className="text-2xl font-bold">{gardenState.activePlant?.actionsCount || 0}/30</div>
@@ -593,24 +593,24 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="mg-card bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-700/30 mb-6"
+            className="mg-card bg-gradient-to-r from-teal-900/30 to-teal-900/30 border border-teal-700/30 mb-6"
           >
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-emerald-500/20">
-                <Sparkles className="w-6 h-6 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-teal-500/20">
+                <Sparkles className="w-6 h-6 text-teal-400" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-emerald-300 mb-1">{gardenState.stateTitle}</h3>
-                <p className="text-emerald-100/70 text-sm">{gardenState.stateMessage}</p>
+                <h3 className="font-semibold text-teal-300 mb-1">{gardenState.stateTitle}</h3>
+                <p className="text-teal-100/70 text-sm">{gardenState.stateMessage}</p>
               </div>
               {isTimeReminderCompleted ? (
-                <div className="px-4 py-2 rounded-xl bg-emerald-500/30 text-emerald-300 text-sm font-medium flex items-center gap-2">
+                <div className="px-4 py-2 rounded-xl bg-teal-500/30 text-teal-300 text-sm font-medium flex items-center gap-2">
                   <span>✓</span> Done
                 </div>
               ) : (
                 <button
                   onClick={() => navigate(`/flow/${timeReminder.action}`)}
-                  className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-sm font-medium transition-colors"
+                  className="px-4 py-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 text-sm font-medium transition-colors"
                 >
                   {timeReminder.actionLabel}
                 </button>
@@ -715,7 +715,7 @@ export default function Dashboard() {
                 premiumUnlocked={gardenState.premiumUnlocked}
                 onWater={handleWaterGarden}
                 onAddPlant={handleAddPlant}
-                className="min-h-[500px] bg-gradient-to-b from-emerald-900/20 to-teal-900/20 border border-emerald-800/30"
+                className="min-h-[500px] bg-gradient-to-b from-teal-900/20 to-teal-900/20 border border-teal-800/30"
               />
             </motion.div>
 
@@ -733,7 +733,7 @@ export default function Dashboard() {
                   Grow Your Plant
                 </h3>
                 
-                <p className="text-xs text-emerald-400/60 mb-4">
+                <p className="text-xs text-teal-400/60 mb-4">
                   Each activity = +1 growth for your plant
                 </p>
                 
@@ -805,7 +805,7 @@ export default function Dashboard() {
                               </span>
                             )}
                             {isToday && minutesUntil > 60 && hoursUntil <= 4 && (
-                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                              <span className="px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-400">
                                 in {hoursUntil}h
                               </span>
                             )}
@@ -919,7 +919,7 @@ export default function Dashboard() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-b from-emerald-950 to-[#022c22] rounded-3xl border border-emerald-800/50"
+              className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-b from-teal-950 to-[#022c22] rounded-3xl border border-teal-800/50"
               onClick={e => e.stopPropagation()}
             >
               <PlantSelector

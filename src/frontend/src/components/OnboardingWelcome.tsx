@@ -25,7 +25,7 @@ export default function OnboardingWelcome({ onContinue }: OnboardingWelcomeProps
             transition={{ delay: 0.2, duration: 0.6 }}
             className="space-y-4"
           >
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-200 via-teal-200 to-emerald-200 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-200 via-teal-200 to-teal-200 bg-clip-text text-transparent">
               Welcome to Mind Garden
             </h1>
             <p className="text-lg text-teal-100 max-w-2xl mx-auto leading-relaxed">

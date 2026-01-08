@@ -150,7 +150,7 @@ export default function MaturityCelebration({
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.8, opacity: 0, y: 50 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                className="relative max-w-lg w-full mx-4 p-8 rounded-3xl bg-gradient-to-b from-emerald-900 to-emerald-950 border border-emerald-700/50 shadow-2xl"
+                className="relative max-w-lg w-full mx-4 p-8 rounded-3xl bg-gradient-to-b from-teal-900 to-teal-950 border border-teal-700/50 shadow-2xl"
                 onClick={e => e.stopPropagation()}
               >
                 {/* Party popper icon */}
@@ -175,7 +175,7 @@ export default function MaturityCelebration({
                   <h2 className="text-3xl font-bold text-white mb-2">
                     🎉 Congratulations! 🎉
                   </h2>
-                  <p className="text-emerald-300 text-lg">
+                  <p className="text-teal-300 text-lg">
                     Your {config.name} is fully grown!
                   </p>
                 </motion.div>
@@ -190,7 +190,7 @@ export default function MaturityCelebration({
                   <div className="relative">
                     {/* Glow effect */}
                     <motion.div
-                      className="absolute inset-0 -m-4 rounded-full bg-emerald-400/30 blur-xl"
+                      className="absolute inset-0 -m-4 rounded-full bg-teal-400/30 blur-xl"
                       animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     />
@@ -211,10 +211,10 @@ export default function MaturityCelebration({
                   transition={{ delay: 0.5 }}
                   className="grid grid-cols-3 gap-4 mb-6"
                 >
-                  <div className="text-center p-3 rounded-xl bg-emerald-800/30 border border-emerald-700/30">
-                    <Leaf className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
+                  <div className="text-center p-3 rounded-xl bg-teal-800/30 border border-teal-700/30">
+                    <Leaf className="w-5 h-5 mx-auto mb-1 text-teal-400" />
                     <div className="text-2xl font-bold text-white">30</div>
-                    <div className="text-xs text-emerald-400/70">Actions</div>
+                    <div className="text-xs text-teal-400/70">Actions</div>
                   </div>
                   <div className="text-center p-3 rounded-xl bg-amber-800/30 border border-amber-700/30">
                     <Sparkles className="w-5 h-5 mx-auto mb-1 text-amber-400" />
@@ -233,7 +233,7 @@ export default function MaturityCelebration({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 }}
-                  className="text-center text-emerald-200/80 mb-6"
+                  className="text-center text-teal-200/80 mb-6"
                 >
                   You've completed 30 mental wellness practices. 
                   Your dedication is beautiful. Ready to grow your garden further?
@@ -248,7 +248,7 @@ export default function MaturityCelebration({
                 >
                   <button
                     onClick={onExpand}
-                    className="w-full py-4 px-6 rounded-2xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-3"
+                    className="w-full py-4 px-6 rounded-2xl font-semibold text-lg bg-gradient-to-r from-teal-500 to-teal-500 hover:from-teal-400 hover:to-teal-400 text-white shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 transition-all flex items-center justify-center gap-3"
                   >
                     <Sparkles className="w-5 h-5" />
                     Plant a Second Seed
@@ -257,7 +257,7 @@ export default function MaturityCelebration({
                   
                   <button
                     onClick={onClose}
-                    className="w-full py-3 px-6 rounded-xl font-medium text-emerald-300/70 hover:text-emerald-200 transition-colors"
+                    className="w-full py-3 px-6 rounded-xl font-medium text-teal-300/70 hover:text-teal-200 transition-colors"
                   >
                     Celebrate Your Progress
                   </button>
@@ -268,7 +268,7 @@ export default function MaturityCelebration({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.9 }}
-                  className="mt-6 text-center text-xs text-emerald-400/50"
+                  className="mt-6 text-center text-xs text-teal-400/50"
                 >
                   🌿 Fun fact: You've spent meaningful time caring for your mental wellness!
                 </motion.div>

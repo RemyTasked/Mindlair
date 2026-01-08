@@ -45,13 +45,13 @@ const ALL_ICON_CONFIGS = [
   { type: 'umbrella', icon: Umbrella, color: 'text-blue-400', bg: 'bg-blue-50' },
   // Nature Elements
   { type: 'flower', icon: Flower2, color: 'text-pink-400', bg: 'bg-pink-50' },
-  { type: 'leaf', icon: Leaf, color: 'text-green-500', bg: 'bg-green-50' },
-  { type: 'tree', icon: TreeDeciduous, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { type: 'pine', icon: TreePine, color: 'text-green-700', bg: 'bg-green-50' },
+  { type: 'leaf', icon: Leaf, color: 'text-cyan-500', bg: 'bg-cyan-50' },
+  { type: 'tree', icon: TreeDeciduous, color: 'text-teal-600', bg: 'bg-teal-50' },
+  { type: 'pine', icon: TreePine, color: 'text-cyan-700', bg: 'bg-cyan-50' },
   { type: 'mountain', icon: Mountain, color: 'text-slate-500', bg: 'bg-slate-50' },
   { type: 'sprout', icon: Sprout, color: 'text-lime-500', bg: 'bg-lime-50' },
-  { type: 'palm', icon: Palmtree, color: 'text-green-600', bg: 'bg-green-50' },
-  { type: 'clover', icon: Clover, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+  { type: 'palm', icon: Palmtree, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+  { type: 'clover', icon: Clover, color: 'text-teal-500', bg: 'bg-teal-50' },
   { type: 'cherry', icon: Cherry, color: 'text-red-400', bg: 'bg-red-50' },
   // Water
   { type: 'droplet', icon: Droplets, color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -254,14 +254,14 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
   // Theme Select
   if (showThemeSelect) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-teal-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-cyan-50 to-teal-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
         >
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Leaf className="w-8 h-8 text-green-600" />
+          <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Leaf className="w-8 h-8 text-cyan-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Theme</h2>
           <p className="text-gray-600 mb-6 text-sm">Each theme offers a unique set of icons</p>
@@ -271,7 +271,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
               <button
                 key={key}
                 onClick={() => handleThemeSelect(key as keyof typeof ICON_THEMES)}
-                className="p-4 rounded-xl text-center transition-all border-2 bg-green-50 border-green-200 hover:border-green-400"
+                className="p-4 rounded-xl text-center transition-all border-2 bg-cyan-50 border-cyan-200 hover:border-cyan-400"
               >
                 <span className="text-3xl block mb-2">{theme.emoji}</span>
                 <h3 className="font-semibold text-gray-800">{theme.name}</h3>
@@ -296,14 +296,14 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
   // Level Select
   if (showLevelSelect) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-teal-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-cyan-50 to-teal-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
         >
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Leaf className="w-10 h-10 text-green-600" />
+          <div className="w-20 h-20 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Leaf className="w-10 h-10 text-cyan-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Choose Your Level</h2>
           <p className="text-gray-600 mb-6">Select a Harmony Level to begin</p>
@@ -313,7 +313,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
               <button
                 key={index}
                 onClick={() => handleLevelSelect(index)}
-                className="w-full p-4 rounded-xl text-left transition-all border-2 bg-green-50 border-green-200 hover:border-green-400 cursor-pointer"
+                className="w-full p-4 rounded-xl text-left transition-all border-2 bg-cyan-50 border-cyan-200 hover:border-cyan-400 cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -321,8 +321,8 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                     <p className="text-sm text-gray-500">{level.description}</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-lg font-bold text-green-600">{level.pairs} pairs</span>
-                    <p className="text-xs text-emerald-500">+1 🍃</p>
+                    <span className="text-lg font-bold text-cyan-600">{level.pairs} pairs</span>
+                    <p className="text-xs text-teal-500">+1 🍃</p>
                   </div>
                 </div>
               </button>
@@ -345,37 +345,37 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
   // Onboarding
   if (showOnboarding) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-teal-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-cyan-50 to-teal-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center"
         >
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Leaf className="w-10 h-10 text-green-600" />
+          <div className="w-20 h-20 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Leaf className="w-10 h-10 text-cyan-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Zen Match</h2>
           <p className="text-gray-600 mb-6">
             Cognitive Concentration Game
           </p>
           
-          <div className="bg-green-50 rounded-2xl p-5 mb-6 text-left">
+          <div className="bg-cyan-50 rounded-2xl p-5 mb-6 text-left">
             <h3 className="font-semibold text-gray-800 mb-3">How to Play:</h3>
             <ul className="space-y-2 text-gray-600 text-sm">
               <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">•</span>
+                <span className="text-cyan-500 mt-1">•</span>
                 Tap cards to flip them over
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">•</span>
+                <span className="text-cyan-500 mt-1">•</span>
                 Find matching pairs of nature icons
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">•</span>
+                <span className="text-cyan-500 mt-1">•</span>
                 Choose your Harmony Level for varying difficulty
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-600 mt-1">🍃</span>
+                <span className="text-teal-600 mt-1">🍃</span>
                 +1 leaf to grow your plant
               </li>
             </ul>
@@ -383,7 +383,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           
           <button
             onClick={() => setShowLevelSelect(true)}
-            className="w-full py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-teal-700 transition-all shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-cyan-600 hover:to-teal-700 transition-all shadow-lg"
           >
             Choose Level
           </button>
@@ -415,7 +415,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
     const canLevelUp = harmonyLevel < HARMONY_LEVELS.length - 1;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-teal-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-cyan-50 to-teal-100 p-4">
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -433,25 +433,25 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           <p className="text-gray-600 mb-2">
             All {numPairs} pairs matched in {moves} moves
           </p>
-          <p className="text-sm text-green-600 font-medium mb-4">
+          <p className="text-sm text-cyan-600 font-medium mb-4">
             Level: {currentLevel.name}
           </p>
           
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-emerald-600 mb-6">
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-teal-600 mb-6">
             <Leaf className="w-6 h-6" />
             <span>+1 Leaf 🍃</span>
           </div>
           
           {canLevelUp && (
             <>
-              <div className="bg-green-50 rounded-xl p-3 mb-4 text-sm text-green-700">
+              <div className="bg-cyan-50 rounded-xl p-3 mb-4 text-sm text-cyan-700">
                 <Sparkles className="w-4 h-4 inline mr-1" />
                 Next level unlocked: {HARMONY_LEVELS[harmonyLevel + 1].name}!
               </div>
               
               <button
                 onClick={handlePlayNextLevel}
-                className="w-full py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-teal-700 transition-all shadow-lg mb-3"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-cyan-600 hover:to-teal-700 transition-all shadow-lg mb-3"
               >
                 Play Next Level
               </button>
@@ -471,7 +471,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
 
   // Main Game
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-teal-100 p-4">
+    <div className="min-h-screen bg-gradient-to-b from-cyan-50 to-teal-100 p-4">
       {/* Header */}
       <div className="max-w-3xl mx-auto mb-6">
         <div className="flex items-center justify-between">
@@ -501,7 +501,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           <span className="text-sm font-medium text-gray-700">
             Matched: {matchedPairs.size} / {numPairs}
           </span>
-          <span className="text-sm text-emerald-600 font-medium">
+          <span className="text-sm text-teal-600 font-medium">
             {matchedPairs.size === numPairs ? '+1 🍃' : `${Math.round((matchedPairs.size / numPairs) * 100)}%`}
           </span>
         </div>
@@ -509,7 +509,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${(matchedPairs.size / numPairs) * 100}%` }}
-            className="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full"
+            className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full"
           />
         </div>
       </div>
@@ -540,7 +540,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                 >
                   {/* Card Back */}
                   <div 
-                    className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-400 to-green-500 shadow-lg flex items-center justify-center backface-hidden"
+                    className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 shadow-lg flex items-center justify-center backface-hidden"
                     style={{ backfaceVisibility: 'hidden' }}
                   >
                     <Leaf className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />
@@ -549,7 +549,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                   {/* Card Front */}
                   <div 
                     className={`absolute inset-0 rounded-xl sm:rounded-2xl ${getIconBg(card.iconType)} shadow-lg flex items-center justify-center border-2 ${
-                      card.isMatched ? 'border-green-400' : 'border-gray-100'
+                      card.isMatched ? 'border-cyan-400' : 'border-gray-100'
                     }`}
                     style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                   >
@@ -560,7 +560,7 @@ export default function ZenMatchGame({ onComplete, onExit }: ZenMatchGameProps) 
                         animate={{ scale: 1 }}
                         className="absolute top-1 right-1"
                       >
-                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-500" />
                       </motion.div>
                     )}
                   </div>

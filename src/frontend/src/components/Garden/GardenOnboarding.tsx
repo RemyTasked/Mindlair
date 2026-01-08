@@ -317,7 +317,7 @@ export default function GardenOnboarding({
       )}
       
       <div className="relative inline-block">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 blur-3xl rounded-full scale-150" />
+        <div className="absolute inset-0 bg-gradient-to-r from-teal-500/30 to-teal-500/30 blur-3xl rounded-full scale-150" />
         <div className="relative">
           <OnePlantSVG 
             plantType="classic" 
@@ -330,7 +330,7 @@ export default function GardenOnboarding({
       </div>
 
       <div className="space-y-4 max-w-lg mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent">
           Welcome to Mind Garden
         </h1>
         <p className="text-lg text-gray-600 leading-relaxed">
@@ -339,9 +339,9 @@ export default function GardenOnboarding({
       </div>
 
       <div className="grid grid-cols-3 gap-4 max-w-md mx-auto pt-4">
-        <div className="text-center p-3 rounded-xl bg-emerald-50">
-          <Leaf className="w-8 h-8 mx-auto text-emerald-600 mb-2" />
-          <p className="text-sm text-emerald-700 font-medium">Grow Leaves</p>
+        <div className="text-center p-3 rounded-xl bg-teal-50">
+          <Leaf className="w-8 h-8 mx-auto text-teal-600 mb-2" />
+          <p className="text-sm text-teal-700 font-medium">Grow Leaves</p>
         </div>
         <div className="text-center p-3 rounded-xl bg-pink-50">
           <Flower2 className="w-8 h-8 mx-auto text-pink-500 mb-2" />
@@ -365,8 +365,8 @@ export default function GardenOnboarding({
 
       <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
         {/* Growth Stages */}
-        <div className="bg-white rounded-2xl p-5 shadow-lg border border-emerald-100">
-          <h3 className="font-bold text-emerald-700 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-2xl p-5 shadow-lg border border-teal-100">
+          <h3 className="font-bold text-teal-700 mb-4 flex items-center gap-2">
             <Target className="w-5 h-5" />
             Growth Stages
           </h3>
@@ -399,7 +399,7 @@ export default function GardenOnboarding({
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center">
                 <span className="text-xl">🌺</span>
               </div>
               <div>
@@ -411,8 +411,8 @@ export default function GardenOnboarding({
         </div>
 
         {/* Actions That Grow */}
-        <div className="bg-white rounded-2xl p-5 shadow-lg border border-emerald-100">
-          <h3 className="font-bold text-emerald-700 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-2xl p-5 shadow-lg border border-teal-100">
+          <h3 className="font-bold text-teal-700 mb-4 flex items-center gap-2">
             <Leaf className="w-5 h-5" />
             Actions That Grow Your Plant
           </h3>
@@ -421,28 +421,28 @@ export default function GardenOnboarding({
               <span className="text-xl">🧘</span>
               <div>
                 <p className="font-medium text-gray-800">Complete a Flow</p>
-                <p className="text-xs text-emerald-600">+1 leaf 🍃</p>
+                <p className="text-xs text-teal-600">+1 leaf 🍃</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-2 rounded-lg bg-purple-50">
               <span className="text-xl">🎮</span>
               <div>
                 <p className="font-medium text-gray-800">Play a Wellness Game</p>
-                <p className="text-xs text-emerald-600">+1 leaf 🍃</p>
+                <p className="text-xs text-teal-600">+1 leaf 🍃</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-2 rounded-lg bg-rose-50">
               <span className="text-xl">💭</span>
               <div>
                 <p className="font-medium text-gray-800">Daily Check-In</p>
-                <p className="text-xs text-emerald-600">+1 leaf 🍃</p>
+                <p className="text-xs text-teal-600">+1 leaf 🍃</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-2 rounded-lg bg-amber-50">
               <span className="text-xl">🎵</span>
               <div>
                 <p className="font-medium text-gray-800">Focus Room Session</p>
-                <p className="text-xs text-emerald-600">+1 leaf 🍃</p>
+                <p className="text-xs text-teal-600">+1 leaf 🍃</p>
               </div>
             </div>
           </div>
@@ -451,8 +451,8 @@ export default function GardenOnboarding({
 
       {/* Visual Growth Demo */}
       <div className="max-w-md mx-auto pt-4">
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-200">
-          <p className="text-sm text-emerald-700 text-center mb-3">
+        <div className="bg-gradient-to-r from-teal-50 to-teal-50 rounded-2xl p-4 border border-teal-200">
+          <p className="text-sm text-teal-700 text-center mb-3">
             🌱 Watch your plant grow with each action!
           </p>
           <div className="flex justify-center items-end gap-2">
@@ -500,10 +500,10 @@ export default function GardenOnboarding({
           }}
           className={`relative p-4 rounded-2xl border-2 transition-all text-left ${
             isSelected
-              ? 'border-emerald-500 bg-emerald-50 shadow-lg'
+              ? 'border-teal-500 bg-teal-50 shadow-lg'
               : locked
               ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-              : 'border-gray-200 bg-white hover:border-emerald-300 hover:shadow-md'
+              : 'border-gray-200 bg-white hover:border-teal-300 hover:shadow-md'
           }`}
         >
           {locked && (
@@ -512,7 +512,7 @@ export default function GardenOnboarding({
             </div>
           )}
           {isSelected && (
-            <div className="absolute top-2 right-2 bg-emerald-500 rounded-full p-1">
+            <div className="absolute top-2 right-2 bg-teal-500 rounded-full p-1">
               <Check className="w-4 h-4 text-white" />
             </div>
           )}
@@ -530,7 +530,7 @@ export default function GardenOnboarding({
               <p className="font-bold text-gray-800 flex items-center gap-1">
                 <span>{plant.emoji}</span> {plant.name}
               </p>
-              <p className="text-xs text-emerald-600 font-medium">{plant.tagline}</p>
+              <p className="text-xs text-teal-600 font-medium">{plant.tagline}</p>
               <p className="text-xs text-gray-500 line-clamp-2 mt-1">{plant.personality}</p>
             </div>
           </div>
@@ -547,7 +547,7 @@ export default function GardenOnboarding({
 
         {/* Free Plants */}
         <div>
-          <h3 className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-teal-700 mb-3 flex items-center gap-2">
             <Sparkles className="w-4 h-4" />
             Starter Plants (Free)
           </h3>
@@ -579,7 +579,7 @@ export default function GardenOnboarding({
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-200">
+              <div className="bg-gradient-to-br from-teal-50 to-teal-50 rounded-2xl p-5 border border-teal-200">
                 <div className="flex items-start gap-4">
                   <OnePlantSVG 
                     plantType={PLANT_DETAILS[showPlantDetail].type} 
@@ -592,7 +592,7 @@ export default function GardenOnboarding({
                     <h4 className="font-bold text-lg text-gray-800">
                       {PLANT_DETAILS[showPlantDetail].emoji} {PLANT_DETAILS[showPlantDetail].name}
                     </h4>
-                    <p className="text-sm text-emerald-600 font-medium mb-2">
+                    <p className="text-sm text-teal-600 font-medium mb-2">
                       {PLANT_DETAILS[showPlantDetail].tagline}
                     </p>
                     <p className="text-sm text-gray-600 mb-3">
@@ -608,7 +608,7 @@ export default function GardenOnboarding({
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {PLANT_DETAILS[showPlantDetail].bestFor.map((tag, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs">
+                          <span key={i} className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full text-xs">
                             {tag}
                           </span>
                         ))}
@@ -628,8 +628,8 @@ export default function GardenOnboarding({
   const NotificationsStep = () => (
     <div className="space-y-6 px-4">
       <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
-          <Bell className="w-10 h-10 text-emerald-600" />
+        <div className="w-20 h-20 mx-auto bg-teal-100 rounded-full flex items-center justify-center">
+          <Bell className="w-10 h-10 text-teal-600" />
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Stay on Track</h2>
         <p className="text-gray-600 max-w-md mx-auto">
@@ -639,9 +639,9 @@ export default function GardenOnboarding({
 
       <div className="max-w-md mx-auto space-y-4">
         {notificationPermission === 'granted' ? (
-          <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-            <Check className="w-6 h-6 text-emerald-600" />
-            <span className="text-emerald-800 font-medium">Notifications enabled!</span>
+          <div className="flex items-center gap-3 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+            <Check className="w-6 h-6 text-teal-600" />
+            <span className="text-teal-800 font-medium">Notifications enabled!</span>
           </div>
         ) : notificationPermission === 'denied' ? (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
@@ -653,7 +653,7 @@ export default function GardenOnboarding({
           <button
             onClick={handleEnableNotifications}
             disabled={isLoading}
-            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold text-lg hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg disabled:opacity-50"
+            className="w-full py-4 bg-gradient-to-r from-teal-500 to-teal-500 text-white rounded-xl font-bold text-lg hover:from-teal-600 hover:to-teal-600 transition-all shadow-lg disabled:opacity-50"
           >
             {isLoading ? 'Enabling...' : 'Enable Notifications'}
           </button>
@@ -663,15 +663,15 @@ export default function GardenOnboarding({
           <p className="text-sm font-medium text-gray-700">You'll receive:</p>
           <ul className="space-y-1 text-sm text-gray-600">
             <li className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-500" />
+              <Clock className="w-4 h-4 text-teal-500" />
               Pre-meeting calm reminders
             </li>
             <li className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-emerald-500" />
+              <Calendar className="w-4 h-4 text-teal-500" />
               Daily practice nudges
             </li>
             <li className="flex items-center gap-2">
-              <Heart className="w-4 h-4 text-emerald-500" />
+              <Heart className="w-4 h-4 text-teal-500" />
               Growth celebrations
             </li>
           </ul>
@@ -695,9 +695,9 @@ export default function GardenOnboarding({
 
       <div className="max-w-md mx-auto space-y-4">
         {isStandalone ? (
-          <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-            <Check className="w-6 h-6 text-emerald-600" />
-            <span className="text-emerald-800 font-medium">Already installed!</span>
+          <div className="flex items-center gap-3 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+            <Check className="w-6 h-6 text-teal-600" />
+            <span className="text-teal-800 font-medium">Already installed!</span>
           </div>
         ) : deferredPrompt ? (
           <button
@@ -767,12 +767,12 @@ export default function GardenOnboarding({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-teal-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 via-white to-teal-50 flex flex-col">
       {/* Progress Bar */}
-      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-emerald-100 px-4 py-3">
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-teal-100 px-4 py-3">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-emerald-700 font-medium">
+            <span className="text-sm text-teal-700 font-medium">
               Step {currentStep + 1} of {totalSteps}
             </span>
             {onSkip && currentStep < totalSteps - 1 && (
@@ -784,9 +784,9 @@ export default function GardenOnboarding({
               </button>
             )}
           </div>
-          <div className="h-2 bg-emerald-100 rounded-full overflow-hidden">
+          <div className="h-2 bg-teal-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-teal-500 to-teal-500 transition-all duration-300"
               style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
             />
           </div>
@@ -801,7 +801,7 @@ export default function GardenOnboarding({
       </div>
 
       {/* Navigation */}
-      <div className="sticky bottom-0 bg-white/80 backdrop-blur-sm border-t border-emerald-100 px-4 py-4">
+      <div className="sticky bottom-0 bg-white/80 backdrop-blur-sm border-t border-teal-100 px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
           <button
             onClick={prevStep}
@@ -821,7 +821,7 @@ export default function GardenOnboarding({
             disabled={!canProceed() || isLoading}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
               canProceed() && !isLoading
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg'
+                ? 'bg-gradient-to-r from-teal-500 to-teal-500 text-white hover:from-teal-600 hover:to-teal-600 shadow-lg'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >
