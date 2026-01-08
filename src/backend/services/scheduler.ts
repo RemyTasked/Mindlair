@@ -227,7 +227,27 @@ async function checkUpcomingMeetings() {
       // Process each event
       // Note: We no longer skip single-attendee meetings to support personal focus blocks
       // and meetings where the calendar provider doesn't populate full attendee lists
+      
+      // DEDUPLICATION: Group events by start time + title to avoid duplicate notifications
+      // when the same meeting appears in multiple calendars
+      const uniqueEvents = new Map<string, any>();
       for (const event of allEvents) {
+        // Create a unique key based on start time and title
+        const eventKey = `${event.start.toISOString()}-${(event.summary || '').toLowerCase().trim()}`;
+        
+        // Only keep the first occurrence of each event
+        if (!uniqueEvents.has(eventKey)) {
+          uniqueEvents.set(eventKey, event);
+        } else {
+          logger.info('⏭️ Skipping duplicate event from another calendar', {
+            userId: user.id,
+            event: event.summary,
+            calendar: event.calendarLabel,
+          });
+        }
+      }
+      
+      for (const event of uniqueEvents.values()) {
         // Skip events with generic/placeholder titles that are clearly not real meetings
         const lowerTitle = (event.summary || '').toLowerCase().trim();
         const isPlaceholder = ['busy', 'tentative', 'block', 'hold', 'no title'].some(
@@ -477,17 +497,28 @@ async function processUpcomingMeeting(user: any, event: any, alertMinutes: numbe
       }
 
       if (delivery?.pushEnabled && delivery?.pushPreMeetingCues) {
-        await pushNotificationService.sendPreMeetingCue(
-          user.id,
-          event.summary,
-          cueMessage,
-          focusSceneUrl,
-          meeting.id
-        );
-        logger.info('✅ Push notification sent successfully', {
-          userId: user.id,
-          flowType: pushNotificationService.determineFlowType(event.summary),
-        });
+        // Only send push notifications for pre-meeting-focus flow type
+        // Other flow types (presentation, difficult conversation) are still shown via email/Slack
+        const flowType = pushNotificationService.determineFlowType(event.summary);
+        if (flowType === 'pre-meeting-focus') {
+          await pushNotificationService.sendPreMeetingCue(
+            user.id,
+            event.summary,
+            cueMessage,
+            focusSceneUrl,
+            meeting.id
+          );
+          logger.info('✅ Push notification sent successfully', {
+            userId: user.id,
+            flowType,
+          });
+        } else {
+          logger.info('⏭️ Skipping push notification - not pre-meeting-focus', {
+            userId: user.id,
+            flowType,
+            meetingTitle: event.summary,
+          });
+        }
       }
 
       // Note: Cue telemetry recording was removed in the Mind Garden pivot
@@ -635,13 +666,14 @@ async function sendDailyWrapUps() {
           );
         }
 
-        if (delivery?.pushEnabled && delivery?.pushDailyWrapUp) {
-          await pushNotificationService.sendDailyWrapUp(
-            user.id,
-            wrapUpMessage,
-            stats
-          );
-        }
+        // Push notifications for daily wrap-up disabled - only pre-meeting focus push notifications
+        // if (delivery?.pushEnabled && delivery?.pushDailyWrapUp) {
+        //   await pushNotificationService.sendDailyWrapUp(
+        //     user.id,
+        //     wrapUpMessage,
+        //     stats
+        //   );
+        // }
 
         // Store daily reflection
         await prisma.dailyReflection.upsert({
@@ -736,14 +768,14 @@ async function sendPostMeetingInsights() {
           );
         }
 
-        // Send push notification if enabled
-        if (delivery?.pushEnabled && delivery?.pushPostMeetingCues) {
-          await pushNotificationService.sendPostMeetingInsight(
-            meeting.userId,
-            meeting.title,
-            ratingUrl
-          );
-        }
+        // Push notifications for post-meeting disabled - only pre-meeting focus push notifications
+        // if (delivery?.pushEnabled && delivery?.pushPostMeetingCues) {
+        //   await pushNotificationService.sendPostMeetingInsight(
+        //     meeting.userId,
+        //     meeting.title,
+        //     ratingUrl
+        //   );
+        // }
 
         // Send Slack notification if enabled
         if (delivery?.slackEnabled && delivery?.slackPostMeetingCues &&
@@ -919,19 +951,19 @@ async function sendPresleyFlowSessions() {
           );
         }
 
-        // Send via push notification if enabled
-        if (delivery?.pushEnabled && delivery?.pushPresleyFlow) {
-          await pushNotificationService.sendPresleyFlowNotification(
-            user.id,
-            presleyFlowUrl,
-            meetings.length,
-            targetDate.toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'short',
-              day: 'numeric',
-            })
-          );
-        }
+        // Push notifications for Presley Flow disabled - only pre-meeting focus push notifications
+        // if (delivery?.pushEnabled && delivery?.pushPresleyFlow) {
+        //   await pushNotificationService.sendPresleyFlowNotification(
+        //     user.id,
+        //     presleyFlowUrl,
+        //     meetings.length,
+        //     targetDate.toLocaleDateString('en-US', {
+        //       weekday: 'long',
+        //       month: 'short',
+        //       day: 'numeric',
+        //     })
+        //   );
+        // }
 
         // Send via Slack if enabled
         if (delivery?.slackEnabled && delivery?.slackPresleyFlow &&
@@ -1041,17 +1073,17 @@ async function sendMorningRecaps() {
           );
         }
 
-        // Send via push notification if enabled
-        if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushMorningRecap) {
-          await pushNotificationService.sendMorningRecap(
-            user.id,
-            recapMessage,
-            firstMeeting.startTime.toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-            })
-          );
-        }
+        // Push notifications for morning recap disabled - only pre-meeting focus push notifications
+        // if (user.deliverySettings?.pushEnabled && user.deliverySettings?.pushMorningRecap) {
+        //   await pushNotificationService.sendMorningRecap(
+        //     user.id,
+        //     recapMessage,
+        //     firstMeeting.startTime.toLocaleTimeString('en-US', {
+        //       hour: 'numeric',
+        //       minute: '2-digit',
+        //     })
+        //   );
+        // }
 
         if (emailSent) {
           logger.info('Morning recap sent', {
@@ -1239,7 +1271,7 @@ async function sendWellnessReminders() {
           });
         }
 
-        // Send push notification if enabled
+        // Wellness push notifications enabled at user's configured frequency
         if (delivery?.pushEnabled && delivery?.pushWellnessReminders) {
           await pushNotificationService.sendWellnessReminder(user.id, type, message);
           sent = true; // Mark as sent if push succeeds
@@ -1363,21 +1395,21 @@ async function sendWindingDownNotifications() {
           }
         }
         
-        // Send via push notification if enabled
-        if (delivery?.pushEnabled && delivery?.pushWindingDown) {
-          try {
-            await pushNotificationService.sendWindingDownNotification(
-              user.id,
-              windingDownUrl
-            );
-            sent = true;
-          } catch (error: any) {
-            logger.error('Failed to send winding down push notification', {
-              userId: user.id,
-              error: error.message,
-            });
-          }
-        }
+        // Push notifications for winding down disabled - only pre-meeting focus push notifications
+        // if (delivery?.pushEnabled && delivery?.pushWindingDown) {
+        //   try {
+        //     await pushNotificationService.sendWindingDownNotification(
+        //       user.id,
+        //       windingDownUrl
+        //     );
+        //     sent = true;
+        //   } catch (error: any) {
+        //     logger.error('Failed to send winding down push notification', {
+        //       userId: user.id,
+        //       error: error.message,
+        //     });
+        //   }
+        // }
 
         // Send via Slack if enabled
         if (delivery?.slackEnabled && delivery?.slackWindingDown &&

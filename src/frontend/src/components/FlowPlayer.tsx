@@ -87,14 +87,15 @@ interface FlowPlayerProps {
   autostart?: boolean;
 }
 
-// Breathing timing patterns - VERY SLOW for truly meditative experience
-// Each phase should feel unhurried - minimum 4 seconds, preferably 6-8 seconds per action
+// Breathing timing patterns - SYNCHRONIZED with audio narration
+// These timings match the ElevenLabs audio files (4-count = ~4 seconds per phase)
+// Audio says: "Breathe in... two... three... four..." which takes about 4 seconds
 const BREATHING_PATTERNS = {
-  box: { inhale: 8, holdIn: 8, exhale: 8, holdOut: 8 },                  // 8 seconds each = 32s cycle (very calm)
-  calming: { inhale: 6, holdIn: 7, exhale: 10, holdOut: 2 },             // Extended exhale calms nervous system
-  'extended-exhale': { inhale: 5, holdIn: 7, exhale: 12, holdOut: 2 },   // Even longer exhale for deep calm
-  energizing: { inhale: 6, holdIn: 4, exhale: 6, holdOut: 2 },           // Slightly faster but still calm
-  cleansing: { inhale: 6, holdIn: 2, exhale: 10, holdOut: 2 },           // Long exhale to release tension
+  box: { inhale: 4, holdIn: 4, exhale: 4, holdOut: 4 },                  // 4 seconds each = 16s cycle (matches audio: "in for 4, hold for 4...")
+  calming: { inhale: 4, holdIn: 6, exhale: 8, holdOut: 0 },              // 4-7-8 pattern for calming (matches extended exhale audio)
+  'extended-exhale': { inhale: 4, holdIn: 6, exhale: 8, holdOut: 0 },    // Same as calming - matches audio "in 4, hold 6, out 8"
+  energizing: { inhale: 4, holdIn: 2, exhale: 4, holdOut: 2 },           // Quick energizing pattern
+  cleansing: { inhale: 4, holdIn: 0, exhale: 6, holdOut: 0 },            // Simple cleansing breath (in and out)
 };
 
 export default function FlowPlayer({ flow, onComplete, onClose, autostart = false }: FlowPlayerProps) {
@@ -117,6 +118,10 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
   const narrationAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Track actual audio duration and position for accurate time remaining
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
 
   const currentStep = flow.steps[currentStepIndex];
   const totalSteps = flow.steps.length;
@@ -233,6 +238,16 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     audio.onerror = (e) => {
       console.warn('Narration audio failed to load:', e);
       // Fallback to TTS if MP3 fails
+    };
+    
+    // Track audio duration for accurate time remaining display
+    audio.onloadedmetadata = () => {
+      setAudioDuration(audio.duration);
+    };
+    
+    // Track current time for syncing and time remaining
+    audio.ontimeupdate = () => {
+      setAudioCurrentTime(audio.currentTime);
     };
     
     audio.play().catch(err => {
@@ -518,8 +533,10 @@ export default function FlowPlayer({ flow, onComplete, onClose, autostart = fals
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Use audio-based time remaining when available for accuracy
   const totalElapsed = (Date.now() - startTimeRef.current) / 1000;
-  const totalRemaining = Math.max(0, flow.duration - totalElapsed);
+  const audioRemaining = audioDuration ? Math.max(0, audioDuration - audioCurrentTime) : null;
+  const totalRemaining = audioRemaining ?? Math.max(0, flow.duration - totalElapsed);
 
   // Breathing circle animation
   const getBreathScale = () => {

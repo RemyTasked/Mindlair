@@ -401,11 +401,12 @@ export function createNewPlant(type: PlantType, position: number): OnePlant {
 
 /**
  * Update plant's visual state based on action count
+ * Leaves are earned at 1 per 2 activities (actions)
  */
 export function updatePlantVisuals(plant: OnePlant): OnePlant {
   return {
     ...plant,
-    leavesCount: Math.min(plant.actionsCount, GROWTH_THRESHOLDS.MAX_LEAVES),
+    leavesCount: Math.min(Math.floor(plant.actionsCount / 2), GROWTH_THRESHOLDS.MAX_LEAVES),
     flowerBudsCount: calculateFlowerBuds(plant.actionsCount),
     flowersCount: calculateFlowers(plant.actionsCount),
     growthStage: calculateGrowthStage(plant.actionsCount),

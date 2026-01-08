@@ -10,8 +10,8 @@
  * - Automatic updates with cache busting
  */
 
-const CACHE_NAME = 'mind-garden-v2';
-const RUNTIME_CACHE = 'mind-garden-runtime-v2';
+const CACHE_NAME = 'mind-garden-v3';
+const RUNTIME_CACHE = 'mind-garden-runtime-v3';
 
 // Core assets to cache on install for offline use
 const PRECACHE_ASSETS = [
@@ -212,26 +212,29 @@ self.addEventListener('push', (event) => {
  * - Autostart parameter for immediate flow playback
  */
 self.addEventListener('notificationclick', (event) => {
-  console.log('🌱 Mind Garden SW: Notification clicked:', event.action);
+  console.log('🌱 Mind Garden SW: Notification clicked:', event.action, event.notification.data);
   event.notification.close();
 
   const notifData = event.notification.data || {};
-  let targetUrl = '/garden';
+  let targetUrl = '/dashboard';
 
-  if (event.action === 'start-flow' || event.action === 'open' || !event.action) {
-    // User clicked "Start Flow" or the notification body
-    if (notifData.flowType) {
-      // Build URL with autostart parameter
-      targetUrl = `/flow/${notifData.flowType}?autostart=true`;
-      if (notifData.meetingId) {
-        targetUrl += `&meetingId=${notifData.meetingId}`;
-      }
-    } else if (notifData.url) {
-      targetUrl = notifData.url;
-    }
-  } else if (event.action === 'dismiss') {
+  if (event.action === 'dismiss') {
     // User clicked "Not Now" - just close, don't open anything
     return;
+  }
+
+  // User clicked "Start Flow", the notification body, or any action
+  if (notifData.flowType) {
+    // Build URL with autostart parameter for pre-meeting flows
+    targetUrl = `/flow/${notifData.flowType}?autostart=true`;
+    if (notifData.meetingId) {
+      targetUrl += `&meetingId=${notifData.meetingId}`;
+    }
+    console.log('🌱 Navigating to flow:', targetUrl);
+  } else if (notifData.url) {
+    // Use explicit URL from notification data
+    targetUrl = notifData.url;
+    console.log('🌱 Navigating to URL from data:', targetUrl);
   }
 
   // Open or focus the app window
@@ -241,11 +244,13 @@ self.addEventListener('notificationclick', (event) => {
       for (const client of clientList) {
         if (client.url.includes(self.registration.scope) && 'focus' in client) {
           // Navigate existing window to the target URL
+          console.log('🌱 Navigating existing window to:', targetUrl);
           client.navigate(targetUrl);
           return client.focus();
         }
       }
       // Open new window if app not open
+      console.log('🌱 Opening new window to:', targetUrl);
       return clients.openWindow(targetUrl);
     })
   );

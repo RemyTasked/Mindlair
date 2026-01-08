@@ -268,7 +268,9 @@ export default function Activities() {
         navigate('/flow/breathing');
         break;
       case 'mindful-moments':
-        navigate('/flows');
+        // Stay on the activities page (this is a daily challenge feature, not flows)
+        // For now, navigate to a breathing flow as the main mindful moment
+        navigate('/flow/breathing');
         break;
       case 'thought-popper':
         startGame('thought-popper');

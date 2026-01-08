@@ -15,6 +15,8 @@ import { asyncHandler } from '../middleware/errorHandler';
 import * as gardenService from '../services/games/gardenService';
 import { MILESTONE_DEFINITIONS } from '../services/games/gardenService';
 import { logger } from '../utils/logger';
+import { pushNotificationService } from '../services/delivery/pushNotificationService';
+import { prisma } from '../utils/prisma';
 
 const router = express.Router();
 
@@ -202,6 +204,38 @@ router.post(
       }
       res.status(400).json({ error: result.message });
       return;
+    }
+    
+    // Send push notification for milestones (plant growth achievements)
+    if (result.milestones && result.milestones.length > 0) {
+      // Check if user has push notifications enabled for milestones
+      const userDeliverySettings = await prisma.deliverySettings.findUnique({
+        where: { userId },
+      });
+      
+      if (userDeliverySettings?.pushEnabled) {
+        // Send push notification for each milestone achieved
+        for (const milestone of result.milestones) {
+          try {
+            await pushNotificationService.sendMilestoneNotification(
+              userId,
+              milestone.title,
+              milestone.message,
+              milestone.emoji
+            );
+            logger.info('🎉 Milestone push notification sent', {
+              userId,
+              milestone: milestone.title,
+            });
+          } catch (error: any) {
+            logger.error('Failed to send milestone push notification', {
+              userId,
+              milestone: milestone.title,
+              error: error.message,
+            });
+          }
+        }
+      }
     }
     
     res.json({

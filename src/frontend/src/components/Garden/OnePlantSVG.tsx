@@ -124,8 +124,9 @@ interface OnePlantProps {
 }
 
 // Calculate visual properties based on actions
+// 1 leaf per 2 activities (actions), max 35 leaves at 70 actions
 function calculateVisuals(actionsCount: number) {
-  const leavesCount = Math.min(actionsCount, 35);
+  const leavesCount = Math.min(Math.floor(actionsCount / 2), 35);
   
   // Stem height percentage
   let stemHeight = 30;

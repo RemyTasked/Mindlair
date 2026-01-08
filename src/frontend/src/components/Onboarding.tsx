@@ -163,7 +163,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         completedAt: new Date().toISOString(),
       });
 
-      localStorage.setItem('mindgarden_onboarding_completed', 'true');
+      localStorage.setItem('mindgarden_onboarding_v2_completed', 'true');
       localStorage.removeItem('meetcute_profile_cache');
       
       onComplete();
@@ -173,7 +173,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         `Failed to save onboarding data. Would you like to skip for now?`
       );
       if (skipOnboarding) {
-        localStorage.setItem('mindgarden_onboarding_completed', 'true');
+        localStorage.setItem('mindgarden_onboarding_v2_completed', 'true');
         onComplete();
       }
     }

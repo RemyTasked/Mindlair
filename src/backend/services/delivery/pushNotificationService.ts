@@ -327,6 +327,29 @@ class PushNotificationService {
   }
 
   /**
+   * Send plant growth milestone notification
+   */
+  async sendMilestoneNotification(
+    userId: string,
+    milestoneTitle: string,
+    milestoneMessage: string,
+    emoji: string
+  ): Promise<boolean> {
+    return this.sendToUser(userId, {
+      title: `${emoji} ${milestoneTitle}`,
+      body: milestoneMessage,
+      icon: '/icons/mindgarden-icon-192x192.png',
+      badge: '/icons/mindgarden-icon-72x72.png',
+      url: '/dashboard',
+      tag: 'plant-milestone',
+      data: {
+        type: 'plant-milestone',
+        milestoneTitle,
+      },
+    });
+  }
+
+  /**
    * Subscribe a user to push notifications
    */
   async subscribe(
