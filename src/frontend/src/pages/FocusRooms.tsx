@@ -1,101 +1,247 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Clock, Headphones, Sparkles, Heart, Zap, Moon } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Play, Pause, Volume2, VolumeX, Clock, Waves, CloudRain, TreePine, Wind, Coffee, Moon } from 'lucide-react';
 import DashboardLayout from '../components/Garden/DashboardLayout';
-import AmbientSound from '../components/AmbientSound';
-import SceneLibrary from '../components/SceneLibrary';
-import api from '../lib/axios';
 
-interface FocusRoom {
+// ============================================================================
+// AMBIENT SOUND DEFINITIONS - 6 Simple Sounds
+// ============================================================================
+
+interface AmbientSound {
   id: string;
   name: string;
   description: string;
   icon: React.ReactNode;
-  gradient: string;
-  bgGradient: string;
-  soundType: 'lofi-deep-focus' | 'lofi-soft-composure' | 'lofi-warm-connection' | 'lofi-pitch-pulse' | 'lofi-recovery-lounge' | 'lofi-focus' | 'lofi-chill' | 'lofi-morning' | 'lofi-evening' | 'lofi-calm' | 'calm-ocean' | 'rain' | 'forest' | 'meditation-bell' | 'white-noise';
+  color: string;
+  bgColor: string;
 }
 
-const FOCUS_ROOMS: FocusRoom[] = [
+const AMBIENT_SOUNDS: AmbientSound[] = [
   {
-    id: 'deep-focus',
-    name: 'Deep Focus Room',
-    description: 'Clarity & momentum',
-    icon: <Headphones className="w-8 h-8" />,
-    gradient: 'from-sky-600 to-cyan-600',
-    bgGradient: 'from-sky-50 to-cyan-50',
-    soundType: 'lofi-deep-focus',
+    id: 'ocean-waves',
+    name: 'Ocean Waves',
+    description: 'Calming waves for relaxation',
+    icon: <Waves className="w-8 h-8" />,
+    color: 'text-blue-500',
+    bgColor: 'bg-gradient-to-br from-blue-100 to-cyan-100',
   },
   {
-    id: 'soft-composure',
-    name: 'Soft Composure Room',
-    description: 'Calm nervous system',
-    icon: <Heart className="w-8 h-8" />,
-    gradient: 'from-teal-600 to-cyan-600',
-    bgGradient: 'from-teal-50 to-cyan-50',
-    soundType: 'lofi-soft-composure',
+    id: 'gentle-rain',
+    name: 'Gentle Rain',
+    description: 'Soft rain for focus',
+    icon: <CloudRain className="w-8 h-8" />,
+    color: 'text-slate-500',
+    bgColor: 'bg-gradient-to-br from-slate-100 to-gray-100',
   },
   {
-    id: 'warm-connection',
-    name: 'Warm Connection Room',
-    description: 'Empathy for 1:1s',
-    icon: <Sparkles className="w-8 h-8" />,
-    gradient: 'from-pink-600 to-rose-600',
-    bgGradient: 'from-pink-50 to-rose-50',
-    soundType: 'lofi-warm-connection',
+    id: 'forest',
+    name: 'Forest Ambience',
+    description: 'Birds and rustling leaves',
+    icon: <TreePine className="w-8 h-8" />,
+    color: 'text-green-600',
+    bgColor: 'bg-gradient-to-br from-green-100 to-emerald-100',
   },
   {
-    id: 'pitch-pulse',
-    name: 'Pitch Pulse Room',
-    description: 'Confidence boost',
-    icon: <Zap className="w-8 h-8" />,
-    gradient: 'from-yellow-600 to-orange-600',
-    bgGradient: 'from-yellow-50 to-orange-50',
-    soundType: 'lofi-pitch-pulse',
+    id: 'wind',
+    name: 'Soft Wind',
+    description: 'Gentle breeze sounds',
+    icon: <Wind className="w-8 h-8" />,
+    color: 'text-sky-500',
+    bgColor: 'bg-gradient-to-br from-sky-100 to-blue-100',
   },
   {
-    id: 'recovery-lounge',
-    name: 'Recovery Lounge',
-    description: 'Decompress after tough scenes',
+    id: 'cafe',
+    name: 'Café Ambience',
+    description: 'Coffee shop background',
+    icon: <Coffee className="w-8 h-8" />,
+    color: 'text-amber-600',
+    bgColor: 'bg-gradient-to-br from-amber-100 to-orange-100',
+  },
+  {
+    id: 'night',
+    name: 'Night Sounds',
+    description: 'Crickets and peaceful night',
     icon: <Moon className="w-8 h-8" />,
-    gradient: 'from-slate-600 to-slate-700',
-    bgGradient: 'from-slate-50 to-gray-50',
-    soundType: 'lofi-recovery-lounge',
+    color: 'text-indigo-500',
+    bgColor: 'bg-gradient-to-br from-indigo-100 to-purple-100',
   },
 ];
 
-type TimerOption = 5 | 10 | 20 | '∞';
+// ============================================================================
+// AUDIO GENERATION - Simple procedural sounds
+// ============================================================================
+
+const SAMPLE_RATE = 44100;
+const DURATION_SECONDS = 30; // 30 second loops
+
+function generateAudioBuffer(soundId: string): Float32Array {
+  const length = SAMPLE_RATE * DURATION_SECONDS;
+  const data = new Float32Array(length);
+
+  switch (soundId) {
+    case 'ocean-waves': {
+      // Smooth ocean waves with gentle swells
+      let prevNoise = 0;
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Wave motion at different frequencies
+        const wave1 = Math.sin(2 * Math.PI * 0.08 * t) * 0.3;
+        const wave2 = Math.sin(2 * Math.PI * 0.12 * t + 0.5) * 0.2;
+        // Filtered noise for water texture
+        const noise = Math.random() * 2 - 1;
+        prevNoise += 0.02 * (noise - prevNoise);
+        data[i] = (wave1 + wave2) * 0.4 + prevNoise * 0.3;
+      }
+      break;
+    }
+    case 'gentle-rain': {
+      // Soft rain without harsh drops
+      let prev1 = 0, prev2 = 0;
+      for (let i = 0; i < length; i++) {
+        const noise = Math.random() * 2 - 1;
+        prev1 += 0.01 * (noise - prev1);
+        prev2 += 0.03 * (prev1 - prev2);
+        data[i] = prev2 * 0.4;
+      }
+      break;
+    }
+    case 'forest': {
+      // Birds and gentle wind
+      let windNoise = 0;
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Gentle wind base
+        const noise = Math.random() * 2 - 1;
+        windNoise += 0.02 * (noise - windNoise);
+        // Occasional bird chirps
+        const bird1 = (t % 7 < 0.2) ? Math.sin(2 * Math.PI * 1200 * t) * Math.exp(-10 * (t % 7)) * 0.15 : 0;
+        const bird2 = ((t + 3) % 11 < 0.15) ? Math.sin(2 * Math.PI * 1500 * t) * Math.exp(-12 * ((t + 3) % 11)) * 0.1 : 0;
+        data[i] = windNoise * 0.3 + bird1 + bird2;
+      }
+      break;
+    }
+    case 'wind': {
+      // Soft, flowing wind
+      let prev1 = 0, prev2 = 0;
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        const noise = Math.random() * 2 - 1;
+        prev1 += 0.008 * (noise - prev1);
+        prev2 += 0.02 * (prev1 - prev2);
+        // Slow modulation for gusts
+        const gust = 1 + Math.sin(2 * Math.PI * 0.1 * t) * 0.3;
+        data[i] = prev2 * 0.35 * gust;
+      }
+      break;
+    }
+    case 'cafe': {
+      // Coffee shop ambient murmur
+      let prev1 = 0, prev2 = 0;
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        const noise = Math.random() * 2 - 1;
+        prev1 += 0.03 * (noise - prev1);
+        prev2 += 0.05 * (prev1 - prev2);
+        // Subtle low frequency murmur
+        const murmur = Math.sin(2 * Math.PI * 150 * t) * 0.05;
+        data[i] = prev2 * 0.25 + murmur;
+      }
+      break;
+    }
+    case 'night': {
+      // Crickets and peaceful night
+      for (let i = 0; i < length; i++) {
+        const t = i / SAMPLE_RATE;
+        // Cricket chirps (high frequency, rhythmic)
+        const cricketPhase = (t * 15) % 1;
+        const cricket = cricketPhase < 0.3 ? Math.sin(2 * Math.PI * 4000 * t) * 0.08 * (1 - cricketPhase / 0.3) : 0;
+        // Soft ambient noise
+        const ambient = (Math.random() * 2 - 1) * 0.02;
+        // Deep night atmosphere
+        const deep = Math.sin(2 * Math.PI * 60 * t) * 0.03;
+        data[i] = cricket + ambient + deep;
+      }
+      break;
+    }
+    default:
+      data.fill(0);
+  }
+
+  // Smooth fade in/out to prevent clicks
+  const fadeSamples = SAMPLE_RATE * 0.5;
+  for (let i = 0; i < fadeSamples; i++) {
+    const fade = i / fadeSamples;
+    data[i] *= fade * fade;
+    data[length - 1 - i] *= fade * fade;
+  }
+
+  return data;
+}
+
+function createAudioDataUrl(soundId: string): string {
+  const samples = generateAudioBuffer(soundId);
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  // WAV header
+  const writeString = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  };
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, SAMPLE_RATE, true);
+  view.setUint32(28, SAMPLE_RATE * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  // Convert samples to 16-bit PCM
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return `data:audio/wav;base64,${btoa(binary)}`;
+}
+
+// ============================================================================
+// FOCUS ROOMS COMPONENT
+// ============================================================================
+
+type TimerOption = 5 | 10 | 20 | 30;
 
 export default function FocusRooms() {
-  const [activeRoom, setActiveRoom] = useState<string | null>(null);
+  const [activeSound, setActiveSound] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [timer, setTimer] = useState<TimerOption>(20);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
-  const [totalCredits, setTotalCredits] = useState(0);
-  const [activeTab, setActiveTab] = useState<'focus-rooms' | 'ambient-library'>('focus-rooms');
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
 
-  // Stop any ambient sound from Scene Library when entering Focus Rooms page
+  // Cleanup audio on unmount
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-      detail: { source: 'focus-rooms-mount', fadeOut: true },
-    }));
-  }, []);
-
-  // Load credits on mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const statsResponse = await api.get('/api/focus-rooms/stats').catch(() => ({ data: { totalCredits: 0 } }));
-        setTotalCredits(statsResponse.data.totalCredits || 0);
-      } catch (error) {
-        console.error('Error loading data:', error);
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
     };
-    loadData();
   }, []);
 
   // Timer countdown
@@ -103,138 +249,93 @@ export default function FocusRooms() {
     if (timeRemaining === null || !isPlaying) return;
     
     if (timeRemaining <= 0) {
-      handleTimerEnd();
+      stopAudio();
       return;
     }
 
     const interval = setInterval(() => {
       setTimeRemaining((prev) => {
-        if (prev === null) return null;
-        if (prev <= 1) {
-          return 0;
-        }
+        if (prev === null || prev <= 1) return 0;
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
   }, [timeRemaining, isPlaying]);
-  
+
+  // Stop when timer reaches 0
   useEffect(() => {
     if (timeRemaining === 0 && isPlaying) {
-      handleTimerEnd();
+      stopAudio();
     }
-  }, [timeRemaining]);
+  }, [timeRemaining, isPlaying]);
 
-  const handleTimerEnd = async () => {
+  // Update volume when changed
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
     setIsPlaying(false);
-    
-    // Fade out and stop audio
-    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-      detail: { source: 'focus-rooms', fadeOut: true }
-    }));
-    
-    // Complete session
-    if (currentSessionId && sessionStartTime) {
-      const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
-      try {
-        const response = await api.post('/api/focus-rooms/sessions/complete', {
-          sessionId: currentSessionId,
-          duration,
-          completed: true,
-        });
-        setTotalCredits(response.data.totalCredits);
-      } catch (error) {
-        console.error('Error completing session:', error);
-      }
-    }
-    
-    setActiveRoom(null);
+    setActiveSound(null);
     setTimeRemaining(null);
-    setCurrentSessionId(null);
-    setSessionStartTime(null);
-  };
+  }, []);
 
-  // Stop any ambient sound before starting a new one
-  const stopAmbientIfAny = () => {
-    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-      detail: { source: 'focus-rooms-start', fadeOut: true },
-    }));
-  };
-
-  const handleRoomSelect = async (room: FocusRoom) => {
-    // Stop all audio first
-    stopAmbientIfAny();
-    
-    if (activeRoom === room.id) {
-      // Closing the room
-      if (currentSessionId && sessionStartTime) {
-        const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
-        try {
-          const response = await api.post('/api/focus-rooms/sessions/complete', {
-            sessionId: currentSessionId,
-            duration,
-            completed: false,
-          });
-          setTotalCredits(response.data.totalCredits);
-        } catch (error) {
-          console.error('Error completing session:', error);
-        }
-      }
-      
-      setIsPlaying(false);
-      setActiveRoom(null);
-      setTimeRemaining(null);
-      setCurrentSessionId(null);
-      setSessionStartTime(null);
-      return;
-    } else {
-      // Opening a new room
-      try {
-        const sessionResponse = await api.post('/api/focus-rooms/sessions/start', {
-          roomId: room.id,
-          roomName: room.name,
-          timerOption: timer.toString(),
-          audioSource: 'meetcute',
-        });
-        
-        setCurrentSessionId(sessionResponse.data.sessionId);
-        setSessionStartTime(Date.now());
-      } catch (error) {
-        console.error('Error starting session:', error);
-      }
-      
-      setActiveRoom(room.id);
-      setIsPlaying(false);
-      
-      if (timer === '∞') {
-        setTimeRemaining(null);
-      } else {
-        setTimeRemaining(timer * 60);
-      }
+  const startAudio = useCallback((soundId: string) => {
+    // Stop any existing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
-  };
 
-  const startMindGardenAudio = (room: FocusRoom) => {
-    console.log('🎵 Starting Mind Garden audio for room:', { roomId: room.id, soundType: room.soundType });
+    // Generate audio URL
+    const audioUrl = createAudioDataUrl(soundId);
+    audioUrlRef.current = audioUrl;
+
+    // Create and play audio
+    const audio = new Audio(audioUrl);
+    audio.loop = true;
+    audio.volume = isMuted ? 0 : volume;
     
-    // First stop any currently playing audio to prevent overlap
-    window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-      detail: { source: 'focus-rooms-before-start', fadeOut: false }
-    }));
-    
-    // Start the new sound - dispatch event with specific sound type
-    // The AmbientSound component will handle the actual playback
-    setTimeout(() => {
-      console.log('🎵 Dispatching ambient-sound-play for:', room.soundType);
-      window.dispatchEvent(new CustomEvent('ambient-sound-play', {
-        detail: { 
-          source: 'focus-rooms-mindgarden', 
-          soundType: room.soundType
-        }
-      }));
-    }, 100);
-  };
+    audio.play().catch((err) => {
+      console.warn('Audio playback failed:', err);
+    });
+
+    audioRef.current = audio;
+    setIsPlaying(true);
+    setActiveSound(soundId);
+    setTimeRemaining(timer * 60);
+  }, [volume, isMuted, timer]);
+
+  const toggleSound = useCallback((soundId: string) => {
+    if (activeSound === soundId && isPlaying) {
+      stopAudio();
+    } else {
+      startAudio(soundId);
+    }
+  }, [activeSound, isPlaying, startAudio, stopAudio]);
+
+  const togglePlayPause = useCallback(() => {
+    if (!audioRef.current || !activeSound) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play().catch(console.warn);
+      setIsPlaying(true);
+    }
+  }, [isPlaying, activeSound]);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => !prev);
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -244,277 +345,195 @@ export default function FocusRooms() {
 
   return (
     <DashboardLayout activeSection="sounds">
-      <div className="p-4 md:p-8 pb-32 max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-[var(--mg-text-primary)] mb-2">
-            Focus Rooms
+      <div className="p-4 md:p-8 pb-32 max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-[var(--mg-text-primary)] mb-3">
+            🎧 Ambient Sounds
           </h1>
-          <p className="text-[var(--mg-text-secondary)]">
-            Audio is the "stage lighting" for performance. Calm + clarity become a ritual, not a struggle.
+          <p className="text-[var(--mg-text-secondary)] text-lg">
+            Choose a sound to help you focus, relax, or unwind.
           </p>
-          {totalCredits > 0 && (
-            <div className="inline-block mt-2 px-3 py-1 bg-[var(--mg-accent)]/20 text-[var(--mg-accent-light)] rounded-full text-sm font-semibold">
-              🎯 {totalCredits} Credits Earned
-            </div>
-          )}
         </div>
 
-        {/* Tabs */}
-        <div className="mg-card overflow-hidden mb-6">
-          <div className="flex border-b border-[var(--mg-border)]">
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                  detail: { source: 'focus-rooms-tab-switch', fadeOut: true }
-                }));
-                
-                if (activeRoom) {
-                  setActiveRoom(null);
-                  setIsPlaying(false);
+        {/* Sound Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          {AMBIENT_SOUNDS.map((sound, index) => (
+            <motion.button
+              key={sound.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              onClick={() => toggleSound(sound.id)}
+              className={`
+                relative p-6 rounded-2xl text-left transition-all duration-300
+                ${sound.bgColor}
+                ${activeSound === sound.id 
+                  ? 'ring-4 ring-[var(--mg-accent)] shadow-xl scale-[1.02]' 
+                  : 'hover:shadow-lg hover:scale-[1.01]'
                 }
-                
-                setActiveTab('focus-rooms');
-              }}
-              className={`flex-1 px-4 py-3 text-center font-medium transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'focus-rooms'
-                  ? 'bg-[var(--mg-accent)] text-white'
-                  : 'text-[var(--mg-text-muted)] hover:bg-[var(--mg-bg-primary)]'
-              }`}
+              `}
             >
-              <Headphones className="w-4 h-4" />
-              <span>Focus Rooms</span>
-            </button>
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                  detail: { source: 'ambient-library-tab-switch', fadeOut: true }
-                }));
-                
-                if (activeRoom) {
-                  setActiveRoom(null);
-                  setIsPlaying(false);
-                }
-                
-                setActiveTab('ambient-library');
-              }}
-              className={`flex-1 px-4 py-3 text-center font-medium transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'ambient-library'
-                  ? 'bg-[var(--mg-accent)] text-white'
-                  : 'text-[var(--mg-text-muted)] hover:bg-[var(--mg-bg-primary)]'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Ambient Library</span>
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-4 md:p-6 min-h-[400px]">
-            <AnimatePresence mode="wait">
-              {activeTab === 'focus-rooms' && (
-                <motion.div
-                  key="focus-rooms"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {FOCUS_ROOMS.map((room, index) => (
-                      <motion.div
-                        key={room.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 * index }}
-                        onClick={() => handleRoomSelect(room)}
-                        className={`
-                          relative bg-gradient-to-br ${room.bgGradient} rounded-xl p-5 cursor-pointer
-                          transition-all hover:shadow-lg hover:scale-[1.02]
-                          ${activeRoom === room.id ? 'ring-2 ring-[var(--mg-accent)] ring-offset-2 ring-offset-[var(--mg-bg-primary)]' : ''}
-                        `}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className={`text-${room.gradient.split(' ')[0].split('-')[1]}-600`}>
-                            {room.icon}
-                          </div>
-                          {activeRoom === room.id && isPlaying && (
-                            <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">
-                          {room.name}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-3">
-                          {room.description}
-                        </p>
-                        
-                        {/* Audio Badge */}
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-medium rounded-full">
-                            Mind Garden Audio
-                          </span>
-                        </div>
-
-                        {/* Controls when active */}
-                        {activeRoom === room.id && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            className="mt-4 pt-4 border-t border-gray-300 space-y-4"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {/* Timer */}
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-gray-500" />
-                                  <span className="text-xs font-medium text-gray-600">Timer</span>
-                                </div>
-                                {timeRemaining !== null && (
-                                  <span className="text-sm font-bold text-gray-900">
-                                    {formatTime(timeRemaining)}
-                                  </span>
-                                )}
-                                {timeRemaining === null && (
-                                  <span className="text-sm font-bold text-gray-900">∞</span>
-                                )}
-                              </div>
-                              <div className="flex gap-2">
-                                {([5, 10, 20, '∞'] as TimerOption[]).map((option) => (
-                                  <button
-                                    key={option}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setTimer(option);
-                                      if (option === '∞') {
-                                        setTimeRemaining(null);
-                                      } else {
-                                        setTimeRemaining(option * 60);
-                                      }
-                                    }}
-                                    className={`
-                                      px-3 py-1.5 rounded-lg font-medium transition-all text-xs
-                                      ${timer === option
-                                        ? 'bg-teal-600 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                      }
-                                    `}
-                                  >
-                                    {option === '∞' ? '∞' : `${option}m`}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                            
-                            {/* Play/Pause and Volume */}
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Volume2 className="w-4 h-4 text-gray-500" />
-                                  <span className="text-xs font-medium text-gray-600">Volume</span>
-                                  <span className="text-xs font-medium text-gray-900">
-                                    {Math.round((isMuted ? 0 : volume) * 100)}%
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      
-                                      if (isPlaying) {
-                                        // Pause
-                                        window.dispatchEvent(new CustomEvent('ambient-sound-stop', {
-                                          detail: { source: 'focus-rooms-play-pause', fadeOut: false }
-                                        }));
-                                        setIsPlaying(false);
-                                      } else {
-                                        // Play
-                                        stopAmbientIfAny();
-                                        startMindGardenAudio(room);
-                                        setIsPlaying(true);
-                                      }
-                                    }}
-                                    className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-teal-600 text-white flex items-center justify-center hover:from-teal-700 hover:to-teal-700 transition-all shadow-md"
-                                  >
-                                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newMuted = !isMuted;
-                                    setIsMuted(newMuted);
-                                    
-                                    window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                                      detail: { volume: newMuted ? 0 : volume }
-                                    }));
-                                  }}
-                                  className="w-8 h-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-all"
-                                >
-                                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                                </button>
-                                <input
-                                  type="range"
-                                  min="0"
-                                  max="1"
-                                  step="0.01"
-                                  value={isMuted ? 0 : volume}
-                                  onChange={(e) => {
-                                    e.stopPropagation();
-                                    const newVolume = parseFloat(e.target.value);
-                                    setVolume(newVolume);
-                                    setIsMuted(newVolume === 0);
-                                    
-                                    window.dispatchEvent(new CustomEvent('ambient-sound-volume', {
-                                      detail: { volume: newVolume }
-                                    }));
-                                  }}
-                                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
+              {/* Playing indicator */}
+              {activeSound === sound.id && isPlaying && (
+                <div className="absolute top-3 right-3">
+                  <div className="w-3 h-3 bg-[var(--mg-accent)] rounded-full animate-pulse" />
+                </div>
               )}
 
-              {activeTab === 'ambient-library' && (
-                <motion.div
-                  key="ambient-library"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <SceneLibrary
-                    timeOfDay={new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}
-                    onSoundTypeChange={() => {
-                      if (activeRoom) {
-                        setActiveRoom(null);
-                        setIsPlaying(false);
+              <div className={`${sound.color} mb-4`}>
+                {sound.icon}
+              </div>
+              
+              <h3 className="text-lg font-bold text-gray-900 mb-1">
+                {sound.name}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {sound.description}
+              </p>
+
+              {/* Play/Pause overlay for active sound */}
+              {activeSound === sound.id && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-2xl">
+                  <div className={`p-3 rounded-full bg-white shadow-lg ${sound.color}`}>
+                    {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
+                  </div>
+                </div>
+              )}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Controls - Only show when a sound is active */}
+        {activeSound && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mg-card p-6 space-y-6"
+          >
+            {/* Now Playing */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${AMBIENT_SOUNDS.find(s => s.id === activeSound)?.bgColor}`}>
+                  {AMBIENT_SOUNDS.find(s => s.id === activeSound)?.icon}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[var(--mg-text-primary)]">
+                    Now Playing
+                  </h3>
+                  <p className="text-sm text-[var(--mg-text-secondary)]">
+                    {AMBIENT_SOUNDS.find(s => s.id === activeSound)?.name}
+                  </p>
+                </div>
+              </div>
+
+              {/* Timer display */}
+              {timeRemaining !== null && (
+                <div className="text-right">
+                  <p className="text-2xl font-mono font-bold text-[var(--mg-text-primary)]">
+                    {formatTime(timeRemaining)}
+                  </p>
+                  <p className="text-xs text-[var(--mg-text-muted)]">remaining</p>
+                </div>
+              )}
+            </div>
+
+            {/* Timer Selection */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="w-4 h-4 text-[var(--mg-text-muted)]" />
+                <span className="text-sm font-medium text-[var(--mg-text-secondary)]">Timer</span>
+              </div>
+              <div className="flex gap-2">
+                {([5, 10, 20, 30] as TimerOption[]).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setTimer(option);
+                      if (isPlaying) {
+                        setTimeRemaining(option * 60);
                       }
                     }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    className={`
+                      px-4 py-2 rounded-lg font-medium transition-all text-sm
+                      ${timer === option
+                        ? 'bg-[var(--mg-accent)] text-white'
+                        : 'bg-[var(--mg-bg-primary)] text-[var(--mg-text-secondary)] hover:bg-[var(--mg-bg-secondary)]'
+                      }
+                    `}
+                  >
+                    {option}m
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Volume Control */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Volume2 className="w-4 h-4 text-[var(--mg-text-muted)]" />
+                <span className="text-sm font-medium text-[var(--mg-text-secondary)]">
+                  Volume: {Math.round((isMuted ? 0 : volume) * 100)}%
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleMute}
+                  className="p-2 rounded-lg bg-[var(--mg-bg-primary)] text-[var(--mg-text-secondary)] hover:bg-[var(--mg-bg-secondary)] transition-all"
+                >
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => {
+                    const newVolume = parseFloat(e.target.value);
+                    setVolume(newVolume);
+                    setIsMuted(newVolume === 0);
+                  }}
+                  className="flex-1 h-2 bg-[var(--mg-bg-primary)] rounded-lg appearance-none cursor-pointer accent-[var(--mg-accent)]"
+                />
+              </div>
+            </div>
+
+            {/* Play/Pause and Stop */}
+            <div className="flex items-center gap-4 pt-2">
+              <button
+                onClick={togglePlayPause}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[var(--mg-accent)] text-white font-semibold hover:bg-[var(--mg-accent-dark)] transition-all"
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause className="w-5 h-5" />
+                    Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 ml-0.5" />
+                    Resume
+                  </>
+                )}
+              </button>
+              <button
+                onClick={stopAudio}
+                className="px-6 py-3 rounded-xl bg-[var(--mg-bg-primary)] text-[var(--mg-text-secondary)] font-semibold hover:bg-[var(--mg-bg-secondary)] transition-all"
+              >
+                Stop
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Empty State */}
+        {!activeSound && (
+          <div className="text-center py-8 text-[var(--mg-text-muted)]">
+            <p>Tap a sound above to start playing</p>
           </div>
-        </div>
+        )}
       </div>
-      
-      {/* Global Ambient Sound */}
-      <AmbientSound
-        soundType="none"
-        enabled={true}
-        stopOnNavigation={false}
-      />
     </DashboardLayout>
   );
 }

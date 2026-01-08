@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../lib/axios';
 import { getToken } from '../utils/persistentStorage';
 import { Calendar, Settings as SettingsIcon, TrendingUp, Headphones, Gamepad2, Flower2, Download } from 'lucide-react';
-import AmbientSound from '../components/AmbientSound';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import Logo from '../components/Logo';
@@ -642,11 +641,6 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Global Ambient Sound - Disabled on dashboard to prevent interference */}
-      <AmbientSound
-        soundType="none"
-        enabled={false}
-      />
 
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
