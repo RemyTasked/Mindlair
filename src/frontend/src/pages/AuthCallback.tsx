@@ -86,7 +86,7 @@ export default function AuthCallback() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-teal-50">
       <div className="text-center">
         <div className="mx-auto mb-4">
-          <Logo size="xl" />
+          <Logo size="2xl" />
         </div>
         <h2 className="text-2xl font-semibold text-gray-800">Completing setup...</h2>
       </div>

@@ -3,20 +3,64 @@
 :root {
   /* ========================================
      Nature-Inspired Color Palette
+     Designed to match the Mind Garden logo (cyan/teal/lime gradient)
      ======================================== */
   
-  /* Primary Greens - Garden Life */
-  --mg-green-50: #ecfdf5;
-  --mg-green-100: #d1fae5;
-  --mg-green-200: #a7f3d0;
-  --mg-green-300: #6ee7b7;
-  --mg-green-400: #34d399;
-  --mg-green-500: #10b981;
-  --mg-green-600: #059669;
-  --mg-green-700: #047857;
-  --mg-green-800: #065f46;
-  --mg-green-900: #064e3b;
-  --mg-green-950: #022c22;
+  /* Primary Teal/Cyan - Matches Logo Center */
+  --mg-teal-50: #f0fdfa;
+  --mg-teal-100: #ccfbf1;
+  --mg-teal-200: #99f6e4;
+  --mg-teal-300: #5eead4;
+  --mg-teal-400: #2dd4bf;
+  --mg-teal-500: #14b8a6;
+  --mg-teal-600: #0d9488;
+  --mg-teal-700: #0f766e;
+  --mg-teal-800: #115e59;
+  --mg-teal-900: #134e4a;
+  --mg-teal-950: #042f2e;
+  
+  /* Fresh Green - Matches Logo Leaves */
+  --mg-green-50: #f0fdf4;
+  --mg-green-100: #dcfce7;
+  --mg-green-200: #bbf7d0;
+  --mg-green-300: #86efac;
+  --mg-green-400: #4ade80;
+  --mg-green-500: #22c55e;
+  --mg-green-600: #16a34a;
+  --mg-green-700: #15803d;
+  --mg-green-800: #166534;
+  --mg-green-900: #14532d;
+  --mg-green-950: #052e16;
+  
+  /* Sky Blue - Matches Logo Left Side */
+  --mg-sky-50: #f0f9ff;
+  --mg-sky-100: #e0f2fe;
+  --mg-sky-200: #bae6fd;
+  --mg-sky-300: #7dd3fc;
+  --mg-sky-400: #38bdf8;
+  --mg-sky-500: #0ea5e9;
+  --mg-sky-600: #0284c7;
+  --mg-sky-700: #0369a1;
+  --mg-sky-800: #075985;
+  --mg-sky-900: #0c4a6e;
+  
+  /* Warm Coral - Accent for CTAs & Highlights */
+  --mg-coral-50: #fff5f5;
+  --mg-coral-100: #ffe4e6;
+  --mg-coral-200: #fecdd3;
+  --mg-coral-300: #fda4af;
+  --mg-coral-400: #fb7185;
+  --mg-coral-500: #f43f5e;
+  --mg-coral-600: #e11d48;
+  
+  /* Golden Warmth - Success & Achievement */
+  --mg-gold-50: #fffbeb;
+  --mg-gold-100: #fef3c7;
+  --mg-gold-200: #fde68a;
+  --mg-gold-300: #fcd34d;
+  --mg-gold-400: #fbbf24;
+  --mg-gold-500: #f59e0b;
+  --mg-gold-600: #d97706;
   
   /* Earth Tones - Grounding */
   --mg-earth-50: #fdf8f6;
@@ -30,80 +74,83 @@
   --mg-earth-800: #4a2c17;
   --mg-earth-900: #3d2414;
   
-  /* Sky Blues - Calm & Clarity */
-  --mg-sky-50: #f0f9ff;
-  --mg-sky-100: #e0f2fe;
-  --mg-sky-200: #bae6fd;
-  --mg-sky-300: #7dd3fc;
-  --mg-sky-400: #38bdf8;
-  --mg-sky-500: #0ea5e9;
-  --mg-sky-600: #0284c7;
-  --mg-sky-700: #0369a1;
+  /* Neutral Slate - Text & Backgrounds */
+  --mg-slate-50: #f8fafc;
+  --mg-slate-100: #f1f5f9;
+  --mg-slate-200: #e2e8f0;
+  --mg-slate-300: #cbd5e1;
+  --mg-slate-400: #94a3b8;
+  --mg-slate-500: #64748b;
+  --mg-slate-600: #475569;
+  --mg-slate-700: #334155;
+  --mg-slate-800: #1e293b;
+  --mg-slate-900: #0f172a;
+  --mg-slate-950: #020617;
   
-  /* Sunset/Warmth - Evening & Reflection */
-  --mg-sunset-50: #fff7ed;
-  --mg-sunset-100: #ffedd5;
-  --mg-sunset-200: #fed7aa;
-  --mg-sunset-300: #fdba74;
-  --mg-sunset-400: #fb923c;
-  --mg-sunset-500: #f97316;
-  --mg-sunset-600: #ea580c;
-  --mg-sunset-700: #c2410c;
+  /* Legacy aliases for backwards compatibility */
+  --mg-night-50: var(--mg-slate-50);
+  --mg-night-100: var(--mg-slate-100);
+  --mg-night-200: var(--mg-slate-200);
+  --mg-night-300: var(--mg-slate-300);
+  --mg-night-400: var(--mg-slate-400);
+  --mg-night-500: var(--mg-slate-500);
+  --mg-night-600: var(--mg-slate-600);
+  --mg-night-700: var(--mg-slate-700);
+  --mg-night-800: var(--mg-slate-800);
+  --mg-night-900: var(--mg-slate-900);
+  --mg-night-950: var(--mg-slate-950);
   
-  /* Night/Deep - Rest & Sleep */
-  --mg-night-50: #f8fafc;
-  --mg-night-100: #f1f5f9;
-  --mg-night-200: #e2e8f0;
-  --mg-night-300: #cbd5e1;
-  --mg-night-400: #94a3b8;
-  --mg-night-500: #64748b;
-  --mg-night-600: #475569;
-  --mg-night-700: #334155;
-  --mg-night-800: #1e293b;
-  --mg-night-900: #0f172a;
-  --mg-night-950: #020617;
-  
-  /* Accent Colors - Flowers & Highlights */
-  --mg-rose-400: #fb7185;
-  --mg-rose-500: #f43f5e;
-  --mg-violet-400: #a78bfa;
-  --mg-violet-500: #8b5cf6;
-  --mg-amber-400: #fbbf24;
-  --mg-amber-500: #f59e0b;
+  /* Accent shorthand */
+  --mg-rose-400: var(--mg-coral-400);
+  --mg-rose-500: var(--mg-coral-500);
+  --mg-amber-400: var(--mg-gold-400);
+  --mg-amber-500: var(--mg-gold-500);
   
   /* ========================================
      Semantic Colors
      ======================================== */
   
-  /* Backgrounds */
-  --mg-bg-primary: var(--mg-green-950);
-  --mg-bg-secondary: var(--mg-night-900);
-  --mg-bg-card: rgba(6, 78, 59, 0.3);
+  /* Backgrounds - Softer, less dark */
+  --mg-bg-primary: var(--mg-slate-900);
+  --mg-bg-secondary: var(--mg-slate-800);
+  --mg-bg-card: rgba(20, 184, 166, 0.08);
   --mg-bg-overlay: rgba(0, 0, 0, 0.5);
   
-  /* Text */
-  --mg-text-primary: var(--mg-green-50);
-  --mg-text-secondary: var(--mg-green-200);
-  --mg-text-muted: var(--mg-green-400);
+  /* Text - Using teal tints */
+  --mg-text-primary: var(--mg-teal-50);
+  --mg-text-secondary: var(--mg-teal-200);
+  --mg-text-muted: var(--mg-slate-400);
   
-  /* Borders */
-  --mg-border: rgba(52, 211, 153, 0.15);
-  --mg-border-active: var(--mg-green-500);
+  /* Borders - Cyan/teal based */
+  --mg-border: rgba(45, 212, 191, 0.15);
+  --mg-border-active: var(--mg-teal-500);
   
-  /* Accents */
-  --mg-accent: var(--mg-green-500);
-  --mg-accent-light: var(--mg-green-400);
-  --mg-accent-dark: var(--mg-green-600);
+  /* Primary Accent - Teal (matches logo center) */
+  --mg-accent: var(--mg-teal-500);
+  --mg-accent-light: var(--mg-teal-400);
+  --mg-accent-dark: var(--mg-teal-600);
+  
+  /* Secondary Accent - Fresh Green (matches logo leaves) */
+  --mg-accent-green: var(--mg-green-500);
+  --mg-accent-green-light: var(--mg-green-400);
+  
+  /* Tertiary Accent - Sky Blue (matches logo left) */
+  --mg-accent-sky: var(--mg-sky-500);
+  --mg-accent-sky-light: var(--mg-sky-400);
+  
+  /* Warm Accents */
+  --mg-accent-coral: var(--mg-coral-500);
+  --mg-accent-gold: var(--mg-gold-500);
   
   /* ========================================
      Garden States
      ======================================== */
   
   --mg-state-thriving: var(--mg-green-400);
-  --mg-state-growing: var(--mg-green-500);
+  --mg-state-growing: var(--mg-teal-500);
   --mg-state-stable: var(--mg-sky-400);
-  --mg-state-idle: var(--mg-night-400);
-  --mg-state-dormant: var(--mg-night-500);
+  --mg-state-idle: var(--mg-slate-400);
+  --mg-state-dormant: var(--mg-slate-500);
   
   /* ========================================
      Time of Day Themes
@@ -132,7 +179,9 @@
   --mg-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --mg-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
   --mg-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-  --mg-shadow-glow: 0 0 20px rgba(16, 185, 129, 0.3);
+  --mg-shadow-glow: 0 0 20px rgba(20, 184, 166, 0.4);
+  --mg-shadow-glow-coral: 0 0 20px rgba(244, 63, 94, 0.3);
+  --mg-shadow-glow-gold: 0 0 20px rgba(245, 158, 11, 0.3);
   
   /* ========================================
      Layout Dimensions
@@ -173,10 +222,11 @@
    ======================================== */
 
 [data-theme="dark"] {
-  --mg-bg-primary: var(--mg-green-950);
-  --mg-bg-secondary: var(--mg-night-900);
-  --mg-text-primary: var(--mg-green-50);
-  --mg-text-secondary: var(--mg-green-200);
+  --mg-bg-primary: var(--mg-slate-900);
+  --mg-bg-secondary: var(--mg-slate-800);
+  --mg-bg-card: rgba(20, 184, 166, 0.08);
+  --mg-text-primary: var(--mg-teal-50);
+  --mg-text-secondary: var(--mg-teal-200);
 }
 
 /* ========================================
@@ -184,13 +234,13 @@
    ======================================== */
 
 [data-theme="light"] {
-  --mg-bg-primary: var(--mg-green-50);
+  --mg-bg-primary: var(--mg-teal-50);
   --mg-bg-secondary: white;
   --mg-bg-card: rgba(255, 255, 255, 0.9);
-  --mg-text-primary: var(--mg-green-900);
-  --mg-text-secondary: var(--mg-green-700);
-  --mg-text-muted: var(--mg-green-600);
-  --mg-border: rgba(16, 185, 129, 0.2);
+  --mg-text-primary: var(--mg-slate-900);
+  --mg-text-secondary: var(--mg-slate-700);
+  --mg-text-muted: var(--mg-slate-500);
+  --mg-border: rgba(20, 184, 166, 0.2);
 }
 
 /* ========================================
@@ -219,19 +269,19 @@
   position: relative;
   aspect-ratio: 1;
   border-radius: 8px;
-  background: rgba(16, 185, 129, 0.05);
+  background: rgba(20, 184, 166, 0.05);
   border: 1px solid transparent;
   transition: all var(--mg-transition-normal);
   cursor: pointer;
 }
 
 .mg-garden-cell:hover {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(20, 184, 166, 0.1);
   border-color: var(--mg-border);
 }
 
 .mg-garden-cell.has-plant {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(20, 184, 166, 0.15);
 }
 
 /* ========================================
@@ -283,7 +333,7 @@
     filter: drop-shadow(0 0 0 transparent);
   }
   50% {
-    filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.6));
+    filter: drop-shadow(0 0 12px rgba(20, 184, 166, 0.6));
   }
 }
 
@@ -618,12 +668,12 @@
 }
 
 .mg-nav-item:hover {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(20, 184, 166, 0.1);
   color: var(--mg-text-primary);
 }
 
 .mg-nav-item.active {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(20, 184, 166, 0.15);
   color: var(--mg-accent-light);
 }
 
@@ -717,12 +767,12 @@
 }
 
 .mg-btn-primary {
-  background: linear-gradient(135deg, var(--mg-green-500) 0%, var(--mg-green-600) 100%);
+  background: linear-gradient(135deg, var(--mg-teal-500) 0%, var(--mg-teal-600) 100%);
   color: white;
 }
 
 .mg-btn-primary:hover {
-  background: linear-gradient(135deg, var(--mg-green-400) 0%, var(--mg-green-500) 100%);
+  background: linear-gradient(135deg, var(--mg-teal-400) 0%, var(--mg-teal-500) 100%);
   transform: translateY(-1px);
   box-shadow: var(--mg-shadow-glow);
 }
@@ -734,7 +784,7 @@
 }
 
 .mg-btn-secondary:hover {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(20, 184, 166, 0.1);
   border-color: var(--mg-accent);
 }
 
@@ -1175,10 +1225,10 @@
 /* Vitality Glow - Ambient environment glow when active */
 @keyframes mg-vitality-glow {
   0%, 100% {
-    box-shadow: inset 0 0 40px rgba(16, 185, 129, 0.05);
+    box-shadow: inset 0 0 40px rgba(20, 184, 166, 0.05);
   }
   50% {
-    box-shadow: inset 0 0 80px rgba(16, 185, 129, 0.15);
+    box-shadow: inset 0 0 80px rgba(20, 184, 166, 0.15);
   }
 }
 

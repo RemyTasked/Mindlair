@@ -94,12 +94,12 @@ export default function LandingPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-50 via-teal-50 to-cyan-50">
         <div className="text-center">
 <div className="mb-4 animate-pulse flex justify-center">
             <MindGardenIcon size={64} />
           </div>
-          <p className="text-emerald-700">Loading...</p>
+          <p className="text-teal-600">Loading...</p>
         </div>
       </div>
     );
@@ -143,14 +143,14 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50 to-cyan-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-teal-50 to-cyan-50 relative overflow-hidden">
       {/* Ambient Background - CSS animations for performance */}
       <FloatingElements />
 
       {/* Header */}
-      <header className="container mx-auto px-6 py-6 relative z-10">
+      <header className="container mx-auto px-6 py-8 relative z-10">
         <div className="flex justify-start items-center animate-fade-in">
-          <Logo size="lg" variant="icon" />
+          <Logo size="4xl" variant="icon" />
         </div>
       </header>
 
@@ -158,7 +158,7 @@ export default function LandingPage() {
       <section className="container mx-auto px-6 py-12 text-center relative z-10">
         <div className="max-w-3xl mx-auto">
           <div className="mb-6 animate-fade-in">
-            <span className="inline-block px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
+            <span className="inline-block px-4 py-2 bg-teal-100 text-teal-700 rounded-full text-sm font-medium">
               Grow your mental wellness, one moment at a time
             </span>
           </div>
@@ -166,7 +166,7 @@ export default function LandingPage() {
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-tight animate-fade-in-up">
             Cultivate Calm.
             <br />
-            <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-500 via-teal-500 to-green-500 bg-clip-text text-transparent">
               Watch Your Garden Grow.
             </span>
           </h2>
@@ -184,17 +184,17 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
             className="mb-12"
           >
-            <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
+            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
               {/* Static gradient orbs - no animation for perf */}
-              <div className="absolute inset-0 opacity-15 pointer-events-none" aria-hidden="true">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500 rounded-full blur-3xl"></div>
+              <div className="absolute inset-0 opacity-20 pointer-events-none" aria-hidden="true">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500 rounded-full blur-3xl"></div>
               </div>
 
               <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
                 <div className="text-center md:text-left">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 backdrop-blur-sm rounded-full text-emerald-100 text-xs font-medium mb-4 border border-emerald-400/20">
-                    <Sparkles className="w-3 h-3 text-amber-300" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-500/20 backdrop-blur-sm rounded-full text-teal-100 text-xs font-medium mb-4 border border-teal-400/20">
+                    <Sparkles className="w-3 h-3 text-gold-300" />
                     Works Everywhere
                   </div>
                   
@@ -204,28 +204,28 @@ export default function LandingPage() {
                   
                   <div className="grid grid-cols-2 gap-3 mb-8">
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
-                      <Bell className="w-5 h-5 text-emerald-300" />
-                      <span className="text-xs font-medium text-emerald-50">Push Notifications</span>
+                      <Bell className="w-5 h-5 text-sky-300" />
+                      <span className="text-xs font-medium text-teal-50">Push Notifications</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
-                      <Wind className="w-5 h-5 text-emerald-300" />
-                      <span className="text-xs font-medium text-emerald-50">2-Min Resets</span>
+                      <Wind className="w-5 h-5 text-teal-300" />
+                      <span className="text-xs font-medium text-teal-50">2-Min Resets</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
-                      <Smartphone className="w-5 h-5 text-emerald-300" />
-                      <span className="text-xs font-medium text-emerald-50">Desktop & Mobile</span>
+                      <Smartphone className="w-5 h-5 text-green-300" />
+                      <span className="text-xs font-medium text-teal-50">Desktop & Mobile</span>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 flex flex-col gap-2">
-                      <Download className="w-5 h-5 text-emerald-300" />
-                      <span className="text-xs font-medium text-emerald-50">Install as App</span>
+                      <Download className="w-5 h-5 text-cyan-300" />
+                      <span className="text-xs font-medium text-teal-50">Install as App</span>
                     </div>
                   </div>
 
-                  <p className="text-emerald-100/80 text-sm mb-4">
+                  <p className="text-teal-100/80 text-sm mb-4">
                     Get a gentle nudge 10 minutes before stressful meetings. One tap starts a calming flow.
                   </p>
                   
-                  <p className="text-emerald-200/60 text-xs">
+                  <p className="text-teal-200/60 text-xs">
                     📱 Works on any device — add to home screen for the full app experience
                   </p>
                 </div>
@@ -236,7 +236,7 @@ export default function LandingPage() {
                     {/* Notification preview */}
                     <div className="bg-white rounded-xl p-4 shadow-lg mb-3">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center shadow-md shrink-0">
+                        <div className="w-10 h-10 bg-gradient-to-br from-sky-500 via-teal-500 to-green-500 rounded-lg flex items-center justify-center shadow-md shrink-0">
                           <MindGardenIcon size={24} className="text-white" />
                         </div>
                         <div className="flex-1">
@@ -246,7 +246,7 @@ export default function LandingPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button className="flex-1 py-2 bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
+                        <button className="flex-1 py-2 bg-teal-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
                           <MindGardenIcon size={14} /> Start Flow
                         </button>
                         <button className="flex-1 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
@@ -255,7 +255,7 @@ export default function LandingPage() {
                       </div>
                     </div>
                     
-                    <div className="text-center text-emerald-200/60 text-[10px]">
+                    <div className="text-center text-teal-200/60 text-[10px]">
                       Actionable notifications with one-tap access
                     </div>
                   </div>
@@ -270,7 +270,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="mb-12 bg-white/60 rounded-3xl p-8 shadow-xl border border-emerald-100"
+            className="mb-12 bg-white/60 rounded-3xl p-8 shadow-xl border border-teal-100"
           >
             <div className="grid grid-cols-3 gap-6 mb-6">
               <div className="text-center">
@@ -281,8 +281,8 @@ export default function LandingPage() {
                 <p className="text-sm text-gray-500">Start with intention</p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-emerald-100 to-teal-200 rounded-2xl flex items-center justify-center">
-                  <Leaf className="w-8 h-8 text-emerald-600" />
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-sky-100 to-teal-200 rounded-2xl flex items-center justify-center">
+                  <Leaf className="w-8 h-8 text-teal-600" />
                 </div>
                 <p className="font-medium text-gray-800">Micro-Flows</p>
                 <p className="text-sm text-gray-500">2-5 min resets</p>
@@ -296,7 +296,7 @@ export default function LandingPage() {
               </div>
             </div>
             
-            <div className="flex items-center justify-center gap-2 text-emerald-600">
+            <div className="flex items-center justify-center gap-2 text-teal-600">
               <Sparkles className="w-5 h-5" />
               <span className="font-medium">Your garden grows with every moment of mindfulness</span>
             </div>
@@ -393,9 +393,9 @@ export default function LandingPage() {
                   animation={
                     <div className="relative h-32 w-full flex items-center justify-center gap-4 overflow-hidden">
                       {[
-                        { color: 'bg-rose-400', delay: '0s' },
-                        { color: 'bg-emerald-400', delay: '1s' },
-                        { color: 'bg-amber-400', delay: '2s' }
+                        { color: 'bg-sky-400', delay: '0s' },
+                        { color: 'bg-teal-400', delay: '1s' },
+                        { color: 'bg-green-400', delay: '2s' }
                       ].map((seed, i) => (
                         <motion.div
                           key={i}
@@ -419,7 +419,7 @@ export default function LandingPage() {
             <button
               onClick={handleGoogleAuth}
               disabled={loading}
-              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
+              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-xl hover:border-teal-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
             >
               <svg className="w-6 h-6" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -433,7 +433,7 @@ export default function LandingPage() {
             <button
               onClick={handleMicrosoftAuth}
               disabled={loading}
-              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
+              className="px-8 py-4 bg-white border-2 border-gray-200 rounded-xl hover:border-teal-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
             >
               <svg className="w-6 h-6" viewBox="0 0 23 23">
                 <path fill="#f3f3f3" d="M0 0h23v23H0z"/>
@@ -461,7 +461,7 @@ export default function LandingPage() {
                 <button
                   onClick={handleWebexAuth}
                   disabled={loading}
-                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
+                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-teal-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                     <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#00BCF2"/>
@@ -474,7 +474,7 @@ export default function LandingPage() {
                 <button
                   onClick={() => setShowCalDAVModal(true)}
                   disabled={loading}
-                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
+                  className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl hover:border-teal-300 hover:shadow-lg transition-all flex items-center justify-center gap-3 font-medium disabled:opacity-50"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                     <rect x="3" y="4" width="18" height="18" rx="2" stroke="#6B7280" strokeWidth="2"/>
@@ -535,7 +535,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-4xl mx-auto bg-gradient-to-br from-emerald-100 to-teal-100 rounded-3xl p-8 sm:p-12 border border-emerald-200"
+          className="max-w-4xl mx-auto bg-gradient-to-br from-sky-100 to-teal-100 rounded-3xl p-8 sm:p-12 border border-teal-200"
         >
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -563,7 +563,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <span className="px-3 py-1 bg-white/60 rounded-full text-emerald-700">
+            <span className="px-3 py-1 bg-white/60 rounded-full text-teal-700">
               🌬️ Breathing = Bamboo
             </span>
             <span className="px-3 py-1 bg-white/60 rounded-full text-amber-700">
@@ -579,15 +579,15 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="container mx-auto px-6 py-12 text-center relative z-10">
         <div className="flex items-center justify-center mb-4">
-          <Logo size="lg" />
+          <Logo size="2xl" />
         </div>
         <p className="text-gray-500 text-sm mb-4">
           Cultivating calm, one moment at a time
         </p>
         <div className="flex justify-center gap-6 text-sm text-gray-500">
-          <a href="/privacy" className="hover:text-emerald-600 transition-colors">Privacy</a>
+          <a href="/privacy" className="hover:text-teal-600 transition-colors">Privacy</a>
           <span>·</span>
-          <a href="/terms" className="hover:text-emerald-600 transition-colors">Terms</a>
+          <a href="/terms" className="hover:text-teal-600 transition-colors">Terms</a>
         </div>
         <p className="text-xs text-gray-400 mt-6 max-w-lg mx-auto">
           Mind Garden is a wellness tool, not a replacement for professional mental health care.
@@ -621,7 +621,8 @@ const GameCard = memo(function GameCard({
     sky: 'from-sky-50 to-sky-100 border-sky-200 text-sky-700',
     amber: 'from-amber-50 to-amber-100 border-amber-200 text-amber-700',
     teal: 'from-teal-50 to-teal-100 border-teal-200 text-teal-700',
-    emerald: 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-700',
+    green: 'from-green-50 to-green-100 border-green-200 text-green-700',
+    coral: 'from-rose-50 to-rose-100 border-rose-200 text-rose-700',
   };
 
   return (

@@ -141,15 +141,15 @@ export default function DashboardLayout({
         <div className="mg-sidebar-header">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
-                <MindGardenIcon size={32} />
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500/20 via-teal-500/20 to-green-500/20 flex items-center justify-center">
+                <MindGardenIcon size={44} />
               </div>
               {!sidebarCollapsed && (
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
-                  <Logo size="sm" variant="text" />
+                  <Logo size="md" variant="text" />
                   <p className="text-xs text-[var(--mg-text-muted)]">Grow your focus</p>
                 </motion.div>
               )}
@@ -244,7 +244,7 @@ export default function DashboardLayout({
         <div className="p-4 border-t border-[var(--mg-border)]">
           {user && !sidebarCollapsed ? (
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm font-semibold text-white">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 via-teal-500 to-green-500 flex items-center justify-center text-sm font-semibold text-white">
                 {user.picture ? (
                   <img src={user.picture} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
@@ -295,8 +295,8 @@ export default function DashboardLayout({
         </button>
         
         <div className="flex items-center gap-2">
-          <MindGardenIcon size={32} />
-          <Logo size="sm" variant="text" />
+          <MindGardenIcon size={40} />
+          <Logo size="md" variant="text" />
         </div>
         
         <button 

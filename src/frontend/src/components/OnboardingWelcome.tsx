@@ -16,7 +16,7 @@ export default function OnboardingWelcome({ onContinue }: OnboardingWelcomeProps
             transition={{ duration: 0.6 }}
             className="flex justify-center"
           >
-            <Logo size="xl" />
+            <Logo size="2xl" />
           </motion.div>
 
           <motion.div

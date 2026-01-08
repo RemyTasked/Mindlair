@@ -1,21 +1,25 @@
 interface LogoProps {
   className?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
   showText?: boolean;
   variant?: 'full' | 'icon' | 'text';
 }
 
 const sizeConfig = {
-  xs: { icon: 'w-7 h-7', text: 'text-base', gap: 'gap-1.5' },
-  sm: { icon: 'w-9 h-9', text: 'text-xl', gap: 'gap-2' },
-  md: { icon: 'w-11 h-11', text: 'text-2xl', gap: 'gap-2' },
-  lg: { icon: 'w-16 h-16', text: 'text-4xl', gap: 'gap-2.5' },
-  xl: { icon: 'w-20 h-20', text: 'text-5xl', gap: 'gap-3' },
+  xs: { icon: 'w-8 h-8', text: 'text-lg', gap: 'gap-2' },
+  sm: { icon: 'w-10 h-10', text: 'text-xl', gap: 'gap-2' },
+  md: { icon: 'w-12 h-12', text: 'text-2xl', gap: 'gap-2.5' },
+  lg: { icon: 'w-16 h-16', text: 'text-3xl', gap: 'gap-3' },
+  xl: { icon: 'w-20 h-20', text: 'text-4xl', gap: 'gap-3' },
+  '2xl': { icon: 'w-24 h-24', text: 'text-5xl', gap: 'gap-4' },
+  '3xl': { icon: 'w-32 h-32', text: 'text-6xl', gap: 'gap-4' },
+  '4xl': { icon: 'w-40 h-40', text: 'text-7xl', gap: 'gap-5' },
+  '5xl': { icon: 'w-48 h-48', text: 'text-8xl', gap: 'gap-6' },
 };
 
-// Mind Garden brand colors - emerald/teal gradient (shared)
+// Mind Garden brand colors - matches logo gradient (blue → cyan → green)
 const gradientStyle = {
-  background: 'linear-gradient(135deg, #059669 0%, #14b8a6 100%)',
+  background: 'linear-gradient(90deg, #38bdf8 0%, #2dd4bf 50%, #4ade80 100%)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',

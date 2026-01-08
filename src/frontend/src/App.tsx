@@ -23,12 +23,12 @@ const Privacy = lazy(() => import('./pages/Privacy'));
 
 // Loading component
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-50">
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-50 via-teal-50 to-cyan-50">
     <div className="text-center">
       <div className="mx-auto mb-4">
-        <Logo size="xl" />
+        <Logo size="2xl" />
       </div>
-      <p className="text-emerald-700">Loading...</p>
+      <p className="text-teal-600">Loading...</p>
     </div>
   </div>
 );
