@@ -1,0 +1,390 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+// ============================================
+// User & Auth
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  timezone      String    @default("America/New_York")
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  settings          UserSettings?
+  sources           Source[]
+  positions         Position[]
+  beliefs           Belief[]
+  digests           Digest[]
+  nudges            Nudge[]
+  connectedSources  ConnectedSource[]
+  sessions          Session[]
+  apiKeys           ApiKey[]
+  pushSubscriptions PushSubscription[]
+
+  @@map("users")
+}
+
+model MagicLinkToken {
+  id        String    @id @default(cuid())
+  email     String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@map("magic_link_tokens")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key        String    @unique
+  name       String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([key])
+  @@index([userId])
+  @@map("api_keys")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  deviceName String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([endpoint])
+  @@map("push_subscriptions")
+}
+
+model UserSettings {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Digest windows
+  morningDigestEnabled Boolean @default(true)
+  morningDigestHour    Int     @default(8)
+  morningDigestMinute  Int     @default(0)
+  eveningDigestEnabled Boolean @default(true)
+  eveningDigestHour    Int     @default(19)
+  eveningDigestMinute  Int     @default(0)
+
+  // Notifications
+  pushEnabled  Boolean @default(true)
+  smsEnabled   Boolean @default(false)
+  emailEnabled Boolean @default(true)
+  phoneNumber  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+model ConnectedSource {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String // readwise, pocket, instapaper
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  lastSyncAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, provider])
+  @@map("connected_sources")
+}
+
+// ============================================
+// Core Data Model
+// ============================================
+
+model Source {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url       String
+  title     String?
+  outlet    String?
+  author    String?
+  
+  contentType  String // article, video, podcast, thread
+  surface      String // chrome_extension, ios_share, readwise_import, etc.
+  
+  // Engagement metrics
+  dwellTimeMs       Int?
+  scrollDepth       Float?  // 0-1
+  completionPercent Float?  // 0-1
+  visitCount        Int     @default(1)
+  
+  // Content metadata
+  wordCount         Int?
+  videoDurationMs   Int?
+  publishedAt       DateTime?
+  
+  consumedAt DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  claims Claim[]
+
+  @@index([userId, consumedAt])
+  @@index([url])
+  @@map("sources")
+}
+
+model Claim {
+  id       String @id @default(cuid())
+  sourceId String
+  source   Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  text            String
+  claimType       String // factual, opinion, prediction, policy
+  confidenceScore Float  // 0-1
+  modelVersion    String
+  extractedAt     DateTime @default(now())
+
+  positions  Position[]
+  claimChain ClaimChain?
+
+  // Concepts this claim relates to
+  claimConcepts ClaimConcept[]
+
+  @@index([sourceId])
+  @@map("claims")
+}
+
+model Position {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  claimId String
+  claim   Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  stance  String // agree, disagree, complicated, skip
+  note    String?
+  context String // realtime, digest
+
+  // Evolution tracking
+  supersedesId String?
+  supersedes   Position?  @relation("PositionEvolution", fields: [supersedesId], references: [id])
+  supersededBy Position[] @relation("PositionEvolution")
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([claimId])
+  @@map("positions")
+}
+
+model Concept {
+  id    String @id @default(cuid())
+  label String @unique
+  type  String // topic, person, institution
+
+  // Vector embedding for similarity
+  embedding Unsupported("vector(1536)")?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  beliefs       Belief[]
+  claimConcepts ClaimConcept[]
+  nudges        Nudge[]
+  
+  // Tension relations
+  tensionsAsA Tension[] @relation("TensionBeliefA")
+  tensionsAsB Tension[] @relation("TensionBeliefB")
+
+  @@map("concepts")
+}
+
+model ClaimConcept {
+  id        String  @id @default(cuid())
+  claimId   String
+  claim     Claim   @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  conceptId String
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  relevance Float   @default(1.0) // 0-1 relevance score
+
+  @@unique([claimId, conceptId])
+  @@map("claim_concepts")
+}
+
+model Belief {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conceptId String
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  direction     String // positive, negative, mixed
+  strength      Float  // 0-1
+  stability     Float  // 0-1, how consistent over time
+  positionCount Int    @default(0)
+
+  // Echo chamber tracking
+  sameDirectionStreak   Int     @default(0)
+  echoFlagged           Boolean @default(false)
+  lastCounterpointAt    DateTime?
+
+  firstSeenAt   DateTime @default(now())
+  lastUpdatedAt DateTime @updatedAt
+
+  @@unique([userId, conceptId])
+  @@index([userId, echoFlagged])
+  @@map("beliefs")
+}
+
+model Tension {
+  id         String  @id @default(cuid())
+  conceptAId String
+  conceptA   Concept @relation("TensionBeliefA", fields: [conceptAId], references: [id], onDelete: Cascade)
+  conceptBId String
+  conceptB   Concept @relation("TensionBeliefB", fields: [conceptBId], references: [id], onDelete: Cascade)
+
+  tensionType    String  // direct_contradiction, implicit_tension
+  surfacedCount  Int     @default(0)
+  resolved       Boolean @default(false)
+  resolutionNote String?
+  metadata       Json?   // Stores explanation, confidence, claim texts for semantic tensions
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([conceptAId, conceptBId])
+  @@map("tensions")
+}
+
+// ============================================
+// Genealogy / Source Chain
+// ============================================
+
+model ClaimChain {
+  id      String @id @default(cuid())
+  claimId String @unique
+  claim   Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  chainNodes      Json // Array of SourceChainNode
+  originSource    Json? // The original source if found
+  chainConfidence Float // 0-1
+
+  generatedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("claim_chains")
+}
+
+// ============================================
+// Digest System
+// ============================================
+
+model Digest {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  window String // morning, evening
+  items  Json   // Array of DigestItem with claim IDs and priority
+
+  status      String   @default("pending") // pending, opened, completed, expired
+  openedAt    DateTime?
+  completedAt DateTime?
+  durationMs  Int?
+
+  generatedAt DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([userId, status])
+  @@index([expiresAt])
+  @@map("digests")
+}
+
+// ============================================
+// Nudges
+// ============================================
+
+model Nudge {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conceptId String
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  type        String // echo_chamber, blind_spot
+  sourceUrl   String
+  sourceTitle String
+  sourceOutlet String?
+  framing     String // The curiosity-framed message
+
+  status      String   @default("pending") // pending, clicked, dismissed
+  clickedAt   DateTime?
+  dismissedAt DateTime?
+  feedback    String?  // helpful, not_helpful
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId, status])
+  @@index([conceptId])
+  @@map("nudges")
+}
+
+// ============================================
+// Analytics Events
+// ============================================
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String
+  surface   String
+  payload   Json
+  timestamp DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([type, timestamp])
+  @@map("analytics_events")
+}

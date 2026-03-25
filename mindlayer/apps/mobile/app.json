@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "Mindlayer",
+    "slug": "mindlayer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#09090b"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.mindlayer.mobile",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow Mindlayer to access your photos to share content",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["mindlayer"]
+          }
+        ]
+      },
+      "associatedDomains": ["applinks:mindlayer.app"],
+      "entitlements": {
+        "com.apple.developer.applesignin": ["Default"],
+        "com.apple.security.application-groups": ["group.app.mindlayer"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#09090b"
+      },
+      "package": "app.mindlayer.mobile",
+      "intentFilters": [
+        {
+          "action": "android.intent.action.SEND",
+          "category": ["android.intent.category.DEFAULT"],
+          "data": [
+            { "mimeType": "text/plain" },
+            { "mimeType": "text/*" }
+          ]
+        },
+        {
+          "action": "android.intent.action.VIEW",
+          "category": ["android.intent.category.DEFAULT", "android.intent.category.BROWSABLE"],
+          "data": [
+            { "scheme": "mindlayer" },
+            { "scheme": "https", "host": "mindlayer.app", "pathPrefix": "/share" }
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#10b981"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    },
+    "scheme": "mindlayer"
+  }
+}

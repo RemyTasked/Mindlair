@@ -1,0 +1,23 @@
+{
+  "name": "mindlayer",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:desktop": "cd apps/desktop && npm run tauri dev",
+    "dev:web": "cd apps/web && npm run dev",
+    "build:desktop": "cd apps/desktop && npm run tauri build",
+    "build:web": "cd apps/web && npm run build",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules",
+    "db:generate": "cd apps/web && npx prisma generate",
+    "db:push": "cd apps/web && npx prisma db push",
+    "db:studio": "cd apps/web && npx prisma studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
