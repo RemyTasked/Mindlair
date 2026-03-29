@@ -1,4 +1,5 @@
 use super::{CaptureEvent, CaptureEventType, CaptureData, EngagementMetrics};
+use super::content_filter;
 use chrono::Utc;
 use tokio::sync::broadcast;
 use std::thread;
@@ -158,6 +159,12 @@ impl UrlMonitor for MacUrlMonitor {
             
             while running.load(Ordering::SeqCst) {
                 if let Some((app_name, url, title)) = Self::get_frontmost_browser_url() {
+                    if content_filter::is_url_blocked(&url) {
+                        log::debug!("Blocked NSFW URL: {}", url);
+                        thread::sleep(Duration::from_millis(1000));
+                        continue;
+                    }
+
                     let mut session_guard = current_session.lock().unwrap();
                     let mut metrics_guard = url_metrics.lock().unwrap();
                     
@@ -441,6 +448,12 @@ impl UrlMonitor for WindowsUrlMonitor {
                 if let Some((process_name, window_title)) = Self::get_foreground_window_info() {
                     if Self::is_browser(&process_name) {
                         if let Some(url) = Self::get_browser_url(&process_name) {
+                            if content_filter::is_url_blocked(&url) {
+                                log::debug!("Blocked NSFW URL: {}", url);
+                                thread::sleep(Duration::from_millis(1000));
+                                continue;
+                            }
+
                             let mut session_guard = current_session.lock().unwrap();
                             let mut metrics_guard = url_metrics.lock().unwrap();
                             
@@ -702,6 +715,12 @@ impl UrlMonitor for LinuxUrlMonitor {
                 if let Some((process_name, window_title)) = Self::get_active_window_info() {
                     if Self::is_browser(&process_name) {
                         if let Some(url) = Self::get_browser_url_xdotool(&process_name) {
+                            if content_filter::is_url_blocked(&url) {
+                                log::debug!("Blocked NSFW URL: {}", url);
+                                thread::sleep(Duration::from_millis(1000));
+                                continue;
+                            }
+
                             let mut session_guard = current_session.lock().unwrap();
                             let mut metrics_guard = url_metrics.lock().unwrap();
                             

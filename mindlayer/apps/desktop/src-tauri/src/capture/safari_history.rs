@@ -1,4 +1,5 @@
 use super::{CaptureEvent, CaptureEventType, CaptureData};
+use super::content_filter;
 use chrono::{DateTime, Utc, TimeZone};
 use tokio::sync::broadcast;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -150,6 +151,11 @@ impl SafariHistoryBridge {
                         for entry in entries {
                             if entry.visit_time > max_time {
                                 max_time = entry.visit_time;
+                            }
+
+                            if content_filter::is_url_blocked(&entry.url) {
+                                log::debug!("Blocked NSFW Safari history URL: {}", entry.url);
+                                continue;
                             }
 
                             let is_mobile = Self::is_likely_mobile_visit(&entry.url, &entry.title);

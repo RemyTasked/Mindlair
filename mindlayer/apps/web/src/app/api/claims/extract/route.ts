@@ -5,6 +5,7 @@ import { extractClaims, MODEL_VERSION } from '@/lib/services/ai';
 import { fetchArticleContent } from '@/lib/services/content-fetch';
 import { linkClaimToConcepts } from '@/lib/services/belief-graph';
 import { getCanonicalConceptLabels } from '@/lib/services/concept-resolver';
+import { isContentExplicit } from '@/lib/services/content-filter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,6 +56,20 @@ export async function POST(request: NextRequest) {
     }
 
     const content = await fetchArticleContent(source.url);
+
+    // Block explicit content from entering the AI extraction pipeline
+    const filter = isContentExplicit({
+      url: source.url,
+      title: source.title ?? content?.title,
+      text: content?.text,
+    });
+    if (filter.blocked) {
+      return NextResponse.json(
+        { code: 'CONTENT_BLOCKED', message: 'Content filtered — explicit material is not mapped.', reason: filter.reason },
+        { status: 422 }
+      );
+    }
+
     const existingConcepts = await getCanonicalConceptLabels();
 
     const analysis = await extractClaims(

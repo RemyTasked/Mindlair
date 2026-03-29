@@ -1,4 +1,4 @@
-mod capture;
+pub(crate) mod capture;
 mod storage;
 mod sync;
 

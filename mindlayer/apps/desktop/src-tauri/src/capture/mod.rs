@@ -2,6 +2,7 @@ mod url;
 mod audio;
 mod screen;
 mod clipboard;
+pub mod content_filter;
 #[cfg(target_os = "macos")]
 mod safari_history;
 

@@ -1,6 +1,7 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json;
+use crate::capture::content_filter;
 
 pub struct SyncManager {
     endpoint: String,
@@ -89,6 +90,14 @@ impl SyncManager {
             // Skip items without URL or text
             if url.is_none() && text.is_none() {
                 return None;
+            }
+
+            // Skip NSFW / explicit URLs
+            if let Some(ref u) = url {
+                if content_filter::is_url_blocked(u) {
+                    log::debug!("Sync skipped NSFW URL: {}", u);
+                    return None;
+                }
             }
             
             // Extract engagement metrics from metadata if present

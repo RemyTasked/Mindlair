@@ -3,6 +3,7 @@ import { ingestContentSchema } from '@/lib/validations';
 import db from '@/lib/db';
 import { getDomainFromUrl, calculateEngagementScore } from '@/lib/utils';
 import { getAuthFromRequest } from '@/lib/auth';
+import { isContentExplicit } from '@/lib/services/content-filter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,6 +27,15 @@ export async function POST(request: NextRequest) {
 
     const data = validation.data;
     const userId = user.id;
+
+    // Block explicit / NSFW content before it enters the belief graph
+    const filter = isContentExplicit({ url: data.url, title: data.title });
+    if (filter.blocked) {
+      return NextResponse.json(
+        { code: 'CONTENT_BLOCKED', message: 'Content filtered — explicit material is not mapped.', reason: filter.reason },
+        { status: 422 }
+      );
+    }
 
     // Check if source already exists for this user + URL (for revisit tracking)
     const existingSource = data.url ? await db.source.findFirst({
