@@ -101,7 +101,7 @@ export default function HomePage() {
             color: "#7a7469", lineHeight: 1.6,
           }}>
             A year of one person&apos;s intellectual life. Every node is a topic.
-            Every shift is a change of mind. Drag the timeline to explore.
+            Every shift is a change of mind. Click a cluster to explore it. Drag the timeline to travel through time.
           </p>
         </div>
       </section>

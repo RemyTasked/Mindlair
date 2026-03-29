@@ -9,11 +9,11 @@ const C = {
   amber: "#d4915a", blue: "#6b9fc4",
 };
 
-const POS_COLORS: Record<string, { fill: string; stroke: string }> = {
-  affirm:     { fill: "#1a3d2e", stroke: "#52b788" },
-  disagree:   { fill: "#3d2010", stroke: "#d4915a" },
-  ambivalent: { fill: "#1a2a3d", stroke: "#6b9fc4" },
-  passive:    { fill: "#252219", stroke: "#4a4540" },
+const POS_COLORS: Record<string, { fill: string; stroke: string; label: string }> = {
+  affirm:     { fill: "#1a3d2e", stroke: "#52b788", label: "Generally agrees" },
+  disagree:   { fill: "#3d2010", stroke: "#d4915a", label: "Generally disagrees" },
+  ambivalent: { fill: "#1a2a3d", stroke: "#6b9fc4", label: "Ambivalent" },
+  passive:    { fill: "#252219", stroke: "#4a4540", label: "Passive interest" },
 };
 
 const VW = 900, VH = 460;
@@ -103,10 +103,26 @@ const CURVE_OFFSETS = LINKS.map((_, i) => ({
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 type NodeT = typeof NODES[number];
 
+const NODE_DETAILS: Record<string, { sources: number; reactions: number; lastActive: string; tension: boolean; summary: string; topClaims: string[] }> = {
+  "monetary-policy": { sources: 24, reactions: 18, lastActive: "3 days ago", tension: true, summary: "You consistently push back on mainstream central banking doctrine — 14 disagrees vs 4 agrees across 18 reactions.", topClaims: ["Central banks are losing inflation credibility", "Rate hikes disproportionately hurt working class", "Quantitative easing caused structural inequality"] },
+  "ai-ml": { sources: 31, reactions: 22, lastActive: "Yesterday", tension: true, summary: "Your most-read topic. Genuinely ambivalent — positions are split and shifting. You've changed your mind on capability timelines twice.", topClaims: ["LLMs don't truly understand — they pattern match", "AI will displace more jobs than it creates", "Open source models are catching closed ones"] },
+  "climate": { sources: 26, reactions: 19, lastActive: "1 week ago", tension: false, summary: "Strong consistent agreement across climate and energy content. Your most settled topic.", topClaims: ["Nuclear is essential to any realistic transition", "Carbon pricing works better than mandates", "Adaptation is being underfunded vs mitigation"] },
+  "stoicism": { sources: 18, reactions: 14, lastActive: "6 months ago", tension: false, summary: "Was your dominant interest in Q1. Quiet since May — this cluster has faded significantly.", topClaims: ["Emotional regulation is a learnable skill", "Modern stoicism misses the political dimension", "Virtue ethics > consequentialism for daily decisions"] },
+  "crypto": { sources: 19, reactions: 15, lastActive: "4 months ago", tension: true, summary: "Strong disagreement with crypto maximalism. Engagement has declined sharply since Q2.", topClaims: ["Most crypto value is speculative not fundamental", "DeFi solves problems that don't exist for most people", "Bitcoin as store of value is more credible than altcoins"] },
+  "geopolitics": { sources: 22, reactions: 16, lastActive: "2 days ago", tension: false, summary: "Consistently ambivalent — you engage deeply but rarely land on strong positions.", topClaims: ["Multipolar world is already here, West hasn't adjusted", "Supply chain decoupling will take decades not years", "Energy dependency reshaped European foreign policy"] },
+  "philosophy": { sources: 14, reactions: 10, lastActive: "1 week ago", tension: true, summary: "Slow-growing cluster. Your interest has been building steadily for 8 months.", topClaims: ["Consciousness may not be computationally reducible", "Free will compatibilism is more defensible than it sounds", "Philosophy of mind and AI are converging"] },
+  "nutrition": { sources: 16, reactions: 11, lastActive: "2 months ago", tension: false, summary: "Peak engagement in Q1. Has quietened significantly since spring.", topClaims: ["Time-restricted eating has stronger evidence than most diets", "Ultra-processed food is the primary driver of chronic disease"] },
+  "urbanism": { sources: 12, reactions: 9, lastActive: "3 weeks ago", tension: false, summary: "Emerging cluster — growing since April. Consistent agreement with pro-density arguments.", topClaims: ["Zoning reform is the highest-leverage housing intervention", "Parking minimums are a hidden tax on density"] },
+  "media-trust": { sources: 20, reactions: 14, lastActive: "4 days ago", tension: false, summary: "Strong disagree with mainstream media narratives. Engagement picking up in H2.", topClaims: ["Institutional media trust collapse is structural not cyclical", "Social media hasn't replaced journalism — it's replaced editors"] },
+  "sleep-science": { sources: 11, reactions: 8, lastActive: "5 weeks ago", tension: false, summary: "Consistent agreement. Quiet recently but well-established cluster.", topClaims: ["Sleep deprivation is the most underrated health risk", "Chronotypes are real and systematically ignored by society"] },
+  "supply-chain": { sources: 8, reactions: 4, lastActive: "4 months ago", tension: false, summary: "Fading cluster. Was active during peak supply chain news cycle, now quiet.", topClaims: ["Reshoring is politically attractive but economically costly", "Just-in-time is being replaced by just-in-case everywhere"] },
+};
+
 const ANIM_CSS = `
   @keyframes ld-breathe { 0%,100%{opacity:.05} 50%{opacity:.14} }
   @keyframes ld-pulse   { 0%,100%{stroke-opacity:.35} 50%{stroke-opacity:.6} }
   @keyframes ld-fade-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes ld-slide-in { from{opacity:0;transform:translateX(12px)} to{opacity:1;transform:translateX(0)} }
 `;
 
 export default function LandingMapDemo() {
@@ -120,6 +136,7 @@ export default function LandingMapDemo() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredNode, setHoveredNode] = useState<NodeT | null>(null);
+  const [selectedNode, setSelectedNode] = useState<NodeT | null>(null);
 
   const timeIdx = Math.round(timeValue);
   const isActive = isDragging || isPlaying;
@@ -301,8 +318,9 @@ export default function LandingMapDemo() {
             const col = POS_COLORS[stance];
             const p = nodePos[node.id];
             const isHov = hoveredNode?.id === node.id;
+            const isSel = selectedNode?.id === node.id;
             const tension = hasTension(node.id);
-            const ds = isHov ? st.size * 1.06 : st.size;
+            const ds = isHov || isSel ? st.size * 1.06 : st.size;
 
             return (
               <g key={node.id}
@@ -311,11 +329,21 @@ export default function LandingMapDemo() {
                 opacity={st.opacity}
                 onMouseEnter={() => setHoveredNode(node)}
                 onMouseLeave={() => setHoveredNode(null)}
+                onClick={() => {
+                  interactedRef.current = true;
+                  clearTimeout(restartRef.current);
+                  setIsPlaying(false);
+                  setSelectedNode(isSel ? null : node);
+                }}
               >
                 {tension && (
                   <circle r={ds * 0.58 + 7} fill="none" stroke={C.amber}
                     strokeWidth={1} strokeDasharray="4,3"
                     style={{ animation: `ld-pulse 3s ease-in-out infinite`, animationDelay: `${ni * 0.4}s` }} />
+                )}
+                {isSel && (
+                  <circle r={ds * 0.58 + 4} fill="none" stroke={col.stroke}
+                    strokeWidth={2} strokeOpacity={0.8} />
                 )}
                 <circle r={ds * 0.6} fill={col.stroke}
                   style={{ animation: `ld-breathe ${3.5 + ni * 0.2}s ease-in-out infinite`, animationDelay: `${ni * 0.35}s` }} />
@@ -341,7 +369,7 @@ export default function LandingMapDemo() {
             );
           })}
 
-          {hoveredNode && (() => {
+          {hoveredNode && !selectedNode && (() => {
             const st = nodeStates[hoveredNode.id];
             const stance = nodeStances[hoveredNode.id];
             const col = POS_COLORS[stance];
@@ -351,19 +379,19 @@ export default function LandingMapDemo() {
             const ty = p.y - 16;
             const ax = tx + tw > VW - 10 ? p.x - tw - st.size * 0.55 - 12 : tx;
             const ay = ty + th > VH - 10 ? VH - th - 10 : Math.max(8, ty);
-            const label = stance === "affirm" ? "Generally agrees" : stance === "disagree" ? "Generally disagrees" : stance === "ambivalent" ? "Ambivalent" : "Passive interest";
             return (
               <g style={{ pointerEvents: "none" }}>
                 <rect x={ax} y={ay} width={tw} height={th} rx={6}
                   fill={C.surface} stroke={col.stroke} strokeWidth={1} strokeOpacity={0.5} />
                 <text x={ax + 10} y={ay + 17} fontSize={11} fontWeight={600} fill={C.text}>{hoveredNode.label}</text>
-                <text x={ax + 10} y={ay + 33} fontSize={10} fill={col.stroke}>{label}</text>
+                <text x={ax + 10} y={ay + 33} fontSize={10} fill={col.stroke}>{col.label}</text>
               </g>
             );
           })()}
         </svg>
 
-        {discovery && (
+        {/* Discovery insight — hide when detail panel is open */}
+        {discovery && !selectedNode && (
           <div key={timeIdx} style={{
             position: "absolute", bottom: 10, left: 14, right: 14,
             maxWidth: 420,
@@ -382,6 +410,94 @@ export default function LandingMapDemo() {
             <div style={{ fontSize: 11, lineHeight: 1.5, color: C.textSoft }}>{discovery.text}</div>
           </div>
         )}
+
+        {/* Detail panel — floating card on the right side of the map */}
+        {selectedNode && (() => {
+          const detail = NODE_DETAILS[selectedNode.id];
+          const stance = nodeStances[selectedNode.id];
+          const col = POS_COLORS[stance];
+          if (!detail) return null;
+          return (
+            <div style={{
+              position: "absolute", top: 10, right: 10, bottom: 10,
+              width: 260, background: `${C.surface}f5`,
+              border: `1px solid ${C.border}`, borderRadius: 10,
+              padding: 16, overflowY: "auto",
+              display: "flex", flexDirection: "column", gap: 12,
+              animation: "ld-slide-in 0.25s ease-out",
+              backdropFilter: "blur(12px)",
+            }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{selectedNode.label}</div>
+                  <div style={{ fontSize: 10, color: col.stroke, fontWeight: 500 }}>{col.label}</div>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setSelectedNode(null); }}
+                  style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {[
+                  { label: "Sources", val: String(detail.sources) },
+                  { label: "Reactions", val: String(detail.reactions) },
+                  { label: "Last active", val: detail.lastActive },
+                  { label: "Tension", val: detail.tension ? "Yes" : "None", warn: detail.tension },
+                ].map(s => (
+                  <div key={s.label} style={{ background: C.bg, borderRadius: 6, padding: "7px 10px", border: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 8, color: C.muted, marginBottom: 2, letterSpacing: "0.12em", textTransform: "uppercase" }}>{s.label}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: s.warn ? C.amber : C.text }}>{s.val}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Summary */}
+              <div style={{
+                fontSize: 11, lineHeight: 1.65, color: C.muted,
+                padding: "10px 12px", background: C.bg,
+                borderRadius: 6, borderLeft: `3px solid ${col.stroke}`,
+              }}>{detail.summary}</div>
+
+              {/* Top Claims */}
+              <div>
+                <div style={{ fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: C.muted, marginBottom: 8 }}>Top Claims</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {detail.topClaims.map((claim, i) => (
+                    <div key={i} style={{
+                      fontSize: 11, lineHeight: 1.55, color: C.text,
+                      padding: "6px 10px", background: C.bg, borderRadius: 5,
+                      borderLeft: `2px solid ${C.border}`, fontStyle: "italic",
+                    }}>&ldquo;{claim}&rdquo;</div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Engagement sparkline */}
+              <div>
+                <div style={{ fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: C.muted, marginBottom: 6 }}>Engagement This Year</div>
+                <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 32 }}>
+                  {TL[selectedNode.id].map(([mult], mi) => {
+                    const barStance = STANCE_TL[selectedNode.id]?.[mi] || selectedNode.position;
+                    const barCol = POS_COLORS[barStance];
+                    return (
+                      <div key={mi} style={{
+                        flex: 1, height: Math.max(3, mult * 28),
+                        background: mi === timeIdx ? barCol.stroke : C.border,
+                        borderRadius: 2, transition: "height 0.3s ease",
+                        opacity: mi === timeIdx ? 1 : 0.5,
+                      }} />
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
+                  <span style={{ fontSize: 8, color: C.muted }}>Jan</span>
+                  <span style={{ fontSize: 8, color: C.muted }}>Dec</span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div style={{
