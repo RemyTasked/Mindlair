@@ -1,5 +1,6 @@
 import db from '@/lib/db';
-import { generateEmbedding, detectContradictions, identifyBlindSpots } from './ai';
+import { detectContradictions, identifyBlindSpots } from './ai';
+import { resolveConcept, resolveConceptBatch } from './concept-resolver';
 
 type Stance = 'agree' | 'disagree' | 'complicated' | 'skip';
 type BeliefDirection = 'positive' | 'negative' | 'mixed';
@@ -356,57 +357,27 @@ async function checkForSemanticContradictions(
 }
 
 export async function getOrCreateConcept(label: string): Promise<string> {
-  const normalized = label.toLowerCase().trim();
-  
-  let concept = await db.concept.findUnique({
-    where: { label: normalized },
-  });
-
-  if (!concept) {
-    const embedding = await generateEmbedding(normalized);
-    
-    concept = await db.concept.create({
-      data: {
-        label: normalized,
-        type: 'topic',
-      },
-    });
-    
-    // Store embedding separately using raw SQL (pgvector)
-    if (embedding && embedding.length > 0) {
-      try {
-        const embeddingStr = `[${embedding.join(',')}]`;
-        await db.$executeRawUnsafe(
-          `UPDATE "Concept" SET embedding = $1::vector WHERE id = $2`,
-          embeddingStr,
-          concept.id
-        );
-      } catch (error) {
-        console.error('Failed to store embedding:', error);
-      }
-    }
-  }
-
-  return concept.id;
+  const resolved = await resolveConcept(label);
+  return resolved.id;
 }
 
 export async function linkClaimToConcepts(
   claimId: string,
   conceptLabels: string[]
 ): Promise<string[]> {
+  const resolved = await resolveConceptBatch(conceptLabels);
   const conceptIds: string[] = [];
 
-  for (const label of conceptLabels) {
-    const conceptId = await getOrCreateConcept(label);
-    conceptIds.push(conceptId);
+  for (const r of resolved) {
+    conceptIds.push(r.id);
 
     await db.claimConcept.upsert({
       where: {
-        claimId_conceptId: { claimId, conceptId },
+        claimId_conceptId: { claimId, conceptId: r.id },
       },
       create: {
         claimId,
-        conceptId,
+        conceptId: r.id,
         relevance: 1.0,
       },
       update: {},

@@ -227,6 +227,12 @@ model Concept {
   // Vector embedding for similarity (requires pgvector extension)
   // embedding Unsupported("vector(1536)")?
 
+  // JSON-stored embedding for in-memory cosine similarity (pgvector fallback)
+  embeddingJson Json?
+
+  // Canonical aliases that should resolve to this concept
+  aliases String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

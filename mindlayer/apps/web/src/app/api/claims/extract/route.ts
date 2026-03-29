@@ -4,6 +4,7 @@ import db from '@/lib/db';
 import { extractClaims, MODEL_VERSION } from '@/lib/services/ai';
 import { fetchArticleContent } from '@/lib/services/content-fetch';
 import { linkClaimToConcepts } from '@/lib/services/belief-graph';
+import { getCanonicalConceptLabels } from '@/lib/services/concept-resolver';
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,12 +55,16 @@ export async function POST(request: NextRequest) {
     }
 
     const content = await fetchArticleContent(source.url);
-    
-    const analysis = await extractClaims({
-      title: source.title || source.url,
-      text: content?.text,
-      url: source.url,
-    });
+    const existingConcepts = await getCanonicalConceptLabels();
+
+    const analysis = await extractClaims(
+      {
+        title: source.title || source.url,
+        text: content?.text,
+        url: source.url,
+      },
+      existingConcepts,
+    );
 
     const createdClaims = [];
 

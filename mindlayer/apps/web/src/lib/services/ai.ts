@@ -27,13 +27,18 @@ export interface ContentAnalysis {
   sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
 }
 
-const CLAIM_EXTRACTION_PROMPT = `You are an expert at analyzing content and extracting core claims.
+function buildExtractionPrompt(existingConcepts: string[]): string {
+  const conceptGuidance = existingConcepts.length > 0
+    ? `\n\nIMPORTANT — The user already has these concept clusters in their map:\n${existingConcepts.map(c => `  - ${c}`).join('\n')}\n\nWhen listing concepts for a claim, REUSE labels from this list whenever the topic matches or is closely related. Only create a new concept label if the topic genuinely doesn't fit any existing cluster. Use broad, stable labels (e.g. "monetary policy" not "Fed rate hike September 2024").`
+    : '';
+
+  return `You are an expert at analyzing content and extracting core claims.
 
 Given the content below, extract the 1-3 most important claims being made. For each claim:
 1. State the claim as a clear, standalone statement
 2. Classify the type: factual (verifiable), opinion (subjective view), prediction (future outcome), policy (should/shouldn't)
 3. Rate your confidence 0-1 that this is the core claim
-4. List 2-5 concepts/topics this claim relates to
+4. List 2-5 concepts/topics this claim relates to${conceptGuidance}
 
 Focus on claims that:
 - Represent the author's main argument or thesis
@@ -58,21 +63,27 @@ Respond in JSON format:
   "primaryTopic": "main topic",
   "sentiment": "positive|negative|neutral|mixed"
 }`;
+}
 
-export async function extractClaims(content: {
-  title: string;
-  text?: string;
-  url: string;
-}): Promise<ContentAnalysis> {
+export async function extractClaims(
+  content: {
+    title: string;
+    text?: string;
+    url: string;
+  },
+  existingConcepts: string[] = [],
+): Promise<ContentAnalysis> {
   const contentText = content.text 
     ? `Title: ${content.title}\n\nContent:\n${content.text.slice(0, 8000)}`
     : `Title: ${content.title}\nURL: ${content.url}`;
+
+  const systemPrompt = buildExtractionPrompt(existingConcepts);
 
   try {
     const response = await getOpenAI().chat.completions.create({
       model: MODEL_VERSION,
       messages: [
-        { role: 'system', content: CLAIM_EXTRACTION_PROMPT },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: contentText },
       ],
       response_format: { type: 'json_object' },
