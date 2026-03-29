@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const metadata = {
   title: "How Mindlayer Works | Map your thinking",
@@ -9,27 +8,33 @@ export const metadata = {
     "Learn how Mindlayer captures what you read, extracts claims, and builds a living map of your beliefs.",
 };
 
+const C = {
+  bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
+  text: "#e8e4dc", textSoft: "#c4bfb4", muted: "#7a7469",
+  accent: "#52b788", amber: "#d4915a", blue: "#6b9fc4",
+};
+
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
-      {/* Navigation */}
-      <nav className="border-b border-zinc-100 dark:border-zinc-900">
+    <div className="min-h-screen" style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif" }}>
+      {/* Nav */}
+      <nav style={{ borderBottom: `1px solid ${C.border}`, background: `${C.bg}dd`, backdropFilter: "blur(12px)" }}>
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-semibold tracking-tight">
-            Mindlayer
+          <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
           </Link>
-          <Link href="/install">
-            <Button size="sm">Get Started</Button>
+          <Link href="/login">
+            <Button size="sm" variant="gradient">Get Started</Button>
           </Link>
         </div>
       </nav>
 
       {/* Header */}
-      <header className="py-16 px-6 text-center border-b border-zinc-100 dark:border-zinc-900">
-        <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
+      <header className="py-16 px-6 text-center" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <h1 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 12 }}>
           How Mindlayer Works
         </h1>
-        <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
+        <p style={{ fontSize: 17, color: C.textSoft, maxWidth: 520, margin: "0 auto" }}>
           Two layers — real-time and ambient. Nothing meaningful falls through.
         </p>
       </header>
@@ -37,69 +42,31 @@ export default function HowItWorksPage() {
       {/* Layer 1 */}
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <Badge className="bg-rose-500">Layer 1</Badge>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-              Real-Time Capture
-            </h2>
+          <div className="flex items-center gap-3 mb-10">
+            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: C.accent, border: `1px solid ${C.accent}40`, borderRadius: 6, padding: "4px 10px" }}>Layer 1</span>
+            <h2 style={{ fontSize: 22, fontWeight: 700 }}>Real-Time Capture</h2>
           </div>
-
-          <div className="space-y-8">
-            <Step
-              number={1}
-              title="Silent Monitoring"
-              description="Desktop app tracks browsers, apps, audio. Measures dwell time, scroll depth, completion. Skims ignored."
-            />
-            <Step
-              number={2}
-              title="Completion Detection"
-              description="When you finish, AI extracts the core claims in the background."
-            />
-            <Step
-              number={3}
-              title="Prompt Appears"
-              description="A small card shows the claim with reaction options. For debates, pick which view resonates."
-            />
-            <Step
-              number={4}
-              title="Graph Updates"
-              description="Your reaction embeds into the belief graph. Skip? It goes to the digest."
-            />
+          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+            <Step n={1} title="Silent Monitoring" description="Desktop app tracks browsers, apps, audio. Measures dwell time, scroll depth, completion. Skims ignored." color={C.accent} />
+            <Step n={2} title="Completion Detection" description="When you finish, AI extracts the core claims in the background." color={C.accent} />
+            <Step n={3} title="Prompt Appears" description="A small card shows the claim with reaction options. For debates, pick which view resonates." color={C.accent} />
+            <Step n={4} title="Graph Updates" description="Your reaction embeds into the belief graph. Skip? It goes to the digest." color={C.accent} />
           </div>
         </div>
       </section>
 
       {/* Layer 2 */}
-      <section className="py-16 px-6 bg-zinc-50 dark:bg-zinc-900/30">
+      <section className="py-16 px-6" style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <Badge className="bg-amber-500">Layer 2</Badge>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-              Twice-Daily Digest
-            </h2>
+          <div className="flex items-center gap-3 mb-10">
+            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: C.amber, border: `1px solid ${C.amber}40`, borderRadius: 6, padding: "4px 10px" }}>Layer 2</span>
+            <h2 style={{ fontSize: 22, fontWeight: 700 }}>Twice-Daily Digest</h2>
           </div>
-
-          <div className="space-y-8">
-            <Step
-              number={5}
-              title="Digest Notification"
-              description="Morning and evening. Catches dismissed items and mobile content shared via the PWA."
-            />
-            <Step
-              number={6}
-              title="Card Swipe"
-              description="One claim per card, four options. Swipe to react. 4-5 items, under 2 minutes."
-            />
-            <Step
-              number={7}
-              title="Curiosity Hook"
-              description='Contains a counterpoint? You&apos;ll see: "including one that challenges a view you hold."'
-            />
-            <Step
-              number={8}
-              title="Loop Closes"
-              description="Digest reactions update the same graph. Tomorrow only shows new content."
-            />
+          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+            <Step n={5} title="Digest Notification" description="Morning and evening. Catches dismissed items and mobile content shared via the PWA." color={C.amber} />
+            <Step n={6} title="Card Swipe" description="One claim per card, four options. Swipe to react. 4–5 items, under 2 minutes." color={C.amber} />
+            <Step n={7} title="Curiosity Hook" description={`Contains a counterpoint? You'll see: "including one that challenges a view you hold."`} color={C.amber} />
+            <Step n={8} title="Loop Closes" description="Digest reactions update the same graph. Tomorrow only shows new content." color={C.amber} />
           </div>
         </div>
       </section>
@@ -107,47 +74,26 @@ export default function HowItWorksPage() {
       {/* Downstream */}
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <Badge variant="outline">Downstream</Badge>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-              What the Graph Does
-            </h2>
+          <div className="flex items-center gap-3 mb-10">
+            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: C.blue, border: `1px solid ${C.blue}40`, borderRadius: 6, padding: "4px 10px" }}>Downstream</span>
+            <h2 style={{ fontSize: 22, fontWeight: 700 }}>What the Graph Does</h2>
           </div>
-
           <div className="grid md:grid-cols-3 gap-6">
-            <DownstreamCard
-              title="Echo Detection"
-              description="Same direction 5-6 times without counterpoint? Flagged. Primes the nudge engine."
-            />
-            <DownstreamCard
-              title="Gentle Nudges"
-              description={`"This take on X is worth a look." One counter-angle. Engage or don't.`}
-            />
-            <DownstreamCard
-              title="Living Map"
-              description="Topic clusters by engagement. Timeline scrubber to watch thinking evolve."
-            />
+            <InfoCard title="Echo Detection" description="Same direction 5–6 times without counterpoint? Flagged. Primes the nudge engine." color={C.accent} />
+            <InfoCard title="Gentle Nudges" description={`"This take on X is worth a look." One counter-angle. Engage or don't.`} color={C.amber} />
+            <InfoCard title="Living Map" description="Topic clusters by engagement. Timeline scrubber to watch thinking evolve." color={C.blue} />
           </div>
         </div>
       </section>
 
       {/* Three never-dos */}
-      <section className="py-16 px-6 bg-zinc-900 dark:bg-black text-white">
+      <section className="py-16 px-6" style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-8">Three things it never does</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 32 }}>Three things it never does</h2>
           <div className="grid md:grid-cols-3 gap-8 text-left">
-            <NeverDo
-              title="Never tells you you're wrong"
-              description="It maps and suggests. What you do is yours."
-            />
-            <NeverDo
-              title="Never reinforces your views"
-              description="Nudges point to the window you haven't looked through."
-            />
-            <NeverDo
-              title="Never demands effort"
-              description="Desktop: silent. Mobile: share to add. Only action: optional one-tap reaction."
-            />
+            <NeverDo title="Never tells you you're wrong" description="It maps and suggests. What you do is yours." />
+            <NeverDo title="Never reinforces your views" description="Nudges point to the window you haven't looked through." />
+            <NeverDo title="Never demands effort" description="Desktop: silent. Mobile: share to add. Only action: optional one-tap reaction." />
           </div>
         </div>
       </section>
@@ -155,15 +101,15 @@ export default function HowItWorksPage() {
       {/* CTA */}
       <section className="py-20 px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
+          <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)", fontWeight: 700, marginBottom: 12 }}>
             Ready to map your thinking?
           </h2>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-8">
+          <p style={{ color: C.textSoft, fontSize: 15, marginBottom: 32 }}>
             Free to use. Import from Readwise or Pocket to seed your map.
           </p>
-          <Link href="/install">
+          <Link href="/login">
             <Button size="lg" variant="gradient">
-              Get Mindlayer Free
+              Get Started Free
               <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </Link>
@@ -171,23 +117,13 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-100 dark:border-zinc-900">
+      <footer style={{ borderTop: `1px solid ${C.border}` }}>
         <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ fontSize: 13, color: C.muted }}>
             <p>&copy; 2026 Mindlayer. All rights reserved.</p>
             <div className="flex gap-6">
-              <Link
-                href="/privacy"
-                className="hover:text-zinc-900 dark:hover:text-zinc-100"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="/security"
-                className="hover:text-zinc-900 dark:hover:text-zinc-100"
-              >
-                Security
-              </Link>
+              <Link href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</Link>
+              <Link href="/security" style={{ color: "inherit", textDecoration: "none" }}>Security</Link>
             </div>
           </div>
         </div>
@@ -196,63 +132,41 @@ export default function HowItWorksPage() {
   );
 }
 
-function Step({
-  number,
-  title,
-  description,
-}: {
-  number: number;
-  title: string;
-  description: string;
-}) {
+function Step({ n, title, description, color }: { n: number; title: string; description: string; color: string }) {
   return (
-    <div className="flex gap-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-sm font-semibold text-zinc-600 dark:text-zinc-400">
-        {number}
-      </div>
+    <div style={{ display: "flex", gap: 16 }}>
+      <div style={{
+        flexShrink: 0, width: 32, height: 32, borderRadius: "50%",
+        border: `1px solid ${color}40`, color,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 13, fontWeight: 600,
+      }}>{n}</div>
       <div>
-        <h3 className="font-semibold text-zinc-900 dark:text-zinc-50 mb-1">
-          {title}
-        </h3>
-        <p className="text-zinc-600 dark:text-zinc-400">{description}</p>
+        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{title}</h3>
+        <p style={{ fontSize: 14, color: "#c4bfb4", lineHeight: 1.6 }}>{description}</p>
       </div>
     </div>
   );
 }
 
-function DownstreamCard({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+function InfoCard({ title, description, color }: { title: string; description: string; color: string }) {
   return (
-    <div className="p-6 rounded-xl border border-zinc-200 dark:border-zinc-800">
-      <h3 className="font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
-        {title}
-      </h3>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">{description}</p>
+    <div style={{ padding: 24, borderRadius: 12, border: "1px solid #2a2825", background: "#1a1916" }}>
+      <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, marginBottom: 14 }} />
+      <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>{title}</h3>
+      <p style={{ fontSize: 14, color: "#c4bfb4", lineHeight: 1.6 }}>{description}</p>
     </div>
   );
 }
 
-function NeverDo({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+function NeverDo({ title, description }: { title: string; description: string }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center">
-          <Check className="w-3 h-3 text-red-400" />
-        </div>
-        <h3 className="font-semibold">{title}</h3>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#d4915a20", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#d4915a" }}>✕</div>
+        <h3 style={{ fontSize: 15, fontWeight: 600 }}>{title}</h3>
       </div>
-      <p className="text-sm text-zinc-400">{description}</p>
+      <p style={{ fontSize: 14, color: "#7a7469", lineHeight: 1.6 }}>{description}</p>
     </div>
   );
 }

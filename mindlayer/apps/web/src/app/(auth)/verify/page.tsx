@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,6 @@ import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
 export default function VerifyPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
@@ -35,11 +34,10 @@ export default function VerifyPage() {
       return;
     }
 
-    setStatus("success");
-    setTimeout(() => {
-      router.push("/map");
-    }, 2000);
-  }, [searchParams, router]);
+    // Hand off to the API route which validates the token,
+    // creates the user/session, sets the cookie, and redirects to /map.
+    window.location.href = `/api/auth/verify?token=${encodeURIComponent(token)}`;
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">

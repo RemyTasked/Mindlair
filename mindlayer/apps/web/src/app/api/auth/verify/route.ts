@@ -13,13 +13,13 @@ export async function GET(request: NextRequest) {
     const token = request.nextUrl.searchParams.get('token');
 
     if (!token) {
-      return NextResponse.redirect(new URL('/login?error=missing_token', request.url));
+      return NextResponse.redirect(new URL('/verify?error=missing_token', request.url));
     }
 
     const email = await verifyMagicLinkToken(token);
 
     if (!email) {
-      return NextResponse.redirect(new URL('/login?error=invalid_token', request.url));
+      return NextResponse.redirect(new URL('/verify?error=invalid_token', request.url));
     }
 
     const existingUser = await db.user.findUnique({
@@ -43,6 +43,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/map', request.url));
   } catch (error) {
     console.error('Verify error:', error);
-    return NextResponse.redirect(new URL('/login?error=verification_failed', request.url));
+    return NextResponse.redirect(new URL('/verify?error=verification_failed', request.url));
   }
 }

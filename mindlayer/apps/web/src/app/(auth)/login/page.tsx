@@ -3,10 +3,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mail, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+
+const C = {
+  bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
+  text: "#e8e4dc", textSoft: "#c4bfb4", muted: "#7a7469",
+  accent: "#52b788", danger: "#c05252",
+};
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
@@ -54,116 +58,108 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 bg-clip-text text-transparent">
-              Mindlayer
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-10">
+          <Link href="/" style={{ textDecoration: "none" }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.04em", color: C.text }}>
+              Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
             </h1>
           </Link>
-          <p className="text-zinc-500 mt-2">Map your thinking, not just your time</p>
+          <p style={{ fontSize: 14, color: C.muted, marginTop: 6 }}>Map your thinking, not just your time</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">
-              {isSuccess ? "Check your email" : "Sign in"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isSuccess ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center space-y-4"
+        {/* Card */}
+        <div style={{ border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, background: C.surface }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, textAlign: "center", marginBottom: 20 }}>
+            {isSuccess ? "Check your email" : "Sign in"}
+          </h2>
+
+          {isSuccess ? (
+            <div style={{ textAlign: "center" }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: "50%", background: `${C.accent}18`,
+                display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px",
+              }}>
+                <CheckCircle style={{ width: 28, height: 28, color: C.accent }} />
+              </div>
+              <p style={{ fontSize: 14, color: C.textSoft, marginBottom: 6 }}>
+                We sent a sign-in link to <strong style={{ color: C.text }}>{email}</strong>
+              </p>
+              <p style={{ fontSize: 13, color: C.muted, marginBottom: 20 }}>
+                Click the link in your email to sign in. It expires in 15 minutes.
+              </p>
+              <button
+                onClick={() => { setIsSuccess(false); setEmail(""); }}
+                style={{ fontSize: 13, color: C.accent, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
               >
-                <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                Use a different email
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              {error && (
+                <div style={{
+                  display: "flex", alignItems: "flex-start", gap: 8,
+                  padding: "10px 12px", borderRadius: 10,
+                  background: `${C.danger}12`, border: `1px solid ${C.danger}30`, marginBottom: 16,
+                }}>
+                  <AlertCircle style={{ width: 18, height: 18, color: C.danger, flexShrink: 0, marginTop: 1 }} />
+                  <p style={{ fontSize: 13, color: C.danger }}>{error}</p>
                 </div>
-                <p className="text-zinc-600 dark:text-zinc-400">
-                  We sent a sign-in link to <strong>{email}</strong>
-                </p>
-                <p className="text-sm text-zinc-500">
-                  Click the link in your email to sign in. The link will expire in 15 minutes.
-                </p>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setIsSuccess(false);
-                    setEmail("");
+              )}
+
+              <label htmlFor="email" style={{ display: "block", fontSize: 13, fontWeight: 500, color: C.textSoft, marginBottom: 6 }}>
+                Email address
+              </label>
+              <div style={{ position: "relative", marginBottom: 16 }}>
+                <Mail style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 18, height: 18, color: C.muted }} />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  style={{
+                    width: "100%", paddingLeft: 40, paddingRight: 14, paddingTop: 10, paddingBottom: 10,
+                    borderRadius: 10, border: `1px solid ${C.border}`, background: C.bg, color: C.text,
+                    fontSize: 14, outline: "none", boxSizing: "border-box",
                   }}
-                  className="mt-4"
-                >
-                  Use a different email
-                </Button>
-              </motion.div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 flex items-start gap-2"
-                  >
-                    <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>
-                  </motion.div>
+                />
+              </div>
+
+              <Button
+                type="submit"
+                variant="gradient"
+                className="w-full"
+                disabled={isLoading || !email}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending link...
+                  </>
+                ) : (
+                  "Continue with email"
                 )}
+              </Button>
 
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5"
-                  >
-                    Email address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
-                    />
-                  </div>
-                </div>
+              <p style={{ fontSize: 11, color: C.muted, textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
+                By continuing, you agree to our{" "}
+                <Link href="/privacy" style={{ color: C.accent }}>Privacy Policy</Link>{" "}
+                and{" "}
+                <Link href="/security" style={{ color: C.accent }}>Security practices</Link>
+              </p>
+            </form>
+          )}
+        </div>
 
-                <Button
-                  type="submit"
-                  variant="gradient"
-                  className="w-full"
-                  disabled={isLoading || !email}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Sending link...
-                    </>
-                  ) : (
-                    "Continue with email"
-                  )}
-                </Button>
-
-                <p className="text-xs text-center text-zinc-500 mt-4">
-                  By continuing, you agree to our{" "}
-                  <Link href="/privacy" className="text-rose-600 hover:underline">
-                    Privacy Policy
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/security" className="text-rose-600 hover:underline">
-                    Security practices
-                  </Link>
-                </p>
-              </form>
-            )}
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-sm text-zinc-500 mt-6">
+        <p style={{ textAlign: "center", fontSize: 13, color: C.muted, marginTop: 20 }}>
           No password required. We&apos;ll send you a magic link.
         </p>
       </div>

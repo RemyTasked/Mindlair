@@ -1,47 +1,78 @@
-import { InstallHub } from "@/components/install-hub";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { GetStartedHub } from "@/components/install-hub";
 
 export const metadata = {
-  title: "Download Mindlayer | Map how you think",
+  title: "Get Started with Mindlayer | Map how you think",
   description:
-    "Get the Mindlayer desktop app for Mac, Windows, or Linux. Capture what you read, watch, and listen to — build a living map of your beliefs.",
+    "Sign in to Mindlayer and install the app on your device. Access your belief map from any browser, install the PWA on mobile, or download the desktop companion.",
+};
+
+const C = {
+  bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
+  text: "#e8e4dc", textSoft: "#c4bfb4", muted: "#7a7469",
+  accent: "#52b788",
 };
 
 export default function InstallPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
-      {/* Navigation */}
-      <nav className="border-b border-zinc-100 dark:border-zinc-900">
+    <div className="min-h-screen" style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif" }}>
+      {/* Nav */}
+      <nav style={{ borderBottom: `1px solid ${C.border}`, background: `${C.bg}dd`, backdropFilter: "blur(12px)" }}>
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-semibold tracking-tight">
-            Mindlayer
+          <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
           </Link>
-          <Link
-            href="/how-it-works"
-            className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
+          <Link href="/how-it-works" style={{ fontSize: 13, color: C.muted, textDecoration: "none" }}>
             How it works
           </Link>
         </div>
       </nav>
 
-      {/* Main content */}
-      <main className="max-w-2xl mx-auto px-6 py-16">
-        <InstallHub />
+      {/* Header */}
+      <header className="pt-16 pb-8 px-6 text-center">
+        <h1 style={{ fontSize: "clamp(2rem, 4vw, 2.6rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 12 }}>
+          Get Started
+        </h1>
+        <p style={{ fontSize: 15, color: C.textSoft, maxWidth: 440, margin: "0 auto" }}>
+          Sign in to start building your belief map. Works in any browser — install on mobile for push notifications and offline access.
+        </p>
+      </header>
+
+      {/* Sign In CTA */}
+      <section className="px-6 pb-10">
+        <div className="max-w-md mx-auto text-center">
+          <Link href="/login">
+            <Button size="xl" variant="gradient" className="w-full max-w-sm">
+              Sign In with Email
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </Link>
+          <p style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>
+            Free to use. No credit card. Magic link — no password needed.
+          </p>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div className="px-6">
+        <div className="max-w-md mx-auto" style={{ borderTop: `1px solid ${C.border}` }} />
+      </div>
+
+      {/* Install Options */}
+      <main className="max-w-2xl mx-auto px-6 py-10">
+        <GetStartedHub />
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-100 dark:border-zinc-900 mt-auto">
+      <footer style={{ borderTop: `1px solid ${C.border}`, marginTop: "auto" }}>
         <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ fontSize: 13, color: C.muted }}>
             <p>&copy; 2026 Mindlayer. All rights reserved.</p>
             <div className="flex gap-6">
-              <Link href="/privacy" className="hover:text-zinc-900 dark:hover:text-zinc-100">
-                Privacy
-              </Link>
-              <Link href="/security" className="hover:text-zinc-900 dark:hover:text-zinc-100">
-                Security
-              </Link>
+              <Link href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</Link>
+              <Link href="/security" style={{ color: "inherit", textDecoration: "none" }}>Security</Link>
             </div>
           </div>
         </div>
