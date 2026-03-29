@@ -171,13 +171,31 @@ function MobilePwaCard({
   );
 }
 
+const GITHUB_REPO = "clodel-MeetCute/meet-cute";
+const APP_VERSION = "0.1.0";
+
+const DOWNLOADS: { os: string; label: string; file: string }[] = [
+  { os: "mac",     label: "macOS (Apple Silicon)", file: `Mindlayer_${APP_VERSION}_aarch64.dmg` },
+  { os: "mac",     label: "macOS (Intel)",         file: `Mindlayer_${APP_VERSION}_x64.dmg` },
+  { os: "windows", label: "Windows",               file: `Mindlayer_${APP_VERSION}_x64-setup.exe` },
+  { os: "linux",   label: "Linux (AppImage)",       file: `mindlayer_${APP_VERSION}_amd64.AppImage` },
+];
+
 function DesktopCard({ platform }: { platform: PlatformType }) {
+  const primaryOs = platform === "windows" ? "windows" : platform === "linux" ? "linux" : "mac";
+
+  const sorted = [...DOWNLOADS].sort((a, b) => {
+    if (a.os === primaryOs && b.os !== primaryOs) return -1;
+    if (a.os !== primaryOs && b.os === primaryOs) return 1;
+    return 0;
+  });
+
   return (
     <div style={{ border: `1px solid ${C.border}`, borderRadius: 14, padding: 24, background: C.surface }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
         <Monitor style={{ width: 20, height: 20, color: C.amber }} />
         <h3 style={{ fontSize: 16, fontWeight: 700 }}>Desktop Companion</h3>
-        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: C.amber, border: `1px solid ${C.amber}40`, borderRadius: 4, padding: "2px 6px" }}>Coming Soon</span>
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: C.accent, border: `1px solid ${C.accent}40`, borderRadius: 4, padding: "2px 6px" }}>v{APP_VERSION}</span>
       </div>
 
       <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.6, marginBottom: 14 }}>
@@ -185,17 +203,28 @@ function DesktopCard({ platform }: { platform: PlatformType }) {
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {["macOS", "Windows", "Linux"].map((os) => (
-          <div key={os} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, opacity: 0.5 }}>
-            <span style={{ fontSize: 13, fontWeight: 500 }}>{os}</span>
-            <Download style={{ width: 14, height: 14, color: C.muted }} />
-          </div>
+        {sorted.map((d) => (
+          <a
+            key={d.file}
+            href={`https://github.com/${GITHUB_REPO}/releases/latest/download/${d.file}`}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "8px 12px", borderRadius: 8,
+              border: `1px solid ${d.os === primaryOs ? C.accent + "50" : C.border}`,
+              background: d.os === primaryOs ? `${C.accent}08` : "transparent",
+              textDecoration: "none", color: "inherit",
+              cursor: "pointer", transition: "border-color 0.2s",
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{d.label}</span>
+            <Download style={{ width: 14, height: 14, color: d.os === primaryOs ? C.accent : C.muted }} />
+          </a>
         ))}
       </div>
 
       <p style={{ fontSize: 12, color: C.muted, marginTop: 12 }}>
         {platform === "mac" ? "Mac (Apple Silicon & Intel)" : "Available for Mac, Windows & Linux"}.
-        Sign up to get notified when it ships.
+        Free, no account needed to start.
       </p>
     </div>
   );
