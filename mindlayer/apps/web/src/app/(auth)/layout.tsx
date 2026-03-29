@@ -7,8 +7,13 @@ export default function AuthLayout({
 }) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="animate-spin w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0f0e0c" }}>
+        <div style={{
+          width: 28, height: 28, borderRadius: "50%",
+          border: "2px solid #52b788", borderTopColor: "transparent",
+          animation: "spin 0.8s linear infinite",
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     }>
       {children}

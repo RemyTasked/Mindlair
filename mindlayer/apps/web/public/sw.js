@@ -1,107 +1,97 @@
-const CACHE_NAME = 'mindlayer-v1';
-const STATIC_CACHE = 'mindlayer-static-v1';
-const DYNAMIC_CACHE = 'mindlayer-dynamic-v1';
+const CACHE_VERSION = 'v2';
+const STATIC_CACHE = `mindlayer-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `mindlayer-dynamic-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
   '/',
+  '/map',
+  '/wrapped',
+  '/login',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
   '/apple-touch-icon.png',
+  '/offline',
 ];
 
-const API_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const APP_SHELL_ROUTES = ['/map', '/wrapped', '/inbox', '/timeline', '/nudges', '/settings'];
 
-// Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      console.log('[SW] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
+    caches.keys().then((keys) =>
+      Promise.all(
         keys
           .filter((key) => key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
-          .map((key) => {
-            console.log('[SW] Removing old cache:', key);
-            return caches.delete(key);
-          })
-      );
-    })
+          .map((key) => caches.delete(key))
+      )
+    )
   );
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip cross-origin requests
-  if (url.origin !== location.origin) {
-    return;
-  }
+  if (url.origin !== location.origin) return;
 
-  // Handle share target POST requests
   if (url.pathname === '/share-target' && request.method === 'POST') {
     event.respondWith(handleShareTarget(request));
     return;
   }
 
-  // API requests - network first, cache fallback
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirst(request));
     return;
   }
 
-  // Static assets - cache first
+  if (url.pathname.startsWith('/_next/')) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  if (APP_SHELL_ROUTES.some((r) => url.pathname === r || url.pathname.startsWith(r + '/'))) {
+    event.respondWith(networkFirstWithOffline(request));
+    return;
+  }
+
   event.respondWith(cacheFirst(request));
 });
 
-// Cache-first strategy
 async function cacheFirst(request) {
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
   try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    const response = await fetch(request);
+    if (response.ok) {
       const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      cache.put(request, response.clone());
     }
-    return networkResponse;
-  } catch (error) {
-    console.log('[SW] Network request failed, returning offline page');
-    return new Response('Offline', { status: 503 });
+    return response;
+  } catch {
+    return offlineResponse();
   }
 }
 
-// Network-first strategy
 async function networkFirst(request) {
   try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    const response = await fetch(request);
+    if (response.ok) {
       const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      cache.put(request, response.clone());
     }
-    return networkResponse;
-  } catch (error) {
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
     return new Response(JSON.stringify({ error: 'Offline' }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
@@ -109,7 +99,57 @@ async function networkFirst(request) {
   }
 }
 
-// Handle share target submissions
+async function networkFirstWithOffline(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return caches.match('/offline') || offlineResponse();
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cached = await caches.match(request);
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response.ok) {
+        const cache = caches.open(DYNAMIC_CACHE);
+        cache.then((c) => c.put(request, response.clone()));
+      }
+      return response;
+    })
+    .catch(() => cached);
+
+  return cached || fetchPromise;
+}
+
+function offlineResponse() {
+  return new Response(
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Mindlayer — Offline</title>
+    <style>
+      body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+        background:#0f0e0c;color:#e8e4dc;font-family:Inter,system-ui,sans-serif;text-align:center;padding:24px}
+      h1{font-size:24px;font-weight:700;margin-bottom:8px}
+      p{font-size:14px;color:#7a7469;max-width:320px}
+      .dot{width:8px;height:8px;border-radius:50%;background:#52b788;display:inline-block;margin-bottom:20px;
+        animation:pulse 2s ease-in-out infinite}
+      @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+    </style></head>
+    <body><div><div class="dot"></div><h1>You're offline</h1><p>Mindlayer will sync your data when you reconnect. Your map is waiting.</p></div></body>
+    </html>`,
+    { status: 503, headers: { 'Content-Type': 'text/html' } }
+  );
+}
+
 async function handleShareTarget(request) {
   try {
     const formData = await request.formData();
@@ -117,17 +157,15 @@ async function handleShareTarget(request) {
     const text = formData.get('text') || '';
     const url = formData.get('url') || '';
 
-    // Store in IndexedDB for later processing
     const shareData = { title, text, url, timestamp: Date.now() };
     await storeShareData(shareData);
 
-    // Redirect to share-target page with data
     const params = new URLSearchParams({
       title: title.toString(),
       text: text.toString(),
       url: url.toString(),
     });
-    
+
     return Response.redirect(`/share-target?${params.toString()}`, 303);
   } catch (error) {
     console.error('[SW] Share target error:', error);
@@ -135,35 +173,28 @@ async function handleShareTarget(request) {
   }
 }
 
-// Store share data in IndexedDB
 async function storeShareData(data) {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('mindlayer-shares', 1);
-    
     request.onerror = () => reject(request.error);
-    
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       if (!db.objectStoreNames.contains('shares')) {
         db.createObjectStore('shares', { keyPath: 'timestamp' });
       }
     };
-    
     request.onsuccess = () => {
       const db = request.result;
       const tx = db.transaction('shares', 'readwrite');
-      const store = tx.objectStore('shares');
-      store.add(data);
+      tx.objectStore('shares').add(data);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     };
   });
 }
 
-// Push notification event
+// Push notifications
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push notification received');
-  
   let data = {
     title: 'Mindlayer',
     body: 'You have a new notification',
@@ -177,55 +208,44 @@ self.addEventListener('push', (event) => {
     try {
       const payload = event.data.json();
       data = { ...data, ...payload };
-    } catch (e) {
+    } catch {
       data.body = event.data.text();
     }
   }
 
-  const options = {
-    body: data.body,
-    icon: data.icon,
-    badge: data.badge,
-    tag: data.tag,
-    data: data.data,
-    vibrate: [100, 50, 100],
-    actions: data.actions || [],
-    requireInteraction: data.requireInteraction || false,
-  };
-
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon,
+      badge: data.badge,
+      tag: data.tag,
+      data: data.data,
+      vibrate: [100, 50, 100],
+      actions: data.actions || [],
+      requireInteraction: data.requireInteraction || false,
+    })
   );
 });
 
-// Notification click event
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.notification.tag);
   event.notification.close();
-
-  const urlToOpen = event.notification.data?.url || '/';
+  const urlToOpen = event.notification.data?.url || '/map';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Check if app is already open
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.navigate(urlToOpen);
           return client.focus();
         }
       }
-      // Open new window if app is not open
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
+      if (clients.openWindow) return clients.openWindow(urlToOpen);
     })
   );
 });
 
-// Background sync for offline shares
+// Background sync
 self.addEventListener('sync', (event) => {
-  console.log('[SW] Background sync:', event.tag);
-  
   if (event.tag === 'sync-shares') {
     event.waitUntil(syncPendingShares());
   }
@@ -234,49 +254,35 @@ self.addEventListener('sync', (event) => {
 async function syncPendingShares() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('mindlayer-shares', 1);
-    
     request.onsuccess = async () => {
       const db = request.result;
       const tx = db.transaction('shares', 'readwrite');
       const store = tx.objectStore('shares');
       const getAllRequest = store.getAll();
-      
+
       getAllRequest.onsuccess = async () => {
-        const shares = getAllRequest.result;
-        
-        for (const share of shares) {
+        for (const share of getAllRequest.result) {
           try {
             const response = await fetch('/api/ingest', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                url: share.url,
-                title: share.title,
-                text: share.text,
-                source: 'share-target',
+                url: share.url, title: share.title,
+                text: share.text, source: 'share-target',
               }),
             });
-            
-            if (response.ok) {
-              store.delete(share.timestamp);
-            }
-          } catch (error) {
-            console.error('[SW] Failed to sync share:', error);
-          }
+            if (response.ok) store.delete(share.timestamp);
+          } catch { /* retry next sync */ }
         }
-        
         resolve();
       };
     };
-    
     request.onerror = () => reject(request.error);
   });
 }
 
-// Periodic background sync for digest notifications
+// Periodic digest check
 self.addEventListener('periodicsync', (event) => {
-  console.log('[SW] Periodic sync:', event.tag);
-  
   if (event.tag === 'daily-digest') {
     event.waitUntil(checkForDigest());
   }
@@ -286,23 +292,19 @@ async function checkForDigest() {
   try {
     const response = await fetch('/api/digest/check');
     const data = await response.json();
-    
+
     if (data.hasDigest) {
       await self.registration.showNotification('Your Daily Mindlayer Digest', {
         body: data.summary,
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png',
         tag: 'daily-digest',
-        data: { url: '/digest' },
+        data: { url: '/inbox' },
         actions: [
           { action: 'view', title: 'View Digest' },
           { action: 'dismiss', title: 'Dismiss' },
         ],
       });
     }
-  } catch (error) {
-    console.error('[SW] Digest check failed:', error);
-  }
+  } catch { /* offline or error — skip */ }
 }
-
-console.log('[SW] Service worker loaded');

@@ -9,6 +9,12 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+const C = {
+  bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
+  text: "#e8e4dc", textSoft: "#c4bfb4", muted: "#7a7469",
+  accent: "#52b788",
+};
+
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -21,7 +27,7 @@ export function PWAInstallPrompt() {
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
     setIsIOS(isIOSDevice);
 
-    const isStandaloneMode = 
+    const isStandaloneMode =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
     setIsStandalone(isStandaloneMode);
@@ -30,8 +36,7 @@ export function PWAInstallPrompt() {
 
     const dismissed = localStorage.getItem("pwa-install-dismissed");
     if (dismissed) {
-      const dismissedDate = new Date(dismissed);
-      const daysSinceDismissed = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceDismissed = (Date.now() - new Date(dismissed).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceDismissed < 7) return;
     }
 
@@ -47,20 +52,14 @@ export function PWAInstallPrompt() {
       setTimeout(() => setShowPrompt(true), 5000);
     }
 
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-    };
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
   }, []);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
-
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === "accepted") {
-      setShowPrompt(false);
-    }
+    if (outcome === "accepted") setShowPrompt(false);
     setDeferredPrompt(null);
   };
 
@@ -72,64 +71,80 @@ export function PWAInstallPrompt() {
   if (isStandalone || !showPrompt) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-gradient-to-br from-rose-50 to-amber-50 dark:from-zinc-900 dark:to-zinc-800 rounded-xl shadow-xl border border-rose-200 dark:border-zinc-700 p-4 z-50">
-      <button
-        onClick={handleDismiss}
-        className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-full hover:bg-white/50"
-      >
-        <X className="w-4 h-4" />
+    <div style={{
+      position: "fixed", bottom: 16, left: 16, right: 16,
+      maxWidth: 380, marginLeft: "auto",
+      background: C.surface, border: `1px solid ${C.border}`,
+      borderRadius: 14, padding: 16, zIndex: 50,
+      boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
+      fontFamily: "'Inter', system-ui, sans-serif",
+    }}>
+      <button onClick={handleDismiss} style={{
+        position: "absolute", top: 10, right: 10, background: "none",
+        border: "none", color: C.muted, cursor: "pointer", padding: 4,
+      }}>
+        <X style={{ width: 16, height: 16 }} />
       </button>
 
-      <div className="flex items-start gap-3">
-        <div className="p-2.5 bg-gradient-to-br from-rose-500 to-amber-500 rounded-xl shadow-lg">
-          <Smartphone className="w-6 h-6 text-white" />
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <div style={{
+          padding: 10, borderRadius: 12,
+          background: `${C.accent}18`,
+          flexShrink: 0,
+        }}>
+          <Smartphone style={{ width: 22, height: 22, color: C.accent }} />
         </div>
-        <div className="flex-1 pr-4">
-          <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
+        <div style={{ flex: 1, paddingRight: 16 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>
             Add Mindlayer to Home Screen
           </h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-            Install the app for quick access, offline support, and push notifications.
+          <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+            Install for quick access, offline support, and push notifications.
           </p>
         </div>
       </div>
 
-      <div className="mt-4">
+      <div style={{ marginTop: 14 }}>
         {isIOS ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 bg-white/70 dark:bg-zinc-800/70 p-3 rounded-lg">
-              <Share className="w-5 h-5 text-rose-500 shrink-0" />
+          <div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 12, color: C.textSoft,
+              background: C.bg, padding: "10px 12px", borderRadius: 8,
+              border: `1px solid ${C.border}`,
+            }}>
+              <Share style={{ width: 16, height: 16, color: C.accent, flexShrink: 0 }} />
               <span>
-                Tap the <strong>Share</strong> button, then{" "}
-                <strong>&quot;Add to Home Screen&quot;</strong>
+                Tap <strong>Share</strong>, then <strong>&quot;Add to Home Screen&quot;</strong>
               </span>
             </div>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleDismiss}
-            >
+            <button onClick={handleDismiss} style={{
+              width: "100%", marginTop: 10, padding: "8px 0",
+              background: "none", border: `1px solid ${C.border}`,
+              borderRadius: 8, color: C.textSoft, fontSize: 13,
+              cursor: "pointer", fontWeight: 500,
+            }}>
               Got it
-            </Button>
+            </button>
           </div>
         ) : (
-          <Button
-            className="w-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white"
-            onClick={handleInstall}
-          >
+          <Button variant="gradient" className="w-full" onClick={handleInstall}>
             <Download className="w-4 h-4 mr-2" />
             Install App
           </Button>
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-center gap-4 text-xs text-zinc-500">
-        <span className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+      <div style={{
+        marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center",
+        gap: 16, fontSize: 11, color: C.muted,
+      }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: C.accent }} />
           Works offline
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#d4915a" }} />
           Push notifications
         </span>
       </div>

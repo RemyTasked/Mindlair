@@ -9,10 +9,7 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f43f5e" },
-    { media: "(prefers-color-scheme: dark)", color: "#18181b" },
-  ],
+  themeColor: "#0f0e0c",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -23,20 +20,20 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Mindlayer | Map how you think",
   description:
-    "Mindlayer captures what you read and watch, maps your beliefs over time, and gently surfaces perspectives you haven't encountered yet.",
+    "A living map of how you think — capture what you read, track your evolving beliefs, and surface perspectives you haven't encountered yet.",
   keywords: [
     "belief mapping",
     "reading tracker",
     "thought capture",
     "intellectual growth",
-    "desktop app",
+    "PWA",
     "mobile app",
   ],
   authors: [{ name: "Mindlayer" }],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Mindlayer",
   },
   formatDetection: {
@@ -69,7 +66,7 @@ export const metadata: Metadata = {
       {
         rel: "mask-icon",
         url: "/icons/icon.svg",
-        color: "#f43f5e",
+        color: "#52b788",
       },
     ],
   },
@@ -85,10 +82,10 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Mindlayer" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-TileColor" content="#f43f5e" />
+        <meta name="msapplication-TileColor" content="#0f0e0c" />
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body className="font-sans antialiased">

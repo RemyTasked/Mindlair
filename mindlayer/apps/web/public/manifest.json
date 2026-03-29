@@ -2,12 +2,12 @@
   "id": "/",
   "name": "Mindlayer",
   "short_name": "Mindlayer",
-  "description": "Map how you think — a living map of your beliefs and a quiet guide to thinking wider.",
-  "start_url": "/",
+  "description": "A living map of how you think — capture what you read, track your evolving beliefs, and surface perspectives you haven't encountered yet.",
+  "start_url": "/map",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#f43f5e",
+  "background_color": "#0f0e0c",
+  "theme_color": "#0f0e0c",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -81,6 +81,20 @@
       "url": "url"
     }
   },
+  "shortcuts": [
+    {
+      "name": "Belief Map",
+      "short_name": "Map",
+      "url": "/map",
+      "description": "View your belief map"
+    },
+    {
+      "name": "Wrapped",
+      "short_name": "Wrapped",
+      "url": "/wrapped",
+      "description": "Your annual thinking review"
+    }
+  ],
   "categories": ["productivity", "education", "lifestyle"],
   "related_applications": [],
   "prefer_related_applications": false
