@@ -1,176 +1,174 @@
-const POCKET_API_BASE = 'https://getpocket.com/v3';
-const POCKET_AUTH_URL = 'https://getpocket.com/auth';
+/**
+ * Pocket integration.
+ * Uses Pocket's custom OAuth flow (request token → authorize → access token).
+ * Syncs saved articles and their read status.
+ */
+
+const POCKET_REQUEST_URL = 'https://getpocket.com/v3/oauth/request';
+const POCKET_AUTH_URL = 'https://getpocket.com/auth/authorize';
+const POCKET_ACCESS_URL = 'https://getpocket.com/v3/oauth/authorize';
+const POCKET_GET_URL = 'https://getpocket.com/v3/get';
+
+export function getPocketConfig() {
+  const consumerKey = process.env.POCKET_CONSUMER_KEY;
+  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/integrations/pocket/callback`;
+
+  if (!consumerKey) {
+    throw new Error('Pocket consumer key not configured');
+  }
+
+  return { consumerKey, redirectUri };
+}
+
+export async function getRequestToken(): Promise<string> {
+  const { consumerKey, redirectUri } = getPocketConfig();
+
+  const response = await fetch(POCKET_REQUEST_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      consumer_key: consumerKey,
+      redirect_uri: redirectUri,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Pocket request token failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.code;
+}
+
+export function buildPocketAuthUrl(requestToken: string): string {
+  const { redirectUri } = getPocketConfig();
+  const params = new URLSearchParams({
+    request_token: requestToken,
+    redirect_uri: `${redirectUri}?request_token=${requestToken}`,
+  });
+  return `${POCKET_AUTH_URL}?${params}`;
+}
+
+export async function exchangePocketToken(requestToken: string): Promise<{
+  accessToken: string;
+  username: string;
+}> {
+  const { consumerKey } = getPocketConfig();
+
+  const response = await fetch(POCKET_ACCESS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      consumer_key: consumerKey,
+      code: requestToken,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Pocket access token failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { accessToken: data.access_token, username: data.username };
+}
 
 export interface PocketItem {
-  item_id: string;
-  resolved_id: string;
-  given_url: string;
-  resolved_url: string;
-  given_title: string;
-  resolved_title: string;
-  favorite: '0' | '1';
-  status: '0' | '1' | '2';
-  excerpt: string;
-  is_article: '0' | '1';
-  has_image: '0' | '1' | '2';
-  has_video: '0' | '1' | '2';
-  word_count: string;
-  tags?: Record<string, { item_id: string; tag: string }>;
-  authors?: Record<string, { item_id: string; author_id: string; name: string; url: string }>;
-  images?: Record<string, { item_id: string; image_id: string; src: string }>;
-  time_added: string;
-  time_read: string;
-  time_updated: string;
-  time_favorited: string;
-  listen_duration_estimate: number;
-}
-
-export interface PocketRetrieveResponse {
-  status: number;
-  complete: number;
-  list: Record<string, PocketItem>;
-  since: number;
-}
-
-export class PocketClient {
-  private consumerKey: string;
-  private accessToken: string;
-
-  constructor(consumerKey: string, accessToken: string) {
-    this.consumerKey = consumerKey;
-    this.accessToken = accessToken;
-  }
-
-  private async request<T>(endpoint: string, data: Record<string, unknown> = {}): Promise<T> {
-    const response = await fetch(`${POCKET_API_BASE}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'X-Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        consumer_key: this.consumerKey,
-        access_token: this.accessToken,
-        ...data,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorHeader = response.headers.get('X-Error');
-      throw new Error(`Pocket API error: ${response.status} ${errorHeader || response.statusText}`);
-    }
-
-    return response.json();
-  }
-
-  async retrieve(params: {
-    state?: 'unread' | 'archive' | 'all';
-    favorite?: 0 | 1;
-    tag?: string;
-    contentType?: 'article' | 'video' | 'image';
-    sort?: 'newest' | 'oldest' | 'title' | 'site';
-    detailType?: 'simple' | 'complete';
-    count?: number;
-    offset?: number;
-    since?: number;
-  } = {}): Promise<PocketRetrieveResponse> {
-    return this.request('/get', params);
-  }
-
-  async retrieveAll(since?: number): Promise<PocketItem[]> {
-    const response = await this.retrieve({
-      state: 'all',
-      detailType: 'complete',
-      since,
-    });
-
-    return Object.values(response.list);
-  }
-
-  static getAuthUrl(consumerKey: string, redirectUri: string): { url: string; requestToken: Promise<string> } {
-    const requestTokenPromise = fetch(`${POCKET_API_BASE}/oauth/request`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'X-Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        consumer_key: consumerKey,
-        redirect_uri: redirectUri,
-      }),
-    })
-      .then(res => res.json())
-      .then(data => data.code as string);
-
-    return {
-      url: `${POCKET_AUTH_URL}/authorize`,
-      requestToken: requestTokenPromise,
-    };
-  }
-
-  static async exchangeToken(consumerKey: string, requestToken: string): Promise<{ accessToken: string; username: string }> {
-    const response = await fetch(`${POCKET_API_BASE}/oauth/authorize`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'X-Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        consumer_key: consumerKey,
-        code: requestToken,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to exchange Pocket token');
-    }
-
-    const data = await response.json();
-    return {
-      accessToken: data.access_token,
-      username: data.username,
-    };
-  }
-}
-
-export function mapPocketToSource(item: PocketItem): {
-  url: string;
+  itemId: string;
+  resolvedUrl: string;
+  givenUrl: string;
   title: string;
-  contentType: string;
-  surface: string;
-  consumedAt: string;
-  metadata: Record<string, unknown>;
-} {
-  let contentType = 'article';
-  if (item.has_video === '1' || item.has_video === '2') {
-    contentType = 'video';
-  } else if (item.listen_duration_estimate > 0) {
-    contentType = 'audio';
+  excerpt?: string;
+  wordCount?: number;
+  isArticle: boolean;
+  isVideo: boolean;
+  timeAdded: string;
+  timeRead?: string;
+  status: 'unread' | 'archived' | 'deleted';
+}
+
+export async function fetchPocketItems(
+  accessToken: string,
+  since?: number,
+): Promise<PocketItem[]> {
+  const { consumerKey } = getPocketConfig();
+
+  const body: Record<string, unknown> = {
+    consumer_key: consumerKey,
+    access_token: accessToken,
+    detailType: 'complete',
+    sort: 'newest',
+    count: 200,
+  };
+  if (since) body.since = since;
+
+  const response = await fetch(POCKET_GET_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Accept': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Pocket fetch failed: ${response.status}`);
   }
 
-  const authors = item.authors 
-    ? Object.values(item.authors).map(a => a.name)
-    : [];
+  const data = await response.json();
+  const list = data.list || {};
+  const items: PocketItem[] = [];
 
-  const tags = item.tags
-    ? Object.values(item.tags).map(t => t.tag)
-    : [];
+  for (const raw of Object.values(list)) {
+    const item = raw as Record<string, unknown>;
+    const resolvedUrl = (item.resolved_url as string) || (item.given_url as string) || '';
+    if (!resolvedUrl) continue;
 
+    const status = item.status === '1' ? 'archived' : item.status === '2' ? 'deleted' : 'unread';
+
+    items.push({
+      itemId: item.item_id as string,
+      resolvedUrl,
+      givenUrl: (item.given_url as string) || resolvedUrl,
+      title: (item.resolved_title as string) || (item.given_title as string) || resolvedUrl,
+      excerpt: (item.excerpt as string)?.slice(0, 500),
+      wordCount: item.word_count ? parseInt(item.word_count as string) : undefined,
+      isArticle: item.is_article === '1',
+      isVideo: item.has_video === '2',
+      timeAdded: new Date(parseInt(item.time_added as string) * 1000).toISOString(),
+      timeRead: item.time_read && item.time_read !== '0'
+        ? new Date(parseInt(item.time_read as string) * 1000).toISOString()
+        : undefined,
+      status,
+    });
+  }
+
+  return items.sort((a, b) => new Date(b.timeAdded).getTime() - new Date(a.timeAdded).getTime());
+}
+
+export function mapPocketItemToSource(item: PocketItem) {
   return {
-    url: item.resolved_url || item.given_url,
-    title: item.resolved_title || item.given_title || item.resolved_url,
-    contentType,
-    surface: 'pocket_import',
-    consumedAt: new Date(parseInt(item.time_added) * 1000).toISOString(),
+    url: item.resolvedUrl,
+    title: item.title,
+    contentType: item.isVideo ? 'video' : 'article',
+    surface: 'pocket_import' as const,
+    consumedAt: item.timeRead || item.timeAdded,
     metadata: {
-      excerpt: item.excerpt,
-      wordCount: parseInt(item.word_count) || undefined,
-      authors,
-      tags,
-      favorite: item.favorite === '1',
-      status: item.status === '1' ? 'archived' : item.status === '2' ? 'deleted' : 'unread',
-      pocketItemId: item.item_id,
-      listenDurationEstimate: item.listen_duration_estimate,
+      wordCount: item.wordCount,
+      outlet: getDomainSimple(item.resolvedUrl),
     },
   };
+}
+
+function getDomainSimple(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
 }

@@ -13,11 +13,15 @@ export const surfaceSchema = z.enum([
   'readwise_import',
   'pocket_import',
   'instapaper_import',
+  'rss_feed',
+  'spotify_import',
+  'youtube_import',
+  'share_target',
 ]);
 
 export const stanceSchema = z.enum(['agree', 'disagree', 'complicated', 'skip']);
 
-export const contentTypeSchema = z.enum(['article', 'video', 'podcast', 'thread']);
+export const contentTypeSchema = z.enum(['article', 'video', 'podcast', 'thread', 'book', 'audio']);
 
 export const ingestContentSchema = z.object({
   url: z.string().url(),

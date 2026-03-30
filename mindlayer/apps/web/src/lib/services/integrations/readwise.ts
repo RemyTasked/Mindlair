@@ -1,161 +1,150 @@
+/**
+ * Readwise integration.
+ * Uses Readwise API v2 with personal access token.
+ * Fetches highlights grouped by book/article, maps them to sources.
+ */
+
 const READWISE_API_BASE = 'https://readwise.io/api/v2';
+
+export interface ReadwiseBook {
+  id: number;
+  title: string;
+  author: string;
+  category: string; // books, articles, tweets, supplementals, podcasts
+  source: string; // kindle, instapaper, pocket, etc.
+  sourceUrl: string | null;
+  numHighlights: number;
+  lastHighlightAt: string | null;
+  updatedAt: string;
+  coverImageUrl: string | null;
+}
 
 export interface ReadwiseHighlight {
   id: number;
   text: string;
   note: string;
   location: number;
-  location_type: string;
-  highlighted_at: string;
+  locationType: string;
+  bookId: number;
   url: string | null;
-  color: string;
-  updated: string;
-  book_id: number;
-  tags: Array<{ id: number; name: string }>;
+  highlightedAt: string;
+  updatedAt: string;
 }
 
-export interface ReadwiseBook {
-  id: number;
-  title: string;
-  author: string;
-  category: string;
-  source: string;
-  num_highlights: number;
-  last_highlight_at: string;
-  updated: string;
-  cover_image_url: string;
-  highlights_url: string;
-  source_url: string | null;
-  asin: string | null;
-  tags: Array<{ id: number; name: string }>;
+export async function verifyReadwiseToken(token: string): Promise<boolean> {
+  const response = await fetch(`${READWISE_API_BASE}/auth/`, {
+    headers: { 'Authorization': `Token ${token}` },
+  });
+  return response.ok;
 }
 
-export interface ReadwiseExportResponse {
-  count: number;
-  nextPageCursor: string | null;
-  results: ReadwiseBook[];
-}
+export async function fetchReadwiseBooks(
+  token: string,
+  updatedAfter?: string,
+): Promise<ReadwiseBook[]> {
+  const books: ReadwiseBook[] = [];
+  let nextUrl: string | null = `${READWISE_API_BASE}/books/`;
 
-export class ReadwiseClient {
-  private accessToken: string;
-
-  constructor(accessToken: string) {
-    this.accessToken = accessToken;
+  if (updatedAfter) {
+    nextUrl += `?updated__gt=${updatedAfter}`;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${READWISE_API_BASE}${endpoint}`, {
-      ...options,
-      headers: {
-        'Authorization': `Token ${this.accessToken}`,
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+  while (nextUrl) {
+    const response = await fetch(nextUrl, {
+      headers: { 'Authorization': `Token ${token}` },
     });
 
     if (!response.ok) {
-      throw new Error(`Readwise API error: ${response.status} ${response.statusText}`);
+      if (response.status === 401) throw new Error('INVALID_TOKEN');
+      throw new Error(`Readwise API error: ${response.status}`);
     }
 
-    return response.json();
-  }
+    const data = await response.json();
 
-  async validateToken(): Promise<boolean> {
-    try {
-      await this.request('/auth/');
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async getBooks(params: {
-    page_size?: number;
-    page?: number;
-    category?: string;
-    source?: string;
-    updated_after?: string;
-  } = {}): Promise<{ count: number; results: ReadwiseBook[] }> {
-    const searchParams = new URLSearchParams();
-    if (params.page_size) searchParams.set('page_size', params.page_size.toString());
-    if (params.page) searchParams.set('page', params.page.toString());
-    if (params.category) searchParams.set('category', params.category);
-    if (params.source) searchParams.set('source', params.source);
-    if (params.updated_after) searchParams.set('updated__gt', params.updated_after);
-
-    const query = searchParams.toString();
-    return this.request(`/books/${query ? `?${query}` : ''}`);
-  }
-
-  async getHighlights(params: {
-    page_size?: number;
-    page?: number;
-    book_id?: number;
-    updated_after?: string;
-  } = {}): Promise<{ count: number; results: ReadwiseHighlight[] }> {
-    const searchParams = new URLSearchParams();
-    if (params.page_size) searchParams.set('page_size', params.page_size.toString());
-    if (params.page) searchParams.set('page', params.page.toString());
-    if (params.book_id) searchParams.set('book_id', params.book_id.toString());
-    if (params.updated_after) searchParams.set('updated__gt', params.updated_after);
-
-    const query = searchParams.toString();
-    return this.request(`/highlights/${query ? `?${query}` : ''}`);
-  }
-
-  async exportAll(updatedAfter?: string): Promise<ReadwiseBook[]> {
-    const allBooks: ReadwiseBook[] = [];
-    let page = 1;
-    const pageSize = 100;
-
-    while (true) {
-      const response = await this.getBooks({
-        page,
-        page_size: pageSize,
-        updated_after: updatedAfter,
+    for (const book of data.results || []) {
+      books.push({
+        id: book.id,
+        title: book.title || 'Untitled',
+        author: book.author || '',
+        category: book.category || 'articles',
+        source: book.source || '',
+        sourceUrl: book.source_url || null,
+        numHighlights: book.num_highlights || 0,
+        lastHighlightAt: book.last_highlight_at || null,
+        updatedAt: book.updated,
+        coverImageUrl: book.cover_image_url || null,
       });
-
-      allBooks.push(...response.results);
-
-      if (response.results.length < pageSize) {
-        break;
-      }
-      page++;
     }
 
-    return allBooks;
+    nextUrl = data.next;
   }
+
+  return books;
 }
 
-export function mapReadwiseToSource(book: ReadwiseBook): {
-  url: string;
-  title: string;
-  contentType: string;
-  surface: string;
-  consumedAt: string;
-  metadata: Record<string, unknown>;
-} {
-  const categoryToContentType: Record<string, string> = {
-    articles: 'article',
-    books: 'book',
-    tweets: 'thread',
-    podcasts: 'audio',
-    supplementals: 'article',
-  };
+export async function fetchReadwiseHighlights(
+  token: string,
+  bookId: number,
+): Promise<ReadwiseHighlight[]> {
+  const highlights: ReadwiseHighlight[] = [];
+  let nextUrl: string | null = `${READWISE_API_BASE}/highlights/?book_id=${bookId}`;
+
+  while (nextUrl) {
+    const response = await fetch(nextUrl, {
+      headers: { 'Authorization': `Token ${token}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Readwise API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    for (const h of data.results || []) {
+      highlights.push({
+        id: h.id,
+        text: h.text || '',
+        note: h.note || '',
+        location: h.location || 0,
+        locationType: h.location_type || '',
+        bookId: h.book_id,
+        url: h.url || null,
+        highlightedAt: h.highlighted_at || h.created_at || '',
+        updatedAt: h.updated,
+      });
+    }
+
+    nextUrl = data.next;
+  }
+
+  return highlights;
+}
+
+export function mapReadwiseBookToSource(book: ReadwiseBook) {
+  const contentType = categoryToContentType(book.category);
+  const url = book.sourceUrl || `https://readwise.io/bookreview/${book.id}`;
 
   return {
-    url: book.source_url || `https://readwise.io/bookreview/${book.id}`,
+    url,
     title: book.title,
-    contentType: categoryToContentType[book.category] || 'article',
-    surface: 'readwise_import',
-    consumedAt: book.last_highlight_at || book.updated,
+    contentType,
+    surface: 'readwise_import' as const,
+    consumedAt: book.lastHighlightAt || book.updatedAt,
     metadata: {
       author: book.author,
-      source: book.source,
-      highlightCount: book.num_highlights,
-      readwiseBookId: book.id,
-      coverImage: book.cover_image_url,
-      tags: book.tags.map(t => t.name),
+      outlet: book.source || 'Readwise',
     },
   };
+}
+
+function categoryToContentType(category: string): string {
+  switch (category) {
+    case 'books': return 'book';
+    case 'podcasts': return 'podcast';
+    case 'tweets': return 'thread';
+    case 'articles':
+    case 'supplementals':
+    default:
+      return 'article';
+  }
 }
