@@ -1,27 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { validateApiKey } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
     const apiKey = request.headers.get('x-api-key');
     
     if (!apiKey) {
-      return NextResponse.json({ valid: false, message: 'No API key provided' });
+      return NextResponse.json({ valid: false, message: 'No API key provided' }, { status: 401 });
     }
 
-    const user = await db.user.findFirst({
-      where: {
-        id: apiKey,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-      },
-    });
+    const user = await validateApiKey(apiKey);
 
     if (!user) {
-      return NextResponse.json({ valid: false, message: 'Invalid API key' });
+      return NextResponse.json({ valid: false, message: 'Invalid API key' }, { status: 401 });
     }
 
     return NextResponse.json({
