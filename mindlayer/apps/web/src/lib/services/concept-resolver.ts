@@ -1,6 +1,6 @@
 import db from '@/lib/db';
 import { generateEmbedding } from './ai';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
 /**
  * Hybrid concept resolver — three layers:
@@ -168,10 +168,10 @@ const SIMILARITY_THRESHOLD_HIGH = 0.85;
 const SIMILARITY_THRESHOLD_AMBIGUOUS = 0.70;
 
 // ── Layer 3: LLM arbitration ───────────────────────────────────
-let openaiClient: OpenAI | null = null;
-function getOpenAI(): OpenAI {
-  if (!openaiClient) openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
-  return openaiClient;
+let anthropicClient: Anthropic | null = null;
+function getAnthropic(): Anthropic {
+  if (!anthropicClient) anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
+  return anthropicClient;
 }
 
 async function llmArbitrate(
@@ -185,12 +185,11 @@ async function llmArbitrate(
     .join('\n');
 
   try {
-    const response = await getOpenAI().chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You decide whether a new topic label refers to the same concept as an existing one.
+    const response = await getAnthropic().messages.create({
+      model: 'claude-haiku-35-20241022',
+      max_tokens: 10,
+      temperature: 0,
+      system: `You decide whether a new topic label refers to the same concept as an existing one.
 
 If the new label is clearly the same topic (just different wording), return its number.
 If it's a genuinely different topic, return 0.
@@ -202,17 +201,16 @@ Consider:
 - "React framework" and "web development" → DIFFERENT (specific vs broad)
 
 Respond with ONLY a single number (the match index, or 0 for no match).`,
-        },
+      messages: [
         {
           role: 'user',
           content: `New label: "${newLabel}"\n\nExisting candidates:\n${candidateList}`,
         },
       ],
-      temperature: 0,
-      max_tokens: 10,
     });
 
-    const answer = parseInt(response.choices[0].message.content?.trim() || '0', 10);
+    const text = response.content[0].type === 'text' ? response.content[0].text : '0';
+    const answer = parseInt(text.trim(), 10);
     if (answer > 0 && answer <= candidates.length) {
       return candidates[answer - 1].label;
     }

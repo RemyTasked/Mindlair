@@ -1,17 +1,38 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
-let openaiClient: OpenAI | null = null;
+let anthropicClient: Anthropic | null = null;
 
-function getOpenAI(): OpenAI {
-  if (!openaiClient) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || '',
+function getAnthropic(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY || '',
     });
   }
-  return openaiClient;
+  return anthropicClient;
 }
 
-export const MODEL_VERSION = 'gpt-4o-2024-08-06';
+export const MODEL_VERSION = 'claude-sonnet-4-20250514';
+const FAST_MODEL = 'claude-haiku-35-20241022';
+const EMBEDDING_MODEL = 'voyage-3-lite';
+
+async function claudeJSON<T>(opts: {
+  system: string;
+  user: string;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+}): Promise<T> {
+  const response = await getAnthropic().messages.create({
+    model: opts.model || MODEL_VERSION,
+    max_tokens: opts.maxTokens || 1024,
+    temperature: opts.temperature ?? 0.3,
+    system: opts.system + '\n\nRespond ONLY with valid JSON. No markdown fences, no commentary.',
+    messages: [{ role: 'user', content: opts.user }],
+  });
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  return JSON.parse(text);
+}
 
 export interface ExtractedClaim {
   text: string;
@@ -80,18 +101,12 @@ export async function extractClaims(
   const systemPrompt = buildExtractionPrompt(existingConcepts);
 
   try {
-    const response = await getOpenAI().chat.completions.create({
-      model: MODEL_VERSION,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: contentText },
-      ],
-      response_format: { type: 'json_object' },
+    const result = await claudeJSON<ContentAnalysis>({
+      system: systemPrompt,
+      user: contentText,
       temperature: 0.3,
-      max_tokens: 1000,
+      maxTokens: 1000,
     });
-
-    const result = JSON.parse(response.choices[0].message.content || '{}');
     
     return {
       claims: result.claims || [],
@@ -99,7 +114,7 @@ export async function extractClaims(
       sentiment: result.sentiment || 'neutral',
     };
   } catch (error) {
-    console.error('OpenAI extraction error:', error);
+    console.error('Claude extraction error:', error);
     
     return {
       claims: [{
@@ -114,16 +129,37 @@ export async function extractClaims(
   }
 }
 
-const EMBEDDING_MODEL = 'text-embedding-3-small';
-
+/**
+ * Generate an embedding via the Voyage AI REST API.
+ * Falls back gracefully to an empty array on failure.
+ */
 export async function generateEmbedding(text: string): Promise<number[]> {
+  const apiKey = process.env.VOYAGE_API_KEY;
+  if (!apiKey) {
+    console.warn('VOYAGE_API_KEY not set — embedding skipped');
+    return [];
+  }
+
   try {
-    const response = await getOpenAI().embeddings.create({
-      model: EMBEDDING_MODEL,
-      input: text,
+    const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: EMBEDDING_MODEL,
+        input: [text],
+      }),
     });
-    
-    return response.data[0].embedding;
+
+    if (!response.ok) {
+      console.error('Voyage embedding error:', response.status, await response.text());
+      return [];
+    }
+
+    const data = await response.json();
+    return data.data?.[0]?.embedding ?? [];
   } catch (error) {
     console.error('Embedding error:', error);
     return [];
@@ -201,7 +237,6 @@ export async function detectContradictions(
   
   const contradictions: ContradictionResult[] = [];
   
-  // Check pairs of claims (limit to avoid excessive API calls)
   const pairsToCheck = Math.min(claims.length * (claims.length - 1) / 2, 10);
   let checkedPairs = 0;
   
@@ -211,21 +246,17 @@ export async function detectContradictions(
       const claimB = claims[j];
       
       try {
-        const response = await getOpenAI().chat.completions.create({
-          model: MODEL_VERSION,
-          messages: [
-            { role: 'system', content: CONTRADICTION_DETECTION_PROMPT },
-            { 
-              role: 'user', 
-              content: `Claim 1 (user agreed): "${claimA.text}"\n\nClaim 2 (user agreed): "${claimB.text}"`
-            },
-          ],
-          response_format: { type: 'json_object' },
+        const result = await claudeJSON<{
+          hasContradiction: boolean;
+          type: 'direct_contradiction' | 'implicit_tension' | null;
+          explanation: string;
+          confidence: number;
+        }>({
+          system: CONTRADICTION_DETECTION_PROMPT,
+          user: `Claim 1 (user agreed): "${claimA.text}"\n\nClaim 2 (user agreed): "${claimB.text}"`,
           temperature: 0.2,
-          max_tokens: 500,
+          maxTokens: 500,
         });
-
-        const result = JSON.parse(response.choices[0].message.content || '{}');
         
         if (result.hasContradiction && result.type && result.confidence >= 0.6) {
           contradictions.push({
@@ -263,18 +294,15 @@ export async function identifyBlindSpots(
   const userConceptIds = new Set(userConcepts.map(c => c.id));
   const userLabels = userConcepts.map(c => c.label);
   
-  // Find concepts the user hasn't engaged with
   const unengagedConcepts = allConcepts.filter(c => !userConceptIds.has(c.id));
   
   if (unengagedConcepts.length === 0) return [];
   
   try {
-    const response = await getOpenAI().chat.completions.create({
-      model: MODEL_VERSION,
-      messages: [
-        { 
-          role: 'system', 
-          content: `You are identifying "blind spots" - topics adjacent to a user's interests that they haven't explored yet.
+    const result = await claudeJSON<{
+      blindSpots: Array<{ label: string; relatedTo: string[]; reason: string }>;
+    }>({
+      system: `You are identifying "blind spots" - topics adjacent to a user's interests that they haven't explored yet.
 
 Given topics the user HAS engaged with and topics they HAVEN'T, identify which unengaged topics would be most valuable for them to explore based on their interests.
 
@@ -289,21 +317,13 @@ Respond in JSON format:
   ]
 }
 
-Return 3-5 most relevant blind spots.`
-        },
-        { 
-          role: 'user', 
-          content: `User's engaged topics: ${userLabels.join(', ')}\n\nUnengaged topics to consider: ${unengagedConcepts.slice(0, 50).map(c => c.label).join(', ')}`
-        },
-      ],
-      response_format: { type: 'json_object' },
+Return 3-5 most relevant blind spots.`,
+      user: `User's engaged topics: ${userLabels.join(', ')}\n\nUnengaged topics to consider: ${unengagedConcepts.slice(0, 50).map(c => c.label).join(', ')}`,
       temperature: 0.4,
-      max_tokens: 800,
+      maxTokens: 800,
     });
-
-    const result = JSON.parse(response.choices[0].message.content || '{}');
     
-    return (result.blindSpots || []).map((bs: { label: string; relatedTo: string[]; reason: string }) => {
+    return (result.blindSpots || []).map((bs) => {
       const matchedConcept = unengagedConcepts.find(
         c => c.label.toLowerCase() === bs.label.toLowerCase()
       );

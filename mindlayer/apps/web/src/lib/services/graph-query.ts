@@ -1,18 +1,18 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import db from '@/lib/db';
 
-let openaiClient: OpenAI | null = null;
+let anthropicClient: Anthropic | null = null;
 
-function getOpenAI(): OpenAI {
-  if (!openaiClient) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || '',
+function getAnthropic(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY || '',
     });
   }
-  return openaiClient;
+  return anthropicClient;
 }
 
-const MODEL_VERSION = 'gpt-4o-2024-08-06';
+const MODEL_VERSION = 'claude-sonnet-4-20250514';
 
 export interface Citation {
   sourceId: string;
@@ -69,15 +69,9 @@ export async function queryBeliefGraph(
   userId: string,
   question: string
 ): Promise<QueryResponse> {
-  // Step 1: Understand the query
   const understanding = await understandQuery(question);
-
-  // Step 2: Gather relevant context
   const context = await gatherContext(userId, understanding);
-
-  // Step 3: Generate answer with citations
   const response = await generateAnswer(question, context);
-
   return response;
 }
 
@@ -88,18 +82,16 @@ async function understandQuery(question: string): Promise<{
   searchTerms: string[];
 }> {
   try {
-    const response = await getOpenAI().chat.completions.create({
+    const response = await getAnthropic().messages.create({
       model: MODEL_VERSION,
-      messages: [
-        { role: 'system', content: QUERY_UNDERSTANDING_PROMPT },
-        { role: 'user', content: question },
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.2,
       max_tokens: 300,
+      temperature: 0.2,
+      system: QUERY_UNDERSTANDING_PROMPT + '\n\nRespond ONLY with valid JSON. No markdown fences, no commentary.',
+      messages: [{ role: 'user', content: question }],
     });
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    const text = response.content[0].type === 'text' ? response.content[0].text : '{}';
+    return JSON.parse(text);
   } catch (error) {
     console.error('Query understanding error:', error);
     return {
@@ -157,7 +149,6 @@ async function gatherContext(
     ? { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
     : undefined;
 
-  // Get beliefs
   const beliefs = await db.belief.findMany({
     where: { userId },
     include: { concept: true },
@@ -165,7 +156,6 @@ async function gatherContext(
     take: 50,
   });
 
-  // Filter by concepts if specified
   const filteredBeliefs = understanding.concepts.length > 0
     ? beliefs.filter(b => 
         understanding.concepts.some(c => 
@@ -174,7 +164,6 @@ async function gatherContext(
       )
     : beliefs;
 
-  // Get recent sources with claims
   const sources = await db.source.findMany({
     where: {
       userId,
@@ -194,7 +183,6 @@ async function gatherContext(
     take: 20,
   });
 
-  // Filter sources by search terms
   const filteredSources = understanding.searchTerms.length > 0
     ? sources.filter(s =>
         understanding.searchTerms.some(term =>
@@ -204,7 +192,6 @@ async function gatherContext(
       )
     : sources;
 
-  // Get positions for timeline queries
   const positions = await db.position.findMany({
     where: {
       userId,
@@ -219,7 +206,6 @@ async function gatherContext(
     take: 30,
   });
 
-  // Get stats
   const [totalSources, totalPositions] = await Promise.all([
     db.source.count({ where: { userId } }),
     db.position.count({ where: { userId } }),
@@ -266,22 +252,21 @@ async function generateAnswer(
   const contextStr = buildContextString(context);
 
   try {
-    const response = await getOpenAI().chat.completions.create({
+    const response = await getAnthropic().messages.create({
       model: MODEL_VERSION,
+      max_tokens: 1000,
+      temperature: 0.3,
+      system: ANSWER_GENERATION_PROMPT,
       messages: [
-        { role: 'system', content: ANSWER_GENERATION_PROMPT },
         { 
           role: 'user', 
           content: `Context about user's engagement:\n${contextStr}\n\nQuestion: ${question}`
         },
       ],
-      temperature: 0.3,
-      max_tokens: 1000,
     });
 
-    const answer = response.choices[0].message.content || '';
+    const answer = response.content[0].type === 'text' ? response.content[0].text : '';
 
-    // Extract citations from context
     const citations: Citation[] = context.positions
       .filter(p => answer.toLowerCase().includes(p.sourceTitle.toLowerCase().slice(0, 20)))
       .slice(0, 5)
@@ -294,7 +279,6 @@ async function generateAnswer(
         date: p.date,
       }));
 
-    // If no citations found in answer, add most relevant ones
     if (citations.length === 0 && context.positions.length > 0) {
       citations.push(...context.positions.slice(0, 3).map(p => ({
         sourceId: '',

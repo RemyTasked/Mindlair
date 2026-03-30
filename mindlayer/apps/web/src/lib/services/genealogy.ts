@@ -1,20 +1,20 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { Prisma } from '@prisma/client';
 import db from '@/lib/db';
 import { fetchArticleContent } from './content-fetch';
 
-let openaiClient: OpenAI | null = null;
+let anthropicClient: Anthropic | null = null;
 
-function getOpenAI(): OpenAI {
-  if (!openaiClient) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || '',
+function getAnthropic(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY || '',
     });
   }
-  return openaiClient;
+  return anthropicClient;
 }
 
-const MODEL_VERSION = 'gpt-4o-2024-08-06';
+const MODEL_VERSION = 'claude-sonnet-4-20250514';
 
 export interface SourceChainNode {
   url: string;
@@ -78,7 +78,6 @@ export async function buildSourceChain(claimId: string): Promise<SourceChain | n
 
   if (!claim) return null;
 
-  // Start with the primary source
   const primaryNode: SourceChainNode = {
     url: claim.source.url,
     title: claim.source.title || 'Unknown',
@@ -92,7 +91,6 @@ export async function buildSourceChain(claimId: string): Promise<SourceChain | n
 
   const chainNodes: SourceChainNode[] = [primaryNode];
 
-  // Try to fetch and analyze the source content for citations
   let sourceContent: string | null = null;
   try {
     const fetchedContent = await fetchArticleContent(claim.source.url);
@@ -103,23 +101,22 @@ export async function buildSourceChain(claimId: string): Promise<SourceChain | n
 
   if (sourceContent) {
     try {
-      const response = await getOpenAI().chat.completions.create({
+      const response = await getAnthropic().messages.create({
         model: MODEL_VERSION,
+        max_tokens: 1500,
+        temperature: 0.2,
+        system: CITATION_EXTRACTION_PROMPT + '\n\nRespond ONLY with valid JSON. No markdown fences, no commentary.',
         messages: [
-          { role: 'system', content: CITATION_EXTRACTION_PROMPT },
           { 
             role: 'user', 
             content: `Claim: "${claim.text}"\n\nSource content:\n${sourceContent.slice(0, 10000)}`
           },
         ],
-        response_format: { type: 'json_object' },
-        temperature: 0.2,
-        max_tokens: 1500,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
+      const text = response.content[0].type === 'text' ? response.content[0].text : '{}';
+      const result = JSON.parse(text);
 
-      // Add cited sources to chain
       for (const citation of (result.citations || [])) {
         if (citation.confidence >= 0.5) {
           chainNodes.push({
@@ -134,7 +131,6 @@ export async function buildSourceChain(claimId: string): Promise<SourceChain | n
         }
       }
 
-      // Set origin if identified
       let originSource: SourceChainNode | null = null;
       if (result.apparentOrigin?.confidence >= 0.6) {
         originSource = {
@@ -146,7 +142,6 @@ export async function buildSourceChain(claimId: string): Promise<SourceChain | n
         };
       }
 
-      // Calculate overall chain confidence
       const avgConfidence = chainNodes.reduce((sum, n) => sum + n.confidence, 0) / chainNodes.length;
       const chainConfidence = originSource 
         ? (avgConfidence + originSource.confidence) / 2 
@@ -163,7 +158,6 @@ export async function buildSourceChain(claimId: string): Promise<SourceChain | n
     }
   }
 
-  // Return minimal chain if analysis failed
   return {
     chainNodes,
     originSource: null,
@@ -207,11 +201,10 @@ export async function buildAndSaveSourceChain(claimId: string): Promise<SourceCh
 export async function queueChainBuildingForHighEngagement(
   sourceId: string
 ): Promise<number> {
-  // Find claims from this source with high engagement
   const claims = await db.claim.findMany({
     where: {
       sourceId,
-      claimChain: null, // No chain built yet
+      claimChain: null,
     },
     include: {
       positions: {
@@ -222,7 +215,6 @@ export async function queueChainBuildingForHighEngagement(
     },
   });
 
-  // Filter to claims with at least 1 position (engaged with)
   const engagedClaims = claims.filter(c => c.positions.length > 0);
   
   let built = 0;
