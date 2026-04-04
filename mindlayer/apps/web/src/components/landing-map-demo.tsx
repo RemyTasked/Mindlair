@@ -130,7 +130,7 @@ export default function LandingMapDemo() {
   const rafRef = useRef(0);
   const lastTsRef = useRef(0);
   const interactedRef = useRef(false);
-  const restartRef = useRef<ReturnType<typeof setTimeout>>();
+  const restartRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [timeValue, setTimeValue] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
