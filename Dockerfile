@@ -1,4 +1,4 @@
-FROM node:18-slim
+FROM node:20-slim
 
 ARG RAILWAY_GIT_COMMIT_SHA=local
 ARG CACHEBUST=${RAILWAY_GIT_COMMIT_SHA}
@@ -9,11 +9,12 @@ RUN apt-get update -y && \
 
 WORKDIR /app
 
-COPY mindlayer/package*.json ./
-COPY mindlayer/apps/web/package*.json ./apps/web/
+COPY mindlayer/package.json ./
+COPY mindlayer/apps/web/package.json ./apps/web/
 COPY mindlayer/packages/ ./packages/
 
-RUN npm install
+RUN npm install --ignore-scripts
+RUN cd apps/web && rm -rf node_modules package-lock.json && npm install
 
 COPY mindlayer/ .
 
