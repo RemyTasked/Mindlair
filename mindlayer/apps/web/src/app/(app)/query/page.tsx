@@ -257,7 +257,7 @@ function MessageBubble({ message }: { message: Message }) {
                   variant="secondary"
                   className={cn(
                     "text-xs",
-                    concept.direction === "positive" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+                    concept.direction === "positive" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
                     concept.direction === "negative" && "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
                     concept.direction === "mixed" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
                   )}
@@ -282,7 +282,7 @@ function MessageBubble({ message }: { message: Message }) {
 
 function CitationCard({ citation }: { citation: Citation }) {
   const stanceColors = {
-    agree: "text-emerald-600",
+    agree: "text-amber-600",
     disagree: "text-rose-600",
     complicated: "text-amber-600",
   };

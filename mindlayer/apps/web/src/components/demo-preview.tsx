@@ -491,13 +491,13 @@ function DemoTimeline() {
   }, [isPlaying, playbackSpeed, timelineData.length]);
 
   const getStanceColor = (stance: number) => {
-    if (stance > 0.3) return "bg-emerald-500";
+    if (stance > 0.3) return "bg-amber-500";
     if (stance < -0.3) return "bg-rose-500";
     return "bg-amber-500";
   };
 
   const getStanceBadgeColor = (stance: number) => {
-    if (stance > 0.3) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
+    if (stance > 0.3) return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300";
     if (stance < -0.3) return "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300";
     return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300";
   };
@@ -668,11 +668,11 @@ function DemoTimeline() {
                   )}
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className={isPositive ? "text-emerald-600" : "text-rose-600"}>
+                  <span className={isPositive ? "text-amber-600" : "text-rose-600"}>
                     {isPositive ? "+" : ""}{Math.round(concept.stance * 100)}%
                   </span>
                   {change !== 0 && (
-                    <span className={`text-[10px] ${change > 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                    <span className={`text-[10px] ${change > 0 ? "text-amber-500" : "text-rose-500"}`}>
                       ({change > 0 ? "↑" : "↓"}{Math.abs(Math.round(change * 100))})
                     </span>
                   )}
@@ -713,7 +713,7 @@ function DemoTimeline() {
             {changes.shifts.map(concept => (
               <li key={concept.id} className="text-xs text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${
-                  concept.stance > (concept.changedFrom || 0) ? "bg-emerald-500" : "bg-rose-500"
+                  concept.stance > (concept.changedFrom || 0) ? "bg-amber-500" : "bg-rose-500"
                 }`} />
                 <strong>{concept.label}</strong> stance shifted{" "}
                 {concept.stance > (concept.changedFrom || 0) ? "more supportive" : "more skeptical"}
@@ -732,7 +732,7 @@ function DemoTimeline() {
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span className="w-2 h-2 rounded-full bg-amber-500" />
           Supportive
         </span>
         <span className="flex items-center gap-1">
@@ -827,7 +827,7 @@ function CitationBlock({ source, claim, stance, date }: { source: string; claim:
       <div className="flex items-start justify-between gap-2 mb-1">
         <span className="text-xs font-medium text-zinc-500">{source} · {date}</span>
         <Badge variant="outline" className={`text-[10px] ${
-          stance === "agree" ? "border-emerald-300 text-emerald-600" :
+          stance === "agree" ? "border-amber-300 text-amber-600" :
           stance === "disagree" ? "border-rose-300 text-rose-600" :
           "border-amber-300 text-amber-600"
         }`}>

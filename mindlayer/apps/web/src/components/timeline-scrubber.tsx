@@ -202,7 +202,7 @@ function ConceptBadge({
   count: number;
 }) {
   const bgColor = {
-    positive: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200",
+    positive: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
     negative: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-200",
     mixed: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
   }[direction] || "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200";

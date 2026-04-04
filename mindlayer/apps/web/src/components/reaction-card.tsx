@@ -27,14 +27,14 @@ const stanceConfig: Record<
   Exclude<Stance, "skip">,
   { label: string; color: string }
 > = {
-  agree: { label: "Agree", color: "bg-emerald-500 hover:bg-emerald-600" },
+  agree: { label: "Agree", color: "bg-amber-500 hover:bg-amber-600" },
   disagree: { label: "Disagree", color: "bg-rose-500 hover:bg-rose-600" },
   complicated: { label: "It's complicated", color: "bg-amber-500 hover:bg-amber-600" },
 };
 
 const claimTypeColors: Record<string, string> = {
   factual: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200",
-  opinion: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200",
+  opinion: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
   prediction: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200",
   policy: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200",
 };

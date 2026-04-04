@@ -12,7 +12,7 @@ export const metadata = {
 const C = {
   bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
   text: "#e8e4dc", textSoft: "#c4bfb4", muted: "#7a7469",
-  accent: "#52b788",
+  accent: "#d4915a",
 };
 
 export default function InstallPage() {

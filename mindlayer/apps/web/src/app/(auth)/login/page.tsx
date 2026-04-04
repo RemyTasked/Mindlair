@@ -9,7 +9,7 @@ import { Mail, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 const C = {
   bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
   text: "#e8e4dc", textSoft: "#c4bfb4", muted: "#7a7469",
-  accent: "#52b788", danger: "#c05252",
+  accent: "#d4915a", danger: "#c05252",
 };
 
 export default function LoginPage() {

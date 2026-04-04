@@ -217,7 +217,7 @@ export default function SettingsPage() {
       const response = await fetch("/api/integrations/readwise", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "connect", accessToken: token }),
+        body: JSON.stringify({ token }),
       });
 
       if (response.ok) {
@@ -233,32 +233,11 @@ export default function SettingsPage() {
 
   const connectPocket = async () => {
     try {
-      const response = await fetch("/api/integrations/pocket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get_auth_url" }),
-      });
+      const response = await fetch("/api/integrations/pocket", { method: "POST" });
 
       if (response.ok) {
-        const { authUrl, requestToken } = await response.json();
-        sessionStorage.setItem("pocket_request_token", requestToken);
-        window.open(authUrl, "_blank");
-        
-        setTimeout(async () => {
-          const token = sessionStorage.getItem("pocket_request_token");
-          if (token) {
-            const exchangeRes = await fetch("/api/integrations/pocket", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "exchange_token", requestToken: token }),
-            });
-            
-            if (exchangeRes.ok) {
-              sessionStorage.removeItem("pocket_request_token");
-              fetchSettings();
-            }
-          }
-        }, 5000);
+        const { authUrl } = await response.json();
+        window.location.href = authUrl;
       }
     } catch (err) {
       alert("Failed to connect Pocket");
@@ -266,8 +245,8 @@ export default function SettingsPage() {
   };
 
   const connectInstapaper = async () => {
-    const username = prompt("Enter your Instapaper username or email:");
-    if (!username) return;
+    const email = prompt("Enter your Instapaper email:");
+    if (!email) return;
     const password = prompt("Enter your Instapaper password:");
     if (!password) return;
 
@@ -275,7 +254,7 @@ export default function SettingsPage() {
       const response = await fetch("/api/integrations/instapaper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "connect", username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (response.ok) {
@@ -292,10 +271,8 @@ export default function SettingsPage() {
   const syncIntegration = async (provider: string) => {
     setSyncingProvider(provider);
     try {
-      const response = await fetch(`/api/integrations/${provider}`, {
+      const response = await fetch(`/api/integrations/${provider}/sync`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "sync" }),
       });
 
       if (response.ok) {
@@ -317,11 +294,7 @@ export default function SettingsPage() {
     if (!confirm(`Are you sure you want to disconnect ${provider}?`)) return;
 
     try {
-      await fetch(`/api/integrations/${provider}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "disconnect" }),
-      });
+      await fetch(`/api/integrations/${provider}`, { method: "DELETE" });
       fetchSettings();
     } catch (err) {
       alert(`Failed to disconnect ${provider}`);
@@ -408,8 +381,8 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {newlyCreatedKey && (
-              <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-2">
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">
                   Your new API key (copy it now, you won&apos;t see it again):
                 </p>
                 <div className="flex items-center gap-2">
@@ -765,7 +738,7 @@ function DigestWindowSetting({
         <button
           onClick={() => onToggle(!enabled)}
           className={`w-10 h-6 rounded-full transition-colors ${
-            enabled ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"
+            enabled ? "bg-amber-500" : "bg-zinc-200 dark:bg-zinc-700"
           }`}
         >
           <div
@@ -815,7 +788,7 @@ function NotificationToggle({
       <button
         onClick={() => onToggle(!enabled)}
         className={`w-10 h-6 rounded-full transition-colors ${
-          enabled ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"
+          enabled ? "bg-amber-500" : "bg-zinc-200 dark:bg-zinc-700"
         }`}
       >
         <div

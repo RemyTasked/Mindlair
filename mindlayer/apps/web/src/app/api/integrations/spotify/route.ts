@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: 'UNAUTHORIZED', message: 'Authentication required' }, { status: 401 });
     }
 
-    const state = `${user.id}:${crypto.randomBytes(16).toString('hex')}`;
+    const body = await request.json().catch(() => ({}));
+    const returnTo = body.returnTo || '/settings';
+    const state = `${user.id}:${crypto.randomBytes(16).toString('hex')}:${returnTo}`;
     const authUrl = buildSpotifyAuthUrl(state);
 
     return NextResponse.json({ authUrl, state });

@@ -10,9 +10,9 @@ const C = {
   text: "#e8e4dc",
   textSoft: "#c4bfb4",
   muted: "#7a7469",
-  accent: "#52b788",
-  accentDim: "#2d6a4f",
-  accentGlow: "#52b78830",
+  accent: "#d4915a",
+  accentDim: "#6b4a2a",
+  accentGlow: "#d4915a30",
   amber: "#d4915a",
   amberDim: "#7a4a20",
   blue: "#6b9fc4",
@@ -21,7 +21,7 @@ const C = {
 };
 
 const POS_COLORS: Record<string, { fill: string; stroke: string; label: string }> = {
-  affirm:     { fill: "#1a3d2e", stroke: "#52b788", label: "Generally agrees" },
+  affirm:     { fill: "#3d2a1a", stroke: "#d4915a", label: "Generally agrees" },
   disagree:   { fill: "#3d2010", stroke: "#d4915a", label: "Generally disagrees" },
   ambivalent: { fill: "#1a2a3d", stroke: "#6b9fc4", label: "Ambivalent" },
   passive:    { fill: "#252219", stroke: "#4a4540", label: "Passive interest" },

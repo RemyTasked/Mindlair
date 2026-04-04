@@ -193,8 +193,8 @@ function ShareTargetContent() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-4"
               >
-                <div className="flex items-center justify-center gap-2 text-emerald-600">
-                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                <div className="flex items-center justify-center gap-2 text-amber-600">
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
                     <Check className="w-5 h-5" />
                   </div>
                   <span className="font-medium">Added to your map!</span>

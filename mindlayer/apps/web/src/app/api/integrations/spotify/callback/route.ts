@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${appUrl}/settings?spotify=error&reason=missing_params`);
   }
 
-  const userId = state.split(':')[0];
+  const stateParts = state.split(':');
+  const userId = stateParts[0];
+  const returnTo = stateParts[2] || '/settings';
   if (!userId) {
     return NextResponse.redirect(`${appUrl}/settings?spotify=error&reason=invalid_state`);
   }
@@ -42,7 +44,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.redirect(`${appUrl}/settings?spotify=connected`);
+    return NextResponse.redirect(`${appUrl}${returnTo}?spotify=connected`);
   } catch (err) {
     console.error('Spotify callback error:', err);
     return NextResponse.redirect(`${appUrl}/settings?spotify=error&reason=token_exchange_failed`);

@@ -51,7 +51,8 @@ export function middleware(request: NextRequest) {
       pathname.startsWith('/inbox') ||
       pathname.startsWith('/settings') ||
       pathname.startsWith('/query') ||
-      pathname.startsWith('/wrapped')) {
+      pathname.startsWith('/wrapped') ||
+      pathname.startsWith('/onboarding')) {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
     
     if (!sessionCookie?.value) {

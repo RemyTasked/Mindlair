@@ -28,7 +28,7 @@ interface BeforeInstallPromptEvent extends Event {
 const C = {
   bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
   text: "#e8e4dc", textSoft: "#c4bfb4", muted: "#7a7469",
-  accent: "#52b788", amber: "#d4915a",
+  accent: "#d4915a", amber: "#d4915a",
 };
 
 function detectDevice(): DetectedDevice {

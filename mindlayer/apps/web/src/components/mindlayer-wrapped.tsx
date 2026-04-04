@@ -10,8 +10,8 @@ const C = {
   text: "#e8e4dc",
   textSoft: "#c4bfb4",
   muted: "#7a7469",
-  accent: "#52b788",
-  accentDim: "#2d6a4f",
+  accent: "#d4915a",
+  accentDim: "#6b4a2a",
   amber: "#d4915a",
   amberDim: "#7a4a20",
   blue: "#6b9fc4",
@@ -24,7 +24,7 @@ const YEAR = 2025;
 
 const TOP_TOPICS = [
   { label: "AI & Machine Learning", sources: 31, reactions: 22, color: "#6b9fc4", position: "Ambivalent", trend: "peaked" },
-  { label: "Climate & Energy",      sources: 26, reactions: 19, color: "#52b788", position: "Agrees",     trend: "steady" },
+  { label: "Climate & Energy",      sources: 26, reactions: 19, color: "#d4915a", position: "Agrees",     trend: "steady" },
   { label: "Monetary Policy",       sources: 24, reactions: 18, color: "#d4915a", position: "Disagrees",  trend: "peaked" },
   { label: "Geopolitics",           sources: 22, reactions: 16, color: "#6b9fc4", position: "Ambivalent", trend: "steady" },
   { label: "Media & Trust",         sources: 20, reactions: 14, color: "#d4915a", position: "Disagrees",  trend: "growing" },

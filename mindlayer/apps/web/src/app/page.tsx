@@ -17,7 +17,7 @@ export default function HomePage() {
       }}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: "#e8e4dc" }}>
-            Mind<span style={{ color: "#52b788", fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: "#d4915a", fontStyle: "italic", fontWeight: 500 }}>layer</span>
           </Link>
           <div className="flex items-center gap-6">
             <Link
@@ -39,8 +39,8 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto">
           <div style={{
             display: "inline-block", fontSize: 11, letterSpacing: "0.15em",
-            textTransform: "uppercase", color: "#52b788",
-            border: "1px solid #2d6a4f", borderRadius: 20,
+            textTransform: "uppercase", color: "#d4915a",
+            border: "1px solid #6b4a2a", borderRadius: 20,
             padding: "5px 14px", marginBottom: 24,
           }}>
             Now in private beta
@@ -53,7 +53,7 @@ export default function HomePage() {
           }}>
             A living map of{" "}
             <span style={{
-              background: "linear-gradient(135deg, #52b788, #6b9fc4, #d4915a)",
+              background: "linear-gradient(135deg, #d4915a, #6b9fc4, #d4915a)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}>how you think</span>
@@ -90,7 +90,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto relative">
           <div style={{
             position: "absolute", inset: -60, zIndex: 0,
-            background: "radial-gradient(ellipse at center, #52b78808 0%, transparent 70%)",
+            background: "radial-gradient(ellipse at center, #d4915a08 0%, transparent 70%)",
             pointerEvents: "none",
           }} />
           <div style={{ position: "relative", zIndex: 1 }}>
@@ -126,7 +126,7 @@ export default function HomePage() {
             <FeatureCard
               title="It grows with you"
               description="Every article, podcast, and video adds to the map. Topics emerge organically. The more you read, the more it reveals."
-              accent="#52b788"
+              accent="#d4915a"
             />
             <FeatureCard
               title="Beliefs evolve"
@@ -235,7 +235,7 @@ export default function HomePage() {
           <div style={{
             display: "inline-block", fontSize: 11, letterSpacing: "0.1em",
             textTransform: "uppercase",
-            background: "linear-gradient(90deg, #52b788, #6b9fc4, #d4915a)",
+            background: "linear-gradient(90deg, #d4915a, #6b9fc4, #d4915a)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             fontWeight: 600, marginBottom: 16,
           }}>Coming this December</div>
@@ -347,7 +347,7 @@ function StepCard({ number, title, description, icon }: { number: number; title:
     <div style={{ textAlign: "center" }}>
       <div style={{ fontSize: 28, marginBottom: 12, lineHeight: 1 }}>{icon}</div>
       <div style={{
-        fontSize: 11, color: "#52b788", fontWeight: 600,
+        fontSize: 11, color: "#d4915a", fontWeight: 600,
         letterSpacing: "0.1em", textTransform: "uppercase" as const,
         marginBottom: 8,
       }}>Step {number}</div>

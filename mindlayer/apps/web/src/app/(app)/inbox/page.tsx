@@ -187,8 +187,8 @@ export default function InboxPage() {
       {hasItems ? (
         <Card className="max-w-lg mx-auto">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center">
-              <Inbox className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 flex items-center justify-center">
+              <Inbox className="w-8 h-8 text-amber-600 dark:text-amber-400" />
             </div>
             <CardTitle className="text-2xl">
               {digestItems.length} claims to react to
@@ -212,7 +212,7 @@ export default function InboxPage() {
             
             <Button
               size="lg"
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
               onClick={handleStartSession}
             >
               Start session

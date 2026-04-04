@@ -140,7 +140,7 @@ function offlineResponse() {
         background:#0f0e0c;color:#e8e4dc;font-family:Inter,system-ui,sans-serif;text-align:center;padding:24px}
       h1{font-size:24px;font-weight:700;margin-bottom:8px}
       p{font-size:14px;color:#7a7469;max-width:320px}
-      .dot{width:8px;height:8px;border-radius:50%;background:#52b788;display:inline-block;margin-bottom:20px;
+      .dot{width:8px;height:8px;border-radius:50%;background:#d4915a;display:inline-block;margin-bottom:20px;
         animation:pulse 2s ease-in-out infinite}
       @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
     </style></head>

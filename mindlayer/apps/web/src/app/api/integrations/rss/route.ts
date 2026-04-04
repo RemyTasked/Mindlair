@@ -12,6 +12,30 @@ const addFeedSchema = z.object({
 
 const MAX_FEEDS_PER_USER = 100;
 
+function normalizeToFeedUrl(input: string): string {
+  try {
+    const url = new URL(input);
+    const host = url.hostname.toLowerCase();
+
+    if (host.endsWith('.substack.com')) {
+      return `${url.protocol}//${host}/feed`;
+    }
+    if (host.endsWith('.ghost.io') && !url.pathname.startsWith('/rss')) {
+      return `${url.protocol}//${host}/rss/`;
+    }
+    if ((host === 'medium.com' || host.endsWith('.medium.com')) && !url.pathname.startsWith('/feed')) {
+      const match = url.pathname.match(/^\/@([^/]+)/);
+      if (match) {
+        return `https://medium.com/feed/@${match[1]}`;
+      }
+    }
+
+    return input;
+  } catch {
+    return input;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthFromRequest(request);
@@ -31,7 +55,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: 'LIMIT_REACHED', message: `Maximum ${MAX_FEEDS_PER_USER} feeds allowed` }, { status: 400 });
     }
 
-    const feedUrl = validation.data.url;
+    const feedUrl = normalizeToFeedUrl(validation.data.url);
 
     const existing = await db.rssFeed.findUnique({
       where: { userId_url: { userId: user.id, url: feedUrl } },

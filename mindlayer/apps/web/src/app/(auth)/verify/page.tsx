@@ -69,8 +69,8 @@ export default function VerifyPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center space-y-4"
               >
-                <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
                 </div>
                 <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
                   You&apos;re signed in!

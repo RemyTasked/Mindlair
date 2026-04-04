@@ -27,11 +27,13 @@ export async function GET(request: NextRequest) {
       where: { id: connection.id },
       data: {
         accessToken,
-        refreshToken: null, // clear the temp request token
+        refreshToken: null,
       },
     });
 
-    return NextResponse.redirect(`${appUrl}/settings?pocket=connected&username=${encodeURIComponent(username)}`);
+    const fullUser = await db.user.findUnique({ where: { id: user.id }, select: { onboardingComplete: true } });
+    const returnTo = fullUser && !fullUser.onboardingComplete ? '/onboarding' : '/settings';
+    return NextResponse.redirect(`${appUrl}${returnTo}?pocket=connected&username=${encodeURIComponent(username)}`);
   } catch (err) {
     console.error('Pocket callback error:', err);
     return NextResponse.redirect(`${appUrl}/settings?pocket=error&reason=exchange_failed`);

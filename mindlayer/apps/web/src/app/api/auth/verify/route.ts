@@ -38,6 +38,12 @@ export async function GET(request: NextRequest) {
 
     if (isNewUser) {
       sendWelcomeEmail(email, user.name || undefined).catch(console.error);
+      return NextResponse.redirect(new URL('/onboarding', request.url));
+    }
+
+    const fullUser = await db.user.findUnique({ where: { id: user.id }, select: { onboardingComplete: true } });
+    if (fullUser && !fullUser.onboardingComplete) {
+      return NextResponse.redirect(new URL('/onboarding', request.url));
     }
 
     return NextResponse.redirect(new URL('/map', request.url));

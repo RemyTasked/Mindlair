@@ -14,14 +14,15 @@ datasource db {
 // ============================================
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  avatarUrl     String?
-  timezone      String    @default("America/New_York")
-  emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  name               String?
+  avatarUrl          String?
+  timezone           String    @default("America/New_York")
+  emailVerified      DateTime?
+  onboardingComplete Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   settings          UserSettings?
   sources           Source[]

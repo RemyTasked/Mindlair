@@ -87,7 +87,7 @@ export function DigestSession({ digestId, items, onComplete }: DigestSessionProp
         
         <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+            className="h-full bg-gradient-to-r from-amber-500 to-orange-500"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.3 }}
@@ -147,8 +147,8 @@ function DigestComplete({
       className="max-w-md mx-auto text-center"
     >
       <Card className="p-8">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-          <Check className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+          <Check className="w-8 h-8 text-amber-600 dark:text-amber-400" />
         </div>
         
         <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">

@@ -5,7 +5,7 @@ import { PushNotificationBanner } from "@/components/push-notifications";
 
 const C = {
   bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
-  text: "#e8e4dc", muted: "#7a7469", accent: "#52b788",
+  text: "#e8e4dc", muted: "#7a7469", accent: "#d4915a",
 };
 
 export default function AppLayout({

@@ -136,7 +136,7 @@ export function BeliefMap({ clusters, beliefs, tensions }: BeliefMapProps) {
 
         {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-4 justify-center text-sm">
-          <LegendItem color="bg-emerald-500" label="Positive stance" />
+          <LegendItem color="bg-amber-500" label="Positive stance" />
           <LegendItem color="bg-rose-500" label="Negative stance" />
           <LegendItem color="bg-amber-500" label="Mixed/complicated" />
           <LegendItem color="bg-orange-500" label="Echo flagged" />
@@ -370,7 +370,7 @@ function getConceptColor(belief?: Belief): string {
   
   switch (belief.direction) {
     case "positive":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200";
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200";
     case "negative":
       return "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-200";
     default:
@@ -381,7 +381,7 @@ function getConceptColor(belief?: Belief): string {
 function DirectionIcon({ direction }: { direction: string }) {
   switch (direction) {
     case "positive":
-      return <TrendingUp className="w-5 h-5 text-emerald-500" />;
+      return <TrendingUp className="w-5 h-5 text-amber-500" />;
     case "negative":
       return <TrendingDown className="w-5 h-5 text-rose-500" />;
     default:
