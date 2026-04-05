@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
   FileText,
   Music,
-  Youtube,
   Monitor,
   Smartphone,
   Globe,
@@ -15,7 +14,6 @@ import {
   ChevronRight,
   ArrowRight,
   RefreshCw,
-  Upload,
   Loader2,
   X,
   ExternalLink,
@@ -48,7 +46,6 @@ interface Integration {
 
 interface IntegrationsData {
   integrations: Integration[];
-  youtube: { imported: boolean; sourceCount: number };
 }
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
@@ -63,10 +60,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(true);
   const [platform, setPlatform] = useState<PlatformType>("other");
   const [syncing, setSyncing] = useState<string | null>(null);
-  const [uploadingYoutube, setUploadingYoutube] = useState(false);
-  const [youtubeResult, setYoutubeResult] = useState<{ imported: number } | null>(null);
   const [completing, setCompleting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -97,18 +91,16 @@ export default function OnboardingPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("spotify") === "connected") {
       fetchData();
-      window.history.replaceState({}, "", "/onboarding");
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, [fetchData]);
 
   const getIntegration = (provider: string) =>
     data?.integrations.find((i) => i.provider === provider);
 
-  const totalConnected = (data?.integrations.filter((i) => i.connected).length || 0) +
-    (data?.youtube.imported ? 1 : 0);
+  const totalConnected = data?.integrations.filter((i) => i.connected).length || 0;
 
-  const totalSources = (data?.integrations.reduce((sum, i) => sum + i.sourceCount, 0) || 0) +
-    (data?.youtube.sourceCount || 0);
+  const totalSources = data?.integrations.reduce((sum, i) => sum + i.sourceCount, 0) || 0;
 
   const connectReadwise = async () => {
     const token = prompt("Enter your Readwise Access Token\n(from readwise.io/access_token):");
@@ -159,7 +151,7 @@ export default function OnboardingPage() {
       const res = await fetch("/api/integrations/spotify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ returnTo: "/onboarding" }),
+        body: JSON.stringify({ returnTo: "/map" }),
       });
       if (res.ok) {
         const { authUrl } = await res.json();
@@ -183,35 +175,6 @@ export default function OnboardingPage() {
       // silent
     } finally {
       setSyncing(null);
-    }
-  };
-
-  const handleYoutubeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingYoutube(true);
-    setYoutubeResult(null);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/integrations/youtube", {
-        method: "POST",
-        body: formData,
-      });
-      if (res.ok) {
-        const result = await res.json();
-        setYoutubeResult({ imported: result.imported });
-        await fetchData();
-      } else {
-        const err = await res.json();
-        alert(err.message || "Failed to import YouTube history");
-      }
-    } catch {
-      alert("Failed to upload file");
-    } finally {
-      setUploadingYoutube(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -305,65 +268,6 @@ export default function OnboardingPage() {
               onSync={() => syncIntegration("spotify")}
             />
 
-            {/* YouTube upload */}
-            <div
-              className="rounded-xl p-4 flex items-center justify-between"
-              style={{ border: `1px solid ${C.border}`, background: C.surface }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ background: `${C.border}80` }}
-                >
-                  <Youtube className="w-5 h-5" style={{ color: "#ff0000" }} />
-                </div>
-                <div>
-                  <p className="font-medium text-sm" style={{ color: C.text }}>
-                    YouTube
-                  </p>
-                  <p className="text-xs" style={{ color: C.muted }}>
-                    Upload watch history from Google Takeout
-                  </p>
-                  {(data?.youtube.sourceCount || 0) > 0 && (
-                    <p className="text-xs mt-0.5" style={{ color: C.accent }}>
-                      {data?.youtube.sourceCount} videos imported
-                    </p>
-                  )}
-                  {youtubeResult && (
-                    <p className="text-xs mt-0.5" style={{ color: C.accent }}>
-                      {youtubeResult.imported} new videos imported
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json,.html"
-                  onChange={handleYoutubeUpload}
-                  className="hidden"
-                  id="youtube-upload"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingYoutube}
-                  style={{ borderColor: C.border, color: C.textSoft }}
-                >
-                  {uploadingYoutube ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 mr-1" />
-                      Upload
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-
             {totalSources > 0 && (
               <div
                 className="rounded-lg p-3 text-center text-sm font-medium"
@@ -389,26 +293,26 @@ export default function OnboardingPage() {
                   <>
                     <DownloadLink
                       label="macOS (Apple Silicon)"
-                      file={`Mindlayer_${APP_VERSION}_aarch64.dmg`}
+                      file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
                       primary
                     />
                     <DownloadLink
                       label="macOS (Intel)"
-                      file={`Mindlayer_${APP_VERSION}_x64.dmg`}
+                      file={`Mindlair_${APP_VERSION}_x64.dmg`}
                     />
                   </>
                 )}
                 {platform === "windows" && (
                   <DownloadLink
                     label="Windows"
-                    file={`Mindlayer_${APP_VERSION}_x64-setup.exe`}
+                    file={`Mindlair_${APP_VERSION}_x64-setup.exe`}
                     primary
                   />
                 )}
                 {platform === "linux" && (
                   <DownloadLink
                     label="Linux (AppImage)"
-                    file={`mindlayer_${APP_VERSION}_amd64.AppImage`}
+                    file={`mindlair_${APP_VERSION}_amd64.AppImage`}
                     primary
                   />
                 )}
@@ -416,15 +320,15 @@ export default function OnboardingPage() {
                   <>
                     <DownloadLink
                       label="macOS (Apple Silicon)"
-                      file={`Mindlayer_${APP_VERSION}_aarch64.dmg`}
+                      file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
                     />
                     <DownloadLink
                       label="Windows"
-                      file={`Mindlayer_${APP_VERSION}_x64-setup.exe`}
+                      file={`Mindlair_${APP_VERSION}_x64-setup.exe`}
                     />
                     <DownloadLink
                       label="Linux (AppImage)"
-                      file={`mindlayer_${APP_VERSION}_amd64.AppImage`}
+                      file={`mindlair_${APP_VERSION}_amd64.AppImage`}
                     />
                   </>
                 )}
@@ -446,29 +350,27 @@ export default function OnboardingPage() {
               </div>
             </CaptureCard>
 
-            {/* Mobile */}
+            {/* Mobile - Add to Home Screen */}
             <CaptureCard
               icon={<Smartphone className="w-5 h-5" style={{ color: "#c4bfb4" }} />}
-              title="Mobile App"
-              description="Share articles, podcasts, and videos from any app directly into Mindlayer using your phone\u2019s share sheet."
+              title="Add to Home Screen"
+              description="Add Mindlair to your home screen for quick access and push notifications."
             >
-              <div className="flex gap-2 mt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  style={{ borderColor: C.border, color: C.textSoft }}
-                  onClick={() => window.open("https://apps.apple.com", "_blank")}
+              <div className="mt-3 space-y-2">
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    background: C.surface,
+                    borderRadius: 8,
+                    border: `1px solid ${C.border}`,
+                  }}
                 >
-                  App Store
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  style={{ borderColor: C.border, color: C.textSoft }}
-                  onClick={() => window.open("https://play.google.com", "_blank")}
-                >
-                  Play Store
-                </Button>
+                  <p style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.6 }}>
+                    <strong>iOS Safari:</strong> Tap Share → Add to Home Screen
+                    <br />
+                    <strong>Android Chrome:</strong> Tap Menu (⋮) → Add to Home screen
+                  </p>
+                </div>
               </div>
             </CaptureCard>
           </>

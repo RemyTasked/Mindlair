@@ -124,7 +124,7 @@ function ShareTargetContent() {
         <div className="p-6 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Add to Mindlayer
+              Add to Mindlair
             </h1>
             <button
               onClick={handleClose}

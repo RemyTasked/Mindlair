@@ -112,7 +112,7 @@ export async function sendDailyDigestNotification(
   }
 ): Promise<void> {
   await sendPushNotification(userId, {
-    title: 'Your Daily Mindlayer Digest',
+    title: 'Your Daily Mindlair Digest',
     body: digest.summary,
     tag: 'daily-digest',
     data: {

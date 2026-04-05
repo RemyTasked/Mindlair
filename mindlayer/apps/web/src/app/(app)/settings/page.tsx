@@ -36,7 +36,6 @@ interface UserSettings {
   notifications: {
     push: boolean;
     email: boolean;
-    sms: boolean;
   };
   connectedSources: {
     readwise: boolean;
@@ -330,7 +329,7 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="text-zinc-500">
-          Configure how Mindlayer captures and delivers your digests.
+          Configure how Mindlair captures and delivers your digests.
         </p>
       </div>
 
@@ -507,16 +506,6 @@ export default function SettingsPage() {
               onToggle={(enabled) =>
                 updateSettings({
                   notifications: { ...settings.notifications, email: enabled },
-                })
-              }
-            />
-            <NotificationToggle
-              label="SMS notifications"
-              description="Get text messages for your digests"
-              enabled={settings.notifications.sms}
-              onToggle={(enabled) =>
-                updateSettings({
-                  notifications: { ...settings.notifications, sms: enabled },
                 })
               }
             />

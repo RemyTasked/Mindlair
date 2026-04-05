@@ -22,7 +22,7 @@ export default function AppLayout({
       }}>
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/map" style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
-            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </Link>
           <button style={{ padding: 8, color: C.muted, background: "none", border: "none", cursor: "pointer" }}>
             <Menu className="w-5 h-5" />
@@ -37,7 +37,7 @@ export default function AppLayout({
         }}>
           <div className="p-6">
             <Link href="/map" style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
-              Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+              Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
             </Link>
           </div>
 

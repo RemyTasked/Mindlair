@@ -11,11 +11,9 @@ export const surfaceSchema = z.enum([
   'desktop_app',
   'safari_icloud',
   'readwise_import',
-  'pocket_import',
   'instapaper_import',
   'rss_feed',
   'spotify_import',
-  'youtube_import',
   'share_target',
 ]);
 
@@ -90,7 +88,6 @@ export const updateSettingsSchema = z.object({
   }).optional(),
   notifications: z.object({
     push: z.boolean().optional(),
-    sms: z.boolean().optional(),
     email: z.boolean().optional(),
   }).optional(),
   timezone: z.string().optional(),

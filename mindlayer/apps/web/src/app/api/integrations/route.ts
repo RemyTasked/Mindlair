@@ -8,7 +8,6 @@ const SURFACE_MAP: Record<string, string> = {
   readwise: 'readwise_import',
   instapaper: 'instapaper_import',
   spotify: 'spotify_import',
-  youtube: 'youtube_import',
   rss: 'rss_feed',
 };
 
@@ -55,15 +54,10 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const youtubeSourceCount = sourceCounts[SURFACE_MAP.youtube] || 0;
     const rssSourceCount = sourceCounts[SURFACE_MAP.rss] || 0;
 
     return NextResponse.json({
       integrations,
-      youtube: {
-        imported: youtubeSourceCount > 0,
-        sourceCount: youtubeSourceCount,
-      },
       rss: {
         feeds: rssFeeds,
         feedCount: rssFeeds.length,

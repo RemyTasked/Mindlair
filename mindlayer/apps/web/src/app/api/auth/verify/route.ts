@@ -40,14 +40,9 @@ export async function GET(request: NextRequest) {
 
     if (isNewUser) {
       sendWelcomeEmail(email, user.name || undefined).catch(console.error);
-      return NextResponse.redirect(new URL('/onboarding', baseUrl));
     }
 
-    const fullUser = await db.user.findUnique({ where: { id: user.id }, select: { onboardingComplete: true } });
-    if (fullUser && !fullUser.onboardingComplete) {
-      return NextResponse.redirect(new URL('/onboarding', baseUrl));
-    }
-
+    // Always redirect to /map - the map page shows onboarding overlay if needed
     return NextResponse.redirect(new URL('/map', baseUrl));
   } catch (error) {
     console.error('Verify error:', error);

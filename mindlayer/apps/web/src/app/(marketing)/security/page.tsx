@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "Security | Mindlayer",
-  description: "How Mindlayer protects your data and beliefs",
+  title: "Security | Mindlair",
+  description: "How Mindlair protects your data and beliefs",
 };
 
 const C = {
@@ -29,7 +29,7 @@ export default function SecurityPage() {
       <nav style={{ borderBottom: `1px solid ${C.border}`, background: `${C.bg}dd`, backdropFilter: "blur(12px)" }}>
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
-            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </Link>
           <Link href="/login">
             <Button size="sm" variant="gradient">Get Started</Button>
@@ -167,8 +167,8 @@ export default function SecurityPage() {
             </p>
             <p style={{ fontSize: 14, color: C.textSoft }}>
               Email:{" "}
-              <a href="mailto:security@mindlayer.app" style={{ color: C.accent, textDecoration: "none" }}>
-                security@mindlayer.app
+              <a href="mailto:security@mindlair.app" style={{ color: C.accent, textDecoration: "none" }}>
+                security@mindlair.app
               </a>
             </p>
           </div>
@@ -179,7 +179,7 @@ export default function SecurityPage() {
       <footer style={{ borderTop: `1px solid ${C.border}` }}>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ fontSize: 13, color: C.muted }}>
-            <p>&copy; 2026 Mindlayer. All rights reserved.</p>
+            <p>&copy; 2026 Mindlair. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</Link>
               <Link href="/" style={{ color: "inherit", textDecoration: "none" }}>Home</Link>

@@ -96,7 +96,7 @@ export function PWAInstallPrompt() {
         </div>
         <div style={{ flex: 1, paddingRight: 16 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-            Add Mindlayer to Home Screen
+            Add Mindlair to Home Screen
           </h3>
           <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
             Install for quick access, offline support, and push notifications.

@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 export const metadata = {
-  title: "How Mindlayer Works | Map your thinking",
+  title: "How Mindlair Works | Map your thinking",
   description:
-    "Learn how Mindlayer captures what you read, extracts claims, and builds a living map of your beliefs.",
+    "Learn how Mindlair captures what you read, extracts claims, and builds a living map of your beliefs.",
 };
 
 const C = {
@@ -21,7 +21,7 @@ export default function HowItWorksPage() {
       <nav style={{ borderBottom: `1px solid ${C.border}`, background: `${C.bg}dd`, backdropFilter: "blur(12px)" }}>
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
-            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </Link>
           <Link href="/login">
             <Button size="sm" variant="gradient">Get Started</Button>
@@ -32,7 +32,7 @@ export default function HowItWorksPage() {
       {/* Header */}
       <header className="py-16 px-6 text-center" style={{ borderBottom: `1px solid ${C.border}` }}>
         <h1 style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 12 }}>
-          How Mindlayer Works
+          How Mindlair Works
         </h1>
         <p style={{ fontSize: 17, color: C.textSoft, maxWidth: 520, margin: "0 auto" }}>
           Two layers — real-time and ambient. Nothing meaningful falls through.
@@ -120,7 +120,7 @@ export default function HowItWorksPage() {
       <footer style={{ borderTop: `1px solid ${C.border}` }}>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ fontSize: 13, color: C.muted }}>
-            <p>&copy; 2026 Mindlayer. All rights reserved.</p>
+            <p>&copy; 2026 Mindlair. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</Link>
               <Link href="/security" style={{ color: "inherit", textDecoration: "none" }}>Security</Link>

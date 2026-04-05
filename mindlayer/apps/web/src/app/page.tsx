@@ -64,7 +64,7 @@ export default function HomePage() {
             color: "#c4bfb4", maxWidth: 580, margin: "0 auto 32px",
             lineHeight: 1.65,
           }}>
-            Mindlayer quietly captures what you read, extracts the claims that matter,
+            Mindlair quietly captures what you read, extracts the claims that matter,
             and builds a map of your evolving beliefs. Watch topics emerge, positions
             shift, and tensions surface.
           </p>
@@ -160,7 +160,7 @@ export default function HomePage() {
             peak, and fade. Watch a belief you held in March flip by September.
           </p>
           <p style={{ color: "#7a7469", fontSize: 14, marginTop: 20, fontStyle: "italic" }}>
-            The first time someone does this is the moment they tell someone else about Mindlayer.
+            The first time someone does this is the moment they tell someone else about Mindlair.
           </p>
         </div>
       </section>
@@ -249,7 +249,7 @@ export default function HomePage() {
             color: "#c4bfb4", fontSize: 15, lineHeight: 1.7,
             maxWidth: 480, margin: "0 auto",
           }}>
-            Every December, Mindlayer creates your intellectual year in review.
+            Every December, Mindlair creates your intellectual year in review.
             Biggest shifts. Deepest reads. Questions still open. Shareable, private by default.
           </p>
         </div>
@@ -312,7 +312,7 @@ export default function HomePage() {
       <footer style={{ borderTop: "1px solid #2a2825" }}>
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ fontSize: 13, color: "#7a7469" }}>
-            <p>&copy; 2026 Mindlayer. All rights reserved.</p>
+            <p>&copy; 2026 Mindlair. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</Link>
               <Link href="/security" style={{ color: "inherit", textDecoration: "none" }}>Security</Link>

@@ -26,7 +26,7 @@ export interface ParsedFeed {
 export async function fetchAndParseFeed(feedUrl: string): Promise<ParsedFeed> {
   const response = await fetch(feedUrl, {
     headers: {
-      'User-Agent': 'Mindlayer/1.0 (+https://mindlayer.app)',
+      'User-Agent': 'Mindlair/1.0 (+https://mindlair.app)',
       'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml',
     },
   });

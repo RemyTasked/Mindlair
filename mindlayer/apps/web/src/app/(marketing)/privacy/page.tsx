@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Shield, Database, Lock, UserX, Mail, ArrowRight } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy | Mindlayer",
-  description: "How Mindlayer handles and protects your data",
+  title: "Privacy Policy | Mindlair",
+  description: "How Mindlair handles and protects your data",
 };
 
 const C = {
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
       <nav style={{ borderBottom: `1px solid ${C.border}`, background: `${C.bg}dd`, backdropFilter: "blur(12px)" }}>
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
-            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </Link>
           <Link href="/login">
             <Button size="sm" variant="gradient">Get Started</Button>
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
         <div className="max-w-3xl mx-auto">
           <SectionHeader icon={<Database style={{ width: 20, height: 20 }} />} title="What We Collect" color={C.accent} />
           <p style={{ fontSize: 15, color: C.textSoft, marginBottom: 20, lineHeight: 1.7 }}>
-            Mindlayer collects only what&apos;s necessary to build your belief map:
+            Mindlair collects only what&apos;s necessary to build your belief map:
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <DataItem label="URLs" description="Web pages you visit (captured from the desktop app when enabled)" />
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
             <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.7, marginBottom: 12 }}>
               When you connect optional integrations (Readwise, Instapaper, Spotify), we access
               those services on your behalf using your credentials. We only fetch data to import
-              into your map and never share your Mindlayer data with them.
+              into your map and never share your Mindlair data with them.
             </p>
             <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.7 }}>
               Our infrastructure runs on secure cloud providers with SOC 2 certification. We use
@@ -129,8 +129,8 @@ export default function PrivacyPage() {
             </div>
             <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.7 }}>
               Questions about your privacy? Reach us at{" "}
-              <a href="mailto:privacy@mindlayer.app" style={{ color: C.accent, textDecoration: "none" }}>
-                privacy@mindlayer.app
+              <a href="mailto:privacy@mindlair.app" style={{ color: C.accent, textDecoration: "none" }}>
+                privacy@mindlair.app
               </a>
             </p>
           </div>
@@ -141,7 +141,7 @@ export default function PrivacyPage() {
       <footer style={{ borderTop: `1px solid ${C.border}` }}>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ fontSize: 13, color: C.muted }}>
-            <p>&copy; 2026 Mindlayer. All rights reserved.</p>
+            <p>&copy; 2026 Mindlair. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/security" style={{ color: "inherit", textDecoration: "none" }}>Security</Link>
               <Link href="/" style={{ color: "inherit", textDecoration: "none" }}>Home</Link>

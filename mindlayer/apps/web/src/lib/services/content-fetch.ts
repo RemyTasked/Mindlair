@@ -11,7 +11,7 @@ export async function fetchArticleContent(url: string): Promise<FetchedContent |
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Mindlayer/1.0; +https://mindlayer.app)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Mindlair/1.0; +https://mindlair.app)',
       },
     });
 

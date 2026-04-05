@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Mindlayer",
-  "short_name": "Mindlayer",
+  "name": "Mindlair",
+  "short_name": "Mindlair",
   "description": "A living map of how you think — capture what you read, track your evolving beliefs, and surface perspectives you haven't encountered yet.",
   "start_url": "/map",
   "scope": "/",

@@ -45,7 +45,7 @@ export default function VerifyPage() {
         <div className="text-center mb-8">
           <Link href="/">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 bg-clip-text text-transparent">
-              Mindlayer
+              Mindlair
             </h1>
           </Link>
         </div>

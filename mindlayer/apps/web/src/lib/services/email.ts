@@ -1,6 +1,6 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@mindlayer.app';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@mindlair.app';
 
 interface SendEmailOptions {
   to: string;
@@ -56,18 +56,18 @@ export async function sendMagicLink(email: string, token: string): Promise<boole
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign in to Mindlayer</title>
+  <title>Sign in to Mindlair</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #18181b; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="text-align: center; margin-bottom: 32px;">
-    <h1 style="font-size: 24px; font-weight: 700; margin: 0; background: linear-gradient(135deg, #f43f5e, #f97316, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mindlayer</h1>
+    <h1 style="font-size: 24px; font-weight: 700; margin: 0; background: linear-gradient(135deg, #f43f5e, #f97316, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mindlair</h1>
   </div>
   
   <div style="background: #fafafa; border-radius: 12px; padding: 32px; margin-bottom: 24px;">
     <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 16px 0;">Sign in to your account</h2>
-    <p style="margin: 0 0 24px 0; color: #52525b;">Click the button below to sign in to Mindlayer. This link will expire in 15 minutes.</p>
+    <p style="margin: 0 0 24px 0; color: #52525b;">Click the button below to sign in to Mindlair. This link will expire in 15 minutes.</p>
     
-    <a href="${magicLinkUrl}" style="display: inline-block; background: linear-gradient(135deg, #f43f5e, #f97316); color: white; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Sign in to Mindlayer</a>
+    <a href="${magicLinkUrl}" style="display: inline-block; background: linear-gradient(135deg, #f43f5e, #f97316); color: white; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Sign in to Mindlair</a>
   </div>
   
   <p style="font-size: 14px; color: #71717a; margin: 0 0 8px 0;">If the button doesn't work, copy and paste this link into your browser:</p>
@@ -81,7 +81,7 @@ export async function sendMagicLink(email: string, token: string): Promise<boole
   `.trim();
 
   const text = `
-Sign in to Mindlayer
+Sign in to Mindlair
 
 Click this link to sign in: ${magicLinkUrl}
 
@@ -92,7 +92,7 @@ If you didn't request this email, you can safely ignore it.
 
   return sendEmail({
     to: email,
-    subject: 'Sign in to Mindlayer',
+    subject: 'Sign in to Mindlair',
     html,
     text,
   });
@@ -107,16 +107,16 @@ export async function sendWelcomeEmail(email: string, name?: string): Promise<bo
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Mindlayer</title>
+  <title>Welcome to Mindlair</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #18181b; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="text-align: center; margin-bottom: 32px;">
-    <h1 style="font-size: 24px; font-weight: 700; margin: 0; background: linear-gradient(135deg, #f43f5e, #f97316, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mindlayer</h1>
+    <h1 style="font-size: 24px; font-weight: 700; margin: 0; background: linear-gradient(135deg, #f43f5e, #f97316, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mindlair</h1>
   </div>
   
   <div style="background: #fafafa; border-radius: 12px; padding: 32px; margin-bottom: 24px;">
     <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 16px 0;">${greeting}!</h2>
-    <p style="margin: 0 0 16px 0; color: #52525b;">Welcome to Mindlayer — your thinking app that maps what you believe and how you got there.</p>
+    <p style="margin: 0 0 16px 0; color: #52525b;">Welcome to Mindlair — your thinking app that maps what you believe and how you got there.</p>
     
     <h3 style="font-size: 16px; font-weight: 600; margin: 24px 0 12px 0;">Get started:</h3>
     <ul style="margin: 0; padding: 0 0 0 20px; color: #52525b;">
@@ -130,14 +130,14 @@ export async function sendWelcomeEmail(email: string, name?: string): Promise<bo
     </div>
   </div>
   
-  <p style="font-size: 12px; color: #a1a1aa; margin: 0; text-align: center;">Mindlayer — Map your thinking, not just your time.</p>
+  <p style="font-size: 12px; color: #a1a1aa; margin: 0; text-align: center;">Mindlair — Map your thinking, not just your time.</p>
 </body>
 </html>
   `.trim();
 
   return sendEmail({
     to: email,
-    subject: 'Welcome to Mindlayer',
+    subject: 'Welcome to Mindlair',
     html,
   });
 }

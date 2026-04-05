@@ -4,9 +4,9 @@ import { ArrowRight } from "lucide-react";
 import { GetStartedHub } from "@/components/install-hub";
 
 export const metadata = {
-  title: "Get Started with Mindlayer | Map how you think",
+  title: "Get Started with Mindlair | Map how you think",
   description:
-    "Sign in to Mindlayer and install the app on your device. Access your belief map from any browser, install the PWA on mobile, or download the desktop companion.",
+    "Sign in to Mindlair and install the app on your device. Access your belief map from any browser, install the PWA on mobile, or download the desktop companion.",
 };
 
 const C = {
@@ -22,7 +22,7 @@ export default function InstallPage() {
       <nav style={{ borderBottom: `1px solid ${C.border}`, background: `${C.bg}dd`, backdropFilter: "blur(12px)" }}>
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
-            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </Link>
           <Link href="/how-it-works" style={{ fontSize: 13, color: C.muted, textDecoration: "none" }}>
             How it works
@@ -69,7 +69,7 @@ export default function InstallPage() {
       <footer style={{ borderTop: `1px solid ${C.border}`, marginTop: "auto" }}>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ fontSize: 13, color: C.muted }}>
-            <p>&copy; 2026 Mindlayer. All rights reserved.</p>
+            <p>&copy; 2026 Mindlair. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</Link>
               <Link href="/security" style={{ color: "inherit", textDecoration: "none" }}>Security</Link>

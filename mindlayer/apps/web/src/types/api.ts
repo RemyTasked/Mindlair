@@ -1,5 +1,5 @@
 /**
- * Mindlayer API Contracts
+ * Mindlair API Contracts
  * Type definitions for all API endpoints
  */
 
@@ -243,7 +243,6 @@ export interface UserSettings {
   };
   notifications: {
     push: boolean;
-    sms: boolean;
     email: boolean;
   };
   timezone: string;

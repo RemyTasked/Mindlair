@@ -174,10 +174,10 @@ const GITHUB_REPO = "clodel-MeetCute/meet-cute";
 const APP_VERSION = "0.1.0";
 
 const DOWNLOADS: { os: string; label: string; file: string }[] = [
-  { os: "mac",     label: "macOS (Apple Silicon)", file: `Mindlayer_${APP_VERSION}_aarch64.dmg` },
-  { os: "mac",     label: "macOS (Intel)",         file: `Mindlayer_${APP_VERSION}_x64.dmg` },
-  { os: "windows", label: "Windows",               file: `Mindlayer_${APP_VERSION}_x64-setup.exe` },
-  { os: "linux",   label: "Linux (AppImage)",       file: `mindlayer_${APP_VERSION}_amd64.AppImage` },
+  { os: "mac",     label: "macOS (Apple Silicon)", file: `Mindlair_${APP_VERSION}_aarch64.dmg` },
+  { os: "mac",     label: "macOS (Intel)",         file: `Mindlair_${APP_VERSION}_x64.dmg` },
+  { os: "windows", label: "Windows",               file: `Mindlair_${APP_VERSION}_x64-setup.exe` },
+  { os: "linux",   label: "Linux (AppImage)",       file: `mindlair_${APP_VERSION}_amd64.AppImage` },
 ];
 
 function DesktopCard({ platform }: { platform: PlatformType }) {

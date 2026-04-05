@@ -134,7 +134,7 @@ function offlineResponse() {
     `<!DOCTYPE html>
     <html lang="en">
     <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Mindlayer — Offline</title>
+    <title>Mindlair — Offline</title>
     <style>
       body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
         background:#0f0e0c;color:#e8e4dc;font-family:Inter,system-ui,sans-serif;text-align:center;padding:24px}
@@ -144,7 +144,7 @@ function offlineResponse() {
         animation:pulse 2s ease-in-out infinite}
       @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
     </style></head>
-    <body><div><div class="dot"></div><h1>You're offline</h1><p>Mindlayer will sync your data when you reconnect. Your map is waiting.</p></div></body>
+    <body><div><div class="dot"></div><h1>You're offline</h1><p>Mindlair will sync your data when you reconnect. Your map is waiting.</p></div></body>
     </html>`,
     { status: 503, headers: { 'Content-Type': 'text/html' } }
   );
@@ -196,11 +196,11 @@ async function storeShareData(data) {
 // Push notifications
 self.addEventListener('push', (event) => {
   let data = {
-    title: 'Mindlayer',
+    title: 'Mindlair',
     body: 'You have a new notification',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
-    tag: 'mindlayer-notification',
+    tag: 'mindlair-notification',
     data: {},
   };
 
@@ -294,7 +294,7 @@ async function checkForDigest() {
     const data = await response.json();
 
     if (data.hasDigest) {
-      await self.registration.showNotification('Your Daily Mindlayer Digest', {
+      await self.registration.showNotification('Your Daily Mindlair Digest', {
         body: data.summary,
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png',

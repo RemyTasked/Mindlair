@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
       },
       notifications: {
         push: settings.pushEnabled,
-        sms: settings.smsEnabled,
         email: settings.emailEnabled,
       },
       timezone: userProfile?.timezone || 'America/New_York',
@@ -109,9 +108,6 @@ export async function PATCH(request: NextRequest) {
     if (data.notifications) {
       if (data.notifications.push !== undefined) {
         updateData.pushEnabled = data.notifications.push;
-      }
-      if (data.notifications.sms !== undefined) {
-        updateData.smsEnabled = data.notifications.sms;
       }
       if (data.notifications.email !== undefined) {
         updateData.emailEnabled = data.notifications.email;

@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Mindlayer | Map how you think",
+  title: "Mindlair | Map how you think",
   description:
     "A living map of how you think — capture what you read, track your evolving beliefs, and surface perspectives you haven't encountered yet.",
   keywords: [
@@ -29,26 +29,26 @@ export const metadata: Metadata = {
     "PWA",
     "mobile app",
   ],
-  authors: [{ name: "Mindlayer" }],
+  authors: [{ name: "Mindlair" }],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Mindlayer",
+    title: "Mindlair",
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
-    title: "Mindlayer | Map how you think",
+    title: "Mindlair | Map how you think",
     description:
       "A living map of how you think — and a quiet guide to thinking wider.",
     type: "website",
-    siteName: "Mindlayer",
+    siteName: "Mindlair",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mindlayer | Map how you think",
+    title: "Mindlair | Map how you think",
     description:
       "A living map of how you think — and a quiet guide to thinking wider.",
   },
@@ -83,7 +83,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Mindlayer" />
+        <meta name="apple-mobile-web-app-title" content="Mindlair" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#0f0e0c" />
         <meta name="msapplication-tap-highlight" content="no" />

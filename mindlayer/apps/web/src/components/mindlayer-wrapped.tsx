@@ -159,9 +159,30 @@ export default function MindlayerWrapped() {
   const numbers = useReveal();
   const share = useReveal();
   const [shareLink, setShareLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = async () => {
+    if (!shareLink) return;
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const textArea = document.createElement("textarea");
+      textArea.value = shareLink;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const generateLink = useCallback(() => {
-    setShareLink(`https://mindlayer.app/wrapped/${YEAR}/u_demo_${Math.random().toString(36).slice(2, 8)}`);
+    setShareLink(`https://mindlair.app/wrapped/${YEAR}/u_demo_${Math.random().toString(36).slice(2, 8)}`);
   }, []);
 
   const sectionStyle: React.CSSProperties = {
@@ -197,11 +218,21 @@ export default function MindlayerWrapped() {
         display: "flex", flexDirection: "column", gap: 8, zIndex: 50,
       }}>
         {[cover, topics, shifts, deep, questions, numbers, share].map((s, i) => (
-          <div key={i} style={{
-            width: 6, height: 6, borderRadius: "50%",
-            background: s.visible ? C.accent : C.border,
-            transition: "background 0.4s",
-          }} />
+          <button
+            key={i}
+            onClick={() => s.ref.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            style={{
+              width: 10, height: 10, borderRadius: "50%",
+              background: s.visible ? C.accent : C.border,
+              border: "none",
+              cursor: "pointer",
+              transition: "background 0.4s, transform 0.2s",
+              padding: 0,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.4)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            aria-label={`Go to section ${i + 1}`}
+          />
         ))}
       </div>
 
@@ -213,7 +244,7 @@ export default function MindlayerWrapped() {
         <div style={{
           fontSize: 11, letterSpacing: "0.25em", textTransform: "uppercase",
           color: C.muted, marginBottom: 8,
-        }}>Mindlayer Wrapped</div>
+        }}>Mindlair Wrapped</div>
         <div style={{
           fontSize: 72, fontWeight: 800, letterSpacing: "-0.06em", lineHeight: 1,
           background: `linear-gradient(135deg, ${C.accent}, ${C.blue}, ${C.amber})`,
@@ -475,11 +506,14 @@ export default function MindlayerWrapped() {
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               fontFamily: "monospace",
             }}>{shareLink}</div>
-            <button onClick={() => navigator.clipboard?.writeText(shareLink)} style={{
-              background: C.accentDim, color: C.accent, border: "none",
+            <button onClick={copyToClipboard} style={{
+              background: copied ? "#2a5a3a" : C.accentDim, 
+              color: copied ? "#7ac47a" : C.accent, 
+              border: "none",
               borderRadius: 6, padding: "8px 16px", cursor: "pointer",
               fontSize: 12, fontWeight: 600, flexShrink: 0,
-            }}>Copy</button>
+              transition: "all 0.2s",
+            }}>{copied ? "Copied!" : "Copy"}</button>
           </div>
         )}
 

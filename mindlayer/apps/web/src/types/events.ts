@@ -1,5 +1,5 @@
 /**
- * Mindlayer Event Taxonomy
+ * Mindlair Event Taxonomy
  * Canonical event schema for cross-surface analytics
  */
 

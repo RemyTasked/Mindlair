@@ -41,7 +41,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: `v${{ steps.get-version.outputs.version }}`,
-              name: `Mindlayer v${{ steps.get-version.outputs.version }}`,
+              name: `Mindlair v${{ steps.get-version.outputs.version }}`,
               body: 'See the assets to download this version and install.',
               draft: true,
               prerelease: false
@@ -171,19 +171,19 @@ jobs:
             "platforms": {
               "darwin-aarch64": {
                 "signature": "",
-                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlayer_${VERSION}_aarch64.dmg"
+                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlair_${VERSION}_aarch64.dmg"
               },
               "darwin-x86_64": {
                 "signature": "",
-                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlayer_${VERSION}_x64.dmg"
+                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlair_${VERSION}_x64.dmg"
               },
               "linux-x86_64": {
                 "signature": "",
-                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/mindlayer_${VERSION}_amd64.AppImage"
+                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/mindlair_${VERSION}_amd64.AppImage"
               },
               "windows-x86_64": {
                 "signature": "",
-                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlayer_${VERSION}_x64-setup.exe"
+                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlair_${VERSION}_x64-setup.exe"
               }
             }
           }

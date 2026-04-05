@@ -223,7 +223,7 @@ function MessageBubble({ message }: { message: Message }) {
         {!isUser && (
           <div className="flex items-center gap-2 mb-2">
             <MessageSquare className="w-4 h-4 text-rose-500" />
-            <span className="text-xs font-medium text-zinc-500">Mindlayer</span>
+            <span className="text-xs font-medium text-zinc-500">Mindlair</span>
           </div>
         )}
 
