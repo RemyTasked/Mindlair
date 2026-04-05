@@ -218,7 +218,7 @@ export default function HomePage() {
             you&apos;ve already read — so the first session already feels like years of insight.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            {["Readwise", "Instapaper", "Browser History", "RSS Feeds"].map(source => (
+            {["Readwise", "Instapaper", "Spotify", "Google Takeout"].map(source => (
               <span key={source} style={{
                 fontSize: 12, color: "#7a7469",
                 border: "1px solid #2a2825", borderRadius: 6,

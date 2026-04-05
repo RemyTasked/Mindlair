@@ -8,7 +8,6 @@ const SURFACE_MAP: Record<string, string> = {
   readwise: 'readwise_import',
   instapaper: 'instapaper_import',
   spotify: 'spotify_import',
-  rss: 'rss_feed',
 };
 
 export async function GET(request: NextRequest) {
@@ -22,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
     const userId = user.id;
 
-    const [connections, sourcesByProvider, rssFeeds] = await Promise.all([
+    const [connections, sourcesByProvider] = await Promise.all([
       db.connectedSource.findMany({ where: { userId } }),
       db.source.groupBy({
         by: ['surface'],
@@ -31,11 +30,6 @@ export async function GET(request: NextRequest) {
           surface: { in: Object.values(SURFACE_MAP) },
         },
         _count: true,
-      }),
-      db.rssFeed.findMany({
-        where: { userId },
-        select: { id: true, title: true, url: true, lastSyncAt: true, createdAt: true },
-        orderBy: { createdAt: 'desc' },
       }),
     ]);
 
@@ -54,15 +48,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const rssSourceCount = sourceCounts[SURFACE_MAP.rss] || 0;
-
     return NextResponse.json({
       integrations,
-      rss: {
-        feeds: rssFeeds,
-        feedCount: rssFeeds.length,
-        sourceCount: rssSourceCount,
-      },
     });
   } catch (error) {
     console.error('Integrations status error:', error);
