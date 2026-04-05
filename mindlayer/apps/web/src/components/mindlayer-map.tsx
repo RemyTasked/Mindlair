@@ -133,6 +133,105 @@ const NODE_DETAILS: Record<string, { sources: number; reactions: number; lastAct
   "supply-chain": { sources: 8, reactions: 4, lastActive: "4 months ago", topClaims: ["Reshoring is politically attractive but economically costly","Just-in-time is being replaced by just-in-case everywhere","Critical mineral dependency is the new energy dependency"], tension: false, summary: "Fading cluster. Was active during peak supply chain news cycle, now quiet." },
 };
 
+// ── Source details for each node ────────────────────────────────
+const NODE_SOURCES: Record<string, { title: string; url: string; outlet: string; date: string; stance: "agree" | "disagree" | "skip" }[]> = {
+  "monetary-policy": [
+    { title: "The Fed's Credibility Problem Is Getting Worse", url: "https://example.com/fed-credibility", outlet: "Bloomberg", date: "Dec 2025", stance: "agree" },
+    { title: "Why Rate Hikes Hit the Poor Hardest", url: "https://example.com/rate-hikes", outlet: "The Atlantic", date: "Nov 2025", stance: "agree" },
+    { title: "In Defense of Quantitative Easing", url: "https://example.com/qe-defense", outlet: "The Economist", date: "Oct 2025", stance: "disagree" },
+    { title: "Central Banks Have Lost Control", url: "https://example.com/central-banks", outlet: "FT", date: "Sep 2025", stance: "agree" },
+  ],
+  "ai-ml": [
+    { title: "LLMs Are Stochastic Parrots", url: "https://example.com/stochastic-parrots", outlet: "ACM", date: "Dec 2025", stance: "agree" },
+    { title: "The Case for AI Optimism", url: "https://example.com/ai-optimism", outlet: "Astral Codex Ten", date: "Nov 2025", stance: "disagree" },
+    { title: "Open Source AI Is Catching Up Fast", url: "https://example.com/open-source-ai", outlet: "Ars Technica", date: "Nov 2025", stance: "agree" },
+    { title: "AI Won't Take Your Job (Yet)", url: "https://example.com/ai-jobs", outlet: "MIT Tech Review", date: "Oct 2025", stance: "skip" },
+  ],
+  "climate": [
+    { title: "Nuclear Is the Only Path to Net Zero", url: "https://example.com/nuclear-net-zero", outlet: "Nature", date: "Dec 2025", stance: "agree" },
+    { title: "Carbon Taxes Work Better Than Mandates", url: "https://example.com/carbon-taxes", outlet: "The Economist", date: "Nov 2025", stance: "agree" },
+    { title: "We're Underfunding Climate Adaptation", url: "https://example.com/adaptation", outlet: "Bloomberg Green", date: "Oct 2025", stance: "agree" },
+  ],
+  "stoicism": [
+    { title: "Can You Really Learn Emotional Regulation?", url: "https://example.com/emotional-regulation", outlet: "Psychology Today", date: "Mar 2025", stance: "agree" },
+    { title: "Modern Stoicism Misses the Point", url: "https://example.com/modern-stoicism", outlet: "Aeon", date: "Feb 2025", stance: "agree" },
+    { title: "Why Virtue Ethics Beats Consequentialism", url: "https://example.com/virtue-ethics", outlet: "Philosophy Now", date: "Jan 2025", stance: "agree" },
+  ],
+  "crypto": [
+    { title: "Most Crypto Is Pure Speculation", url: "https://example.com/crypto-speculation", outlet: "FT", date: "Apr 2025", stance: "agree" },
+    { title: "DeFi Solves Non-Problems", url: "https://example.com/defi-problems", outlet: "Molly White", date: "Mar 2025", stance: "agree" },
+    { title: "Bitcoin as Digital Gold Actually Makes Sense", url: "https://example.com/bitcoin-gold", outlet: "Lyn Alden", date: "Feb 2025", stance: "skip" },
+  ],
+  "geopolitics": [
+    { title: "The Multipolar World Is Already Here", url: "https://example.com/multipolar", outlet: "Foreign Affairs", date: "Dec 2025", stance: "skip" },
+    { title: "Supply Chain Decoupling Will Take Decades", url: "https://example.com/decoupling", outlet: "The Economist", date: "Nov 2025", stance: "agree" },
+    { title: "Energy Reshaped European Foreign Policy", url: "https://example.com/energy-europe", outlet: "FT", date: "Oct 2025", stance: "agree" },
+  ],
+  "philosophy": [
+    { title: "Is Consciousness Computable?", url: "https://example.com/consciousness", outlet: "Stanford Encyclopedia", date: "Dec 2025", stance: "skip" },
+    { title: "The Case for Compatibilism", url: "https://example.com/compatibilism", outlet: "Aeon", date: "Nov 2025", stance: "agree" },
+    { title: "Where Philosophy of Mind Meets AI", url: "https://example.com/mind-ai", outlet: "Quanta", date: "Oct 2025", stance: "agree" },
+  ],
+  "nutrition": [
+    { title: "Time-Restricted Eating: The Evidence", url: "https://example.com/time-restricted", outlet: "Examine", date: "Mar 2025", stance: "agree" },
+    { title: "Ultra-Processed Food Is the Problem", url: "https://example.com/ultra-processed", outlet: "The Guardian", date: "Feb 2025", stance: "agree" },
+    { title: "You're Not Eating Enough Protein", url: "https://example.com/protein", outlet: "Stronger by Science", date: "Jan 2025", stance: "agree" },
+  ],
+  "urbanism": [
+    { title: "Zoning Reform Is the Highest-Leverage Fix", url: "https://example.com/zoning", outlet: "Strong Towns", date: "Dec 2025", stance: "agree" },
+    { title: "The Hidden Cost of Parking Minimums", url: "https://example.com/parking", outlet: "CityLab", date: "Nov 2025", stance: "agree" },
+    { title: "Frequency Is What Makes Transit Work", url: "https://example.com/frequency", outlet: "Human Transit", date: "Oct 2025", stance: "agree" },
+  ],
+  "media-trust": [
+    { title: "The Structural Collapse of Media Trust", url: "https://example.com/media-trust", outlet: "Nieman Lab", date: "Dec 2025", stance: "agree" },
+    { title: "Social Media Replaced Editors, Not Journalists", url: "https://example.com/social-editors", outlet: "Columbia Journalism Review", date: "Nov 2025", stance: "agree" },
+    { title: "Local News Has No Business Model", url: "https://example.com/local-news", outlet: "Poynter", date: "Oct 2025", stance: "agree" },
+  ],
+  "sleep-science": [
+    { title: "Sleep Deprivation Is Underrated as a Health Risk", url: "https://example.com/sleep-health", outlet: "Matthew Walker", date: "May 2025", stance: "agree" },
+    { title: "Chronotypes Are Real and Ignored", url: "https://example.com/chronotypes", outlet: "Science", date: "Apr 2025", stance: "agree" },
+    { title: "The Evidence for Napping", url: "https://example.com/napping", outlet: "Sleep Foundation", date: "Mar 2025", stance: "agree" },
+  ],
+  "supply-chain": [
+    { title: "Reshoring Is Politically Attractive but Costly", url: "https://example.com/reshoring", outlet: "HBR", date: "Apr 2025", stance: "skip" },
+    { title: "Just-in-Time Is Dead", url: "https://example.com/just-in-time", outlet: "McKinsey", date: "Mar 2025", stance: "agree" },
+    { title: "Critical Minerals Are the New Oil", url: "https://example.com/critical-minerals", outlet: "IEA", date: "Feb 2025", stance: "agree" },
+  ],
+};
+
+// ── Tension details ─────────────────────────────────────────────
+const TENSION_DETAILS: Record<string, {
+  nodeA: string;
+  nodeB: string;
+  labelA: string;
+  labelB: string;
+  explanation: string;
+  conflictingClaims: { claimA: string; claimB: string }[];
+}> = {
+  "monetary-policy_crypto": {
+    nodeA: "monetary-policy",
+    nodeB: "crypto",
+    labelA: "Monetary Policy",
+    labelB: "Crypto & Web3",
+    explanation: "You distrust central banks and their monetary policy, but you also distrust crypto as an alternative. This creates a tension: if fiat money is broken, what's the alternative?",
+    conflictingClaims: [
+      { claimA: "Central banks are losing inflation credibility", claimB: "Most crypto value is speculative not fundamental" },
+      { claimA: "Quantitative easing caused structural inequality", claimB: "DeFi solves problems that don't exist for most people" },
+    ],
+  },
+  "ai-ml_philosophy": {
+    nodeA: "ai-ml",
+    nodeB: "philosophy",
+    labelA: "AI & Machine Learning",
+    labelB: "Philosophy of Mind",
+    explanation: "You're uncertain whether AI systems truly understand or just pattern-match, while also believing consciousness may not be computationally reducible. If understanding requires consciousness, can AI ever truly understand?",
+    conflictingClaims: [
+      { claimA: "LLMs don't truly understand — they pattern match", claimB: "Consciousness may not be computationally reducible" },
+      { claimA: "AI will displace more jobs than it creates", claimB: "Philosophy of mind and AI are converging" },
+    ],
+  },
+};
+
 const CURVE_OFFSETS = LINKS.map((_, i) => ({
   ox: Math.sin(i * 2.7 + 1.3) * 40,
   oy: Math.cos(i * 3.1 + 0.7) * 40,
@@ -175,6 +274,8 @@ export default function MindlayerMap() {
   const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showSources, setShowSources] = useState(false);
+  const [showTension, setShowTension] = useState(false);
 
   const timeIdx = Math.round(timeValue);
   const isActive = isDragging || isPlaying;
@@ -426,7 +527,7 @@ export default function MindlayerMap() {
                   opacity={st.opacity}
                   onMouseEnter={() => setHoveredNode(node)}
                   onMouseLeave={() => setHoveredNode(null)}
-                  onClick={() => setSelectedNode(isSel ? null : node)}
+                  onClick={() => { setSelectedNode(isSel ? null : node); setShowSources(false); setShowTension(false); }}
                 >
                   {tension && (
                     <circle r={ds * 0.58 + 7} fill="none" stroke={C.amber}
@@ -517,23 +618,200 @@ export default function MindlayerMap() {
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{selectedNode.label}</div>
                 <div style={{ fontSize: 11, color: selCol.stroke }}>{selCol.label}</div>
               </div>
-              <button onClick={() => setSelectedNode(null)}
+              <button onClick={() => { setSelectedNode(null); setShowSources(false); setShowTension(false); }}
                 style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18, padding: 0, lineHeight: 1 }}>×</button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {([
-                { label: "Sources", val: String(detail.sources), warn: false },
-                { label: "Reactions", val: String(detail.reactions), warn: false },
-                { label: "Last active", val: detail.lastActive, warn: false },
-                { label: "Tension", val: detail.tension ? "Yes" : "None", warn: detail.tension },
-              ]).map(s => (
-                <div key={s.label} style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
-                  <div style={{ fontSize: 9, color: C.muted, marginBottom: 3, letterSpacing: "0.14em", textTransform: "uppercase" }}>{s.label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: s.warn ? C.amber : C.text }}>{s.val}</div>
+              {/* Sources - clickable */}
+              <button
+                onClick={() => setShowSources(!showSources)}
+                style={{
+                  background: showSources ? C.accentDim : C.bg,
+                  borderRadius: 6,
+                  padding: "10px 12px",
+                  border: `1px solid ${showSources ? C.accent : C.border}`,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.2s",
+                }}
+              >
+                <div style={{ fontSize: 9, color: C.muted, marginBottom: 3, letterSpacing: "0.14em", textTransform: "uppercase" }}>Sources</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: showSources ? C.accent : C.text, display: "flex", alignItems: "center", gap: 4 }}>
+                  {detail.sources}
+                  <span style={{ fontSize: 10, color: C.muted }}>{showSources ? "▲" : "▼"}</span>
                 </div>
-              ))}
+              </button>
+              {/* Reactions */}
+              <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 9, color: C.muted, marginBottom: 3, letterSpacing: "0.14em", textTransform: "uppercase" }}>Reactions</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{detail.reactions}</div>
+              </div>
+              {/* Last active */}
+              <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 9, color: C.muted, marginBottom: 3, letterSpacing: "0.14em", textTransform: "uppercase" }}>Last active</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{detail.lastActive}</div>
+              </div>
+              {/* Tension - clickable if exists */}
+              <button
+                onClick={() => detail.tension && setShowTension(!showTension)}
+                disabled={!detail.tension}
+                style={{
+                  background: showTension ? C.amberDim : C.bg,
+                  borderRadius: 6,
+                  padding: "10px 12px",
+                  border: `1px solid ${showTension ? C.amber : C.border}`,
+                  cursor: detail.tension ? "pointer" : "default",
+                  textAlign: "left",
+                  transition: "all 0.2s",
+                  opacity: detail.tension ? 1 : 0.6,
+                }}
+              >
+                <div style={{ fontSize: 9, color: C.muted, marginBottom: 3, letterSpacing: "0.14em", textTransform: "uppercase" }}>Tension</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: detail.tension ? C.amber : C.text, display: "flex", alignItems: "center", gap: 4 }}>
+                  {detail.tension ? "Yes" : "None"}
+                  {detail.tension && <span style={{ fontSize: 10, color: C.muted }}>{showTension ? "▲" : "▼"}</span>}
+                </div>
+              </button>
             </div>
+
+            {/* ── Expanded Sources List ── */}
+            {showSources && NODE_SOURCES[selectedNode.id] && (
+              <div style={{
+                background: C.bg,
+                borderRadius: 8,
+                border: `1px solid ${C.accent}40`,
+                overflow: "hidden",
+              }}>
+                <div style={{ padding: "10px 12px", borderBottom: `1px solid ${C.border}`, background: `${C.accent}10` }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: C.accent, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    Recent Sources
+                  </div>
+                </div>
+                <div style={{ maxHeight: 200, overflowY: "auto" }}>
+                  {NODE_SOURCES[selectedNode.id].map((source, i) => (
+                    <a
+                      key={i}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "block",
+                        padding: "10px 12px",
+                        borderBottom: i < NODE_SOURCES[selectedNode.id].length - 1 ? `1px solid ${C.border}` : "none",
+                        textDecoration: "none",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = `${C.accent}08`)}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 500, color: C.text, marginBottom: 3, lineHeight: 1.4 }}>
+                        {source.title}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 10, color: C.muted }}>{source.outlet}</span>
+                        <span style={{ fontSize: 10, color: C.muted }}>·</span>
+                        <span style={{ fontSize: 10, color: C.muted }}>{source.date}</span>
+                        <span style={{
+                          fontSize: 9,
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          background: source.stance === "agree" ? `${C.accent}20` : source.stance === "disagree" ? `${C.blue}20` : `${C.grey}40`,
+                          color: source.stance === "agree" ? C.accent : source.stance === "disagree" ? C.blue : C.muted,
+                          fontWeight: 600,
+                          marginLeft: "auto",
+                        }}>
+                          {source.stance === "agree" ? "Agreed" : source.stance === "disagree" ? "Disagreed" : "Skipped"}
+                        </span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Expanded Tension Details ── */}
+            {showTension && detail.tension && (() => {
+              const tensionKey = TENSIONS.find(t => t.a === selectedNode.id || t.b === selectedNode.id);
+              const tensionDetail = tensionKey ? TENSION_DETAILS[`${tensionKey.a}_${tensionKey.b}`] : null;
+              if (!tensionDetail) return null;
+              const otherNodeId = tensionKey!.a === selectedNode.id ? tensionKey!.b : tensionKey!.a;
+              const otherNode = NODES.find(n => n.id === otherNodeId);
+              return (
+                <div style={{
+                  background: C.bg,
+                  borderRadius: 8,
+                  border: `1px solid ${C.amber}40`,
+                  overflow: "hidden",
+                }}>
+                  <div style={{ padding: "10px 12px", borderBottom: `1px solid ${C.border}`, background: `${C.amber}10` }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: C.amber, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                      Tension with {otherNode?.label}
+                    </div>
+                  </div>
+                  <div style={{ padding: "12px" }}>
+                    <p style={{ fontSize: 12, lineHeight: 1.6, color: C.textSoft, marginBottom: 12 }}>
+                      {tensionDetail.explanation}
+                    </p>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: C.muted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                      Conflicting Claims
+                    </div>
+                    {tensionDetail.conflictingClaims.map((conflict, i) => (
+                      <div key={i} style={{ marginBottom: i < tensionDetail.conflictingClaims.length - 1 ? 10 : 0 }}>
+                        <div style={{
+                          fontSize: 11, lineHeight: 1.5, color: C.text,
+                          padding: "8px 10px", background: `${C.accent}08`,
+                          borderRadius: "6px 6px 0 0", borderLeft: `2px solid ${C.accent}`,
+                        }}>
+                          <span style={{ fontSize: 9, color: C.accent, fontWeight: 600 }}>{selectedNode.label}:</span><br />
+                          &ldquo;{conflict.claimA}&rdquo;
+                        </div>
+                        <div style={{
+                          fontSize: 11, lineHeight: 1.5, color: C.text,
+                          padding: "8px 10px", background: `${C.blue}08`,
+                          borderRadius: "0 0 6px 6px", borderLeft: `2px solid ${C.blue}`,
+                        }}>
+                          <span style={{ fontSize: 9, color: C.blue, fontWeight: 600 }}>{otherNode?.label}:</span><br />
+                          &ldquo;{conflict.claimB}&rdquo;
+                        </div>
+                      </div>
+                    ))}
+                    {otherNode && (
+                      <button
+                        onClick={() => {
+                          setSelectedNode(otherNode);
+                          setShowTension(false);
+                          setShowSources(false);
+                        }}
+                        style={{
+                          marginTop: 12,
+                          width: "100%",
+                          padding: "8px 12px",
+                          background: C.surface,
+                          border: `1px solid ${C.border}`,
+                          borderRadius: 6,
+                          color: C.textSoft,
+                          fontSize: 11,
+                          fontWeight: 500,
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = C.bg;
+                          e.currentTarget.style.borderColor = C.amber;
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = C.surface;
+                          e.currentTarget.style.borderColor = C.border;
+                        }}
+                      >
+                        View {otherNode.label} →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div style={{
               fontSize: 12, lineHeight: 1.7, color: C.muted,

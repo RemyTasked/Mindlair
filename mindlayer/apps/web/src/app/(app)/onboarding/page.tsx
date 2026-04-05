@@ -17,6 +17,9 @@ import {
   RefreshCw,
   Upload,
   Loader2,
+  X,
+  ExternalLink,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -432,7 +435,7 @@ export default function OnboardingPage() {
             <CaptureCard
               icon={<Globe className="w-5 h-5" style={{ color: C.accent }} />}
               title="Browser Extension"
-              description="Tracks articles and videos you read in your browser. Works alongside the desktop app or as a standalone capture tool."
+              description="Tracks articles and videos you read in your browser. Works alongside the desktop app or as a standalone capture tool. Store versions coming soon — click a browser below for manual install instructions."
               recommended={platform === "ios" || platform === "android"}
             >
               <div className="flex flex-wrap gap-2 mt-3">
@@ -711,22 +714,172 @@ function DownloadLink({
 }
 
 function ExtensionLink({ browser }: { browser: string }) {
-  const urls: Record<string, string> = {
-    Chrome: "https://chrome.google.com/webstore",
-    Firefox: "https://addons.mozilla.org",
-    Safari: "https://apps.apple.com",
-    Edge: "https://microsoftedge.microsoft.com/addons",
+  const [showModal, setShowModal] = useState(false);
+  
+  const instructions: Record<string, { steps: string[]; note: string }> = {
+    Chrome: {
+      steps: [
+        "Download the extension from GitHub releases",
+        "Open chrome://extensions in Chrome",
+        "Enable 'Developer mode' in the top right",
+        "Click 'Load unpacked' and select the extension folder",
+      ],
+      note: "Chrome Web Store version coming soon!",
+    },
+    Firefox: {
+      steps: [
+        "Download the extension from GitHub releases",
+        "Open about:debugging in Firefox",
+        "Click 'This Firefox' → 'Load Temporary Add-on'",
+        "Select any file in the extension folder",
+      ],
+      note: "Firefox Add-ons version coming soon!",
+    },
+    Safari: {
+      steps: [
+        "Download the Safari extension project from GitHub",
+        "Open in Xcode and build the project",
+        "Enable the extension in Safari preferences",
+      ],
+      note: "App Store version coming soon!",
+    },
+    Edge: {
+      steps: [
+        "Download the extension from GitHub releases",
+        "Open edge://extensions in Edge",
+        "Enable 'Developer mode' in the bottom left",
+        "Click 'Load unpacked' and select the extension folder",
+      ],
+      note: "Edge Add-ons version coming soon!",
+    },
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => window.open(urls[browser], "_blank")}
-      style={{ borderColor: C.border, color: C.textSoft }}
-    >
-      {browser}
-    </Button>
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowModal(true)}
+        style={{ borderColor: C.border, color: C.textSoft }}
+      >
+        {browser}
+      </Button>
+      
+      {showModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            style={{
+              background: C.surface,
+              borderRadius: 12,
+              border: `1px solid ${C.border}`,
+              maxWidth: 420,
+              width: "100%",
+              padding: 24,
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowModal(false)}
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                background: "none",
+                border: "none",
+                color: C.muted,
+                cursor: "pointer",
+                padding: 4,
+              }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: C.text, marginBottom: 8 }}>
+              Install {browser} Extension
+            </h3>
+            
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "8px 12px",
+                background: `${C.accent}15`,
+                borderRadius: 8,
+                marginBottom: 16,
+              }}
+            >
+              <Info className="w-4 h-4" style={{ color: C.accent, flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: C.accent }}>
+                {instructions[browser].note}
+              </span>
+            </div>
+            
+            <p style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>
+              For now, you can load the extension manually:
+            </p>
+            
+            <ol style={{ margin: 0, padding: "0 0 0 20px", listStyleType: "decimal" }}>
+              {instructions[browser].steps.map((step, i) => (
+                <li
+                  key={i}
+                  style={{
+                    fontSize: 13,
+                    color: C.textSoft,
+                    marginBottom: 10,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {step}
+                </li>
+              ))}
+            </ol>
+            
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              <a
+                href="https://github.com/RemyTasked/Mindlair/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  padding: "10px 16px",
+                  background: C.accent,
+                  color: C.bg,
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                <Download className="w-4 h-4" />
+                Download from GitHub
+              </a>
+            </div>
+            
+            <p style={{ fontSize: 11, color: C.muted, marginTop: 16, textAlign: "center" }}>
+              Subscribe to get notified when the {browser} store version is available
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
