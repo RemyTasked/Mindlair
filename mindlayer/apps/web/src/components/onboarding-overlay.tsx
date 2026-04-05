@@ -585,35 +585,37 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                           disabled={takeoutUploading}
                           style={{ display: "none" }}
                         />
-                        <label htmlFor="takeout-upload-onboarding">
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                              padding: "8px 14px",
-                              borderRadius: 8,
-                              background: takeoutUploading ? C.border : C.accent,
-                              color: takeoutUploading ? C.muted : "#fff",
-                              fontSize: 13,
-                              fontWeight: 500,
-                              cursor: takeoutUploading ? "not-allowed" : "pointer",
-                              opacity: takeoutUploading ? 0.7 : 1,
-                            }}
-                          >
-                            {takeoutUploading ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Importing...
-                              </>
-                            ) : (
-                              <>
-                                <Upload className="w-4 h-4" />
-                                Upload
-                              </>
-                            )}
-                          </span>
-                        </label>
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('takeout-upload-onboarding')?.click()}
+                          disabled={takeoutUploading}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "8px 14px",
+                            borderRadius: 8,
+                            background: takeoutUploading ? C.border : C.accent,
+                            color: takeoutUploading ? C.muted : "#fff",
+                            fontSize: 13,
+                            fontWeight: 500,
+                            cursor: takeoutUploading ? "not-allowed" : "pointer",
+                            opacity: takeoutUploading ? 0.7 : 1,
+                            border: "none",
+                          }}
+                        >
+                          {takeoutUploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Importing...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4" />
+                              Upload
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
                     <div style={{ marginTop: 12, padding: 12, background: C.border, borderRadius: 8, fontSize: 11 }}>

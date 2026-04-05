@@ -580,23 +580,19 @@ export default function SettingsPage() {
                         onChange={handleTakeoutUpload}
                         disabled={takeoutUploading}
                       />
-                      <label htmlFor="takeout-upload">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={takeoutUploading}
-                          asChild
-                        >
-                          <span className="cursor-pointer">
-                            {takeoutUploading ? (
-                              <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
-                            ) : (
-                              <Upload className="w-4 h-4 mr-1" />
-                            )}
-                            {takeoutUploading ? "Importing..." : "Upload"}
-                          </span>
-                        </Button>
-                      </label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={takeoutUploading}
+                        onClick={() => document.getElementById('takeout-upload')?.click()}
+                      >
+                        {takeoutUploading ? (
+                          <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4 mr-1" />
+                        )}
+                        {takeoutUploading ? "Importing..." : "Upload"}
+                      </Button>
                     </div>
                   </div>
                   <div className="mt-3 p-3 bg-zinc-800/50 rounded-lg text-xs space-y-2">
