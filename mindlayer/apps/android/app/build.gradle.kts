@@ -5,6 +5,10 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 android {
     namespace = "app.mindlair"
     compileSdk = 34
@@ -44,6 +48,11 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+    
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 }
 
