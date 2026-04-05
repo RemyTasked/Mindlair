@@ -14,6 +14,7 @@ import {
   ExternalLink,
   BookOpen,
   FileText,
+  Music,
   Key,
   Copy,
   Trash2,
@@ -267,6 +268,26 @@ export default function SettingsPage() {
     }
   };
 
+  const connectSpotify = async () => {
+    try {
+      const response = await fetch("/api/integrations/spotify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnTo: "/settings" }),
+      });
+
+      if (response.ok) {
+        const { authUrl } = await response.json();
+        window.location.href = authUrl;
+      } else {
+        const error = await response.json();
+        alert(error.message || "Failed to connect Spotify");
+      }
+    } catch (err) {
+      alert("Failed to connect Spotify");
+    }
+  };
+
   const syncIntegration = async (provider: string) => {
     setSyncingProvider(provider);
     try {
@@ -414,6 +435,16 @@ export default function SettingsPage() {
               onConnect={connectInstapaper}
               onSync={() => syncIntegration("instapaper")}
               onDisconnect={() => disconnectIntegration("instapaper")}
+            />
+            <IntegrationItem
+              name="Spotify"
+              description="Sync podcast episodes you've listened to"
+              icon={<Music className="w-5 h-5 text-green-500" />}
+              integration={getIntegration("spotify")}
+              isSyncing={syncingProvider === "spotify"}
+              onConnect={connectSpotify}
+              onSync={() => syncIntegration("spotify")}
+              onDisconnect={() => disconnectIntegration("spotify")}
             />
           </CardContent>
         </Card>

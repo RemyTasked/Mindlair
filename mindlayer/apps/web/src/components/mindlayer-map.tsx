@@ -436,6 +436,32 @@ export default function MindlayerMap() {
     }}>
       <style>{ANIM_CSS}</style>
 
+      {/* ── Demo Data Banner ── */}
+      <div style={{
+        background: `linear-gradient(90deg, ${C.accent}15, ${C.accent}08)`,
+        borderBottom: `1px solid ${C.accent}30`,
+        padding: "10px 16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+      }}>
+        <span style={{ fontSize: 13, color: C.accent }}>
+          ✨ This is sample data showing how your map could look.
+        </span>
+        <a
+          href="/settings"
+          style={{
+            fontSize: 13,
+            color: C.accent,
+            textDecoration: "underline",
+            fontWeight: 500,
+          }}
+        >
+          Connect sources to build your own
+        </a>
+      </div>
+
       {/* ── Header ── */}
       <div style={{
         padding: "14px 24px 12px",
