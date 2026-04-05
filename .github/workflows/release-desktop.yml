@@ -80,7 +80,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: mindlayer/apps/desktop/package-lock.json
+          cache-dependency-path: mindlayer/package-lock.json
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -94,7 +94,7 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Install frontend dependencies
-        working-directory: mindlayer/apps/desktop
+        working-directory: mindlayer
         run: npm ci
 
       - name: Update version in tauri.conf.json
