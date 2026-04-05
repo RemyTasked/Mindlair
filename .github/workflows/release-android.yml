@@ -27,11 +27,14 @@ jobs:
       
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.5
       
       - name: Create Gradle Wrapper
         working-directory: mindlayer/apps/android
         run: |
           gradle wrapper --gradle-version 8.5
+          chmod +x gradlew
       
       - name: Build Debug APK
         working-directory: mindlayer/apps/android
