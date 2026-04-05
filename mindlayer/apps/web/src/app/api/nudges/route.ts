@@ -26,10 +26,28 @@ export async function GET(request: NextRequest) {
         concept: true,
       },
       orderBy: { createdAt: 'desc' },
-      take: 10,
+      take: 20,
     });
 
-    return NextResponse.json({ nudges });
+    // Get total pending count
+    const totalPending = await db.nudge.count({
+      where: {
+        userId,
+        status: 'pending',
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    // Map nudges to include conceptLabel
+    const mappedNudges = nudges.map(nudge => ({
+      ...nudge,
+      conceptLabel: nudge.concept?.label || 'General',
+    }));
+
+    return NextResponse.json({ 
+      nudges: mappedNudges,
+      totalPending,
+    });
   } catch (error) {
     console.error('Nudges error:', error);
     return NextResponse.json(
@@ -63,7 +81,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (action === 'click') {
+    if (action === 'click' || action === 'clicked') {
       await db.nudge.update({
         where: { id: nudgeId },
         data: {
@@ -84,7 +102,7 @@ export async function POST(request: NextRequest) {
           },
         },
       });
-    } else if (action === 'dismiss') {
+    } else if (action === 'dismiss' || action === 'dismissed') {
       await db.nudge.update({
         where: { id: nudgeId },
         data: {
@@ -104,6 +122,27 @@ export async function POST(request: NextRequest) {
             nudgeType: nudge.type,
             conceptId: nudge.conceptId,
             feedback,
+          },
+        },
+      });
+    } else if (action === 'helpful' || action === 'not_helpful') {
+      await db.nudge.update({
+        where: { id: nudgeId },
+        data: {
+          feedback: action,
+        },
+      });
+
+      await db.analyticsEvent.create({
+        data: {
+          userId,
+          type: 'nudge_feedback',
+          surface: 'web',
+          payload: {
+            nudgeId,
+            nudgeType: nudge.type,
+            conceptId: nudge.conceptId,
+            feedback: action,
           },
         },
       });

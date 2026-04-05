@@ -43,7 +43,7 @@ export function LoginScreen() {
         style={styles.content}
       >
         <View style={styles.header}>
-          <Text style={styles.logo}>Mindlayer</Text>
+          <Text style={styles.logo}>Mindlair</Text>
           <Text style={styles.tagline}>Map your evolving beliefs</Text>
         </View>
 
@@ -75,7 +75,7 @@ export function LoginScreen() {
           </TouchableOpacity>
 
           <Text style={styles.hint}>
-            Get your API key from the Mindlayer web dashboard under Settings.
+            Get your API key from the Mindlair web dashboard under Settings.
           </Text>
         </View>
       </KeyboardAvoidingView>

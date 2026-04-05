@@ -123,7 +123,7 @@ function App() {
     return (
       <div className="app loading">
         <div className="spinner"></div>
-        <p>Loading Mindlayer...</p>
+        <p>Loading Mindlair...</p>
       </div>
     );
   }
@@ -139,7 +139,7 @@ function App() {
       
       <header className="header">
         <div className="logo">
-          <h1>Mindlayer</h1>
+          <h1>Mindlair</h1>
           <span className="tagline">Map how you think</span>
         </div>
         <div className="status-badge">
@@ -255,7 +255,7 @@ function Dashboard({
         </button>
         <p className="description">
           {mappingStatus.is_mapping 
-            ? "Mindlayer is mapping your browsing and media consumption."
+            ? "Mindlair is mapping your browsing and media consumption."
             : "Mapping is paused. Click to resume."}
         </p>
         {mappingStatus.capture_count > 0 && (
@@ -301,7 +301,7 @@ function CapturesList({ captures }: { captures: CaptureItem[] }) {
     return (
       <div className="captures-empty">
         <p>No captures yet</p>
-        <p className="hint">Start browsing and Mindlayer will capture your activity</p>
+        <p className="hint">Start browsing and Mindlair will capture your activity</p>
       </div>
     );
   }
@@ -397,7 +397,7 @@ function Settings({
               <code className="key-preview">{authStatus.key_preview}</code>
             </div>
             <p className="setting-description">
-              This device is syncing to your Mindlayer account.
+              This device is syncing to your Mindlair account.
             </p>
             <button onClick={clearApiKey} className="disconnect-btn">
               Disconnect Device

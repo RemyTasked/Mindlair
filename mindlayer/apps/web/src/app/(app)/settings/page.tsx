@@ -27,7 +27,23 @@ import {
   Monitor,
   Globe,
   Smartphone,
+  Share,
 } from "lucide-react";
+
+type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
+
+function detectDevice(): { platform: PlatformType; isMobile: boolean } {
+  if (typeof window === "undefined") return { platform: "other", isMobile: false };
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /iphone|ipad|ipod|android/.test(ua);
+  let platform: PlatformType = "other";
+  if (ua.includes("iphone") || ua.includes("ipad")) platform = "ios";
+  else if (ua.includes("android")) platform = "android";
+  else if (ua.includes("mac")) platform = "mac";
+  else if (ua.includes("win")) platform = "windows";
+  else if (ua.includes("linux")) platform = "linux";
+  return { platform, isMobile };
+}
 import JSZip from "jszip";
 
 const GITHUB_REPO = "RemyTasked/Mindlair";
@@ -94,6 +110,11 @@ export default function SettingsPage() {
   const [takeoutUploading, setTakeoutUploading] = useState(false);
   const [takeoutResult, setTakeoutResult] = useState<{ youtube: number; chrome: number; total: number } | null>(null);
   const [takeoutError, setTakeoutError] = useState<string | null>(null);
+  const [deviceInfo, setDeviceInfo] = useState<{ platform: PlatformType; isMobile: boolean } | null>(null);
+
+  useEffect(() => {
+    setDeviceInfo(detectDevice());
+  }, []);
 
   const fetchSettings = useCallback(async () => {
     setIsLoading(true);
@@ -625,118 +646,197 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Downloads */}
+        {/* Downloads - Device-aware */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Download className="w-5 h-5" />
-              Downloads
+              {deviceInfo?.isMobile ? "Install App" : "Downloads"}
             </CardTitle>
             <CardDescription>
-              Install apps and extensions to capture what you consume.
+              {deviceInfo?.platform === "ios" 
+                ? "Add Mindlair to your home screen for the best experience."
+                : deviceInfo?.platform === "android"
+                ? "Install the app or add to your home screen."
+                : "Install apps and extensions to capture what you consume."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Desktop Apps */}
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
-                <Monitor className="w-5 h-5 text-amber-400" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-sm">Desktop Companion</h4>
-                <p className="text-xs text-zinc-500 mb-2">Captures what you read and watch across all browsers</p>
-                <div className="flex flex-wrap gap-2">
-                  <a
-                    href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_aarch64.dmg`}
-                    className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
-                  >
-                    <Download className="w-3 h-3" /> macOS
-                  </a>
-                  <a
-                    href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_x64-setup.exe`}
-                    className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
-                  >
-                    <Download className="w-3 h-3" /> Windows
-                  </a>
-                  <a
-                    href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_amd64.AppImage`}
-                    className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
-                  >
-                    <Download className="w-3 h-3" /> Linux
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Browser Extensions */}
-            <div className="pt-4 border-t border-zinc-800">
+            {/* iOS - Add to Home Screen */}
+            {deviceInfo?.platform === "ios" && (
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-blue-400" />
+                  <Smartphone className="w-5 h-5 text-amber-400" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-sm">Browser Extensions</h4>
-                  <p className="text-xs text-zinc-500 mb-2">Passively tracks articles and videos you read</p>
-                  <div className="flex flex-wrap gap-2">
-                    <a
-                      href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-chrome-${APP_VERSION}.zip`}
-                      className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
-                    >
-                      <Download className="w-3 h-3" /> Chrome
-                    </a>
-                    <a
-                      href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-firefox-${APP_VERSION}.zip`}
-                      className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
-                    >
-                      <Download className="w-3 h-3" /> Firefox
-                    </a>
-                    <a
-                      href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-edge-${APP_VERSION}.zip`}
-                      className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
-                    >
-                      <Download className="w-3 h-3" /> Edge
-                    </a>
+                  <h4 className="font-medium text-sm">Add to Home Screen</h4>
+                  <p className="text-xs text-zinc-500 mb-3">Get the full app experience with notifications and offline support.</p>
+                  <div className="p-3 rounded-lg bg-zinc-800/50 border border-zinc-700">
+                    <p className="text-sm text-zinc-300 leading-relaxed">
+                      <strong>In Safari:</strong> Tap <Share className="w-4 h-4 inline align-text-bottom mx-1" /> Share → <strong>Add to Home Screen</strong>
+                    </p>
                   </div>
                   <p className="text-xs text-zinc-600 mt-2">
-                    Extract the ZIP and load as an unpacked extension. Store versions coming soon.
+                    Works best in Safari. You&apos;ll get push notifications and quick access from your home screen.
                   </p>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Android APK */}
-            <div className="pt-4 border-t border-zinc-800">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
-                  <Smartphone className="w-5 h-5 text-green-400" />
+            {/* Android - Add to Home Screen + APK */}
+            {deviceInfo?.platform === "android" && (
+              <>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                    <Smartphone className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm">Add to Home Screen</h4>
+                    <p className="text-xs text-zinc-500 mb-3">Quick access with notifications — no download needed.</p>
+                    <div className="p-3 rounded-lg bg-zinc-800/50 border border-zinc-700">
+                      <p className="text-sm text-zinc-300 leading-relaxed">
+                        <strong>In Chrome:</strong> Tap <strong>⋮</strong> menu → <strong>Add to Home screen</strong>
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-sm">Android App</h4>
-                  <p className="text-xs text-zinc-500 mb-2">Native app with passive capture for podcasts and videos</p>
-                  <a
-                    href={`https://github.com/${GITHUB_REPO}/releases/download/android-v${APP_VERSION}/mindlair-${APP_VERSION}-debug.apk`}
-                    className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
-                  >
-                    <Download className="w-3 h-3" /> Download APK
-                  </a>
-                  <p className="text-xs text-zinc-600 mt-2">
-                    Requires Android 8.0+. Enable &quot;Install from unknown sources&quot; to install.
-                  </p>
+
+                <div className="pt-4 border-t border-zinc-800">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                      <Download className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm">Android App (APK)</h4>
+                      <p className="text-xs text-zinc-500 mb-2">Native app with passive capture for podcasts and videos</p>
+                      <a
+                        href={`https://github.com/${GITHUB_REPO}/releases/download/android-v${APP_VERSION}/mindlair-${APP_VERSION}-debug.apk`}
+                        className="text-xs px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-500 transition-colors inline-flex items-center gap-1 text-white font-medium"
+                      >
+                        <Download className="w-3 h-3" /> Download APK
+                      </a>
+                      <p className="text-xs text-zinc-600 mt-2">
+                        Requires Android 8.0+. Enable &quot;Install from unknown sources&quot; to install.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
+
+            {/* Desktop - Apps and Extensions */}
+            {!deviceInfo?.isMobile && (
+              <>
+                {/* Desktop Apps */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                    <Monitor className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm">Desktop Companion</h4>
+                    <p className="text-xs text-zinc-500 mb-2">Captures what you read and watch across all browsers</p>
+                    <div className="flex flex-wrap gap-2">
+                      {deviceInfo?.platform === "mac" && (
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_aarch64.dmg`}
+                          className="text-xs px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-500 transition-colors inline-flex items-center gap-1 text-white font-medium"
+                        >
+                          <Download className="w-3 h-3" /> macOS (Recommended)
+                        </a>
+                      )}
+                      {deviceInfo?.platform === "windows" && (
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_x64-setup.exe`}
+                          className="text-xs px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-500 transition-colors inline-flex items-center gap-1 text-white font-medium"
+                        >
+                          <Download className="w-3 h-3" /> Windows (Recommended)
+                        </a>
+                      )}
+                      {deviceInfo?.platform === "linux" && (
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_amd64.AppImage`}
+                          className="text-xs px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-500 transition-colors inline-flex items-center gap-1 text-white font-medium"
+                        >
+                          <Download className="w-3 h-3" /> Linux (Recommended)
+                        </a>
+                      )}
+                      {deviceInfo?.platform !== "mac" && (
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_aarch64.dmg`}
+                          className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" /> macOS
+                        </a>
+                      )}
+                      {deviceInfo?.platform !== "windows" && (
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_x64-setup.exe`}
+                          className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" /> Windows
+                        </a>
+                      )}
+                      {deviceInfo?.platform !== "linux" && (
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_amd64.AppImage`}
+                          className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" /> Linux
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Browser Extensions */}
+                <div className="pt-4 border-t border-zinc-800">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm">Browser Extensions</h4>
+                      <p className="text-xs text-zinc-500 mb-2">Passively tracks articles and videos you read</p>
+                      <div className="flex flex-wrap gap-2">
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-chrome-${APP_VERSION}.zip`}
+                          className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" /> Chrome
+                        </a>
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-firefox-${APP_VERSION}.zip`}
+                          className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" /> Firefox
+                        </a>
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-edge-${APP_VERSION}.zip`}
+                          className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" /> Edge
+                        </a>
+                      </div>
+                      <p className="text-xs text-zinc-600 mt-2">
+                        Extract the ZIP and load as an unpacked extension. Store versions coming soon.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
-        {/* Digest Windows */}
+        {/* Digest & Nudge Schedule */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Digest Windows
+              Digest & Nudge Schedule
             </CardTitle>
             <CardDescription>
-              When should we send your twice-daily digest?
+              When should we send your digest? Nudges are delivered alongside your digest.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -784,6 +884,21 @@ export default function SettingsPage() {
                 })
               }
             />
+            <div className="pt-4 border-t">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/50">
+                <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                  <span className="text-lg">✨</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    Nudges delivered with your digest
+                  </p>
+                  <p className="text-xs text-amber-700/70 dark:text-amber-300/70 mt-1">
+                    Up to 5 nudges per day will appear at your scheduled digest time, helping you explore new perspectives without feeling overwhelmed.
+                  </p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -801,7 +916,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <NotificationToggle
               label="Push notifications"
-              description="Get notified in your browser or mobile app"
+              description="Get notified when your digest and nudges are ready"
               enabled={settings.notifications.push}
               onToggle={(enabled) =>
                 updateSettings({
@@ -811,7 +926,7 @@ export default function SettingsPage() {
             />
             <NotificationToggle
               label="Email notifications"
-              description="Receive digest summaries via email"
+              description="Receive digest summaries and nudges via email"
               enabled={settings.notifications.email}
               onToggle={(enabled) =>
                 updateSettings({

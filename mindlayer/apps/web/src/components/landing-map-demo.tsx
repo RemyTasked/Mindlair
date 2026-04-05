@@ -274,7 +274,7 @@ export default function LandingMapDemo() {
         </div>
       </div>
 
-      <div style={{ position: "relative", background: C.bg }}>
+      <div style={{ position: "relative", background: C.bg, paddingBottom: 60 }}>
         <svg viewBox={`0 0 ${VW} ${VH}`} style={{ display: "block", width: "100%" }}>
           <defs>
             {NODES.map(n => {
@@ -393,13 +393,15 @@ export default function LandingMapDemo() {
         {/* Discovery insight — hide when detail panel is open */}
         {discovery && !selectedNode && (
           <div key={timeIdx} style={{
-            position: "absolute", bottom: 10, left: 14, right: 14,
+            position: "absolute", bottom: 12, left: 10, right: 10,
             maxWidth: 420,
-            background: `${C.surface}ee`, border: `1px solid ${C.border}`,
-            borderRadius: 7, padding: "8px 14px",
-            display: "flex", alignItems: "center", gap: 9,
+            background: `${C.surface}f5`, border: `1px solid ${C.border}`,
+            borderRadius: 8, padding: "10px 14px",
+            display: "flex", alignItems: "center", gap: 10,
             animation: "ld-fade-in 0.3s ease-out",
-            backdropFilter: "blur(6px)",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+            zIndex: 10,
           }}>
             <div style={{
               width: 3, height: 24, borderRadius: 2, flexShrink: 0,
@@ -500,8 +502,9 @@ export default function LandingMapDemo() {
         })()}
       </div>
 
+      {/* Timeline Controls */}
       <div style={{
-        padding: "10px 16px 12px",
+        padding: "12px 16px 14px",
         borderTop: `1px solid ${C.border}`,
         background: C.surface,
       }}>
@@ -514,9 +517,9 @@ export default function LandingMapDemo() {
           }} style={{
             background: isPlaying ? C.accentDim : C.accent,
             border: "none", borderRadius: "50%",
-            width: 30, height: 30, cursor: "pointer",
+            width: 32, height: 32, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0, color: "#fff", fontSize: 11,
+            flexShrink: 0, color: "#fff", fontSize: 12,
             transition: "background 0.2s",
           }}>
             {isPlaying ? "⏸" : "▶"}
@@ -528,7 +531,8 @@ export default function LandingMapDemo() {
           }}>{MONTHS[timeIdx]}</div>
 
           <div ref={scrubRef} style={{ flex: 1, position: "relative", userSelect: "none" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+            {/* Month labels - hidden on very small screens */}
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               {MONTHS.map((m, i) => {
                 const shifted = Object.values(STANCE_TL).some(s => i > 0 && s[i] !== s[i - 1]);
                 return (
@@ -554,9 +558,10 @@ export default function LandingMapDemo() {
               })}
             </div>
 
+            {/* Activity bars */}
             <div style={{
-              display: "flex", gap: 1, height: 20,
-              alignItems: "flex-end", marginBottom: 3, cursor: "pointer",
+              display: "flex", gap: 1, height: 22,
+              alignItems: "flex-end", marginBottom: 4, cursor: "pointer",
             }}
               onMouseDown={e => startScrub(e.clientX)}
               onTouchStart={e => startScrub(e.touches[0].clientX)}
@@ -571,7 +576,8 @@ export default function LandingMapDemo() {
               ))}
             </div>
 
-            <div style={{ height: 3, background: `${C.border}80`, borderRadius: 2, position: "relative" }}>
+            {/* Progress track */}
+            <div style={{ height: 4, background: `${C.border}80`, borderRadius: 2, position: "relative" }}>
               <div style={{
                 position: "absolute", left: 0, top: 0, bottom: 0,
                 width: `${(timeValue / 11) * 100}%`,

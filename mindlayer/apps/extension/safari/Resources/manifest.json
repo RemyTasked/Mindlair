@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Mindlayer",
+  "name": "Mindlair",
   "version": "0.1.0",
   "description": "Passively maps what you read, watch, and listen to — building your belief graph over time.",
   "permissions": [

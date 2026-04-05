@@ -51,7 +51,7 @@ function AppNavigator() {
         <Stack.Screen
           name="ShareReceive"
           component={ShareReceiveScreen}
-          options={{ title: "Save to Mindlayer" }}
+          options={{ title: "Save to Mindlair" }}
           initialParams={{
             url: sharedContent.url,
             text: sharedContent.text,
@@ -63,7 +63,7 @@ function AppNavigator() {
           <Stack.Screen
             name="Home"
             component={HomeScreen}
-            options={{ title: "Mindlayer" }}
+            options={{ title: "Mindlair" }}
           />
           <Stack.Screen
             name="Settings"

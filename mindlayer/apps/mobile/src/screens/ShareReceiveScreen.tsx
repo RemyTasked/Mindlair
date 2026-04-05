@@ -71,7 +71,7 @@ export function ShareReceiveScreen({ route, navigation }: Props) {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
           <View style={styles.successHeader}>
             <Text style={styles.successIcon}>✓</Text>
-            <Text style={styles.successTitle}>Saved to Mindlayer</Text>
+            <Text style={styles.successTitle}>Saved to Mindlair</Text>
             <Text style={styles.successSubtitle}>
               {savedClaims.length} claim{savedClaims.length !== 1 ? "s" : ""} extracted
             </Text>

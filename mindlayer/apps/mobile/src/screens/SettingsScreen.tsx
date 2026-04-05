@@ -90,7 +90,7 @@ export function SettingsScreen() {
             <Text style={styles.helpText}>
               1. Open any article in Safari or another app{"\n"}
               2. Tap the Share button{"\n"}
-              3. Select "Mindlayer" from the share sheet{"\n"}
+              3. Select "Mindlair" from the share sheet{"\n"}
               4. The article will be analyzed and claims extracted
             </Text>
           </View>

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Mindlayer",
+    "name": "Mindlair",
     "slug": "mindlayer",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.mindlayer.mobile",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Allow Mindlayer to access your photos to share content",
+        "NSPhotoLibraryUsageDescription": "Allow Mindlair to access your photos to share content",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": ["mindlayer"]

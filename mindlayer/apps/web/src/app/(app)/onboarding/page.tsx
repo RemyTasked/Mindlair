@@ -59,6 +59,7 @@ export default function OnboardingPage() {
   const [data, setData] = useState<IntegrationsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [platform, setPlatform] = useState<PlatformType>("other");
+  const [isMobile, setIsMobile] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
 
@@ -80,6 +81,9 @@ export default function OnboardingPage() {
     fetchData();
 
     const ua = navigator.userAgent.toLowerCase();
+    const mobile = /iphone|ipad|ipod|android/.test(ua);
+    setIsMobile(mobile);
+    
     if (ua.includes("iphone") || ua.includes("ipad")) setPlatform("ios");
     else if (ua.includes("android")) setPlatform("android");
     else if (ua.includes("mac")) setPlatform("mac");
@@ -281,92 +285,140 @@ export default function OnboardingPage() {
 
         {step === "capture" && (
           <>
-            {/* Desktop app */}
-            <CaptureCard
-              icon={<Monitor className="w-5 h-5" style={{ color: C.amber }} />}
-              title="Desktop Companion"
-              description="Silent menubar app that monitors what you read, watch, and listen to. Captures URLs, audio transcripts, and screen content automatically."
-              recommended={platform === "mac" || platform === "windows" || platform === "linux"}
-            >
-              <div className="flex flex-col gap-2 mt-3">
-                {platform === "mac" && (
-                  <DownloadLink
-                    label="macOS (Apple Silicon)"
-                    file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
-                    primary
-                  />
-                )}
-                {platform === "windows" && (
-                  <DownloadLink
-                    label="Windows"
-                    file={`Mindlair_${APP_VERSION}_x64-setup.exe`}
-                    primary
-                  />
-                )}
-                {platform === "linux" && (
-                  <DownloadLink
-                    label="Linux (AppImage)"
-                    file={`Mindlair_${APP_VERSION}_amd64.AppImage`}
-                    primary
-                  />
-                )}
-                {platform !== "mac" && platform !== "windows" && platform !== "linux" && (
-                  <>
+            {/* Mobile: Add to Home Screen - shown first and prominently */}
+            {isMobile && (
+              <CaptureCard
+                icon={<Smartphone className="w-5 h-5" style={{ color: C.amber }} />}
+                title="Add to Home Screen"
+                description="Get the full app experience with notifications, offline support, and quick access from your home screen."
+                recommended
+              >
+                <div className="mt-3 space-y-3">
+                  <div
+                    style={{
+                      padding: "14px 18px",
+                      background: `${C.accent}12`,
+                      borderRadius: 10,
+                      border: `1px solid ${C.accent}30`,
+                    }}
+                  >
+                    {platform === "ios" ? (
+                      <p style={{ fontSize: 14, color: C.text, lineHeight: 1.7 }}>
+                        <strong>In Safari:</strong> Tap the <span style={{ color: C.accent }}>Share</span> button → <strong>Add to Home Screen</strong>
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: 14, color: C.text, lineHeight: 1.7 }}>
+                        <strong>In Chrome:</strong> Tap <span style={{ color: C.accent }}>⋮</span> menu → <strong>Add to Home screen</strong>
+                      </p>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 12, color: C.muted }}>
+                    {platform === "ios" 
+                      ? "Works best in Safari. You'll get push notifications and a native app feel."
+                      : "No download required. The app will install instantly."}
+                  </p>
+                </div>
+              </CaptureCard>
+            )}
+
+            {/* Android: APK download option */}
+            {platform === "android" && (
+              <CaptureCard
+                icon={<Download className="w-5 h-5" style={{ color: "#4ade80" }} />}
+                title="Android App (APK)"
+                description="Native app with passive capture for podcasts and videos. Automatically tracks what you listen to across apps."
+              >
+                <div className="mt-3">
+                  <a
+                    href={`https://github.com/${GITHUB_REPO}/releases/download/android-v${APP_VERSION}/mindlair-${APP_VERSION}-debug.apk`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "12px 20px",
+                      borderRadius: 10,
+                      background: C.accent,
+                      color: C.bg,
+                      fontWeight: 600,
+                      fontSize: 14,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Download className="w-4 h-4" />
+                    Download APK
+                  </a>
+                  <p style={{ fontSize: 12, color: C.muted, marginTop: 10 }}>
+                    Requires Android 8.0+. Enable &quot;Install from unknown sources&quot; when prompted.
+                  </p>
+                </div>
+              </CaptureCard>
+            )}
+
+            {/* Desktop: Desktop app - only show on non-mobile */}
+            {!isMobile && (
+              <CaptureCard
+                icon={<Monitor className="w-5 h-5" style={{ color: C.amber }} />}
+                title="Desktop Companion"
+                description="Silent menubar app that monitors what you read, watch, and listen to. Captures URLs, audio transcripts, and screen content automatically."
+                recommended={platform === "mac" || platform === "windows" || platform === "linux"}
+              >
+                <div className="flex flex-col gap-2 mt-3">
+                  {platform === "mac" && (
                     <DownloadLink
                       label="macOS (Apple Silicon)"
                       file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
+                      primary
                     />
+                  )}
+                  {platform === "windows" && (
                     <DownloadLink
                       label="Windows"
                       file={`Mindlair_${APP_VERSION}_x64-setup.exe`}
+                      primary
                     />
+                  )}
+                  {platform === "linux" && (
                     <DownloadLink
                       label="Linux (AppImage)"
                       file={`Mindlair_${APP_VERSION}_amd64.AppImage`}
+                      primary
                     />
-                  </>
-                )}
-              </div>
-            </CaptureCard>
-
-            {/* Browser extension */}
-            <CaptureCard
-              icon={<Globe className="w-5 h-5" style={{ color: C.accent }} />}
-              title="Browser Extension"
-              description="Tracks articles and videos you read in your browser. Works alongside the desktop app or as a standalone capture tool. Store versions coming soon — click a browser below for manual install instructions."
-              recommended={platform === "ios" || platform === "android"}
-            >
-              <div className="flex flex-wrap gap-2 mt-3">
-                <ExtensionLink browser="Chrome" />
-                <ExtensionLink browser="Firefox" />
-                <ExtensionLink browser="Safari" />
-                <ExtensionLink browser="Edge" />
-              </div>
-            </CaptureCard>
-
-            {/* Mobile - Add to Home Screen */}
-            <CaptureCard
-              icon={<Smartphone className="w-5 h-5" style={{ color: "#c4bfb4" }} />}
-              title="Add to Home Screen"
-              description="Add Mindlair to your home screen for quick access and push notifications."
-            >
-              <div className="mt-3 space-y-2">
-                <div
-                  style={{
-                    padding: "12px 16px",
-                    background: C.surface,
-                    borderRadius: 8,
-                    border: `1px solid ${C.border}`,
-                  }}
-                >
-                  <p style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.6 }}>
-                    <strong>iOS Safari:</strong> Tap Share → Add to Home Screen
-                    <br />
-                    <strong>Android Chrome:</strong> Tap Menu (⋮) → Add to Home screen
-                  </p>
+                  )}
+                  {platform !== "mac" && platform !== "windows" && platform !== "linux" && (
+                    <>
+                      <DownloadLink
+                        label="macOS (Apple Silicon)"
+                        file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
+                      />
+                      <DownloadLink
+                        label="Windows"
+                        file={`Mindlair_${APP_VERSION}_x64-setup.exe`}
+                      />
+                      <DownloadLink
+                        label="Linux (AppImage)"
+                        file={`Mindlair_${APP_VERSION}_amd64.AppImage`}
+                      />
+                    </>
+                  )}
                 </div>
-              </div>
-            </CaptureCard>
+              </CaptureCard>
+            )}
+
+            {/* Desktop: Browser extension - only show on non-mobile */}
+            {!isMobile && (
+              <CaptureCard
+                icon={<Globe className="w-5 h-5" style={{ color: C.accent }} />}
+                title="Browser Extension"
+                description="Tracks articles and videos you read in your browser. Works alongside the desktop app or as a standalone capture tool. Store versions coming soon — click a browser below for manual install instructions."
+              >
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <ExtensionLink browser="Chrome" />
+                  <ExtensionLink browser="Firefox" />
+                  <ExtensionLink browser="Safari" />
+                  <ExtensionLink browser="Edge" />
+                </div>
+              </CaptureCard>
+            )}
           </>
         )}
 
