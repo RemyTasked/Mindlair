@@ -225,7 +225,7 @@ function AndroidApkCard() {
 const DOWNLOADS: { os: string; label: string; file: string }[] = [
   { os: "mac",     label: "macOS (Apple Silicon)", file: `Mindlair_${APP_VERSION}_aarch64.dmg` },
   { os: "windows", label: "Windows",               file: `Mindlair_${APP_VERSION}_x64-setup.exe` },
-  { os: "linux",   label: "Linux (AppImage)",       file: `mindlair_${APP_VERSION}_amd64.AppImage` },
+  { os: "linux",   label: "Linux (AppImage)",       file: `Mindlair_${APP_VERSION}_amd64.AppImage` },
 ];
 
 function DesktopCard({ platform }: { platform: PlatformType }) {

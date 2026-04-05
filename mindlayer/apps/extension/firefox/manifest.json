@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Mindlayer",
+  "name": "Mindlair",
   "version": "0.1.0",
   "description": "Passively maps what you read, watch, and listen to — building your belief graph over time.",
   "browser_specific_settings": {
     "gecko": {
-      "id": "extension@mindlayer.app",
+      "id": "extension@mindlair.app",
       "strict_min_version": "109.0"
     }
   },
@@ -17,7 +17,8 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://*.mindlayer.app/*",
+    "https://*.mindlair.app/*",
+    "https://mindlair-production.up.railway.app/*",
     "http://localhost:3000/*"
   ],
   "background": {

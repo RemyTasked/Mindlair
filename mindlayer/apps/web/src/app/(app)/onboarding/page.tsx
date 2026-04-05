@@ -306,7 +306,7 @@ export default function OnboardingPage() {
                 {platform === "linux" && (
                   <DownloadLink
                     label="Linux (AppImage)"
-                    file={`mindlair_${APP_VERSION}_amd64.AppImage`}
+                    file={`Mindlair_${APP_VERSION}_amd64.AppImage`}
                     primary
                   />
                 )}
@@ -322,7 +322,7 @@ export default function OnboardingPage() {
                     />
                     <DownloadLink
                       label="Linux (AppImage)"
-                      file={`mindlair_${APP_VERSION}_amd64.AppImage`}
+                      file={`Mindlair_${APP_VERSION}_amd64.AppImage`}
                     />
                   </>
                 )}
@@ -612,41 +612,46 @@ function DownloadLink({
 function ExtensionLink({ browser }: { browser: string }) {
   const [showModal, setShowModal] = useState(false);
   
-  const instructions: Record<string, { steps: string[]; note: string }> = {
+  const instructions: Record<string, { steps: string[]; note: string; downloadFile: string }> = {
     Chrome: {
       steps: [
-        "Download the extension from GitHub releases",
+        "Download and extract the ZIP file",
         "Open chrome://extensions in Chrome",
         "Enable 'Developer mode' in the top right",
-        "Click 'Load unpacked' and select the extension folder",
+        "Click 'Load unpacked' and select the extracted folder",
       ],
       note: "Chrome Web Store version coming soon!",
+      downloadFile: `mindlair-chrome-${APP_VERSION}.zip`,
     },
     Firefox: {
       steps: [
-        "Download the extension from GitHub releases",
+        "Download and extract the ZIP file",
         "Open about:debugging in Firefox",
         "Click 'This Firefox' → 'Load Temporary Add-on'",
-        "Select any file in the extension folder",
+        "Select the manifest.json in the extracted folder",
       ],
       note: "Firefox Add-ons version coming soon!",
+      downloadFile: `mindlair-firefox-${APP_VERSION}.zip`,
     },
     Safari: {
       steps: [
-        "Download the Safari extension project from GitHub",
-        "Open in Xcode and build the project",
-        "Enable the extension in Safari preferences",
+        "Safari extension requires building from source",
+        "Clone the GitHub repository",
+        "Open the Safari extension project in Xcode",
+        "Build and enable in Safari preferences",
       ],
       note: "App Store version coming soon!",
+      downloadFile: "",
     },
     Edge: {
       steps: [
-        "Download the extension from GitHub releases",
+        "Download and extract the ZIP file",
         "Open edge://extensions in Edge",
         "Enable 'Developer mode' in the bottom left",
-        "Click 'Load unpacked' and select the extension folder",
+        "Click 'Load unpacked' and select the extracted folder",
       ],
       note: "Edge Add-ons version coming soon!",
+      downloadFile: `mindlair-edge-${APP_VERSION}.zip`,
     },
   };
 
@@ -746,7 +751,10 @@ function ExtensionLink({ browser }: { browser: string }) {
             
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               <a
-                href="https://github.com/RemyTasked/Mindlair/releases"
+                href={instructions[browser].downloadFile 
+                  ? `https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/${instructions[browser].downloadFile}`
+                  : `https://github.com/${GITHUB_REPO}/releases`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

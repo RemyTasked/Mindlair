@@ -23,7 +23,14 @@ import {
   Play,
   Upload,
   FolderArchive,
+  Download,
+  Monitor,
+  Globe,
+  Smartphone,
 } from "lucide-react";
+
+const GITHUB_REPO = "RemyTasked/Mindlair";
+const APP_VERSION = "0.1.0";
 
 interface DigestWindow {
   enabled: boolean;
@@ -550,6 +557,109 @@ export default function SettingsPage() {
                       {takeoutError}
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Downloads */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="w-5 h-5" />
+              Downloads
+            </CardTitle>
+            <CardDescription>
+              Install apps and extensions to capture what you consume.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Desktop Apps */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                <Monitor className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium text-sm">Desktop Companion</h4>
+                <p className="text-xs text-zinc-500 mb-2">Captures what you read and watch across all browsers</p>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_aarch64.dmg`}
+                    className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                  >
+                    <Download className="w-3 h-3" /> macOS
+                  </a>
+                  <a
+                    href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_x64-setup.exe`}
+                    className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                  >
+                    <Download className="w-3 h-3" /> Windows
+                  </a>
+                  <a
+                    href={`https://github.com/${GITHUB_REPO}/releases/latest/download/Mindlair_${APP_VERSION}_amd64.AppImage`}
+                    className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                  >
+                    <Download className="w-3 h-3" /> Linux
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Browser Extensions */}
+            <div className="pt-4 border-t border-zinc-800">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm">Browser Extensions</h4>
+                  <p className="text-xs text-zinc-500 mb-2">Passively tracks articles and videos you read</p>
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-chrome-${APP_VERSION}.zip`}
+                      className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                    >
+                      <Download className="w-3 h-3" /> Chrome
+                    </a>
+                    <a
+                      href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-firefox-${APP_VERSION}.zip`}
+                      className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                    >
+                      <Download className="w-3 h-3" /> Firefox
+                    </a>
+                    <a
+                      href={`https://github.com/${GITHUB_REPO}/releases/download/ext-v${APP_VERSION}/mindlair-edge-${APP_VERSION}.zip`}
+                      className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                    >
+                      <Download className="w-3 h-3" /> Edge
+                    </a>
+                  </div>
+                  <p className="text-xs text-zinc-600 mt-2">
+                    Extract the ZIP and load as an unpacked extension. Store versions coming soon.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Android APK */}
+            <div className="pt-4 border-t border-zinc-800">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                  <Smartphone className="w-5 h-5 text-green-400" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm">Android App</h4>
+                  <p className="text-xs text-zinc-500 mb-2">Native app with passive capture for podcasts and videos</p>
+                  <a
+                    href={`https://github.com/${GITHUB_REPO}/releases/download/android-v${APP_VERSION}/mindlair-${APP_VERSION}-debug.apk`}
+                    className="text-xs px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors inline-flex items-center gap-1"
+                  >
+                    <Download className="w-3 h-3" /> Download APK
+                  </a>
+                  <p className="text-xs text-zinc-600 mt-2">
+                    Requires Android 8.0+. Enable &quot;Install from unknown sources&quot; to install.
+                  </p>
                 </div>
               </div>
             </div>
