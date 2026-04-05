@@ -8,6 +8,8 @@ import { HomeScreen } from "./src/screens/HomeScreen";
 import { LoginScreen } from "./src/screens/LoginScreen";
 import { ShareReceiveScreen } from "./src/screens/ShareReceiveScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
+import { FeedScreen } from "./src/screens/FeedScreen";
+import { PublishScreen } from "./src/screens/PublishScreen";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { ShareIntentProvider, useShareIntent } from "./src/context/ShareIntentContext";
 
@@ -16,6 +18,8 @@ export type RootStackParamList = {
   Home: undefined;
   ShareReceive: { url?: string; text?: string; title?: string };
   Settings: undefined;
+  Feed: undefined;
+  Publish: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -64,6 +68,16 @@ function AppNavigator() {
             name="Home"
             component={HomeScreen}
             options={{ title: "Mindlair" }}
+          />
+          <Stack.Screen
+            name="Feed"
+            component={FeedScreen}
+            options={{ title: "Feed" }}
+          />
+          <Stack.Screen
+            name="Publish"
+            component={PublishScreen}
+            options={{ title: "Publish" }}
           />
           <Stack.Screen
             name="Settings"

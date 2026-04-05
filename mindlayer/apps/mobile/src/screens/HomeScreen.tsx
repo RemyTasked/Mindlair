@@ -102,6 +102,27 @@ export function HomeScreen({ navigation }: Props) {
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
+          
+          <View style={styles.quickActionRow}>
+            <TouchableOpacity
+              style={styles.primaryActionButton}
+              onPress={() => navigation.navigate("Feed")}
+            >
+              <Text style={styles.primaryActionIcon}>📰</Text>
+              <Text style={styles.primaryActionText}>Feed</Text>
+              <Text style={styles.primaryActionSubtext}>Explore posts</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.primaryActionButton, styles.publishActionButton]}
+              onPress={() => navigation.navigate("Publish")}
+            >
+              <Text style={styles.primaryActionIcon}>✍️</Text>
+              <Text style={styles.primaryActionText}>Publish</Text>
+              <Text style={styles.primaryActionSubtext}>Share your thinking</Text>
+            </TouchableOpacity>
+          </View>
+          
           <TouchableOpacity
             style={styles.actionButton}
             onPress={openWebDashboard}
@@ -228,6 +249,37 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fafafa",
     marginBottom: 12,
+  },
+  quickActionRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 12,
+  },
+  primaryActionButton: {
+    flex: 1,
+    backgroundColor: "#18181b",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#3b82f6",
+    alignItems: "center",
+  },
+  publishActionButton: {
+    borderColor: "#d4915a",
+  },
+  primaryActionIcon: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  primaryActionText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fafafa",
+  },
+  primaryActionSubtext: {
+    fontSize: 12,
+    color: "#71717a",
+    marginTop: 4,
   },
   actionButton: {
     backgroundColor: "#18181b",

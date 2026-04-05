@@ -19,6 +19,9 @@ const totalCapturesEl = $("#totalCaptures");
 const pendingCountEl = $("#pendingCount");
 const recentList = $("#recentList");
 const openDashboard = $("#openDashboard");
+const feedLink = $("#feedLink");
+const publishLink = $("#publishLink");
+const mapLink = $("#mapLink");
 
 // ── Init ──────────────────────────────────────────────────────────
 
@@ -55,10 +58,31 @@ function render(status) {
     toggleBtn.style.color = "var(--amber)";
   }
 
-  openDashboard.href = status.apiUrl || "https://mindlayer.app";
+  const baseUrl = status.apiUrl || "https://mindlayer.app";
+  
+  openDashboard.href = baseUrl;
   openDashboard.addEventListener("click", (e) => {
     e.preventDefault();
-    chrome.tabs.create({ url: openDashboard.href + "/map" });
+    chrome.tabs.create({ url: baseUrl + "/map" });
+  });
+
+  // Quick links
+  feedLink.href = baseUrl + "/feed";
+  feedLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    chrome.tabs.create({ url: baseUrl + "/feed" });
+  });
+
+  publishLink.href = baseUrl + "/publish";
+  publishLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    chrome.tabs.create({ url: baseUrl + "/publish" });
+  });
+
+  mapLink.href = baseUrl + "/map";
+  mapLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    chrome.tabs.create({ url: baseUrl + "/map" });
   });
 
   loadRecent();

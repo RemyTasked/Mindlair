@@ -36,6 +36,14 @@ model User {
   pushSubscriptions PushSubscription[]
   rssFeeds          RssFeed[]
 
+  // Publishing Layer
+  posts             Post[]
+  postReactions     PostReaction[]
+  following         Follow[]       @relation("Following")
+  followers         Follow[]       @relation("Followers")
+  blocking          Block[]        @relation("Blocking")
+  blockedBy         Block[]        @relation("BlockedBy")
+
   @@map("users")
 }
 
@@ -188,6 +196,7 @@ model Source {
   updatedAt  DateTime @updatedAt
 
   claims Claim[]
+  post   Post?    // Back-relation to Post (publishing layer)
 
   @@index([userId, consumedAt])
   @@index([url])
@@ -395,6 +404,107 @@ model Nudge {
   @@index([userId, status])
   @@index([conceptId])
   @@map("nudges")
+}
+
+// ============================================
+// Publishing Layer
+// ============================================
+
+enum AuthorStance {
+  arguing
+  exploring
+  steelmanning
+}
+
+enum PostStatus {
+  draft
+  published
+  removed
+}
+
+enum ModerationStatus {
+  pending
+  approved
+  flagged
+  removed
+}
+
+model Post {
+  id            String   @id @default(cuid())
+  authorId      String
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  headlineClaim String   // The falsifiable claim (required)
+  body          String   @db.Text // 500-1500 words
+  authorStance  AuthorStance // arguing, exploring, steelmanning
+
+  status        PostStatus @default(draft)
+  publishedAt   DateTime?
+
+  // Links to claim extraction pipeline
+  sourceId      String?  @unique
+  source        Source?  @relation(fields: [sourceId], references: [id])
+
+  // AI-suggested topic tags
+  topicTags     String[] @default([])
+
+  // Moderation
+  aiScreeningPassed Boolean          @default(false)
+  moderationStatus  ModerationStatus @default(pending)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reactions     PostReaction[]
+
+  @@index([authorId])
+  @@index([publishedAt])
+  @@index([status])
+  @@map("posts")
+}
+
+model PostReaction {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stance    String   // agree, disagree, complicated, skip
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@map("post_reactions")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("Blocking", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+  @@map("blocks")
 }
 
 // ============================================

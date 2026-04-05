@@ -266,6 +266,51 @@
 
     .footer a:hover { color: var(--accent); }
 
+    /* Quick Links */
+    .quick-links {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .quick-link {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .quick-link:hover {
+      border-color: var(--accent);
+      background: rgba(163, 196, 122, 0.1);
+    }
+
+    .quick-link-icon {
+      font-size: 16px;
+    }
+
+    .quick-link-text {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-soft);
+    }
+
+    .quick-link:hover .quick-link-text {
+      color: var(--text);
+    }
+
+    .feed-link:hover { border-color: #6b9fc4; background: rgba(107, 159, 196, 0.1); }
+    .publish-link:hover { border-color: #d4915a; background: rgba(212, 145, 90, 0.1); }
+    .map-link:hover { border-color: var(--accent); background: rgba(163, 196, 122, 0.1); }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -325,6 +370,21 @@
     <div class="controls">
       <button class="btn btn-ghost toggle-btn" id="toggleBtn">Pause</button>
       <button class="btn btn-ghost toggle-btn" id="syncBtn">Sync Now</button>
+    </div>
+
+    <div class="quick-links">
+      <a href="#" class="quick-link feed-link" id="feedLink">
+        <span class="quick-link-icon">📰</span>
+        <span class="quick-link-text">Feed</span>
+      </a>
+      <a href="#" class="quick-link publish-link" id="publishLink">
+        <span class="quick-link-icon">✍️</span>
+        <span class="quick-link-text">Publish</span>
+      </a>
+      <a href="#" class="quick-link map-link" id="mapLink">
+        <span class="quick-link-icon">🗺️</span>
+        <span class="quick-link-text">Map</span>
+      </a>
     </div>
 
     <div class="recent-section">

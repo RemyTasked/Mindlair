@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string;
   name: string | null;
   emailVerified: Date | null;
+  createdAt: Date;
 }
 
 export function generateToken(length: number = 32): string {
@@ -134,6 +135,7 @@ export async function getSessionByToken(token: string): Promise<AuthUser | null>
     email: session.user.email,
     name: session.user.name,
     emailVerified: session.user.emailVerified,
+    createdAt: session.user.createdAt,
   };
 }
 
@@ -171,6 +173,7 @@ export async function validateApiKey(apiKey: string): Promise<AuthUser | null> {
     email: key.user.email,
     name: key.user.name,
     emailVerified: key.user.emailVerified,
+    createdAt: key.user.createdAt,
   };
 }
 
@@ -239,6 +242,7 @@ export async function getOrCreateUser(email: string): Promise<AuthUser> {
     email: user.email,
     name: user.name,
     emailVerified: user.emailVerified,
+    createdAt: user.createdAt,
   };
 }
 

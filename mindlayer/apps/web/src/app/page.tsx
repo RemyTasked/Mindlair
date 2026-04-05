@@ -197,9 +197,142 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Cold start ── */}
+      {/* ── Publishing Lair ── */}
       <section className="py-20 px-6" style={{
         background: "#1a1916",
+        borderTop: "1px solid #2a2825",
+        borderBottom: "1px solid #2a2825",
+      }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div style={{
+              display: "inline-block", fontSize: 11, letterSpacing: "0.15em",
+              textTransform: "uppercase", color: "#6b9fc4",
+              border: "1px solid #3a5a7a", borderRadius: 20,
+              padding: "5px 14px", marginBottom: 20,
+            }}>
+              Publishing Lair
+            </div>
+            <h2 style={{
+              fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
+              fontWeight: 700, marginBottom: 16,
+            }}>
+              Publish your thinking.{" "}
+              <span style={{ color: "#d4915a" }}>Shape the conversation.</span>
+            </h2>
+            <p style={{
+              color: "#c4bfb4", fontSize: 15, lineHeight: 1.7,
+              maxWidth: 560, margin: "0 auto",
+            }}>
+              Write claim-based posts that become the strongest signals in your belief map.
+              Your readers react — and their maps update too. The social layer IS the mapping layer.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Post Mockup */}
+            <div style={{
+              background: "#0f0e0c",
+              border: "1px solid #2a2825",
+              borderRadius: 16,
+              padding: 24,
+              maxWidth: 400,
+              margin: "0 auto",
+            }}>
+              {/* Author & Stance */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 18, background: "#2a2825" }} />
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>Sarah Chen</div>
+                    <div style={{ fontSize: 12, color: "#7a7469" }}>2 hours ago</div>
+                  </div>
+                </div>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "4px 10px", background: "#a3c47a20", borderRadius: 6,
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: 3, background: "#a3c47a" }} />
+                  <span style={{ color: "#a3c47a", fontSize: 12, fontWeight: 500 }}>Arguing</span>
+                </div>
+              </div>
+
+              {/* Headline Claim */}
+              <h3 style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.4, marginBottom: 12 }}>
+                Remote work permanently reduced urban commercial real estate value
+              </h3>
+
+              {/* Body Preview */}
+              <p style={{ fontSize: 14, color: "#c4bfb4", lineHeight: 1.6, marginBottom: 16 }}>
+                The pandemic didn&apos;t just accelerate remote work — it fundamentally reset expectations about...
+              </p>
+
+              {/* Topic Tags */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+                {["remote work", "real estate", "urban planning"].map(tag => (
+                  <span key={tag} style={{
+                    fontSize: 11, color: "#7a7469",
+                    background: "#2a2825", borderRadius: 4,
+                    padding: "4px 8px",
+                  }}>{tag}</span>
+                ))}
+              </div>
+
+              {/* Reaction UI (hidden counts) */}
+              <div style={{ borderTop: "1px solid #2a2825", paddingTop: 16 }}>
+                <p style={{ fontSize: 12, color: "#7a7469", marginBottom: 10, fontStyle: "italic" }}>
+                  React to see what others think
+                </p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[
+                    { label: "Agree", color: "#a3c47a" },
+                    { label: "Disagree", color: "#e57373" },
+                    { label: "Complicated", color: "#d4915a" },
+                  ].map(btn => (
+                    <button key={btn.label} style={{
+                      flex: 1, padding: "8px 12px",
+                      background: "transparent", border: `1px solid ${btn.color}40`,
+                      borderRadius: 8, color: btn.color, fontSize: 13,
+                      cursor: "pointer",
+                    }}>{btn.label}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Feature List */}
+            <div className="space-y-6">
+              <FeatureCard
+                title="Claim-based posts"
+                description="Not topics — specific, falsifiable positions. 'Remote work is interesting' won't cut it. State what you believe."
+                accent="#6b9fc4"
+              />
+              <FeatureCard
+                title="Your stance, upfront"
+                description="Signal if you're arguing, exploring, or steelmanning. Readers know your relationship to the claim before they react."
+                accent="#a3c47a"
+              />
+              <FeatureCard
+                title="Reactions update both maps"
+                description="When you react to someone's post, your map updates. Their map updates. That's a new relationship between reading and thinking."
+                accent="#d4915a"
+              />
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/login">
+              <Button size="lg" variant="outline" style={{ borderColor: "#6b9fc4", background: "transparent", color: "#6b9fc4" }}>
+                Start Publishing
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Cold start ── */}
+      <section className="py-20 px-6" style={{
         borderTop: "1px solid #2a2825",
         borderBottom: "1px solid #2a2825",
       }}>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Brain, Inbox, Map, Lightbulb, Settings } from "lucide-react";
+import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationBanner } from "@/components/push-notifications";
 
@@ -41,6 +41,8 @@ export default function AppLayout({
           </div>
 
           <nav className="flex-1 px-3">
+            <NavLink href="/feed" icon={Rss}>Feed</NavLink>
+            <NavLink href="/publish" icon={PenSquare}>Publish</NavLink>
             <NavLink href="/inbox" icon={Inbox}>Inbox</NavLink>
             <NavLink href="/map" icon={Map}>Map</NavLink>
             <NavLink href="/timeline" icon={Brain}>Timeline</NavLink>
@@ -67,9 +69,9 @@ export default function AppLayout({
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}>
         <div className="flex items-center justify-around py-2">
-          <MobileNavLink href="/inbox" icon={Inbox} label="Inbox" />
+          <MobileNavLink href="/feed" icon={Rss} label="Feed" />
           <MobileNavLink href="/map" icon={Map} label="Map" />
-          <MobileNavLink href="/timeline" icon={Brain} label="Timeline" />
+          <MobileNavLink href="/inbox" icon={Inbox} label="Inbox" />
           <MobileNavLink href="/nudges" icon={Lightbulb} label="Nudges" />
           <MobileNavLink href="/settings" icon={Settings} label="Settings" />
         </div>

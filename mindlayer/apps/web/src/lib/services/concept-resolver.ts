@@ -359,6 +359,141 @@ export async function getCanonicalConceptLabels(): Promise<string[]> {
   return concepts.map(c => c.label);
 }
 
+/**
+ * Find posts with semantically similar headline claims.
+ * Used to cluster similar posts together on the map.
+ */
+export async function findSimilarPosts(
+  headlineClaim: string,
+  excludePostId?: string
+): Promise<{ postId: string; headlineClaim: string; similarity: number; conceptIds: string[] }[]> {
+  const norm = normalize(headlineClaim);
+  const embedding = await generateEmbedding(norm);
+  
+  if (embedding.length === 0) {
+    // Fallback to text matching if embedding fails
+    const posts = await db.post.findMany({
+      where: {
+        status: 'published',
+        ...(excludePostId ? { id: { not: excludePostId } } : {}),
+      },
+      select: {
+        id: true,
+        headlineClaim: true,
+        source: {
+          include: {
+            claims: {
+              include: {
+                claimConcepts: true,
+              },
+            },
+          },
+        },
+      },
+      take: 100,
+      orderBy: { publishedAt: 'desc' },
+    });
+
+    const results: { postId: string; headlineClaim: string; similarity: number; conceptIds: string[] }[] = [];
+    
+    for (const post of posts) {
+      const overlap = wordOverlapScore(norm, post.headlineClaim);
+      if (overlap >= 0.5) {
+        const conceptIds = post.source?.claims
+          .flatMap(c => c.claimConcepts.map(cc => cc.conceptId)) || [];
+        results.push({
+          postId: post.id,
+          headlineClaim: post.headlineClaim,
+          similarity: overlap,
+          conceptIds: [...new Set(conceptIds)],
+        });
+      }
+    }
+    
+    return results.sort((a, b) => b.similarity - a.similarity).slice(0, 10);
+  }
+
+  // Use embedding similarity for better matching
+  const posts = await db.post.findMany({
+    where: {
+      status: 'published',
+      ...(excludePostId ? { id: { not: excludePostId } } : {}),
+    },
+    select: {
+      id: true,
+      headlineClaim: true,
+      source: {
+        include: {
+          claims: {
+            include: {
+              claimConcepts: true,
+            },
+          },
+        },
+      },
+    },
+    take: 200,
+    orderBy: { publishedAt: 'desc' },
+  });
+
+  const scoredPosts: { postId: string; headlineClaim: string; similarity: number; conceptIds: string[] }[] = [];
+
+  for (const post of posts) {
+    const postEmbedding = await generateEmbedding(normalize(post.headlineClaim));
+    if (postEmbedding.length === 0) continue;
+
+    const sim = cosineSimilarity(embedding, postEmbedding);
+    if (sim >= 0.7) {
+      const conceptIds = post.source?.claims
+        .flatMap(c => c.claimConcepts.map(cc => cc.conceptId)) || [];
+      scoredPosts.push({
+        postId: post.id,
+        headlineClaim: post.headlineClaim,
+        similarity: sim,
+        conceptIds: [...new Set(conceptIds)],
+      });
+    }
+  }
+
+  return scoredPosts.sort((a, b) => b.similarity - a.similarity).slice(0, 10);
+}
+
+/**
+ * Extract key concepts from a headline claim.
+ * Used to ensure posts are linked to the right map clusters.
+ */
+export async function extractConceptsFromHeadline(headlineClaim: string): Promise<string[]> {
+  const tokens = tokenize(headlineClaim);
+  const concepts: string[] = [];
+  
+  // Check for known aliases/concepts in the headline
+  for (const token of tokens) {
+    const aliased = resolveByAlias(token);
+    if (aliased) {
+      concepts.push(aliased);
+    }
+  }
+  
+  // Also check multi-word phrases
+  const norm = normalize(headlineClaim);
+  for (const [alias, canonical] of Object.entries(ALIAS_MAP)) {
+    if (norm.includes(alias) && alias.length >= 3) {
+      if (!concepts.includes(canonical)) {
+        concepts.push(canonical);
+      }
+    }
+  }
+  
+  // If we found no known concepts, extract noun phrases as potential concepts
+  if (concepts.length === 0) {
+    // Return significant words as potential new concepts
+    const significantTokens = tokens.filter(t => t.length >= 4);
+    return significantTokens.slice(0, 3);
+  }
+  
+  return [...new Set(concepts)];
+}
+
 // ── Internal helpers ───────────────────────────────────────────
 
 async function createConcept(

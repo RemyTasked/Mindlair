@@ -38,7 +38,7 @@ function App() {
   const [authStatus, setAuthStatus] = useState<AuthStatus>({ authenticated: false });
   const [recentCaptures, setRecentCaptures] = useState<CaptureItem[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "captures" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "feed" | "publish" | "captures" | "settings">("dashboard");
   const [isLoading, setIsLoading] = useState(true);
 
   const loadMappingStatus = useCallback(async () => {
@@ -156,6 +156,18 @@ function App() {
           Dashboard
         </button>
         <button 
+          className={activeTab === "feed" ? "active" : ""} 
+          onClick={() => setActiveTab("feed")}
+        >
+          Feed
+        </button>
+        <button 
+          className={activeTab === "publish" ? "active" : ""} 
+          onClick={() => setActiveTab("publish")}
+        >
+          Publish
+        </button>
+        <button 
           className={activeTab === "captures" ? "active" : ""} 
           onClick={() => setActiveTab("captures")}
         >
@@ -178,6 +190,14 @@ function App() {
             onToggleMapping={toggleMapping}
             onSync={syncNow}
           />
+        )}
+        
+        {activeTab === "feed" && (
+          <FeedTab />
+        )}
+        
+        {activeTab === "publish" && (
+          <PublishTab />
         )}
         
         {activeTab === "captures" && (
@@ -467,6 +487,275 @@ function Settings({
         </p>
         <button className="danger">Clear Local Data</button>
       </div>
+    </div>
+  );
+}
+
+function FeedTab() {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "following" | "discover">("all");
+
+  useEffect(() => {
+    loadFeed();
+  }, [filter]);
+
+  async function loadFeed() {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/api/feed?filter=${filter === "all" ? "" : filter}`);
+      const data = await response.json();
+      setPosts(data.posts || []);
+    } catch (error) {
+      console.error("Failed to load feed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleReaction(postId: string, reaction: string) {
+    try {
+      await fetch(`http://localhost:3000/api/posts/${postId}/react`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reaction }),
+      });
+      loadFeed();
+    } catch (error) {
+      console.error("Failed to react:", error);
+    }
+  }
+
+  const stanceColors: Record<string, string> = {
+    arguing: "#a3c47a",
+    exploring: "#d4915a",
+    steelmanning: "#4a9eff",
+  };
+
+  return (
+    <div className="feed-tab">
+      <div className="feed-header">
+        <h2>Feed</h2>
+        <div className="feed-filters">
+          {(["all", "following", "discover"] as const).map((f) => (
+            <button
+              key={f}
+              className={`filter-btn ${filter === f ? "active" : ""}`}
+              onClick={() => setFilter(f)}
+            >
+              {f === "all" ? "For You" : f === "following" ? "Following" : "Discover"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="feed-loading">Loading posts...</div>
+      ) : posts.length === 0 ? (
+        <div className="feed-empty">
+          <p>No posts yet</p>
+          <p className="hint">Be the first to publish!</p>
+        </div>
+      ) : (
+        <div className="feed-posts">
+          {posts.map((post) => (
+            <div key={post.id} className="post-card">
+              <div className="post-header">
+                <div className="post-author">
+                  <div className="avatar"></div>
+                  <div>
+                    <span className="author-name">{post.author?.name || "Anonymous"}</span>
+                    <span className="post-date">
+                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <span
+                  className="stance-badge"
+                  style={{ backgroundColor: `${stanceColors[post.authorStance]}20`, color: stanceColors[post.authorStance] }}
+                >
+                  {post.authorStance}
+                </span>
+              </div>
+              <h3 className="post-headline">{post.headlineClaim}</h3>
+              {post.body && <p className="post-body">{truncate(post.body, 200)}</p>}
+              {post.topicTags?.length > 0 && (
+                <div className="post-tags">
+                  {post.topicTags.slice(0, 3).map((tag: string, idx: number) => (
+                    <span key={idx} className="tag">{tag}</span>
+                  ))}
+                </div>
+              )}
+              <div className="post-reactions">
+                {!post.userReaction && (
+                  <p className="reaction-prompt">React to see what others think</p>
+                )}
+                <div className="reaction-buttons">
+                  {["agree", "disagree", "complicated"].map((r) => (
+                    <button
+                      key={r}
+                      className={`reaction-btn ${r} ${post.userReaction === r ? "active" : ""}`}
+                      onClick={() => handleReaction(post.id, r)}
+                    >
+                      {r.charAt(0).toUpperCase() + r.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PublishTab() {
+  const [headlineClaim, setHeadlineClaim] = useState("");
+  const [body, setBody] = useState("");
+  const [authorStance, setAuthorStance] = useState<"arguing" | "exploring" | "steelmanning">("arguing");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
+  const charCount = headlineClaim.length;
+  const isValidClaim = charCount >= 10 && charCount <= 280;
+  const isValidBody = wordCount >= 100 && wordCount <= 2000;
+  const canPublish = isValidClaim && isValidBody && !isSubmitting;
+
+  const emojis = ["😀", "😂", "🤔", "👍", "👎", "❤️", "🔥", "💡", "✨", "🎯", "📚", "💪", "🙏", "⚡", "🌟"];
+
+  function insertEmoji(emoji: string) {
+    setBody(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  }
+
+  async function handlePublish() {
+    if (!canPublish) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Create post
+      const createResponse = await fetch("http://localhost:3000/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ headlineClaim, postBody: body, authorStance }),
+      });
+      const createData = await createResponse.json();
+      
+      if (!createResponse.ok) {
+        throw new Error(createData.message || "Failed to create post");
+      }
+
+      // Publish post
+      const publishResponse = await fetch(`http://localhost:3000/api/posts/${createData.post.id}/publish`, {
+        method: "POST",
+      });
+      
+      if (!publishResponse.ok) {
+        const publishData = await publishResponse.json();
+        throw new Error(publishData.message || "Failed to publish post");
+      }
+
+      alert("Published successfully!");
+      setHeadlineClaim("");
+      setBody("");
+      setAuthorStance("arguing");
+    } catch (error: any) {
+      alert(error.message || "Failed to publish");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const stanceConfig = {
+    arguing: { label: "Arguing", description: "I believe this", color: "#a3c47a" },
+    exploring: { label: "Exploring", description: "I'm uncertain", color: "#d4915a" },
+    steelmanning: { label: "Steelmanning", description: "Position I may not hold", color: "#4a9eff" },
+  };
+
+  return (
+    <div className="publish-tab">
+      <h2>Publish</h2>
+      <p className="publish-subtitle">Share your thinking. Every post shapes your belief map.</p>
+
+      <div className="form-group">
+        <label>Your Stance</label>
+        <div className="stance-buttons">
+          {(Object.keys(stanceConfig) as Array<keyof typeof stanceConfig>).map((stance) => (
+            <button
+              key={stance}
+              className={`stance-btn ${authorStance === stance ? "active" : ""}`}
+              style={authorStance === stance ? { borderColor: stanceConfig[stance].color, backgroundColor: `${stanceConfig[stance].color}20` } : {}}
+              onClick={() => setAuthorStance(stance)}
+            >
+              <span className="stance-label">{stanceConfig[stance].label}</span>
+              <span className="stance-desc">{stanceConfig[stance].description}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="form-group">
+        <div className="label-row">
+          <label>Headline Claim</label>
+          <span className={`counter ${!isValidClaim && charCount > 0 ? "error" : ""}`}>{charCount}/280</span>
+        </div>
+        <textarea
+          className="headline-input"
+          placeholder="State a specific, falsifiable position"
+          value={headlineClaim}
+          onChange={(e) => setHeadlineClaim(e.target.value)}
+          maxLength={280}
+        />
+        <p className="hint">Example: "Remote work permanently reduced urban commercial real estate value"</p>
+      </div>
+
+      <div className="form-group">
+        <div className="label-row">
+          <label>Your Argument</label>
+          <div className="label-actions">
+            <button 
+              className={`emoji-btn ${showEmojiPicker ? "active" : ""}`}
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
+              😀 Emoji
+            </button>
+            <span className={`counter ${wordCount > 0 && (wordCount < 100 || wordCount > 2000) ? "error" : ""}`}>
+              {wordCount} / 100-2000 words
+            </span>
+          </div>
+        </div>
+        {showEmojiPicker && (
+          <div className="emoji-picker">
+            {emojis.map((emoji) => (
+              <button key={emoji} onClick={() => insertEmoji(emoji)} className="emoji-item">
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+        <textarea
+          className="body-input"
+          placeholder="Make your case. Focus on the argument, not formatting. Use emojis to express yourself! 😊"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
+      </div>
+
+      <div className="publish-info">
+        <strong>What happens when you publish:</strong> Your post goes through AI screening, 
+        then claim extraction. The claims become part of your belief map — publishing is 
+        the strongest signal of what you actually think.
+      </div>
+
+      <button
+        className={`publish-btn ${canPublish ? "" : "disabled"}`}
+        onClick={handlePublish}
+        disabled={!canPublish}
+      >
+        {isSubmitting ? "Publishing..." : "Publish"}
+      </button>
     </div>
   );
 }

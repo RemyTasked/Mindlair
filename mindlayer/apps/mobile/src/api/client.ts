@@ -2,6 +2,28 @@ import axios, { AxiosInstance } from "axios";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
 
+export interface Post {
+  id: string;
+  headlineClaim: string;
+  body: string;
+  authorStance: "arguing" | "exploring" | "steelmanning";
+  status: "draft" | "published";
+  publishedAt: string | null;
+  createdAt: string;
+  topicTags: string[];
+  author?: {
+    id: string;
+    name: string | null;
+  };
+  userReaction?: string | null;
+}
+
+export interface FeedResponse {
+  posts: Post[];
+  nextCursor: string | undefined;
+  hasMore: boolean;
+}
+
 class ApiClient {
   private client: AxiosInstance;
   private apiKey: string | null = null;
@@ -81,6 +103,51 @@ class ApiClient {
 
   async dismissNudge(nudgeId: string): Promise<void> {
     await this.client.post("/nudges/dismiss", { nudgeId });
+  }
+
+  async getFeed(params: {
+    cursor?: string;
+    filter?: string;
+    limit?: number;
+  }): Promise<FeedResponse> {
+    const response = await this.client.get("/feed", { params });
+    return {
+      posts: response.data.posts || [],
+      nextCursor: response.data.nextCursor,
+      hasMore: response.data.hasMore ?? false,
+    };
+  }
+
+  async createPost(data: {
+    headlineClaim: string;
+    postBody: string;
+    authorStance: string;
+  }): Promise<{ post: Post }> {
+    const response = await this.client.post("/posts", data);
+    return response.data;
+  }
+
+  async updatePost(postId: string, data: {
+    headlineClaim?: string;
+    postBody?: string;
+    authorStance?: string;
+  }): Promise<{ post: Post }> {
+    const response = await this.client.patch(`/posts/${postId}`, data);
+    return response.data;
+  }
+
+  async publishPost(postId: string): Promise<{ success: boolean }> {
+    const response = await this.client.post(`/posts/${postId}/publish`);
+    return response.data;
+  }
+
+  async reactToPost(postId: string, reaction: string): Promise<void> {
+    await this.client.post(`/posts/${postId}/react`, { reaction });
+  }
+
+  async getPost(postId: string): Promise<Post> {
+    const response = await this.client.get(`/posts/${postId}`);
+    return response.data.post;
   }
 }
 
