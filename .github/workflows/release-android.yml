@@ -35,7 +35,13 @@ jobs:
       
       - name: Build Debug APK
         working-directory: mindlayer/apps/android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          ./gradlew assembleDebug --no-daemon --stacktrace --info || {
+            echo "=== BUILD FAILED ==="
+            echo "Checking for compilation errors..."
+            find . -name "*.log" -exec echo "=== {} ===" \; -exec cat {} \; 2>/dev/null || true
+            exit 1
+          }
       
       - name: Build Release APK
         working-directory: mindlayer/apps/android

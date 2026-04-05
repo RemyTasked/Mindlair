@@ -1,17 +1,17 @@
 /**
- * Mindlayer browser extension — background service worker.
+ * Mindlair browser extension — background service worker.
  *
  * Passively captures every URL the user visits, tracks dwell time,
- * batches captures, and syncs them to the Mindlayer API.
+ * batches captures, and syncs them to the Mindlair API.
  */
 
 importScripts("content-filter.js");
 
 const MIN_DWELL_MS = 5000;
 const SYNC_INTERVAL_MINUTES = 2;
-const SYNC_ALARM_NAME = "mindlayer-sync";
+const SYNC_ALARM_NAME = "mindlair-sync";
 const MAX_PENDING_ITEMS = 200;
-const DEFAULT_API_URL = "https://mindlayer.app";
+const DEFAULT_API_URL = "https://mindlair-production.up.railway.app";
 
 // ── State ─────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ chrome.webNavigation.onCompleted.addListener(async (details) => {
   if (!captureEnabled) return;
 
   const url = details.url;
-  if (MindlayerFilter.isUrlBlocked(url)) return;
+  if (MindlairFilter.isUrlBlocked(url)) return;
 
   const tabId = details.tabId;
 
@@ -77,12 +77,12 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   // and timestamp the new active tab
   try {
     const tab = await chrome.tabs.get(activeInfo.tabId);
-    if (!tab.url || MindlayerFilter.isUrlBlocked(tab.url)) return;
+    if (!tab.url || MindlairFilter.isUrlBlocked(tab.url)) return;
 
     const session = activeSessions.get(activeInfo.tabId);
     if (session && session.url === tab.url) {
       // Already tracking — no action needed
-    } else if (tab.url && !MindlayerFilter.isInternalUrl(tab.url)) {
+    } else if (tab.url && !MindlairFilter.isInternalUrl(tab.url)) {
       // New session from tab switch
       activeSessions.set(activeInfo.tabId, {
         url: tab.url,
@@ -186,11 +186,11 @@ async function syncPending() {
         syncedCount++;
       } else if (response.status === 401) {
         // Bad API key — stop syncing
-        console.warn("Mindlayer: API key invalid");
+        console.warn("Mindlair: API key invalid");
         break;
       }
     } catch (error) {
-      console.warn("Mindlayer sync error:", error.message);
+      console.warn("Mindlair sync error:", error.message);
       break; // Network error — retry later
     }
   }

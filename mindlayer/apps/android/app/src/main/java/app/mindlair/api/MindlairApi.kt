@@ -7,10 +7,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -183,11 +183,15 @@ class MindlairApi private constructor(
             }
             
             val authInterceptor = Interceptor { chain ->
-                val token = context.dataStore.data
-                val request = chain.request().newBuilder()
+                val token = runBlocking {
+                    context.dataStore.data.first()[stringPreferencesKey("auth_token")]
+                }
+                val requestBuilder = chain.request().newBuilder()
                     .addHeader("Content-Type", "application/json")
-                    .build()
-                chain.proceed(request)
+                if (token != null) {
+                    requestBuilder.addHeader("Authorization", "Bearer $token")
+                }
+                chain.proceed(requestBuilder.build())
             }
             
             val client = OkHttpClient.Builder()

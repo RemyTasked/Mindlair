@@ -1,5 +1,5 @@
 /**
- * Mindlayer content script — tracks scroll depth on every page.
+ * Mindlair content script — tracks scroll depth on every page.
  * Sends engagement data back to the background service worker.
  */
 

@@ -1,5 +1,5 @@
 /**
- * Mindlayer extension popup — connects to background service worker
+ * Mindlair extension popup — connects to background service worker
  * and renders status, controls, and recent captures.
  */
 
@@ -55,7 +55,7 @@ function render(status) {
     toggleBtn.style.color = "var(--amber)";
   }
 
-  openDashboard.href = status.apiUrl || "https://mindlayer.app";
+  openDashboard.href = status.apiUrl || "https://mindlair-production.up.railway.app";
   openDashboard.addEventListener("click", (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: openDashboard.href + "/map" });
@@ -91,7 +91,7 @@ async function loadRecent() {
 
 connectBtn.addEventListener("click", async () => {
   const apiKey = apiKeyInput.value.trim();
-  const apiUrl = apiUrlInput.value.trim() || "https://mindlayer.app";
+  const apiUrl = apiUrlInput.value.trim() || "https://mindlair-production.up.railway.app";
 
   if (!apiKey) {
     connectError.textContent = "Please enter your API key.";

@@ -60,5 +60,5 @@ function isUrlBlocked(url) {
 
 // Exported for use by background.js and content.js
 if (typeof globalThis !== "undefined") {
-  globalThis.MindlayerFilter = { isUrlBlocked, isInternalUrl, BLOCKED_DOMAINS };
+  globalThis.MindlairFilter = { isUrlBlocked, isInternalUrl, BLOCKED_DOMAINS };
 }
