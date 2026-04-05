@@ -17,7 +17,7 @@ export default function HomePage() {
       }}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: "#e8e4dc" }}>
-            Mind<span style={{ color: "#d4915a", fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: "#d4915a", fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </Link>
           <div className="flex items-center gap-6">
             <Link

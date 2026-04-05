@@ -20,7 +20,9 @@ import {
   Trash2,
   Plus,
   LogOut,
-  Play
+  Play,
+  Upload,
+  FolderArchive,
 } from "lucide-react";
 
 interface DigestWindow {
@@ -81,6 +83,9 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
   const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
+  const [takeoutUploading, setTakeoutUploading] = useState(false);
+  const [takeoutResult, setTakeoutResult] = useState<{ youtube: number; chrome: number; total: number } | null>(null);
+  const [takeoutError, setTakeoutError] = useState<string | null>(null);
 
   const fetchSettings = useCallback(async () => {
     setIsLoading(true);
@@ -288,6 +293,39 @@ export default function SettingsPage() {
     }
   };
 
+  const handleTakeoutUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setTakeoutUploading(true);
+    setTakeoutError(null);
+    setTakeoutResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/integrations/google-takeout", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setTakeoutResult(data.imported);
+        fetchSettings();
+      } else {
+        setTakeoutError(data.message || "Failed to import Google Takeout data");
+      }
+    } catch (err) {
+      setTakeoutError("Failed to upload file");
+    } finally {
+      setTakeoutUploading(false);
+      event.target.value = "";
+    }
+  };
+
   const syncIntegration = async (provider: string) => {
     setSyncingProvider(provider);
     try {
@@ -446,6 +484,75 @@ export default function SettingsPage() {
               onSync={() => syncIntegration("spotify")}
               onDisconnect={() => disconnectIntegration("spotify")}
             />
+
+            {/* Google Takeout Import */}
+            <div className="pt-4 border-t border-zinc-800">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                  <FolderArchive className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-sm">Google Takeout</h4>
+                      <p className="text-xs text-zinc-500">Import YouTube watch history & Chrome browsing data</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        id="takeout-upload"
+                        className="hidden"
+                        accept=".zip,.html,.json"
+                        onChange={handleTakeoutUpload}
+                        disabled={takeoutUploading}
+                      />
+                      <label htmlFor="takeout-upload">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={takeoutUploading}
+                          asChild
+                        >
+                          <span className="cursor-pointer">
+                            {takeoutUploading ? (
+                              <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                              <Upload className="w-4 h-4 mr-1" />
+                            )}
+                            {takeoutUploading ? "Importing..." : "Upload"}
+                          </span>
+                        </Button>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-xs text-zinc-600">
+                      <a
+                        href="https://takeout.google.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:underline inline-flex items-center gap-1"
+                      >
+                        Export from Google Takeout
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                      {" "}— select YouTube history and/or Chrome history, then upload the ZIP file here.
+                    </p>
+                  </div>
+                  {takeoutResult && (
+                    <div className="mt-2 p-2 bg-green-900/30 border border-green-800 rounded text-xs text-green-300">
+                      <Check className="w-3 h-3 inline mr-1" />
+                      Imported {takeoutResult.total} items ({takeoutResult.youtube} videos, {takeoutResult.chrome} articles)
+                    </div>
+                  )}
+                  {takeoutError && (
+                    <div className="mt-2 p-2 bg-red-900/30 border border-red-800 rounded text-xs text-red-300">
+                      {takeoutError}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

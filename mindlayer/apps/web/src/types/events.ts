@@ -25,7 +25,10 @@ export type Surface =
   | 'android_share'
   | 'web_app'
   | 'readwise_import'
-  | 'instapaper_import';
+  | 'instapaper_import'
+  | 'google_takeout_youtube'
+  | 'google_takeout_chrome'
+  | 'spotify_import';
 
 export type Stance = 'agree' | 'disagree' | 'complicated' | 'skip';
 

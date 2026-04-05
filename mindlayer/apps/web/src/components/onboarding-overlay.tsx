@@ -22,6 +22,9 @@ import {
   Brain,
   TrendingUp,
   Layers,
+  Upload,
+  FolderArchive,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -68,6 +71,9 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
   const [platform, setPlatform] = useState<PlatformType>("other");
   const [syncing, setSyncing] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
+  const [takeoutUploading, setTakeoutUploading] = useState(false);
+  const [takeoutResult, setTakeoutResult] = useState<{ youtube: number; chrome: number; total: number } | null>(null);
+  const [takeoutError, setTakeoutError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -180,6 +186,39 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
     } catch (e) {
       setSpotifyError("Failed to connect Spotify. Please try again.");
       setSpotifyLoading(false);
+    }
+  };
+
+  const handleTakeoutUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setTakeoutUploading(true);
+    setTakeoutError(null);
+    setTakeoutResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/integrations/google-takeout", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setTakeoutResult(data.imported);
+        await fetchData();
+      } else {
+        setTakeoutError(data.message || "Failed to import Google Takeout data");
+      }
+    } catch {
+      setTakeoutError("Failed to upload file");
+    } finally {
+      setTakeoutUploading(false);
+      event.target.value = "";
     }
   };
 
@@ -435,6 +474,125 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 externalLoading={spotifyLoading}
                 externalError={spotifyError}
               />
+
+              {/* Google Takeout Import */}
+              <div
+                style={{
+                  background: C.surface,
+                  borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  padding: 16,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 10,
+                      background: `${C.border}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <FolderArchive className="w-5 h-5" style={{ color: "#4285F4" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                      <div>
+                        <h4 style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>
+                          Google Takeout
+                        </h4>
+                        <p style={{ fontSize: 12, color: C.muted }}>
+                          Import YouTube watch history & Chrome data
+                        </p>
+                      </div>
+                      <div>
+                        <input
+                          type="file"
+                          id="takeout-upload-onboarding"
+                          className="hidden"
+                          accept=".zip,.html,.json"
+                          onChange={handleTakeoutUpload}
+                          disabled={takeoutUploading}
+                          style={{ display: "none" }}
+                        />
+                        <label htmlFor="takeout-upload-onboarding">
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "8px 14px",
+                              borderRadius: 8,
+                              background: takeoutUploading ? C.border : C.accent,
+                              color: takeoutUploading ? C.muted : "#fff",
+                              fontSize: 13,
+                              fontWeight: 500,
+                              cursor: takeoutUploading ? "not-allowed" : "pointer",
+                              opacity: takeoutUploading ? 0.7 : 1,
+                            }}
+                          >
+                            {takeoutUploading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Importing...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-4 h-4" />
+                                Upload
+                              </>
+                            )}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
+                      <a
+                        href="https://takeout.google.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#4285F4", textDecoration: "none" }}
+                      >
+                        Export from takeout.google.com
+                        <ExternalLink className="w-3 h-3 inline ml-1" />
+                      </a>
+                      {" "}— select YouTube history and/or Chrome history, then upload the ZIP.
+                    </p>
+                    {takeoutResult && (
+                      <div
+                        style={{
+                          marginTop: 10,
+                          padding: "8px 12px",
+                          background: `${C.accent}15`,
+                          borderRadius: 6,
+                          border: `1px solid ${C.accent}30`,
+                        }}
+                      >
+                        <p style={{ fontSize: 12, color: C.accent }}>
+                          <Check className="w-3 h-3 inline mr-1" />
+                          Imported {takeoutResult.total} items ({takeoutResult.youtube} videos, {takeoutResult.chrome} articles)
+                        </p>
+                      </div>
+                    )}
+                    {takeoutError && (
+                      <div
+                        style={{
+                          marginTop: 10,
+                          padding: "8px 12px",
+                          background: `${C.rose}15`,
+                          borderRadius: 6,
+                          border: `1px solid ${C.rose}30`,
+                        }}
+                      >
+                        <p style={{ fontSize: 12, color: C.rose }}>{takeoutError}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {totalSources > 0 && (
                 <div
