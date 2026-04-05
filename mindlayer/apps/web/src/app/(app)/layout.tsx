@@ -16,9 +16,10 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen" style={{ background: C.bg, color: C.text }}>
+    <div className="min-h-screen" style={{ minHeight: "100dvh", background: C.bg, color: C.text }}>
       {/* Mobile header - just logo */}
       <header className="lg:hidden sticky top-0 z-50" style={{
+        paddingTop: "env(safe-area-inset-top, 0px)",
         background: `${C.bg}ee`, backdropFilter: "blur(12px)",
         borderBottom: `1px solid ${C.border}`,
       }}>
@@ -56,7 +57,10 @@ export default function AppLayout({
 
         {/* Main content */}
         <main className="flex-1 lg:ml-64">
-          <div className="max-w-5xl mx-auto px-4 py-8 lg:px-8">
+          <div 
+            className="max-w-5xl mx-auto px-4 py-8 lg:px-8"
+            style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
+          >
             {children}
           </div>
         </main>

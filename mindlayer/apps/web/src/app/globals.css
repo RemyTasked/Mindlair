@@ -12,10 +12,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html, body {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+}
+
+@supports (min-height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
 }
 
 ::selection {

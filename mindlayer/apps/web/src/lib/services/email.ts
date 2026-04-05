@@ -9,14 +9,22 @@ interface SendEmailOptions {
   text?: string;
 }
 
-async function sendEmail(options: SendEmailOptions): Promise<boolean> {
+interface SendEmailResult {
+  success: boolean;
+  error?: string;
+  errorCode?: string;
+}
+
+async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
   if (!RESEND_API_KEY) {
-    console.log('Email would be sent (no RESEND_API_KEY configured):');
-    console.log(`To: ${options.to}`);
-    console.log(`Subject: ${options.subject}`);
-    console.log(`HTML: ${options.html}`);
-    return true;
+    console.log('[Email] RESEND_API_KEY not configured - email would be sent:');
+    console.log(`  To: ${options.to}`);
+    console.log(`  Subject: ${options.subject}`);
+    return { success: true };
   }
+
+  console.log(`[Email] Sending email to ${options.to} via Resend...`);
+  console.log(`[Email] From: ${FROM_EMAIL}`);
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
@@ -34,20 +42,53 @@ async function sendEmail(options: SendEmailOptions): Promise<boolean> {
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Failed to send email:', error);
-      return false;
+    const responseText = await response.text();
+    let responseData: any = null;
+    
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = { raw: responseText };
     }
 
-    return true;
+    if (!response.ok) {
+      const errorMessage = responseData?.message || responseData?.error || responseText;
+      const errorCode = responseData?.name || responseData?.statusCode || response.status.toString();
+      
+      console.error(`[Email] Resend API error (${response.status}):`, {
+        status: response.status,
+        errorCode,
+        message: errorMessage,
+        from: FROM_EMAIL,
+        to: options.to,
+        response: responseData,
+      });
+      
+      return { 
+        success: false, 
+        error: errorMessage,
+        errorCode,
+      };
+    }
+
+    console.log(`[Email] Successfully sent to ${options.to}`, { id: responseData?.id });
+    return { success: true };
   } catch (error) {
-    console.error('Email send error:', error);
-    return false;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Email] Network/fetch error:', {
+      error: errorMessage,
+      to: options.to,
+      from: FROM_EMAIL,
+    });
+    return { 
+      success: false, 
+      error: `Network error: ${errorMessage}`,
+      errorCode: 'NETWORK_ERROR',
+    };
   }
 }
 
-export async function sendMagicLink(email: string, token: string): Promise<boolean> {
+export async function sendMagicLink(email: string, token: string): Promise<SendEmailResult> {
   const magicLinkUrl = `${APP_URL}/verify?token=${token}`;
 
   const html = `
@@ -98,7 +139,7 @@ If you didn't request this email, you can safely ignore it.
   });
 }
 
-export async function sendWelcomeEmail(email: string, name?: string): Promise<boolean> {
+export async function sendWelcomeEmail(email: string, name?: string): Promise<SendEmailResult> {
   const greeting = name ? `Hi ${name}` : 'Welcome';
 
   const html = `
