@@ -10,10 +10,6 @@ on:
         description: 'Version to release (e.g., 0.1.0)'
         required: true
 
-env:
-  TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-
 jobs:
   create-release:
     runs-on: ubuntu-latest
@@ -58,20 +54,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-14'
-            args: ''
-            target: 'aarch64-apple-darwin'
-          - platform: 'macos-13'
-            args: ''
-            target: 'x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04'
-            args: ''
-            target: 'x86_64-unknown-linux-gnu'
-          - platform: 'windows-latest'
-            args: ''
-            target: 'x86_64-pc-windows-msvc'
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            name: macOS-ARM64
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            name: Linux
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: Windows
 
     runs-on: ${{ matrix.platform }}
+    name: Build (${{ matrix.name }})
     steps:
       - uses: actions/checkout@v4
 
@@ -79,13 +73,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: mindlayer/package-lock.json
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
         with:
-          targets: ${{ matrix.target }}
+          workspaces: mindlayer/apps/desktop/src-tauri
 
       - name: Install dependencies (Ubuntu)
         if: matrix.platform == 'ubuntu-22.04'
@@ -97,46 +92,19 @@ jobs:
         working-directory: mindlayer
         run: npm ci
 
-      - name: Update version in tauri.conf.json
-        working-directory: mindlayer/apps/desktop/src-tauri
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            powershell -Command "(Get-Content tauri.conf.json) -replace '\"version\": \"[^\"]*\"', '\"version\": \"${{ needs.create-release.outputs.version }}\"' | Set-Content tauri.conf.json"
-          else
-            sed -i.bak 's/"version": "[^"]*"/"version": "${{ needs.create-release.outputs.version }}"/' tauri.conf.json
-          fi
-        shell: bash
-
-      - name: Import macOS signing certificate
-        if: matrix.platform == 'macos-latest'
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: |
-          if [ -n "$APPLE_CERTIFICATE" ]; then
-            echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
-            security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-            security default-keychain -s build.keychain
-            security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-            security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
-            rm certificate.p12
-          fi
+      - name: Build frontend
+        working-directory: mindlayer/apps/desktop
+        run: npm run build
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          CI: false
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: mindlayer/apps/desktop
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          args: ${{ matrix.args }}
 
   publish-release:
     needs: [create-release, build-tauri]
@@ -154,46 +122,3 @@ jobs:
               release_id: ${{ needs.create-release.outputs.release_id }},
               draft: false
             })
-
-  update-release-json:
-    needs: [create-release, build-tauri, publish-release]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Generate update manifest
-        env:
-          VERSION: ${{ needs.create-release.outputs.version }}
-          REPO: ${{ github.repository }}
-        run: |
-          cat > update.json << EOF
-          {
-            "version": "v${VERSION}",
-            "notes": "See release notes at https://github.com/${REPO}/releases/tag/v${VERSION}",
-            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "platforms": {
-              "darwin-aarch64": {
-                "signature": "",
-                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlair_${VERSION}_aarch64.dmg"
-              },
-              "darwin-x86_64": {
-                "signature": "",
-                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlair_${VERSION}_x64.dmg"
-              },
-              "linux-x86_64": {
-                "signature": "",
-                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/mindlair_${VERSION}_amd64.AppImage"
-              },
-              "windows-x86_64": {
-                "signature": "",
-                "url": "https://github.com/${REPO}/releases/download/v${VERSION}/Mindlair_${VERSION}_x64-setup.exe"
-              }
-            }
-          }
-          EOF
-
-      - name: Upload update manifest
-        uses: actions/upload-artifact@v4
-        with:
-          name: update-manifest
-          path: update.json
