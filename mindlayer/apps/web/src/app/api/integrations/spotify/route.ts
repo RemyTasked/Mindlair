@@ -30,6 +30,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: 'UNAUTHORIZED', message: 'Authentication required' }, { status: 401 });
     }
 
+    // Check if Spotify credentials are configured
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      console.error('Spotify credentials missing:', { 
+        hasClientId: !!clientId, 
+        hasClientSecret: !!clientSecret 
+      });
+      return NextResponse.json({ 
+        code: 'CONFIG_ERROR', 
+        message: 'Spotify is not configured. Please add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET.' 
+      }, { status: 500 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const returnTo = body.returnTo || '/settings';
     const state = `${user.id}:${crypto.randomBytes(16).toString('hex')}:${returnTo}`;
@@ -38,7 +53,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ authUrl, state });
   } catch (error) {
     console.error('Spotify connect error:', error);
-    return NextResponse.json({ code: 'INTERNAL_ERROR', message: 'Failed to initiate Spotify auth' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ code: 'INTERNAL_ERROR', message: `Failed to initiate Spotify auth: ${errorMessage}` }, { status: 500 });
   }
 }
 
