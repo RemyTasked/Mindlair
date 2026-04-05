@@ -1,8 +1,11 @@
 package app.mindlair.models
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity(tableName = "captured_content")
 data class CapturedContent(
     @PrimaryKey(autoGenerate = true)
@@ -19,7 +22,7 @@ data class CapturedContent(
     val synced: Boolean = false,
     val syncedAt: Long? = null,
     val remoteId: String? = null
-)
+) : Parcelable
 
 enum class ContentType {
     VIDEO,

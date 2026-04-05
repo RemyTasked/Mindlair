@@ -52,10 +52,15 @@ class FloatingBubbleService : Service() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
     }
     
+    @Suppress("DEPRECATION")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_SHOW -> {
-                val content = intent.getParcelableExtra<CapturedContent>(EXTRA_CONTENT)
+                val content = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(EXTRA_CONTENT, CapturedContent::class.java)
+                } else {
+                    intent.getParcelableExtra(EXTRA_CONTENT)
+                }
                 if (content != null) {
                     currentContent = content
                     showBubble()
