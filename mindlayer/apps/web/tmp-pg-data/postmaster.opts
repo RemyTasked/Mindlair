@@ -1,0 +1,1 @@
+/Users/clodelremy/Meet Cute/mindlayer/node_modules/@embedded-postgres/darwin-x64/native/bin/postgres "-D" "./tmp-pg-data" "-p" "5433"

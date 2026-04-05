@@ -459,17 +459,11 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                   >
                     <div className="flex flex-col gap-2 mt-3">
                       {platform === "mac" && (
-                        <>
-                          <DownloadLink
-                            label="macOS (Apple Silicon)"
-                            file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
-                            primary
-                          />
-                          <DownloadLink
-                            label="macOS (Intel)"
-                            file={`Mindlair_${APP_VERSION}_x64.dmg`}
-                          />
-                        </>
+                        <DownloadLink
+                          label="macOS (Apple Silicon)"
+                          file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
+                          primary
+                        />
                       )}
                       {platform === "windows" && (
                         <DownloadLink

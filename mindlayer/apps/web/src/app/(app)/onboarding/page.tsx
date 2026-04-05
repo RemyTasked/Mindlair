@@ -50,7 +50,7 @@ interface IntegrationsData {
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
 
-const GITHUB_REPO = "clodel-MeetCute/meet-cute";
+const GITHUB_REPO = "RemyTasked/Mindlair";
 const APP_VERSION = "0.1.0";
 
 export default function OnboardingPage() {
@@ -290,17 +290,11 @@ export default function OnboardingPage() {
             >
               <div className="flex flex-col gap-2 mt-3">
                 {platform === "mac" && (
-                  <>
-                    <DownloadLink
-                      label="macOS (Apple Silicon)"
-                      file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
-                      primary
-                    />
-                    <DownloadLink
-                      label="macOS (Intel)"
-                      file={`Mindlair_${APP_VERSION}_x64.dmg`}
-                    />
-                  </>
+                  <DownloadLink
+                    label="macOS (Apple Silicon)"
+                    file={`Mindlair_${APP_VERSION}_aarch64.dmg`}
+                    primary
+                  />
                 )}
                 {platform === "windows" && (
                   <DownloadLink
