@@ -656,6 +656,33 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                     </div>
                   </CaptureCard>
 
+                  {/* Android: Native App */}
+                  {platform === "android" && (
+                    <CaptureCard
+                      icon={<Download className="w-5 h-5" style={{ color: C.accent }} />}
+                      title="Android App"
+                      description="Native app with passive capture. Automatically tracks what you watch and listen to."
+                    >
+                      <div className="mt-3 space-y-3">
+                        <a
+                          href={`https://github.com/${GITHUB_REPO}/releases/download/android-v${APP_VERSION}/mindlair-${APP_VERSION}-debug.apk`}
+                          style={{
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                            padding: "10px 14px", borderRadius: 8,
+                            background: C.accent, color: "#fff",
+                            textDecoration: "none", fontWeight: 600, fontSize: 13,
+                          }}
+                        >
+                          <Download className="w-4 h-4" />
+                          Download APK
+                        </a>
+                        <p style={{ fontSize: 11, color: C.muted }}>
+                          After downloading, tap the file to install. Enable &quot;Install from unknown sources&quot; if prompted.
+                        </p>
+                      </div>
+                    </CaptureCard>
+                  )}
+
                   {/* Mobile: Share extension info */}
                   <CaptureCard
                     icon={<Smartphone className="w-5 h-5" style={{ color: C.textSoft }} />}

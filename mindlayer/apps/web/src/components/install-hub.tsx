@@ -99,8 +99,12 @@ export function GetStartedHub() {
           canInstall={!!deferredPrompt}
           isInstalled={isPwaInstalled}
         />
-        {/* Desktop */}
-        <DesktopCard platform={device.platform} />
+        {/* Android APK or Desktop */}
+        {device.platform === "android" ? (
+          <AndroidApkCard />
+        ) : (
+          <DesktopCard platform={device.platform} />
+        )}
       </div>
 
       {/* Integration callout */}
@@ -172,6 +176,51 @@ function MobilePwaCard({
 
 const GITHUB_REPO = "RemyTasked/Mindlair";
 const APP_VERSION = "0.1.0";
+const ANDROID_APK_FILE = `mindlair-${APP_VERSION}-debug.apk`;
+
+function AndroidApkCard() {
+  return (
+    <div style={{ border: `1px solid ${C.border}`, borderRadius: 14, padding: 24, background: C.surface }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <Smartphone style={{ width: 20, height: 20, color: C.accent }} />
+        <h3 style={{ fontSize: 16, fontWeight: 700 }}>Android App</h3>
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: C.accent, border: `1px solid ${C.accent}40`, borderRadius: 4, padding: "2px 6px" }}>v{APP_VERSION}</span>
+      </div>
+
+      <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.6, marginBottom: 14 }}>
+        Native Android app with passive capture. Automatically tracks what you watch and listen to across apps.
+      </p>
+
+      <a
+        href={`https://github.com/${GITHUB_REPO}/releases/download/android-v${APP_VERSION}/${ANDROID_APK_FILE}`}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          padding: "12px 16px", borderRadius: 10,
+          background: C.accent, color: "#fff",
+          textDecoration: "none", fontWeight: 600, fontSize: 14,
+          cursor: "pointer", transition: "opacity 0.2s",
+        }}
+      >
+        <Download style={{ width: 16, height: 16 }} />
+        Download APK
+      </a>
+
+      <div style={{ marginTop: 14, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+        <p style={{ marginBottom: 8 }}><strong>To install:</strong></p>
+        <ol style={{ paddingLeft: 16, margin: 0 }}>
+          <li>Download the APK file</li>
+          <li>Open your Downloads folder</li>
+          <li>Tap the APK to install</li>
+          <li>Enable &quot;Install from unknown sources&quot; if prompted</li>
+        </ol>
+      </div>
+
+      <p style={{ fontSize: 11, color: C.muted, marginTop: 12, fontStyle: "italic" }}>
+        Requires Android 8.0 or higher
+      </p>
+    </div>
+  );
+}
 
 const DOWNLOADS: { os: string; label: string; file: string }[] = [
   { os: "mac",     label: "macOS (Apple Silicon)", file: `Mindlair_${APP_VERSION}_aarch64.dmg` },
