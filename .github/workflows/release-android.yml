@@ -35,11 +35,11 @@ jobs:
       
       - name: Build Debug APK
         working-directory: mindlayer/apps/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
       
       - name: Build Release APK
         working-directory: mindlayer/apps/android
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
       
       - name: Sign Release APK
         if: env.ANDROID_KEYSTORE_BASE64 != ''
