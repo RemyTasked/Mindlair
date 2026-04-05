@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Brain, Inbox, Map, Lightbulb, Settings, Menu, X } from "lucide-react";
+import { Brain, Inbox, Map, Lightbulb, Settings } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationBanner } from "@/components/push-notifications";
 
@@ -16,43 +15,18 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <div className="min-h-screen" style={{ background: C.bg, color: C.text }}>
-      {/* Mobile header */}
+      {/* Mobile header - just logo */}
       <header className="lg:hidden sticky top-0 z-50" style={{
         background: `${C.bg}ee`, backdropFilter: "blur(12px)",
         borderBottom: `1px solid ${C.border}`,
       }}>
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-center px-4 py-3">
           <Link href="/map" style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.04em", textDecoration: "none", color: C.text }}>
             Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </Link>
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{ padding: 8, color: C.muted, background: "none", border: "none", cursor: "pointer" }}
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
-        
-        {/* Mobile dropdown menu */}
-        {mobileMenuOpen && (
-          <div style={{
-            background: C.surface,
-            borderBottom: `1px solid ${C.border}`,
-            padding: "8px 16px 16px",
-          }}>
-            <nav className="space-y-1">
-              <MobileMenuLink href="/inbox" icon={Inbox} label="Inbox" onClick={() => setMobileMenuOpen(false)} />
-              <MobileMenuLink href="/map" icon={Map} label="Map" onClick={() => setMobileMenuOpen(false)} />
-              <MobileMenuLink href="/timeline" icon={Brain} label="Timeline" onClick={() => setMobileMenuOpen(false)} />
-              <MobileMenuLink href="/nudges" icon={Lightbulb} label="Nudges" onClick={() => setMobileMenuOpen(false)} />
-              <MobileMenuLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileMenuOpen(false)} />
-            </nav>
-          </div>
-        )}
       </header>
 
       <div className="flex">
@@ -149,26 +123,3 @@ function MobileNavLink({
   );
 }
 
-function MobileMenuLink({
-  href,
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
-      style={{ color: "#c4bfb4", textDecoration: "none" }}
-    >
-      <Icon className="w-5 h-5" />
-      <span className="text-sm font-medium">{label}</span>
-    </Link>
-  );
-}
