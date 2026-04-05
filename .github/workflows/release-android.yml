@@ -24,19 +24,22 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'gradle'
       
-      - name: Grant execute permission for gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      
+      - name: Create Gradle Wrapper
         working-directory: mindlayer/apps/android
-        run: chmod +x gradlew
+        run: |
+          gradle wrapper --gradle-version 8.5
       
       - name: Build Debug APK
         working-directory: mindlayer/apps/android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon
       
       - name: Build Release APK
         working-directory: mindlayer/apps/android
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-daemon
       
       - name: Sign Release APK
         if: env.ANDROID_KEYSTORE_BASE64 != ''
