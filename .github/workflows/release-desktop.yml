@@ -35,15 +35,32 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const tagName = `v${{ steps.get-version.outputs.version }}`;
+            
+            // Check if release already exists
+            try {
+              const { data: existing } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: tagName
+              });
+              console.log(`Found existing release: ${existing.id}`);
+              return existing.id;
+            } catch (e) {
+              if (e.status !== 404) throw e;
+            }
+            
+            // Create new release
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `v${{ steps.get-version.outputs.version }}`,
+              tag_name: tagName,
               name: `Mindlair v${{ steps.get-version.outputs.version }}`,
               body: 'See the assets to download this version and install.',
               draft: true,
               prerelease: false
-            })
+            });
+            console.log(`Created new release: ${data.id}`);
             return data.id
 
   build-tauri:
