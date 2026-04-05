@@ -34,14 +34,21 @@ export async function POST(request: NextRequest) {
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
     
+    // Debug: Log all env var keys that contain SPOTIFY
+    const spotifyVars = Object.keys(process.env).filter(k => k.includes('SPOTIFY'));
+    console.log('Available SPOTIFY env vars:', spotifyVars);
+    console.log('SPOTIFY_CLIENT_ID length:', clientId?.length);
+    console.log('SPOTIFY_CLIENT_SECRET length:', clientSecret?.length);
+    
     if (!clientId || !clientSecret) {
       console.error('Spotify credentials missing:', { 
         hasClientId: !!clientId, 
-        hasClientSecret: !!clientSecret 
+        hasClientSecret: !!clientSecret,
+        allEnvKeys: Object.keys(process.env).slice(0, 20) // Log first 20 env keys for debugging
       });
       return NextResponse.json({ 
         code: 'CONFIG_ERROR', 
-        message: 'Spotify is not configured. Please add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET.' 
+        message: `Spotify is not configured. Found vars: ${spotifyVars.join(', ') || 'none'}. Please check SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET.`
       }, { status: 500 });
     }
 
