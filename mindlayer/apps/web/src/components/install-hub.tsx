@@ -106,8 +106,7 @@ export function GetStartedHub() {
       {/* Integration callout */}
       <div style={{ border: `1px dashed ${C.border}`, borderRadius: 12, padding: "16px 20px", textAlign: "center" }}>
         <p style={{ fontSize: 13, color: C.textSoft }}>
-          Use <strong>Readwise</strong>, <strong>Pocket</strong>, or{" "}
-          <strong>Instapaper</strong>? Connect after sign-in to import your reading history.
+          Use <strong>Readwise</strong> or <strong>Instapaper</strong>? Connect after sign-in to import your reading history.
         </p>
       </div>
     </div>

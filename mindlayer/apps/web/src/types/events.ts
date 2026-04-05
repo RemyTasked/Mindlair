@@ -25,7 +25,6 @@ export type Surface =
   | 'android_share'
   | 'web_app'
   | 'readwise_import'
-  | 'pocket_import'
   | 'instapaper_import';
 
 export type Stance = 'agree' | 'disagree' | 'complicated' | 'skip';

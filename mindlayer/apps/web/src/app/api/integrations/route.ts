@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
 
-const OAUTH_PROVIDERS = ['readwise', 'pocket', 'instapaper', 'spotify'];
+const OAUTH_PROVIDERS = ['readwise', 'instapaper', 'spotify'];
 
 const SURFACE_MAP: Record<string, string> = {
   readwise: 'readwise_import',
-  pocket: 'pocket_import',
   instapaper: 'instapaper_import',
   spotify: 'spotify_import',
   youtube: 'youtube_import',

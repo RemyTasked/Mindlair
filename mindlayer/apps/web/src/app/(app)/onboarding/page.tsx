@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
-  Bookmark,
   FileText,
   Music,
   Youtube,
@@ -93,7 +92,7 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("spotify") === "connected" || params.get("pocket") === "connected") {
+    if (params.get("spotify") === "connected") {
       fetchData();
       window.history.replaceState({}, "", "/onboarding");
     }
@@ -126,18 +125,6 @@ export default function OnboardingPage() {
       }
     } catch {
       alert("Failed to connect Readwise");
-    }
-  };
-
-  const connectPocket = async () => {
-    try {
-      const res = await fetch("/api/integrations/pocket", { method: "POST" });
-      if (res.ok) {
-        const { authUrl } = await res.json();
-        window.location.href = authUrl;
-      }
-    } catch {
-      alert("Failed to connect Pocket");
     }
   };
 
@@ -293,16 +280,6 @@ export default function OnboardingPage() {
               syncing={syncing === "readwise"}
               onConnect={connectReadwise}
               onSync={() => syncIntegration("readwise")}
-            />
-            <IntegrationRow
-              name="Pocket"
-              description="Saved articles & videos"
-              icon={<Bookmark className="w-5 h-5" style={{ color: C.rose }} />}
-              connected={!!getIntegration("pocket")?.connected}
-              sourceCount={getIntegration("pocket")?.sourceCount || 0}
-              syncing={syncing === "pocket"}
-              onConnect={connectPocket}
-              onSync={() => syncIntegration("pocket")}
             />
             <IntegrationRow
               name="Instapaper"

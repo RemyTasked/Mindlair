@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,13 +13,13 @@ import {
   Check,
   ExternalLink,
   BookOpen,
-  Bookmark,
   FileText,
   Key,
   Copy,
   Trash2,
   Plus,
-  LogOut
+  LogOut,
+  Play
 } from "lucide-react";
 
 interface DigestWindow {
@@ -39,7 +40,6 @@ interface UserSettings {
   };
   connectedSources: {
     readwise: boolean;
-    pocket: boolean;
     instapaper: boolean;
   };
   timezone: string;
@@ -68,6 +68,7 @@ interface UserSession {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeyInfo[]>([]);
@@ -79,6 +80,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
+  const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
 
   const fetchSettings = useCallback(async () => {
     setIsLoading(true);
@@ -209,6 +211,17 @@ export default function SettingsPage() {
     }
   };
 
+  const rerunOnboarding = async () => {
+    setIsResettingOnboarding(true);
+    try {
+      await fetch("/api/onboarding", { method: "DELETE" });
+      router.push("/onboarding");
+    } catch (err) {
+      console.error("Failed to reset onboarding:", err);
+      setIsResettingOnboarding(false);
+    }
+  };
+
   const connectReadwise = async () => {
     const token = prompt("Enter your Readwise Access Token (from readwise.io/access_token):");
     if (!token) return;
@@ -228,19 +241,6 @@ export default function SettingsPage() {
       }
     } catch (err) {
       alert("Failed to connect Readwise");
-    }
-  };
-
-  const connectPocket = async () => {
-    try {
-      const response = await fetch("/api/integrations/pocket", { method: "POST" });
-
-      if (response.ok) {
-        const { authUrl } = await response.json();
-        window.location.href = authUrl;
-      }
-    } catch (err) {
-      alert("Failed to connect Pocket");
     }
   };
 
@@ -349,6 +349,22 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
+                <p className="font-medium">Re-run setup</p>
+                <p className="text-sm text-zinc-500">Go through onboarding again to connect integrations</p>
+              </div>
+              <Button variant="outline" onClick={rerunOnboarding} disabled={isResettingOnboarding}>
+                {isResettingOnboarding ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-1" />
+                    Start
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="font-medium">Sign out</p>
                 <p className="text-sm text-zinc-500">Sign out of this device</p>
               </div>
@@ -365,104 +381,6 @@ export default function SettingsPage() {
                 Sign out all
               </Button>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* API Keys for Desktop/Mobile Apps */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Key className="w-5 h-5" />
-              API Keys
-            </CardTitle>
-            <CardDescription>
-              Generate keys to connect the desktop app or other devices.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {newlyCreatedKey && (
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">
-                  Your new API key (copy it now, you won&apos;t see it again):
-                </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 p-2 bg-white dark:bg-zinc-900 rounded border text-sm font-mono break-all">
-                    {newlyCreatedKey}
-                  </code>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(newlyCreatedKey)}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="mt-2"
-                  onClick={() => setNewlyCreatedKey(null)}
-                >
-                  Done
-                </Button>
-              </div>
-            )}
-            
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Key name (e.g., MacBook Pro)"
-                value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm"
-              />
-              <Button
-                onClick={createApiKey}
-                disabled={isCreatingKey || !newKeyName.trim()}
-              >
-                {isCreatingKey ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-1" />
-                    Create
-                  </>
-                )}
-              </Button>
-            </div>
-            
-            {apiKeys.length > 0 ? (
-              <div className="space-y-2">
-                {apiKeys.map((key) => (
-                  <div
-                    key={key.id}
-                    className="flex items-center justify-between py-3 px-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">{key.name}</p>
-                      <p className="text-xs text-zinc-500 font-mono">{key.keyPreview}</p>
-                      {key.lastUsedAt && (
-                        <p className="text-xs text-zinc-400">
-                          Last used: {new Date(key.lastUsedAt).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      onClick={() => deleteApiKey(key.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-zinc-500 text-center py-4">
-                No API keys yet. Create one to connect the desktop app.
-              </p>
-            )}
           </CardContent>
         </Card>
 
@@ -487,16 +405,6 @@ export default function SettingsPage() {
               onConnect={connectReadwise}
               onSync={() => syncIntegration("readwise")}
               onDisconnect={() => disconnectIntegration("readwise")}
-            />
-            <IntegrationItem
-              name="Pocket"
-              description="Import your saved articles"
-              icon={<Bookmark className="w-5 h-5 text-rose-500" />}
-              integration={getIntegration("pocket")}
-              isSyncing={syncingProvider === "pocket"}
-              onConnect={connectPocket}
-              onSync={() => syncIntegration("pocket")}
-              onDisconnect={() => disconnectIntegration("pocket")}
             />
             <IntegrationItem
               name="Instapaper"
@@ -612,6 +520,104 @@ export default function SettingsPage() {
                 })
               }
             />
+          </CardContent>
+        </Card>
+
+        {/* API Keys for Desktop/Mobile Apps */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5" />
+              API Keys
+            </CardTitle>
+            <CardDescription>
+              Generate keys to connect the desktop app or other devices.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {newlyCreatedKey && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">
+                  Your new API key (copy it now, you won&apos;t see it again):
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-white dark:bg-zinc-900 rounded border text-sm font-mono break-all">
+                    {newlyCreatedKey}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => copyToClipboard(newlyCreatedKey)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-2"
+                  onClick={() => setNewlyCreatedKey(null)}
+                >
+                  Done
+                </Button>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Key name (e.g., MacBook Pro)"
+                value={newKeyName}
+                onChange={(e) => setNewKeyName(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm"
+              />
+              <Button
+                onClick={createApiKey}
+                disabled={isCreatingKey || !newKeyName.trim()}
+              >
+                {isCreatingKey ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Create
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {apiKeys.length > 0 ? (
+              <div className="space-y-2">
+                {apiKeys.map((key) => (
+                  <div
+                    key={key.id}
+                    className="flex items-center justify-between py-3 px-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium">{key.name}</p>
+                      <p className="text-xs text-zinc-500 font-mono">{key.keyPreview}</p>
+                      {key.lastUsedAt && (
+                        <p className="text-xs text-zinc-400">
+                          Last used: {new Date(key.lastUsedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      onClick={() => deleteApiKey(key.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-zinc-500 text-center py-4">
+                No API keys yet. Create one to connect the desktop app.
+              </p>
+            )}
           </CardContent>
         </Card>
 

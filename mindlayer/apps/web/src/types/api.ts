@@ -249,7 +249,6 @@ export interface UserSettings {
   timezone: string;
   connectedSources: {
     readwise: boolean;
-    pocket: boolean;
     instapaper: boolean;
   };
 }

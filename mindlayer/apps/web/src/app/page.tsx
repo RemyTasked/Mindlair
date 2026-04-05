@@ -214,11 +214,11 @@ export default function HomePage() {
             color: "#c4bfb4", fontSize: 15, lineHeight: 1.7,
             maxWidth: 520, margin: "0 auto 28px",
           }}>
-            Import from Readwise, Pocket, or browser history. Your map begins with everything
+            Import from Readwise, Instapaper, or browser history. Your map begins with everything
             you&apos;ve already read — so the first session already feels like years of insight.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            {["Readwise", "Pocket", "Browser History", "RSS Feeds"].map(source => (
+            {["Readwise", "Instapaper", "Browser History", "RSS Feeds"].map(source => (
               <span key={source} style={{
                 fontSize: 12, color: "#7a7469",
                 border: "1px solid #2a2825", borderRadius: 6,

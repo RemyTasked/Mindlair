@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
 
     const connectedMap = {
       readwise: connectedSources.some(s => s.provider === 'readwise'),
-      pocket: connectedSources.some(s => s.provider === 'pocket'),
       instapaper: connectedSources.some(s => s.provider === 'instapaper'),
     };
 

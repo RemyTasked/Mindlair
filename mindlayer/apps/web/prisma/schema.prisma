@@ -127,7 +127,7 @@ model ConnectedSource {
   id           String    @id @default(cuid())
   userId       String
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider     String // readwise, pocket, instapaper
+  provider     String // readwise, instapaper
   accessToken  String?
   refreshToken String?
   expiresAt    DateTime?

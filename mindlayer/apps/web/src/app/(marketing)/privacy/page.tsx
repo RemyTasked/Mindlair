@@ -111,7 +111,7 @@ export default function PrivacyPage() {
           <div style={{ padding: 28, borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface, marginBottom: 24 }}>
             <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 10 }}>Third-Party Services</h3>
             <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.7, marginBottom: 12 }}>
-              When you connect optional integrations (Readwise, Pocket, Instapaper, Spotify), we access
+              When you connect optional integrations (Readwise, Instapaper, Spotify), we access
               those services on your behalf using your credentials. We only fetch data to import
               into your map and never share your Mindlayer data with them.
             </p>
