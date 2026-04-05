@@ -1,8 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-parcelize")
-    id("kotlin-kapt")
+    id("org.jetbrains.kotlin.plugin.parcelize")
+    kotlin("kapt")
 }
 
 android {
