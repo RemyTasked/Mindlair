@@ -154,7 +154,12 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
     }
   };
 
+  const [spotifyError, setSpotifyError] = useState("");
+  const [spotifyLoading, setSpotifyLoading] = useState(false);
+
   const connectSpotify = async () => {
+    setSpotifyError("");
+    setSpotifyLoading(true);
     try {
       const res = await fetch("/api/integrations/spotify", {
         method: "POST",
@@ -164,9 +169,14 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
       if (res.ok) {
         const { authUrl } = await res.json();
         window.location.href = authUrl;
+      } else {
+        const err = await res.json().catch(() => ({ message: "Unknown error" }));
+        setSpotifyError(err.message || "Failed to connect Spotify. Please try again.");
+        setSpotifyLoading(false);
       }
-    } catch {
-      alert("Failed to connect Spotify");
+    } catch (e) {
+      setSpotifyError("Failed to connect Spotify. Please try again.");
+      setSpotifyLoading(false);
     }
   };
 
@@ -331,6 +341,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 provider="readwise"
                 fetchData={fetchData}
                 syncIntegration={syncIntegration}
+                externalLoading={false}
+                externalError=""
               />
               <IntegrationRow
                 name="Instapaper"
@@ -344,6 +356,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 provider="instapaper"
                 fetchData={fetchData}
                 syncIntegration={syncIntegration}
+                externalLoading={false}
+                externalError=""
               />
               <IntegrationRow
                 name="Spotify"
@@ -357,6 +371,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 provider="spotify"
                 fetchData={fetchData}
                 syncIntegration={syncIntegration}
+                externalLoading={spotifyLoading}
+                externalError={spotifyError}
               />
 
               {totalSources > 0 && (
@@ -619,6 +635,8 @@ function IntegrationRow({
   provider,
   fetchData,
   syncIntegration,
+  externalLoading,
+  externalError,
 }: {
   name: string;
   description: string;
@@ -631,6 +649,8 @@ function IntegrationRow({
   provider: string;
   fetchData: () => Promise<void>;
   syncIntegration: (provider: string) => Promise<void>;
+  externalLoading?: boolean;
+  externalError?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -638,6 +658,9 @@ function IntegrationRow({
   const [instapaperEmail, setInstapaperEmail] = useState("");
   const [instapaperPassword, setInstapaperPassword] = useState("");
   const [error, setError] = useState("");
+
+  const isLoading = connecting || externalLoading;
+  const displayError = error || externalError;
 
   const handleReadwiseConnect = async () => {
     if (!readwiseToken.trim()) {
@@ -752,6 +775,7 @@ function IntegrationRow({
           <Button
             variant="outline"
             size="sm"
+            disabled={isLoading}
             onClick={() => {
               if (provider === "spotify") {
                 onConnect();
@@ -762,10 +786,23 @@ function IntegrationRow({
             }}
             style={{ borderColor: C.border, color: C.textSoft }}
           >
-            {expanded ? "Cancel" : "Connect"}
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : expanded ? (
+              "Cancel"
+            ) : (
+              "Connect"
+            )}
           </Button>
         )}
       </div>
+
+      {/* Show error for Spotify */}
+      {displayError && provider === "spotify" && (
+        <div style={{ padding: "0 16px 12px 16px" }}>
+          <p style={{ fontSize: 12, color: C.rose }}>{displayError}</p>
+        </div>
+      )}
 
       {/* Expandable form for non-OAuth integrations */}
       {expanded && !connected && provider !== "spotify" && (
