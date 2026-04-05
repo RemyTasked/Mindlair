@@ -56,7 +56,8 @@ export function middleware(request: NextRequest) {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
     
     if (!sessionCookie?.value) {
-      const loginUrl = new URL('/login', request.url);
+      const base = process.env.NEXT_PUBLIC_APP_URL || request.url;
+      const loginUrl = new URL('/login', base);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }

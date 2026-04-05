@@ -9,17 +9,19 @@ import { sendWelcomeEmail } from '@/lib/services/email';
 import db from '@/lib/db';
 
 export async function GET(request: NextRequest) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.url;
+
   try {
     const token = request.nextUrl.searchParams.get('token');
 
     if (!token) {
-      return NextResponse.redirect(new URL('/verify?error=missing_token', request.url));
+      return NextResponse.redirect(new URL('/verify?error=missing_token', baseUrl));
     }
 
     const email = await verifyMagicLinkToken(token);
 
     if (!email) {
-      return NextResponse.redirect(new URL('/verify?error=invalid_token', request.url));
+      return NextResponse.redirect(new URL('/verify?error=invalid_token', baseUrl));
     }
 
     const existingUser = await db.user.findUnique({
@@ -38,17 +40,17 @@ export async function GET(request: NextRequest) {
 
     if (isNewUser) {
       sendWelcomeEmail(email, user.name || undefined).catch(console.error);
-      return NextResponse.redirect(new URL('/onboarding', request.url));
+      return NextResponse.redirect(new URL('/onboarding', baseUrl));
     }
 
     const fullUser = await db.user.findUnique({ where: { id: user.id }, select: { onboardingComplete: true } });
     if (fullUser && !fullUser.onboardingComplete) {
-      return NextResponse.redirect(new URL('/onboarding', request.url));
+      return NextResponse.redirect(new URL('/onboarding', baseUrl));
     }
 
-    return NextResponse.redirect(new URL('/map', request.url));
+    return NextResponse.redirect(new URL('/map', baseUrl));
   } catch (error) {
     console.error('Verify error:', error);
-    return NextResponse.redirect(new URL('/verify?error=verification_failed', request.url));
+    return NextResponse.redirect(new URL('/verify?error=verification_failed', baseUrl));
   }
 }
