@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mindlair Brand Colors -->
+    <color name="bg">#0F0E0C</color>
+    <color name="surface">#1A1916</color>
+    <color name="border">#2A2825</color>
+    <color name="text">#E8E4DC</color>
+    <color name="text_soft">#C4BFB4</color>
+    <color name="muted">#7A7469</color>
+    <color name="accent">#D4915A</color>
+    <color name="amber">#D4915A</color>
+    <color name="rose">#E06070</color>
+    <color name="blue">#6B9FC4</color>
+    <color name="green">#5CB85C</color>
+    
+    <!-- System colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    
+    <!-- Reaction colors -->
+    <color name="agree_bg">#1A3D2E</color>
+    <color name="agree_border">#2E6B4F</color>
+    <color name="disagree_bg">#3D1A1A</color>
+    <color name="disagree_border">#6B2E2E</color>
+    <color name="complicated_bg">#3D331A</color>
+    <color name="complicated_border">#6B5B2E</color>
+    
+    <!-- Material Theme -->
+    <color name="colorPrimary">@color/accent</color>
+    <color name="colorPrimaryVariant">#B8754A</color>
+    <color name="colorOnPrimary">@color/white</color>
+    <color name="colorSecondary">@color/blue</color>
+    <color name="colorSecondaryVariant">#5889AC</color>
+    <color name="colorOnSecondary">@color/white</color>
+    <color name="colorSurface">@color/surface</color>
+    <color name="colorOnSurface">@color/text</color>
+    <color name="colorBackground">@color/bg</color>
+    <color name="colorOnBackground">@color/text</color>
+    <color name="colorError">@color/rose</color>
+    <color name="colorOnError">@color/white</color>
+</resources>

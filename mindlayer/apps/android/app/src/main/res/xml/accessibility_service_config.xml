@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/accessibility_service_description"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewTextChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:notificationTimeout="100"
+    android:canRetrieveWindowContent="true"
+    android:canPerformGestures="false"
+    android:settingsActivity="app.mindlair.ui.SettingsActivity"
+    android:packageNames="com.google.android.youtube,com.spotify.music,com.android.chrome,com.sec.android.app.sbrowser,org.mozilla.firefox,com.microsoft.emmx,com.pocket.ui,com.instapaper.android" />

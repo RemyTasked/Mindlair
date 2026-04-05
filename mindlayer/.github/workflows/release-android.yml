@@ -1,0 +1,121 @@
+name: Build Android APK
+
+on:
+  push:
+    tags:
+      - 'android-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 0.1.0)'
+        required: true
+        default: '0.1.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+      
+      - name: Grant execute permission for gradlew
+        working-directory: mindlayer/apps/android
+        run: chmod +x gradlew
+      
+      - name: Build Debug APK
+        working-directory: mindlayer/apps/android
+        run: ./gradlew assembleDebug
+      
+      - name: Build Release APK
+        working-directory: mindlayer/apps/android
+        run: ./gradlew assembleRelease
+      
+      - name: Sign Release APK
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: mindlayer/apps/android
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > keystore.jks
+          
+          # Sign with apksigner
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks keystore.jks \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass pass:"$ANDROID_KEYSTORE_PASSWORD" \
+            --key-pass pass:"$ANDROID_KEY_PASSWORD" \
+            --out app/build/outputs/apk/release/mindlair-release-signed.apk \
+            app/build/outputs/apk/release/app-release-unsigned.apk
+          
+          rm keystore.jks
+      
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            VERSION=${GITHUB_REF#refs/tags/android-v}
+            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Rename APKs
+        working-directory: mindlayer/apps/android/app/build/outputs/apk
+        run: |
+          mv debug/app-debug.apk debug/mindlair-${{ steps.version.outputs.VERSION }}-debug.apk
+          if [ -f release/mindlair-release-signed.apk ]; then
+            mv release/mindlair-release-signed.apk release/mindlair-${{ steps.version.outputs.VERSION }}-release.apk
+          elif [ -f release/app-release-unsigned.apk ]; then
+            mv release/app-release-unsigned.apk release/mindlair-${{ steps.version.outputs.VERSION }}-unsigned.apk
+          fi
+      
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindlair-debug-apk
+          path: mindlayer/apps/android/app/build/outputs/apk/debug/*.apk
+      
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindlair-release-apk
+          path: mindlayer/apps/android/app/build/outputs/apk/release/*.apk
+      
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Mindlair Android ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## Mindlair Android ${{ steps.version.outputs.VERSION }}
+            
+            ### Installation
+            1. Download the APK file below
+            2. On your Android device, enable "Install from unknown sources" in Settings
+            3. Open the downloaded APK to install
+            
+            ### Features
+            - Accessibility Service for passive content capture
+            - Floating bubble for quick reactions
+            - Background sync with Mindlair web
+            
+            ### Requirements
+            - Android 8.0 (API 26) or higher
+          files: |
+            mindlayer/apps/android/app/build/outputs/apk/debug/*.apk
+            mindlayer/apps/android/app/build/outputs/apk/release/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
