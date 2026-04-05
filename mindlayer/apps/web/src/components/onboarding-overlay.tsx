@@ -328,6 +328,9 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 syncing={syncing === "readwise"}
                 onConnect={connectReadwise}
                 onSync={() => syncIntegration("readwise")}
+                provider="readwise"
+                fetchData={fetchData}
+                syncIntegration={syncIntegration}
               />
               <IntegrationRow
                 name="Instapaper"
@@ -338,6 +341,9 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 syncing={syncing === "instapaper"}
                 onConnect={connectInstapaper}
                 onSync={() => syncIntegration("instapaper")}
+                provider="instapaper"
+                fetchData={fetchData}
+                syncIntegration={syncIntegration}
               />
               <IntegrationRow
                 name="Spotify"
@@ -348,6 +354,9 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 syncing={syncing === "spotify"}
                 onConnect={connectSpotify}
                 onSync={() => syncIntegration("spotify")}
+                provider="spotify"
+                fetchData={fetchData}
+                syncIntegration={syncIntegration}
               />
 
               {totalSources > 0 && (
@@ -607,6 +616,9 @@ function IntegrationRow({
   syncing,
   onConnect,
   onSync,
+  provider,
+  fetchData,
+  syncIntegration,
 }: {
   name: string;
   description: string;
@@ -616,65 +628,252 @@ function IntegrationRow({
   syncing: boolean;
   onConnect: () => void;
   onSync: () => void;
+  provider: string;
+  fetchData: () => Promise<void>;
+  syncIntegration: (provider: string) => Promise<void>;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [readwiseToken, setReadwiseToken] = useState("");
+  const [instapaperEmail, setInstapaperEmail] = useState("");
+  const [instapaperPassword, setInstapaperPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleReadwiseConnect = async () => {
+    if (!readwiseToken.trim()) {
+      setError("Please enter your access token");
+      return;
+    }
+    setConnecting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/integrations/readwise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: readwiseToken.trim() }),
+      });
+      if (res.ok) {
+        await fetchData();
+        await syncIntegration("readwise");
+        setExpanded(false);
+        setReadwiseToken("");
+      } else {
+        const err = await res.json();
+        setError(err.message || "Failed to connect");
+      }
+    } catch {
+      setError("Failed to connect");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const handleInstapaperConnect = async () => {
+    if (!instapaperEmail.trim() || !instapaperPassword) {
+      setError("Please enter email and password");
+      return;
+    }
+    setConnecting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/integrations/instapaper", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: instapaperEmail.trim(), password: instapaperPassword }),
+      });
+      if (res.ok) {
+        await fetchData();
+        await syncIntegration("instapaper");
+        setExpanded(false);
+        setInstapaperEmail("");
+        setInstapaperPassword("");
+      } else {
+        const err = await res.json();
+        setError(err.message || "Failed to connect");
+      }
+    } catch {
+      setError("Failed to connect");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
   return (
     <div
-      className="rounded-xl p-4 flex items-center justify-between"
+      className="rounded-xl overflow-hidden"
       style={{
         border: `1px solid ${connected ? `${C.accent}40` : C.border}`,
         background: C.surface,
       }}
     >
-      <div className="flex items-center gap-3">
-        <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center"
-          style={{ background: `${C.border}80` }}
-        >
-          {icon}
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-sm" style={{ color: C.text }}>
-              {name}
-            </p>
-            {connected && <Check className="w-3.5 h-3.5" style={{ color: C.accent }} />}
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ background: `${C.border}80` }}
+          >
+            {icon}
           </div>
-          <p className="text-xs" style={{ color: C.muted }}>
-            {description}
-          </p>
-          {connected && sourceCount > 0 && (
-            <p className="text-xs mt-0.5" style={{ color: C.accent }}>
-              {sourceCount} sources imported
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-sm" style={{ color: C.text }}>
+                {name}
+              </p>
+              {connected && <Check className="w-3.5 h-3.5" style={{ color: C.accent }} />}
+            </div>
+            <p className="text-xs" style={{ color: C.muted }}>
+              {description}
             </p>
+            {connected && sourceCount > 0 && (
+              <p className="text-xs mt-0.5" style={{ color: C.accent }}>
+                {sourceCount} sources imported
+              </p>
+            )}
+          </div>
+        </div>
+        {connected ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSync}
+            disabled={syncing}
+            style={{ borderColor: C.border, color: C.textSoft }}
+          >
+            {syncing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Sync
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (provider === "spotify") {
+                onConnect();
+              } else {
+                setExpanded(!expanded);
+                setError("");
+              }
+            }}
+            style={{ borderColor: C.border, color: C.textSoft }}
+          >
+            {expanded ? "Cancel" : "Connect"}
+          </Button>
+        )}
+      </div>
+
+      {/* Expandable form for non-OAuth integrations */}
+      {expanded && !connected && provider !== "spotify" && (
+        <div
+          style={{
+            padding: "0 16px 16px 16px",
+            borderTop: `1px solid ${C.border}`,
+          }}
+        >
+          {provider === "readwise" && (
+            <div className="pt-4 space-y-3">
+              <div>
+                <label style={{ fontSize: 12, color: C.muted, display: "block", marginBottom: 6 }}>
+                  Access Token from{" "}
+                  <a
+                    href="https://readwise.io/access_token"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: C.accent, textDecoration: "underline" }}
+                  >
+                    readwise.io/access_token
+                  </a>
+                </label>
+                <input
+                  type="text"
+                  value={readwiseToken}
+                  onChange={(e) => setReadwiseToken(e.target.value)}
+                  placeholder="Enter your access token"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: `1px solid ${C.border}`,
+                    background: C.bg,
+                    color: C.text,
+                    fontSize: 14,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              {error && <p style={{ fontSize: 12, color: C.rose }}>{error}</p>}
+              <Button
+                size="sm"
+                onClick={handleReadwiseConnect}
+                disabled={connecting}
+                style={{ background: C.accent, color: C.bg, fontWeight: 600 }}
+              >
+                {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Connect Readwise"}
+              </Button>
+            </div>
+          )}
+
+          {provider === "instapaper" && (
+            <div className="pt-4 space-y-3">
+              <div>
+                <label style={{ fontSize: 12, color: C.muted, display: "block", marginBottom: 6 }}>
+                  Instapaper Email
+                </label>
+                <input
+                  type="email"
+                  value={instapaperEmail}
+                  onChange={(e) => setInstapaperEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: `1px solid ${C.border}`,
+                    background: C.bg,
+                    color: C.text,
+                    fontSize: 14,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: C.muted, display: "block", marginBottom: 6 }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={instapaperPassword}
+                  onChange={(e) => setInstapaperPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: `1px solid ${C.border}`,
+                    background: C.bg,
+                    color: C.text,
+                    fontSize: 14,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              {error && <p style={{ fontSize: 12, color: C.rose }}>{error}</p>}
+              <Button
+                size="sm"
+                onClick={handleInstapaperConnect}
+                disabled={connecting}
+                style={{ background: C.accent, color: C.bg, fontWeight: 600 }}
+              >
+                {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Connect Instapaper"}
+              </Button>
+            </div>
           )}
         </div>
-      </div>
-      {connected ? (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSync}
-          disabled={syncing}
-          style={{ borderColor: C.border, color: C.textSoft }}
-        >
-          {syncing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-1" />
-              Sync
-            </>
-          )}
-        </Button>
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onConnect}
-          style={{ borderColor: C.border, color: C.textSoft }}
-        >
-          Connect
-        </Button>
       )}
     </div>
   );
