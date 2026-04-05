@@ -443,22 +443,47 @@ export default function MindlayerMap() {
         padding: "10px 16px",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
+        justifyContent: "space-between",
+        gap: 12,
+        flexWrap: "wrap",
       }}>
-        <span style={{ fontSize: 13, color: C.accent }}>
-          ✨ This is sample data showing how your map could look.
-        </span>
-        <a
-          href="/settings"
-          style={{
-            fontSize: 13,
-            color: C.accent,
-            textDecoration: "underline",
-            fontWeight: 500,
-          }}
-        >
-          Connect sources to build your own
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 13, color: C.accent }}>
+            ✨ This is sample data showing how your map could look.
+          </span>
+          <a
+            href="/settings"
+            style={{
+              fontSize: 13,
+              color: C.accent,
+              textDecoration: "underline",
+              fontWeight: 500,
+            }}
+          >
+            Connect sources to build your own
+          </a>
+        </div>
+        <a href="/wrapped" style={{
+          background: `${C.surface}`,
+          border: `1px solid ${C.border}`,
+          borderRadius: 6,
+          padding: "6px 12px",
+          textDecoration: "none",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          flexShrink: 0,
+        }}>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 600,
+            background: `linear-gradient(90deg, ${C.accent}, ${C.blue}, ${C.amber})`,
+            backgroundSize: "200% auto",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            animation: "ml-shimmer 3s linear infinite",
+          }}>Your 2025 Wrapped</span>
+          <span style={{ fontSize: 11, color: C.muted }}>→</span>
         </a>
       </div>
 
@@ -1020,24 +1045,6 @@ export default function MindlayerMap() {
         </div>
       </div>
 
-      {/* ── Wrapped teaser ── */}
-      <a href="/wrapped" style={{
-        position: "absolute", top: 14, right: 24,
-        background: `${C.surface}e0`, border: `1px solid ${C.border}`, borderRadius: 8,
-        padding: "8px 14px", textDecoration: "none",
-        display: "flex", alignItems: "center", gap: 8,
-        backdropFilter: "blur(6px)", zIndex: 10,
-      }}>
-        <span style={{
-          fontSize: 11, fontWeight: 600,
-          background: `linear-gradient(90deg, ${C.accent}, ${C.blue}, ${C.amber})`,
-          backgroundSize: "200% auto",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          animation: "ml-shimmer 3s linear infinite",
-        }}>Your 2025 Wrapped</span>
-        <span style={{ fontSize: 11, color: C.muted }}>→</span>
-      </a>
     </div>
   );
 }
