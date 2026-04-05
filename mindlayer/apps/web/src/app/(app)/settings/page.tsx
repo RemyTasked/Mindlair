@@ -342,14 +342,14 @@ export default function SettingsPage() {
 
       if (response.ok) {
         const result = await response.json();
-        alert(`Imported ${result.imported} new items from ${provider}`);
+        alert(result.message || `Imported ${result.imported} new items from ${provider}`);
         fetchSettings();
       } else {
         const error = await response.json();
         alert(error.message || `Failed to sync ${provider}`);
       }
     } catch (err) {
-      alert(`Failed to sync ${provider}`);
+      alert(`Failed to sync ${provider}. Please check your connection and try again.`);
     } finally {
       setSyncingProvider(null);
     }
@@ -532,18 +532,17 @@ export default function SettingsPage() {
                       </label>
                     </div>
                   </div>
-                  <div className="mt-2">
-                    <p className="text-xs text-zinc-600">
-                      <a
-                        href="https://takeout.google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline inline-flex items-center gap-1"
-                      >
-                        Export from Google Takeout
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                      {" "}— select YouTube history and/or Chrome history, then upload the ZIP file here.
+                  <div className="mt-3 p-3 bg-zinc-800/50 rounded-lg text-xs space-y-2">
+                    <p className="font-medium text-zinc-300">How to export:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-zinc-500">
+                      <li>Go to <a href="https://takeout.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">takeout.google.com</a></li>
+                      <li>Click &quot;Deselect all&quot; first</li>
+                      <li>Select only: <span className="text-zinc-300">YouTube → YouTube and YouTube Music</span> and/or <span className="text-zinc-300">Chrome → BrowserHistory</span></li>
+                      <li>Choose &quot;Export once&quot; and &quot;.zip&quot; format</li>
+                      <li>Wait for email, download ZIP, then upload here</li>
+                    </ol>
+                    <p className="text-zinc-600 pt-1">
+                      Supported files: <code className="text-zinc-500">watch-history.html</code>, <code className="text-zinc-500">BrowserHistory.json</code>, or the full ZIP
                     </p>
                   </div>
                   {takeoutResult && (

@@ -47,18 +47,32 @@ export async function POST(request: NextRequest) {
     try {
       episodes = await fetchRecentlyPlayedEpisodes(accessToken);
     } catch (err) {
+      console.error('Spotify fetch error:', err);
       if (err instanceof Error && err.message === 'TOKEN_EXPIRED' && connection.refreshToken) {
-        const refreshed = await refreshSpotifyToken(connection.refreshToken);
-        accessToken = refreshed.accessToken;
-        await db.connectedSource.update({
-          where: { id: connection.id },
-          data: {
-            accessToken: refreshed.accessToken,
-            refreshToken: refreshed.refreshToken,
-            expiresAt: refreshed.expiresAt,
-          },
-        });
-        episodes = await fetchRecentlyPlayedEpisodes(accessToken);
+        try {
+          const refreshed = await refreshSpotifyToken(connection.refreshToken);
+          accessToken = refreshed.accessToken;
+          await db.connectedSource.update({
+            where: { id: connection.id },
+            data: {
+              accessToken: refreshed.accessToken,
+              refreshToken: refreshed.refreshToken,
+              expiresAt: refreshed.expiresAt,
+            },
+          });
+          episodes = await fetchRecentlyPlayedEpisodes(accessToken);
+        } catch (refreshErr) {
+          console.error('Spotify token refresh failed:', refreshErr);
+          return NextResponse.json({ 
+            code: 'TOKEN_REFRESH_FAILED', 
+            message: 'Please reconnect Spotify - your authorization has expired' 
+          }, { status: 401 });
+        }
+      } else if (err instanceof Error && err.message.includes('Spotify API error: 403')) {
+        return NextResponse.json({ 
+          code: 'FORBIDDEN', 
+          message: 'Spotify access denied. Your account may need to be added to the app\'s allowed users list.' 
+        }, { status: 403 });
       } else {
         throw err;
       }
@@ -101,9 +115,24 @@ export async function POST(request: NextRequest) {
       synced: true,
       totalEpisodes: episodes.length,
       imported,
+      message: episodes.length === 0 
+        ? 'No podcast episodes found in your recent listening history. Spotify only tracks podcasts, not music.'
+        : `Imported ${imported} podcast episode${imported !== 1 ? 's' : ''}`,
     });
   } catch (error) {
     console.error('Spotify sync error:', error);
-    return NextResponse.json({ code: 'INTERNAL_ERROR', message: 'Failed to sync Spotify' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (message.includes('Spotify API error: 403')) {
+      return NextResponse.json({ 
+        code: 'FORBIDDEN', 
+        message: 'Spotify access denied. Your account may need to be added to the app\'s allowed users list.' 
+      }, { status: 403 });
+    }
+    
+    return NextResponse.json({ 
+      code: 'INTERNAL_ERROR', 
+      message: 'Failed to sync Spotify. Please try disconnecting and reconnecting.' 
+    }, { status: 500 });
   }
 }

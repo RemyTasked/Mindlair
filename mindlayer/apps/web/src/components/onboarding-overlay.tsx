@@ -549,18 +549,15 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                         </label>
                       </div>
                     </div>
-                    <p style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
-                      <a
-                        href="https://takeout.google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "#4285F4", textDecoration: "none" }}
-                      >
-                        Export from takeout.google.com
-                        <ExternalLink className="w-3 h-3 inline ml-1" />
-                      </a>
-                      {" "}— select YouTube history and/or Chrome history, then upload the ZIP.
-                    </p>
+                    <div style={{ marginTop: 12, padding: 12, background: C.border, borderRadius: 8, fontSize: 11 }}>
+                      <p style={{ fontWeight: 600, color: C.textSoft, marginBottom: 6 }}>How to export:</p>
+                      <ol style={{ margin: 0, paddingLeft: 16, color: C.muted, lineHeight: 1.6 }}>
+                        <li>Go to <a href="https://takeout.google.com" target="_blank" rel="noopener noreferrer" style={{ color: "#4285F4" }}>takeout.google.com</a></li>
+                        <li>Click &quot;Deselect all&quot; first</li>
+                        <li>Select: <span style={{ color: C.textSoft }}>YouTube → YouTube and YouTube Music</span> and/or <span style={{ color: C.textSoft }}>Chrome → BrowserHistory</span></li>
+                        <li>Choose &quot;.zip&quot; format, then download and upload here</li>
+                      </ol>
+                    </div>
                     {takeoutResult && (
                       <div
                         style={{
