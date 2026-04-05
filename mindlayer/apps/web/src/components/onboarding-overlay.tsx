@@ -312,15 +312,15 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
               alignItems: "center",
               gap: 10,
               padding: "12px 16px",
-              background: `${C.accent}10`,
+              background: `${C.surface}`,
               borderRadius: 10,
               marginBottom: 16,
-              border: `1px solid ${C.accent}30`,
+              border: `1px solid ${C.border}`,
             }}
           >
-            <Info className="w-4 h-4" style={{ color: C.accent, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: C.accent }}>
-              Connect at least one source to see your belief map come alive
+            <Sparkles className="w-4 h-4" style={{ color: C.accent, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: C.textSoft }}>
+              Connect sources for a richer map experience (optional)
             </span>
           </div>
         )}
@@ -550,14 +550,32 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 <Check className="w-8 h-8" style={{ color: C.accent }} />
               </div>
 
-              <div className="space-y-3 mb-8">
-                {totalConnected > 0 && (
-                  <SummaryRow label="Services connected" value={totalConnected} />
-                )}
-                {totalSources > 0 && (
-                  <SummaryRow label="Sources in your map" value={totalSources} />
-                )}
-              </div>
+              {totalConnected > 0 || totalSources > 0 ? (
+                <div className="space-y-3 mb-8">
+                  {totalConnected > 0 && (
+                    <SummaryRow label="Services connected" value={totalConnected} />
+                  )}
+                  {totalSources > 0 && (
+                    <SummaryRow label="Sources in your map" value={totalSources} />
+                  )}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: "16px",
+                    background: C.surface,
+                    borderRadius: 12,
+                    border: `1px solid ${C.border}`,
+                    marginBottom: 24,
+                  }}
+                >
+                  <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.6 }}>
+                    Your map is empty for now. Visit{" "}
+                    <strong style={{ color: C.accent }}>Settings</strong> anytime to connect
+                    your reading sources and watch your belief map grow.
+                  </p>
+                </div>
+              )}
 
               <Button
                 size="lg"
@@ -575,7 +593,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    Explore your map
+                    {totalConnected > 0 ? "Explore your map" : "Continue to map"}
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </>
                 )}
@@ -604,16 +622,13 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
 
             <Button
               onClick={() => setStep(STEPS[stepIndex + 1])}
-              disabled={step === "connect" && !hasAtLeastOneSource}
               style={{
-                background: hasAtLeastOneSource || step !== "connect" ? C.accent : C.border,
-                color: hasAtLeastOneSource || step !== "connect" ? C.bg : C.muted,
+                background: C.accent,
+                color: C.bg,
                 fontWeight: 600,
-                cursor:
-                  step === "connect" && !hasAtLeastOneSource ? "not-allowed" : "pointer",
               }}
             >
-              {stepIndex === STEPS.length - 2 ? "Finish setup" : "Continue"}
+              {step === "connect" && !hasAtLeastOneSource ? "Skip for now" : stepIndex === STEPS.length - 2 ? "Finish setup" : "Continue"}
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
