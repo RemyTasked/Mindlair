@@ -193,6 +193,14 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Check file size
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > 100) {
+      setTakeoutError(`File too large (${fileSizeMB.toFixed(1)}MB). Extract and upload just the watch-history.html or BrowserHistory.json file.`);
+      event.target.value = "";
+      return;
+    }
+
     setTakeoutUploading(true);
     setTakeoutError(null);
     setTakeoutResult(null);
@@ -206,16 +214,21 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
         body: formData,
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setTakeoutResult(data.imported);
-        await fetchData();
-      } else {
-        setTakeoutError(data.message || "Failed to import Google Takeout data");
+      if (!res.ok) {
+        if (res.status === 413) {
+          setTakeoutError("File too large. Extract and upload the individual history file instead.");
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        setTakeoutError(data.message || `Upload failed. Try uploading individual files.`);
+        return;
       }
+
+      const data = await res.json();
+      setTakeoutResult(data.imported);
+      await fetchData();
     } catch {
-      setTakeoutError("Failed to upload file");
+      setTakeoutError("Upload failed. Try extracting and uploading watch-history.html directly.");
     } finally {
       setTakeoutUploading(false);
       event.target.value = "";

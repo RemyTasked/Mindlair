@@ -304,6 +304,14 @@ export default function SettingsPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Check file size (warn if > 50MB, reject if > 100MB)
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > 100) {
+      setTakeoutError(`File too large (${fileSizeMB.toFixed(1)}MB). Please extract and upload just the watch-history.html or BrowserHistory.json file instead of the full ZIP.`);
+      event.target.value = "";
+      return;
+    }
+
     setTakeoutUploading(true);
     setTakeoutError(null);
     setTakeoutResult(null);
@@ -317,16 +325,22 @@ export default function SettingsPage() {
         body: formData,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setTakeoutResult(data.imported);
-        fetchSettings();
-      } else {
-        setTakeoutError(data.message || "Failed to import Google Takeout data");
+      if (!response.ok) {
+        if (response.status === 413) {
+          setTakeoutError("File too large for server. Please extract and upload just the watch-history.html or BrowserHistory.json file instead.");
+          return;
+        }
+        const data = await response.json().catch(() => ({}));
+        setTakeoutError(data.message || `Upload failed (${response.status}). Try uploading individual files instead of the ZIP.`);
+        return;
       }
+
+      const data = await response.json();
+      setTakeoutResult(data.imported);
+      fetchSettings();
     } catch (err) {
-      setTakeoutError("Failed to upload file");
+      console.error("Takeout upload error:", err);
+      setTakeoutError("Upload failed. Try extracting the ZIP and uploading watch-history.html or BrowserHistory.json directly.");
     } finally {
       setTakeoutUploading(false);
       event.target.value = "";

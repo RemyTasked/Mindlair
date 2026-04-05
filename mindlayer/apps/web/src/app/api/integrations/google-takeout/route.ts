@@ -12,6 +12,7 @@ import { isContentExplicit } from '@/lib/services/content-filter';
 import JSZip from 'jszip';
 
 export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,6 +74,17 @@ export async function POST(request: NextRequest) {
       } else if (content.startsWith('{') || content.startsWith('[')) {
         chromeItems = parseChromeHistory(content);
       }
+    }
+
+    // Check if we found any data
+    if (youtubeItems.length === 0 && chromeItems.length === 0) {
+      return NextResponse.json(
+        { 
+          code: 'NO_DATA_FOUND', 
+          message: 'No YouTube or Chrome history found in this file. Make sure you selected "YouTube and YouTube Music" or "Chrome → BrowserHistory" when exporting from Google Takeout.' 
+        },
+        { status: 400 }
+      );
     }
 
     let importedYoutube = 0;
@@ -167,8 +179,17 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Google Takeout import error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (message.includes('Invalid or unsupported zip')) {
+      return NextResponse.json(
+        { code: 'INVALID_ZIP', message: 'Invalid ZIP file. Make sure you downloaded the file completely.' },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { code: 'INTERNAL_ERROR', message: 'Failed to import Google Takeout data' },
+      { code: 'INTERNAL_ERROR', message: `Import failed: ${message.slice(0, 100)}` },
       { status: 500 }
     );
   }
