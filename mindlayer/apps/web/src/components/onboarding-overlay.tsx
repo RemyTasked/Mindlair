@@ -19,6 +19,9 @@ import {
   Home,
   Sparkles,
   Bell,
+  Brain,
+  TrendingUp,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -34,7 +37,7 @@ const C = {
   rose: "#e06070",
 };
 
-const STEPS = ["connect", "capture", "done"] as const;
+const STEPS = ["welcome", "connect", "capture", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 interface Integration {
@@ -59,7 +62,7 @@ interface OnboardingOverlayProps {
 }
 
 export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
-  const [step, setStep] = useState<Step>("connect");
+  const [step, setStep] = useState<Step>("welcome");
   const [data, setData] = useState<IntegrationsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [platform, setPlatform] = useState<PlatformType>("other");
@@ -269,17 +272,24 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
               margin: "0 auto 16px",
             }}
           >
-            <Sparkles className="w-6 h-6" style={{ color: C.accent }} />
+            {step === "welcome" ? (
+              <Brain className="w-6 h-6" style={{ color: C.accent }} />
+            ) : (
+              <Sparkles className="w-6 h-6" style={{ color: C.accent }} />
+            )}
           </div>
           <h1
             className="text-2xl font-bold mb-2"
             style={{ color: C.text, letterSpacing: "-0.03em" }}
           >
+            {step === "welcome" && "Welcome to Mindlair"}
             {step === "connect" && "Connect your sources"}
             {step === "capture" && (isMobile ? "Add to Home Screen" : "Install capture tools")}
             {step === "done" && "You're ready!"}
           </h1>
           <p className="text-sm" style={{ color: C.muted, maxWidth: 400, margin: "0 auto" }}>
+            {step === "welcome" &&
+              "Map your intellectual journey. See how your thinking evolves over time."}
             {step === "connect" &&
               "Link at least one service to seed your map with your reading history. The more you connect, the richer your map becomes."}
             {step === "capture" &&
@@ -327,6 +337,57 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
 
         {/* Step content */}
         <div className="space-y-3">
+          {step === "welcome" && (
+            <div className="space-y-4">
+              {/* What Mindlair does */}
+              <div
+                style={{
+                  background: C.surface,
+                  borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  padding: 20,
+                }}
+              >
+                <div className="space-y-4">
+                  <WelcomeFeature
+                    icon={<Layers className="w-5 h-5" />}
+                    title="Capture what you consume"
+                    description="Articles, podcasts, videos — Mindlair automatically tracks everything you read, watch, and listen to."
+                  />
+                  <WelcomeFeature
+                    icon={<Brain className="w-5 h-5" />}
+                    title="Build your belief map"
+                    description="See your interests as an interactive map. Watch clusters form around topics you care about."
+                  />
+                  <WelcomeFeature
+                    icon={<TrendingUp className="w-5 h-5" />}
+                    title="Track how you evolve"
+                    description="Your map changes over time. Revisit past versions to see how your thinking has shifted."
+                  />
+                </div>
+              </div>
+
+              {/* How to get the most */}
+              <div
+                style={{
+                  background: `${C.accent}08`,
+                  borderRadius: 12,
+                  border: `1px solid ${C.accent}20`,
+                  padding: "16px 20px",
+                }}
+              >
+                <p style={{ fontSize: 13, color: C.textSoft, marginBottom: 12, fontWeight: 500 }}>
+                  Get the most out of Mindlair:
+                </p>
+                <ul style={{ margin: 0, padding: "0 0 0 18px", fontSize: 13, color: C.muted, lineHeight: 1.8 }}>
+                  <li>Connect more reading sources for a richer starting map</li>
+                  <li>Install the browser extension for passive capture</li>
+                  <li>Check back weekly to see your map evolve</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
           {step === "connect" && (
             <>
               <IntegrationRow
@@ -628,7 +689,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 fontWeight: 600,
               }}
             >
-              {step === "connect" && !hasAtLeastOneSource ? "Skip for now" : stepIndex === STEPS.length - 2 ? "Finish setup" : "Continue"}
+              {step === "welcome" ? "Get Started" : step === "connect" && !hasAtLeastOneSource ? "Skip for now" : stepIndex === STEPS.length - 2 ? "Finish setup" : "Continue"}
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
@@ -1191,6 +1252,44 @@ function SummaryRow({ label, value }: { label: string; value: number }) {
       <span className="text-sm font-semibold" style={{ color: C.accent }}>
         {value}
       </span>
+    </div>
+  );
+}
+
+function WelcomeFeature({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex gap-4">
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          background: `${C.accent}15`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          color: C.accent,
+        }}
+      >
+        {icon}
+      </div>
+      <div>
+        <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>
+          {title}
+        </p>
+        <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+          {description}
+        </p>
+      </div>
     </div>
   );
 }
