@@ -27,6 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import JSZip from "jszip";
 
 const C = {
   bg: "#0f0e0c",
@@ -193,42 +194,95 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check file size
-    const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > 100) {
-      setTakeoutError(`File too large (${fileSizeMB.toFixed(1)}MB). Extract and upload just the watch-history.html or BrowserHistory.json file.`);
-      event.target.value = "";
-      return;
-    }
-
     setTakeoutUploading(true);
     setTakeoutError(null);
     setTakeoutResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/integrations/google-takeout", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        if (res.status === 413) {
-          setTakeoutError("File too large. Extract and upload the individual history file instead.");
+      // If it's a ZIP file, extract relevant files client-side and upload them separately
+      if (file.name.endsWith('.zip')) {
+        const arrayBuffer = await file.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        
+        // Find YouTube watch history
+        const youtubeFiles = zip.file(/watch-history\.html$/i);
+        const youtubeFile = youtubeFiles.find(f => 
+          f.name.includes('YouTube') || f.name.includes('history')
+        ) || youtubeFiles[0];
+        
+        // Find Chrome history
+        const chromeFiles = zip.file(/BrowserHistory\.json$/i);
+        const chromeFile = chromeFiles[0];
+        
+        if (!youtubeFile && !chromeFile) {
+          setTakeoutError("No YouTube or Chrome history found in this ZIP. Make sure you selected the right data when exporting.");
           return;
         }
-        const data = await res.json().catch(() => ({}));
-        setTakeoutError(data.message || `Upload failed. Try uploading individual files.`);
-        return;
-      }
 
-      const data = await res.json();
-      setTakeoutResult(data.imported);
-      await fetchData();
-    } catch {
-      setTakeoutError("Upload failed. Try extracting and uploading watch-history.html directly.");
+        let totalYoutube = 0;
+        let totalChrome = 0;
+
+        // Upload YouTube history if found
+        if (youtubeFile) {
+          const content = await youtubeFile.async('blob');
+          const formData = new FormData();
+          formData.append("file", content, "watch-history.html");
+          formData.append("type", "youtube");
+          
+          const response = await fetch("/api/integrations/google-takeout", {
+            method: "POST",
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            totalYoutube = data.imported?.youtube || 0;
+          }
+        }
+
+        // Upload Chrome history if found
+        if (chromeFile) {
+          const content = await chromeFile.async('blob');
+          const formData = new FormData();
+          formData.append("file", content, "BrowserHistory.json");
+          formData.append("type", "chrome");
+          
+          const response = await fetch("/api/integrations/google-takeout", {
+            method: "POST",
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            totalChrome = data.imported?.chrome || 0;
+          }
+        }
+
+        setTakeoutResult({ youtube: totalYoutube, chrome: totalChrome, total: totalYoutube + totalChrome });
+        await fetchData();
+      } else {
+        // For non-ZIP files, upload directly
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/integrations/google-takeout", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setTakeoutError(data.message || `Upload failed`);
+          return;
+        }
+
+        const data = await res.json();
+        setTakeoutResult(data.imported);
+        await fetchData();
+      }
+    } catch (err) {
+      console.error("Takeout upload error:", err);
+      setTakeoutError("Failed to process file. Make sure it's a valid Google Takeout export.");
     } finally {
       setTakeoutUploading(false);
       event.target.value = "";
