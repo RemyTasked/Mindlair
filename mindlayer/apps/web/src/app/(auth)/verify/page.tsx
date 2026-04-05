@@ -40,7 +40,10 @@ export default function VerifyPage() {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+    <div 
+      className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4"
+      style={{ minHeight: "100dvh" }}
+    >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/">

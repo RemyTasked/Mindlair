@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `mindlayer-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `mindlayer-dynamic-${CACHE_VERSION}`;
 
@@ -6,7 +6,6 @@ const STATIC_ASSETS = [
   '/',
   '/map',
   '/wrapped',
-  '/login',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -14,7 +13,9 @@ const STATIC_ASSETS = [
   '/offline',
 ];
 
-const APP_SHELL_ROUTES = ['/map', '/wrapped', '/inbox', '/timeline', '/nudges', '/settings'];
+const APP_SHELL_ROUTES = ['/map', '/wrapped', '/inbox', '/timeline', '/nudges', '/settings', '/feed', '/publish', '/profile'];
+
+const AUTH_ROUTES = ['/login', '/verify', '/onboarding'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -48,7 +49,12 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(networkOnlyForMutations(request));
+    return;
+  }
+
+  if (AUTH_ROUTES.some((r) => url.pathname === r || url.pathname.startsWith(r + '/'))) {
+    event.respondWith(networkOnly(request));
     return;
   }
 
@@ -81,21 +87,37 @@ async function cacheFirst(request) {
   }
 }
 
-async function networkFirst(request) {
+async function networkOnlyForMutations(request) {
+  const isGetRequest = request.method === 'GET';
+  
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response.ok && isGetRequest) {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, response.clone());
     }
     return response;
-  } catch {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    return new Response(JSON.stringify({ error: 'Offline' }), {
+  } catch (error) {
+    if (isGetRequest) {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+    }
+    return new Response(JSON.stringify({ 
+      code: 'NETWORK_OFFLINE',
+      message: 'You appear to be offline. Please check your connection and try again.',
+      offline: true,
+    }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+}
+
+async function networkOnly(request) {
+  try {
+    return await fetch(request);
+  } catch {
+    return offlineResponse();
   }
 }
 

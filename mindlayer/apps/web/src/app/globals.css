@@ -17,10 +17,20 @@ html, body {
   min-height: -webkit-fill-available;
 }
 
+html {
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+}
+
+@supports (padding: max(0px)) {
+  html {
+    padding: max(env(safe-area-inset-top, 0px), 0px) max(env(safe-area-inset-right, 0px), 0px) max(env(safe-area-inset-bottom, 0px), 0px) max(env(safe-area-inset-left, 0px), 0px);
+  }
 }
 
 @supports (min-height: 100dvh) {

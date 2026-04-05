@@ -41,9 +41,19 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
+        cache: "no-store",
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Unable to connect. Please check your internet connection.");
+      }
+
+      if (data.offline) {
+        throw new Error("You appear to be offline. Please check your connection and try again.");
+      }
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to send magic link");
@@ -51,7 +61,11 @@ export default function LoginPage() {
 
       setIsSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        setError("Network error. Please check your internet connection.");
+      } else {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +74,12 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif" }}
+      style={{ 
+        background: C.bg, 
+        color: C.text, 
+        fontFamily: "'Inter', system-ui, sans-serif",
+        minHeight: "100dvh",
+      }}
     >
       <div className="w-full max-w-sm">
         {/* Logo */}
