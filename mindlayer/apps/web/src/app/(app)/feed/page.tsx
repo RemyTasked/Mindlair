@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
@@ -22,7 +22,6 @@ import {
   BookOpen,
   Headphones,
   Video,
-  FileText,
   Sparkles,
   Cpu,
   Brain,
@@ -31,6 +30,7 @@ import {
   Lightbulb as Philosophy,
   Globe,
   Zap,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -107,6 +107,16 @@ const stanceIcons = {
 
 type FilterType = "all" | "following" | "discover";
 
+const FEED_RESTORE_KEY = "mindlayer_feed_restore";
+
+function isFilterType(v: unknown): v is FilterType {
+  return v === "all" || v === "following" || v === "discover";
+}
+
+function isCategoryType(v: unknown): v is NonNullable<CategoryType> {
+  return typeof v === "string" && CATEGORIES.some((c) => c.id === v);
+}
+
 export default function FeedPage() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,6 +129,24 @@ export default function FeedPage() {
   const [reactingPostId, setReactingPostId] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const pendingScrollY = useRef<number | null>(null);
+  const restoreReadRef = useRef(false);
+
+  const persistFeedContextForPost = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem(
+        FEED_RESTORE_KEY,
+        JSON.stringify({
+          scrollY: window.scrollY,
+          filter,
+          category,
+        })
+      );
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [filter, category]);
 
   const fetchPosts = useCallback(async (cursor?: string, isRefresh = false) => {
     if (!isRefresh && !cursor) {
@@ -160,9 +188,46 @@ export default function FeedPage() {
     }
   }, [filter, category]);
 
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || restoreReadRef.current) return;
+    restoreReadRef.current = true;
+    try {
+      const raw = sessionStorage.getItem(FEED_RESTORE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw) as {
+        scrollY?: number;
+        filter?: unknown;
+        category?: unknown;
+      };
+      sessionStorage.removeItem(FEED_RESTORE_KEY);
+      if (typeof data.scrollY === "number" && data.scrollY >= 0) {
+        pendingScrollY.current = data.scrollY;
+      }
+      if (isFilterType(data.filter)) setFilter(data.filter);
+      if (data.category === null || data.category === undefined) {
+        setCategory(null);
+      } else if (isCategoryType(data.category)) {
+        setCategory(data.category);
+      }
+    } catch {
+      sessionStorage.removeItem(FEED_RESTORE_KEY);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
+
+  useLayoutEffect(() => {
+    if (isLoading || pendingScrollY.current === null) return;
+    const y = pendingScrollY.current;
+    pendingScrollY.current = null;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, y);
+      });
+    });
+  }, [isLoading, posts.length]);
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasMore) return;
@@ -196,19 +261,9 @@ export default function FeedPage() {
         throw new Error("Failed to react");
       }
 
-      const data = await response.json();
+      await response.json();
 
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                userReaction: data.reaction.stance,
-                reactionCounts: data.reactionCounts,
-              }
-            : post
-        )
-      );
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
     } catch (err) {
       console.error("Reaction error:", err);
     } finally {
@@ -462,8 +517,8 @@ export default function FeedPage() {
         )}
 
         {/* Post Cards */}
-        <AnimatePresence>
-          {posts.map((post, index) => {
+        <AnimatePresence mode="popLayout">
+          {posts.map((post) => {
             const StanceIcon = stanceIcons[post.authorStance as keyof typeof stanceIcons] || MessageSquare;
             const stanceColor = stanceColors[post.authorStance as keyof typeof stanceColors] || C.muted;
             const isReacting = reactingPostId === post.id;
@@ -473,8 +528,8 @@ export default function FeedPage() {
                 key={post.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ delay: index * 0.05 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
                 style={{
                   background: C.surface,
                   border: `1px solid ${C.border}`,
@@ -554,17 +609,36 @@ export default function FeedPage() {
                   </div>
                 </div>
 
-                {/* Headline Claim */}
-                <Link href={`/post/${post.id}`} style={{ textDecoration: "none" }}>
+                {/* Headline Claim — opens full post on this app */}
+                <Link
+                  href={`/post/${post.id}`}
+                  onClick={persistFeedContextForPost}
+                  style={{ textDecoration: "none", display: "block" }}
+                >
                   <h2 style={{
                     color: C.text,
                     fontSize: 18,
                     fontWeight: 600,
                     lineHeight: 1.4,
-                    marginBottom: 12,
+                    marginBottom: 6,
+                    textDecoration: "underline",
+                    textDecorationColor: `${C.accent}55`,
+                    textUnderlineOffset: 4,
                   }}>
                     {post.headlineClaim}
                   </h2>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    color: C.accent,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    marginBottom: 12,
+                  }}>
+                    <span>Open full post</span>
+                    <ChevronRight size={14} style={{ flexShrink: 0 }} />
+                  </div>
                 </Link>
 
                 {/* Body Preview */}
@@ -602,33 +676,39 @@ export default function FeedPage() {
                   </div>
                 )}
 
-                {/* Source Link */}
+                {/* Source Link — external; not the in-app full post */}
                 {post.source && (
-                  <a
-                    href={post.source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      padding: "12px 16px",
-                      background: C.bg,
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 10,
-                      marginBottom: 16,
-                      textDecoration: "none",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = C.accent;
-                      e.currentTarget.style.background = `${C.accent}08`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = C.border;
-                      e.currentTarget.style.background = C.bg;
-                    }}
-                  >
+                  <>
+                    <div style={{ marginBottom: 8 }}>
+                      <span style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        Original source (external)
+                      </span>
+                    </div>
+                    <a
+                      href={post.source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "12px 16px",
+                        background: C.bg,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 10,
+                        marginBottom: 16,
+                        textDecoration: "none",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = C.accent;
+                        e.currentTarget.style.background = `${C.accent}08`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = C.border;
+                        e.currentTarget.style.background = C.bg;
+                      }}
+                    >
                     <div style={{
                       width: 36,
                       height: 36,
@@ -671,7 +751,8 @@ export default function FeedPage() {
                       </div>
                     </div>
                     <ExternalLink size={16} style={{ color: C.muted, flexShrink: 0 }} />
-                  </a>
+                    </a>
+                  </>
                 )}
 
                 {/* Editorial Badge */}
@@ -697,27 +778,6 @@ export default function FeedPage() {
                   borderTop: `1px solid ${C.border}`,
                   paddingTop: 16,
                 }}>
-                  {/* Show reaction counts after user has reacted */}
-                  {post.userReaction && post.reactionCounts && (
-                    <div style={{ 
-                      display: "flex", 
-                      gap: 16, 
-                      marginBottom: 12,
-                      color: C.muted,
-                      fontSize: 13,
-                    }}>
-                      <span style={{ color: C.green }}>
-                        {post.reactionCounts.agree || 0} agree
-                      </span>
-                      <span style={{ color: C.rose }}>
-                        {post.reactionCounts.disagree || 0} disagree
-                      </span>
-                      <span style={{ color: C.accent }}>
-                        {post.reactionCounts.complicated || 0} complicated
-                      </span>
-                    </div>
-                  )}
-
                   {/* Reaction prompt */}
                   {!post.userReaction && (
                     <p style={{ 
