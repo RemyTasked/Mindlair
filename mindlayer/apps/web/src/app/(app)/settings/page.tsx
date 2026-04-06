@@ -571,7 +571,7 @@ export default function SettingsPage() {
             />
             <IntegrationItem
               name="Spotify"
-              description="Sync podcast episodes you've listened to"
+              description="Import podcasts from what you are playing, saved episodes, and any episode history Spotify returns. Disconnect and reconnect once if sync was failing."
               icon={<Music className="w-5 h-5 text-green-500" />}
               integration={getIntegration("spotify")}
               isSyncing={syncingProvider === "spotify"}

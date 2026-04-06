@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
 import {
-  fetchRecentlyPlayedEpisodes,
+  fetchPodcastEpisodesForSync,
   refreshSpotifyToken,
   mapEpisodeToSource,
 } from '@/lib/services/integrations/spotify';
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     let episodes;
     try {
-      episodes = await fetchRecentlyPlayedEpisodes(accessToken);
+      episodes = await fetchPodcastEpisodesForSync(accessToken);
     } catch (err) {
       console.error('Spotify fetch error:', err);
       if (err instanceof Error && err.message === 'TOKEN_EXPIRED' && connection.refreshToken) {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
               expiresAt: refreshed.expiresAt,
             },
           });
-          episodes = await fetchRecentlyPlayedEpisodes(accessToken);
+          episodes = await fetchPodcastEpisodesForSync(accessToken);
         } catch (refreshErr) {
           console.error('Spotify token refresh failed:', refreshErr);
           return NextResponse.json({ 
@@ -115,9 +115,10 @@ export async function POST(request: NextRequest) {
       synced: true,
       totalEpisodes: episodes.length,
       imported,
-      message: episodes.length === 0 
-        ? 'No podcast episodes found in your recent listening history. Spotify only tracks podcasts, not music.'
-        : `Imported ${imported} podcast episode${imported !== 1 ? 's' : ''}`,
+      message:
+        episodes.length === 0
+          ? 'No podcast episodes found. Open Spotify, play or save a podcast episode, then sync again. If this keeps happening, disconnect Spotify in Settings and reconnect so we can access currently playing and your saved episodes.'
+          : `Imported ${imported} podcast episode${imported !== 1 ? 's' : ''}`,
     });
   } catch (error) {
     console.error('Spotify sync error:', error);
