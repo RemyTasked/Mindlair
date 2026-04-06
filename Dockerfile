@@ -25,4 +25,5 @@ RUN npm run build:web
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["sh", "-c", "cd apps/web && npx prisma db push --skip-generate && npm run start"]
+# db push applies schema; db seed is idempotent (discover@mindlair.app posts for Discovery when no users post yet)
+CMD ["sh", "-c", "cd apps/web && npx prisma db push --skip-generate && npx prisma db seed && npm run start"]
