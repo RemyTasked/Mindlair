@@ -1,6 +1,6 @@
 import db from '@/lib/db';
 import { detectContradictions, identifyBlindSpots } from './ai';
-import { resolveConcept, resolveConceptBatch } from './concept-resolver';
+import { extractConceptsFromHeadline, resolveConcept, resolveConceptBatch } from './concept-resolver';
 
 type Stance = 'agree' | 'disagree' | 'complicated' | 'skip';
 type BeliefDirection = 'positive' | 'negative' | 'mixed';
@@ -385,6 +385,97 @@ export async function linkClaimToConcepts(
   }
 
   return conceptIds;
+}
+
+async function buildConceptLabelsForPost(
+  headlineClaim: string,
+  topicTags: string[],
+): Promise<string[]> {
+  const fromHeadline = await extractConceptsFromHeadline(headlineClaim);
+  const merged = [...new Set([...fromHeadline, ...topicTags.filter(Boolean)])];
+  if (merged.length === 0) {
+    const t = headlineClaim.trim();
+    return [t.slice(0, 72) || 'topic'];
+  }
+  return merged;
+}
+
+/**
+ * Ensures the post has at least one Claim with ClaimConcepts so feed reactions
+ * can create positions and update the belief graph (editorial/seed posts often
+ * had Source but no extracted claims).
+ */
+export async function ensureMappingClaimsForPost(
+  postId: string,
+): Promise<Array<{ id: string; claimConcepts: { conceptId: string }[] }>> {
+  const post = await db.post.findUnique({
+    where: { id: postId },
+    include: {
+      source: {
+        include: {
+          claims: { include: { claimConcepts: true } },
+        },
+      },
+    },
+  });
+  if (!post) return [];
+
+  let sourceId: string;
+  if (post.source) {
+    sourceId = post.source.id;
+  } else {
+    const created = await db.source.create({
+      data: {
+        userId: post.authorId,
+        url: `/post/${postId}`,
+        title: post.headlineClaim.slice(0, 480),
+        contentType: 'article',
+        surface: 'discover_reaction',
+        consumedAt: new Date(),
+      },
+    });
+    await db.post.update({
+      where: { id: postId },
+      data: { sourceId: created.id },
+    });
+    sourceId = created.id;
+  }
+
+  let claims = await db.claim.findMany({
+    where: { sourceId },
+    include: { claimConcepts: true },
+  });
+
+  if (claims.length === 0) {
+    const claim = await db.claim.create({
+      data: {
+        sourceId,
+        text: post.headlineClaim.slice(0, 2000),
+        claimType: 'opinion',
+        confidenceScore: 0.55,
+        modelVersion: 'headline-fallback',
+      },
+    });
+    const labels = await buildConceptLabelsForPost(post.headlineClaim, post.topicTags);
+    await linkClaimToConcepts(claim.id, labels);
+    claims = await db.claim.findMany({
+      where: { sourceId },
+      include: { claimConcepts: true },
+    });
+  } else {
+    for (const c of claims) {
+      if (c.claimConcepts.length === 0) {
+        const labels = await buildConceptLabelsForPost(post.headlineClaim, post.topicTags);
+        await linkClaimToConcepts(c.id, labels);
+      }
+    }
+    claims = await db.claim.findMany({
+      where: { sourceId },
+      include: { claimConcepts: true },
+    });
+  }
+
+  return claims.filter(c => c.claimConcepts.length > 0);
 }
 
 export interface MapNode {

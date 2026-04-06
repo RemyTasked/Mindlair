@@ -1086,22 +1086,39 @@ function MindlayerMapDemo() {
 export default function MindlayerMap() {
   const [payload, setPayload] = useState<MapApiPayload | null>(null);
   const [failed, setFailed] = useState(false);
+  const hadSuccessRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/map")
-      .then(res => {
-        if (!res.ok) throw new Error("map fetch failed");
-        return res.json();
-      })
-      .then((data: MapApiPayload) => {
-        if (!cancelled) setPayload(data);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
+
+    const load = () => {
+      fetch("/api/map")
+        .then(res => {
+          if (!res.ok) throw new Error("map fetch failed");
+          return res.json();
+        })
+        .then((data: MapApiPayload) => {
+          if (!cancelled) {
+            setPayload(data);
+            setFailed(false);
+            hadSuccessRef.current = true;
+          }
+        })
+        .catch(() => {
+          if (!cancelled && !hadSuccessRef.current) setFailed(true);
+        });
+    };
+
+    load();
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 

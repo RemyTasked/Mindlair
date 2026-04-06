@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
-import { updateBeliefGraph } from '@/lib/services/belief-graph';
+import { ensureMappingClaimsForPost, updateBeliefGraph } from '@/lib/services/belief-graph';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -30,17 +30,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const post = await db.post.findUnique({
       where: { id: postId },
-      include: {
-        source: {
-          include: {
-            claims: {
-              include: {
-                claimConcepts: true,
-              },
-            },
-          },
-        },
-      },
     });
 
     if (!post || post.status !== 'published') {
@@ -139,10 +128,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       });
     }
 
-    // Update user's belief graph based on reaction
-    if (post.source?.claims && stance !== 'skip') {
-      for (const claim of post.source.claims) {
-        // Find existing position to potentially supersede
+    // Positions + belief graph (ensure claims/concepts exist for editorial / seed posts)
+    if (stance !== 'skip') {
+      const mappingClaims = await ensureMappingClaimsForPost(postId);
+      for (const claim of mappingClaims) {
         const existingPosition = await db.position.findFirst({
           where: {
             userId: user.id,
@@ -152,7 +141,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           orderBy: { createdAt: 'desc' },
         });
 
-        // Create new position (superseding if exists)
         await db.position.create({
           data: {
             userId: user.id,
@@ -164,7 +152,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           },
         });
 
-        // Update belief graph
         const conceptIds = claim.claimConcepts.map(cc => cc.conceptId);
         await updateBeliefGraph(
           user.id,
