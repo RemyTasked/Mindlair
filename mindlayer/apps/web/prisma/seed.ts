@@ -666,6 +666,7 @@ async function main() {
           author: post.source.author,
           contentType: post.source.contentType,
           surface: 'editorial_seed',
+          consumedAt: new Date(),
         },
       });
       sourceId = source.id;
