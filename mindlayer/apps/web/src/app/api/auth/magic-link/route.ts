@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createMagicLinkToken, checkMagicLinkRateLimit } from '@/lib/auth';
+import {
+  createMagicLinkToken,
+  checkMagicLinkRateLimit,
+  revokeMagicLinkToken,
+} from '@/lib/auth';
 import { sendMagicLink } from '@/lib/services/email';
 
 const requestSchema = z.object({
@@ -29,40 +33,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = await createMagicLinkToken(email);
-    const result = await sendMagicLink(email, token);
+    const plaintextToken = await createMagicLinkToken(email);
 
-    if (!result.success) {
-      console.error('[MagicLink] Email send failed:', {
-        email,
-        error: result.error,
-        errorCode: result.errorCode,
-      });
-      
-      let userMessage = 'Failed to send email. Please try again.';
-      
-      if (result.errorCode === 'validation_error' || result.error?.includes('domain')) {
-        userMessage = 'Email service configuration error. Please contact support.';
-      } else if (result.errorCode === 'NETWORK_ERROR') {
-        userMessage = 'Network error while sending email. Please try again.';
-      } else if (result.error?.includes('rate') || result.error?.includes('limit')) {
-        userMessage = 'Too many emails sent. Please wait a moment and try again.';
+    try {
+      const result = await sendMagicLink(email, plaintextToken);
+
+      if (!result.success) {
+        await revokeMagicLinkToken(plaintextToken).catch(() => {
+          /* best-effort cleanup */
+        });
+
+        console.error('[MagicLink] Email send failed:', {
+          email,
+          error: result.error,
+          errorCode: result.errorCode,
+        });
+
+        let userMessage = 'Failed to send email. Please try again.';
+
+        if (result.errorCode === 'validation_error' || result.error?.includes('domain')) {
+          userMessage = 'Email service configuration error. Please contact support.';
+        } else if (result.errorCode === 'NETWORK_ERROR') {
+          userMessage = 'Network error while sending email. Please try again.';
+        } else if (result.error?.includes('rate') || result.error?.includes('limit')) {
+          userMessage = 'Too many emails sent. Please wait a moment and try again.';
+        }
+
+        return NextResponse.json(
+          {
+            code: 'EMAIL_ERROR',
+            message: userMessage,
+            debug: process.env.NODE_ENV === 'development' ? result.error : undefined,
+          },
+          { status: 500 }
+        );
       }
-      
-      return NextResponse.json(
-        { 
-          code: 'EMAIL_ERROR', 
-          message: userMessage,
-          debug: process.env.NODE_ENV === 'development' ? result.error : undefined,
-        },
-        { status: 500 }
-      );
-    }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Check your email for a sign-in link',
-    });
+      return NextResponse.json({
+        success: true,
+        message: 'Check your email for a sign-in link',
+      });
+    } catch (sendErr) {
+      await revokeMagicLinkToken(plaintextToken).catch(() => {});
+      throw sendErr;
+    }
   } catch (error) {
     console.error('[MagicLink] Request error:', error);
     return NextResponse.json(

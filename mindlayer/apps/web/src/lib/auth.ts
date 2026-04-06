@@ -38,6 +38,14 @@ export async function createMagicLinkToken(email: string): Promise<string> {
   return token;
 }
 
+/** Removes a magic-link row so failed email sends do not count toward rate limits. */
+export async function revokeMagicLinkToken(plaintextToken: string): Promise<void> {
+  const hashedToken = hashToken(plaintextToken);
+  await db.magicLinkToken.deleteMany({
+    where: { token: hashedToken },
+  });
+}
+
 export async function verifyMagicLinkToken(token: string): Promise<string | null> {
   const hashedToken = hashToken(token);
 
@@ -280,7 +288,8 @@ export async function checkMagicLinkRateLimit(email: string): Promise<boolean> {
     },
   });
 
-  return recentRequests < 3;
+  // Successful sends only: failed deliveries revoke their row (see magic-link route).
+  return recentRequests < 5;
 }
 
 export function maskApiKey(key: string): string {
