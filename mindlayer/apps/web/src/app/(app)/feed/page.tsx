@@ -316,7 +316,7 @@ export default function FeedPage() {
   if (isLoading) {
     return (
       <div style={{ 
-        minHeight: "100vh", 
+        minHeight: "100dvh", 
         background: C.bg, 
         display: "flex", 
         alignItems: "center", 
@@ -332,9 +332,27 @@ export default function FeedPage() {
     );
   }
 
+  const previewClamp = {
+    display: "-webkit-box",
+    WebkitBoxOrient: "vertical" as const,
+    overflow: "hidden" as const,
+    wordBreak: "break-word" as const,
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, padding: "24px 16px 100px" }}>
-      <div style={{ maxWidth: 640, margin: "0 auto" }}>
+    <div
+      style={{
+        minHeight: "100dvh",
+        background: C.bg,
+        overflowX: "hidden",
+        boxSizing: "border-box",
+        paddingTop: 16,
+        paddingBottom: 100,
+        paddingLeft: "max(16px, env(safe-area-inset-left, 0px))",
+        paddingRight: "max(16px, env(safe-area-inset-right, 0px))",
+      }}
+    >
+      <div style={{ maxWidth: 640, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
         {/* Header */}
         <div style={{ 
           display: "flex", 
@@ -536,6 +554,8 @@ export default function FeedPage() {
                   borderRadius: 16,
                   padding: 20,
                   marginBottom: 16,
+                  width: "100%",
+                  boxSizing: "border-box",
                 }}
               >
                 {/* Author & Stance */}
@@ -609,47 +629,54 @@ export default function FeedPage() {
                   </div>
                 </div>
 
-                {/* Headline Claim — opens full post on this app */}
+                {/* Headline + excerpt — tap through to full post */}
                 <Link
                   href={`/post/${post.id}`}
                   onClick={persistFeedContextForPost}
-                  style={{ textDecoration: "none", display: "block" }}
+                  style={{ textDecoration: "none", display: "block", color: "inherit", marginBottom: 16 }}
                 >
-                  <h2 style={{
-                    color: C.text,
-                    fontSize: 18,
-                    fontWeight: 600,
-                    lineHeight: 1.4,
-                    marginBottom: 6,
-                    textDecoration: "underline",
-                    textDecorationColor: `${C.accent}55`,
-                    textUnderlineOffset: 4,
-                  }}>
+                  <h2
+                    style={{
+                      color: C.text,
+                      fontSize: 18,
+                      fontWeight: 600,
+                      lineHeight: 1.4,
+                      marginBottom: 8,
+                      textDecoration: "underline",
+                      textDecorationColor: `${C.accent}55`,
+                      textUnderlineOffset: 4,
+                      WebkitLineClamp: 2,
+                      ...previewClamp,
+                    }}
+                  >
                     {post.headlineClaim}
                   </h2>
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    color: C.accent,
-                    fontSize: 12,
-                    fontWeight: 500,
-                    marginBottom: 12,
-                  }}>
-                    <span>Open full post</span>
+                  <p
+                    style={{
+                      color: C.textSoft,
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      marginBottom: 10,
+                      WebkitLineClamp: 3,
+                      ...previewClamp,
+                    }}
+                  >
+                    {post.body}
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      color: C.accent,
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    <span>Read full post</span>
                     <ChevronRight size={14} style={{ flexShrink: 0 }} />
                   </div>
                 </Link>
-
-                {/* Body Preview */}
-                <p style={{
-                  color: C.textSoft,
-                  fontSize: 14,
-                  lineHeight: 1.6,
-                  marginBottom: 16,
-                }}>
-                  {post.body}
-                </p>
 
                 {/* Topic Tags */}
                 {post.topicTags.length > 0 && (

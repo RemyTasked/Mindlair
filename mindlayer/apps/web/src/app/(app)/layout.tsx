@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationBanner } from "@/components/push-notifications";
+import { cn } from "@/lib/utils";
 
 const C = {
   bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
@@ -15,8 +17,15 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname() ?? "";
+  const isMap = pathname === "/map";
+  const isFeed = pathname === "/feed";
+
   return (
-    <div className="min-h-screen" style={{ minHeight: "100dvh", background: C.bg, color: C.text }}>
+    <div
+      className="min-h-screen overflow-x-hidden"
+      style={{ minHeight: "100dvh", background: C.bg, color: C.text }}
+    >
       {/* Mobile header - just logo */}
       <header className="lg:hidden sticky top-0 z-50" style={{
         paddingTop: "env(safe-area-inset-top, 0px)",
@@ -57,9 +66,15 @@ export default function AppLayout({
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 lg:ml-64">
-          <div 
-            className="max-w-5xl mx-auto px-4 py-8 lg:px-8"
+        <main className="flex-1 min-w-0 lg:ml-64">
+          <div
+            className={cn(
+              isMap && "w-full max-w-none px-0 pt-0",
+              isFeed &&
+                !isMap &&
+                "w-full max-w-none px-0 pt-4 sm:px-4 lg:mx-auto lg:max-w-5xl lg:px-8 lg:pt-8",
+              !isMap && !isFeed && "max-w-5xl mx-auto px-4 pt-8 lg:px-8",
+            )}
             style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
           >
             {children}

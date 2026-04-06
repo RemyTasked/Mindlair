@@ -277,6 +277,7 @@ function MindlayerMapDemo() {
   const [isDragging, setIsDragging] = useState(false);
   const [showSources, setShowSources] = useState(false);
   const [showTension, setShowTension] = useState(false);
+  const [isNarrow, setIsNarrow] = useState(false);
 
   const timeIdx = Math.round(timeValue);
   const isActive = isDragging || isPlaying;
@@ -284,17 +285,30 @@ function MindlayerMapDemo() {
   useEffect(() => { tvRef.current = timeValue; }, [timeValue]);
   useEffect(() => { playRef.current = isPlaying; }, [isPlaying]);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const syncNarrow = () => setIsNarrow(mq.matches);
+    syncNarrow();
+    mq.addEventListener("change", syncNarrow);
+    return () => mq.removeEventListener("change", syncNarrow);
+  }, []);
+
   // ── Measure container ──
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
     const measure = () => {
-      if (containerRef.current) {
-        const r = containerRef.current.getBoundingClientRect();
-        setDims({ w: r.width, h: Math.max(340, Math.min(r.height - 220, 580)) });
-      }
+      const r = el.getBoundingClientRect();
+      setDims({ w: r.width, h: Math.max(340, Math.min(r.height - 220, 580)) });
     };
     measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   // ── rAF playback ──
@@ -517,10 +531,26 @@ function MindlayerMapDemo() {
       </div>
 
       {/* ── Main area ── */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: isNarrow ? "column" : "row",
+          overflow: "hidden",
+          minHeight: 0,
+        }}
+      >
 
         {/* ── SVG graph ── */}
-        <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+        <div
+          style={{
+            flex: 1,
+            minHeight: isNarrow && selectedNode ? 280 : 0,
+            minWidth: 0,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
           <svg width="100%" height="100%" style={{ display: "block" }} viewBox={`0 0 ${dims.w} ${dims.h}`}>
             <defs>
               {NODES.map(n => {
@@ -661,7 +691,10 @@ function MindlayerMapDemo() {
         {/* ── Detail panel ── */}
         {selectedNode && detail && selCol && (
           <div style={{
-            width: 280, borderLeft: `1px solid ${C.border}`,
+            width: isNarrow ? "100%" : 280,
+            maxHeight: isNarrow ? 360 : undefined,
+            borderLeft: isNarrow ? "none" : `1px solid ${C.border}`,
+            borderTop: isNarrow ? `1px solid ${C.border}` : "none",
             background: C.surface, padding: 20, overflowY: "auto",
             flexShrink: 0, display: "flex", flexDirection: "column", gap: 16,
           }}>

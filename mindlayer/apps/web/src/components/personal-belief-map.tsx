@@ -89,19 +89,33 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
   const [dims, setDims] = useState({ w: 900, h: 520 });
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selected, setSelected] = useState<MapNode | null>(null);
+  const [isNarrow, setIsNarrow] = useState(false);
 
   const { nodes, edges, clusters, stats, readiness } = payload;
 
   useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const syncNarrow = () => setIsNarrow(mq.matches);
+    syncNarrow();
+    mq.addEventListener("change", syncNarrow);
+    return () => mq.removeEventListener("change", syncNarrow);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
     const measure = () => {
-      if (containerRef.current) {
-        const r = containerRef.current.getBoundingClientRect();
-        setDims({ w: r.width, h: Math.max(320, Math.min(r.height - 160, 540)) });
-      }
+      const r = el.getBoundingClientRect();
+      setDims({ w: r.width, h: Math.max(320, Math.min(r.height - 160, 540)) });
     };
     measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   const nodePos = useMemo(() => {
@@ -253,8 +267,24 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
         </div>
       </div>
 
-      <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
-        <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: isNarrow ? "column" : "row",
+          overflow: "hidden",
+          minHeight: 0,
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            minHeight: isNarrow && selected ? 260 : 0,
+            minWidth: 0,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
           {nodes.length === 0 ? (
             <div
               style={{
@@ -483,8 +513,10 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
         {selected && (
           <div
             style={{
-              width: 280,
-              borderLeft: `1px solid ${C.border}`,
+              width: isNarrow ? "100%" : 280,
+              maxHeight: isNarrow ? 340 : undefined,
+              borderLeft: isNarrow ? "none" : `1px solid ${C.border}`,
+              borderTop: isNarrow ? `1px solid ${C.border}` : "none",
               background: C.surface,
               padding: 20,
               overflowY: "auto",
