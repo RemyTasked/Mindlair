@@ -623,6 +623,170 @@ The risk is that your interests don't lead anywhere useful. But the alternative�
       contentType: 'article',
     },
   },
+
+  // ============================================
+  // Playful / everyday Discover mix (shorter)
+  // ============================================
+  {
+    headlineClaim: "Cereal is absolutely a soup and we need to stop pretending otherwise",
+    body: `Hear me out: liquid base, solid bits floating in it, eaten with a spoon. If gazpacho counts, breakfast cereal counts.
+
+The pushback is always "but it's cold" — so is vichyssoise. "But it's sweet" — tomato soup exists. I'm not saying you serve Cheerios at a dinner party. I'm saying taxonomically we're all in denial.
+
+The real reason we resist: calling it soup makes us feel silly. Embrace the soup. Life is short.`,
+    authorStance: 'arguing',
+    topicTags: ['culture', 'food', 'humor'],
+  },
+  {
+    headlineClaim: "Replying 'k' to a paragraph text should be a misdemeanor",
+    body: `You got three heartfelt sentences and a question. They got one letter. Not even uppercase. Linguists should study this as a form of emotional minimalism.
+
+I'm not asking for a thesis. A thumbs-up emoji carries more semantic weight. "Ok" with two letters is already luxury service.
+
+If you're busy, say you're busy. If you're annoyed, say you're annoyed. 'k' is the Schrödinger's reply — simultaneously fine and fighting words.`,
+    authorStance: 'steelmanning',
+    topicTags: ['culture', 'communication', 'relationships'],
+  },
+  {
+    headlineClaim: "The best seat on a plane is the aisle and I will not be taking questions",
+    body: `Window people talk about views. On a six-hour flight you're looking at a wing and regret. Aisle: bathroom freedom, stretch-a-leg rights, and you escape first when the person next to you won't stop talking about crypto.
+
+Middle seat should come with a federal subsidy. Window is for people who can sleep sitting up — a superpower I respect from afar.
+
+Fight me in the galley.`,
+    authorStance: 'arguing',
+    topicTags: ['culture', 'travel', 'opinions'],
+  },
+  {
+    headlineClaim: "Dogs who make eye contact while pooping deserve extra treats",
+    body: `It's vulnerable. They're saying "I trust you with this moment." The least we can do is nod respectfully and maybe upgrade the kibble.
+
+Cats would never. Cats would sue for invasion of privacy. Dogs are optimists in a cynical world.
+
+Science might say it's pack behavior. I say it's performance art. Either way: treat budget line item.`,
+    authorStance: 'exploring',
+    topicTags: ['culture', 'pets', 'humor'],
+  },
+  {
+    headlineClaim: "Brunch is just lunch with better PR and worse lines",
+    body: `You waited 90 minutes for eggs that cost $4 at home. The mimosa is orange juice doing cosplay. Nobody needs a waffle tower before noon except Instagram.
+
+That said: I'll still go. The social contract of brunch is powerful. We're all pretending this is a meal and not a group therapy session with hollandaise.
+
+Peak brunch is 11:02 a.m., slightly hungover, someone says "we should do this more often," and nobody means it.`,
+    authorStance: 'exploring',
+    topicTags: ['culture', 'food', 'social'],
+  },
+  {
+    headlineClaim: "Hot yoga is just regular yoga with extra drama and a smell",
+    body: `You paid to do sun salutations in a rainforest simulator. Respect. I tried once and learned my body does not consent to being a human dumpling.
+
+Fans say the sweat is detox. Skeptics say it's water. Both sides agree: you will never find your towel again.
+
+If it makes you feel alive, keep going. If it makes you dizzy, that's also data.`,
+    authorStance: 'steelmanning',
+    topicTags: ['health', 'fitness', 'culture'],
+  },
+  {
+    headlineClaim: "Pineapple on pizza is fine; the real crime is bad crust",
+    body: `We've been arguing about fruit while ignoring structural engineering. A soggy base ruins everything — pepperoni, politics, your will to live.
+
+Sweet + salty works everywhere else: fries and shakes, prosciutto and melon, me and regret after midnight snacks.
+
+Order what you like. Judge the dough first.`,
+    authorStance: 'arguing',
+    topicTags: ['culture', 'food', 'humor'],
+  },
+  {
+    headlineClaim: "Group chats should have term limits like elected office",
+    body: `Year three of the same meme format. Someone's cousin's fundraiser every Tuesday. The mute button is democracy's last hope.
+
+Small groups stay golden. At fifteen people you're not chatting — you're receiving a newsletter you didn't subscribe to.
+
+Proposed rule: annual retention vote. Majority keeps the chat; minority starts a splinter faction that dies in a week.`,
+    authorStance: 'exploring',
+    topicTags: ['culture', 'technology', 'social'],
+  },
+  {
+    headlineClaim: "The five-second rule is optimistic engineering, not food safety",
+    body: `Floors have opinions about your snack. That opinion is "hello." Bacteria don't respect your stopwatch.
+
+In practice: dry cracker, clean-ish kitchen, you're probably fine. Wet food, public sidewalk, maybe let it go.
+
+The rule survives because hope sells better than microbiology. I'm still picking up the good chip. We contain multitudes.`,
+    authorStance: 'exploring',
+    topicTags: ['health', 'culture', 'humor'],
+  },
+  {
+    headlineClaim: "Monday meetings should be illegal before coffee has kicked in",
+    body: `Nothing important has ever been decided in the first 15 minutes of Monday except "whose turn was it to book the room."
+
+Productivity isn't about more meetings — it's about fewer meetings where everyone is a NPC until 10 a.m.
+
+Async updates exist. Use them. Save the circle of trust for when pupils are functional.`,
+    authorStance: 'arguing',
+    topicTags: ['productivity', 'work', 'culture'],
+  },
+  {
+    headlineClaim: "Rom-coms lied: the grand gesture is usually just good listening",
+    body: `Airport sprints are cinematic. Remembering their mom's name is sustainable.
+
+Hollywood sells peaks; relationships run on maintenance mode. Boring is underrated. Boring is "I picked up milk without being asked."
+
+Grand gestures are fun once. Consistency is the long game. Sorry to whoever paid for a flash mob.`,
+    authorStance: 'steelmanning',
+    topicTags: ['psychology', 'culture', 'relationships'],
+  },
+  {
+    headlineClaim: "Economics is just vibes with spreadsheets",
+    body: `Inflation feels like the universe charging a convenience fee. Interest rates are a mood ring for central bankers. We're all guessing with confidence.
+
+That doesn't mean data is useless — it means humility is part of the toolkit. The joke is anyone who says they fully understand the economy while sober.
+
+Buy the coffee. Save a little. Panic-read one headline. Repeat.`,
+    authorStance: 'exploring',
+    topicTags: ['economics', 'culture', 'humor'],
+  },
+  {
+    headlineClaim: "Philosophy of socks: losing one in the dryer is a metaphor for adulthood",
+    body: `You started with pairs. You end with an orphan drawer and denial. The dryer didn't eat it — entropy did.
+
+Stoics would say focus on what you control: buy identical socks. Existentialists would say the missing sock is freedom. I'm saying buy a mesh bag.
+
+Wisdom is expensive at Target but worth it.`,
+    authorStance: 'exploring',
+    topicTags: ['philosophy', 'culture', 'humor'],
+  },
+  {
+    headlineClaim: "Scrolling in bed is not rest — it's a second shift with worse lighting",
+    body: `Your brain thinks it's still on duty. Blue light, tiny stress hits, infinite tab. Morning-you files a complaint; night-you ignores HR.
+
+Real rest is boring: dark room, no plot twist. Phones are pocket casinos dressed as tools.
+
+I'm not your parent. I'm the voice you already knew was right when you said "just five more minutes."`,
+    authorStance: 'arguing',
+    topicTags: ['health', 'psychology', 'technology'],
+  },
+  {
+    headlineClaim: "Fantasy football is cosplay for people who own khakis",
+    body: `You're a general manager for imaginary points. The trash talk is real. The trophy is plastic. The bond is oddly sincere.
+
+Sports analytics meet group chat chaos. Nobody reads the waiver wire until 11:58 p.m.
+
+Hate the game or love it — either way you're still checking injuries on a Tuesday.`,
+    authorStance: 'exploring',
+    topicTags: ['culture', 'sports', 'social'],
+  },
+  {
+    headlineClaim: "The best productivity hack is admitting you will never inbox zero",
+    body: `Peace isn't empty — it's negotiated surrender. Filters, snooze, and the sacred art of "not my problem."
+
+Inbox zero is a personality for people who enjoy winning against email. For the rest of us: good enough is a feature.
+
+Close the laptop. The emails will wait. They always do.`,
+    authorStance: 'steelmanning',
+    topicTags: ['productivity', 'psychology', 'culture'],
+  },
 ];
 
 async function main() {

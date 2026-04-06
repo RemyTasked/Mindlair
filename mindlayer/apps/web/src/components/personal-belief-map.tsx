@@ -46,6 +46,9 @@ const C = {
   accentGlow: "#d4915a30",
   blue: "#6b9fc4",
   amber: "#d4915a",
+  green: "#a3c47a",
+  rose: "#e57373",
+  chipBlue: "#4a9eff",
 };
 
 const POS_COLORS: Record<string, { fill: string; stroke: string; label: string }> = {
@@ -84,12 +87,35 @@ function stanceForNode(node: MapNode): string {
   return "mixed";
 }
 
+interface MapRecentPosition {
+  stance: string;
+  context: string;
+  createdAt: string;
+  claim: { id: string; textPreview: string };
+}
+
+function reactionStanceChip(stance: string): { label: string; bg: string; color: string } {
+  switch (stance) {
+    case "agree":
+      return { label: "Agree", bg: `${C.green}22`, color: C.green };
+    case "disagree":
+      return { label: "Disagree", bg: `${C.rose}22`, color: C.rose };
+    case "complicated":
+      return { label: "Complicated", bg: `${C.chipBlue}22`, color: C.chipBlue };
+    default:
+      return { label: stance, bg: C.bg, color: C.muted };
+  }
+}
+
 export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ w: 900, h: 520 });
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selected, setSelected] = useState<MapNode | null>(null);
   const [isNarrow, setIsNarrow] = useState(false);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [recentPositions, setRecentPositions] = useState<MapRecentPosition[] | null>(null);
+  const [recentError, setRecentError] = useState(false);
 
   const { nodes, edges, clusters, stats, readiness } = payload;
 
@@ -225,7 +251,6 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
           borderBottom: `1px solid ${C.border}`,
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
           flexShrink: 0,
           zIndex: 5,
           flexWrap: "wrap",
@@ -248,22 +273,6 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
           >
             Belief Map
           </div>
-        </div>
-        <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-          {(["positive", "negative", "mixed"] as const).map(k => (
-            <div key={k} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <div
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: POS_COLORS[k].stroke,
-                  opacity: 0.9,
-                }}
-              />
-              <span style={{ fontSize: 10, color: C.muted }}>{POS_COLORS[k].label}</span>
-            </div>
-          ))}
         </div>
       </div>
 
@@ -473,10 +482,8 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
                 const node = nodeById.get(hoveredId);
                 const p = nodePos[hoveredId];
                 if (!node || !p) return null;
-                const stance = stanceForNode(node);
-                const col = POS_COLORS[stance];
                 const tw = 200;
-                const th = 72;
+                const th = 52;
                 const tx = p.x + 28;
                 const ty = p.y - 28;
                 const ax = tx + tw > dims.w - 12 ? p.x - tw - 28 : tx;
@@ -490,17 +497,14 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
                       height={th}
                       rx={7}
                       fill={C.surface}
-                      stroke={col.stroke}
+                      stroke={C.border}
                       strokeWidth={1}
-                      strokeOpacity={0.45}
+                      strokeOpacity={0.8}
                     />
                     <text x={ax + 11} y={ay + 18} fontSize={11} fontWeight={600} fill={C.text}>
                       {node.label}
                     </text>
-                    <text x={ax + 11} y={ay + 34} fontSize={10} fill={col.stroke}>
-                      {col.label}
-                    </text>
-                    <text x={ax + 11} y={ay + 50} fontSize={10} fill={C.muted}>
+                    <text x={ax + 11} y={ay + 36} fontSize={10} fill={C.muted}>
                       Strength {(node.strength * 100).toFixed(0)}% · Positions {node.positionCount}
                     </text>
                   </g>
@@ -514,7 +518,7 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
           <div
             style={{
               width: isNarrow ? "100%" : 280,
-              maxHeight: isNarrow ? 340 : undefined,
+              maxHeight: isNarrow ? 420 : undefined,
               borderLeft: isNarrow ? "none" : `1px solid ${C.border}`,
               borderTop: isNarrow ? `1px solid ${C.border}` : "none",
               background: C.surface,
@@ -529,9 +533,7 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{selected.label}</div>
-                <div style={{ fontSize: 11, color: POS_COLORS[stanceForNode(selected)].stroke }}>
-                  {POS_COLORS[stanceForNode(selected)].label}
-                </div>
+                <div style={{ fontSize: 11, color: C.muted }}>Aggregated from your reactions</div>
               </div>
               <button
                 type="button"
@@ -613,6 +615,76 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
                   {selected.echoFlagged ? "Yes" : "No"}
                 </div>
               </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div
+                style={{
+                  fontSize: 9,
+                  color: C.muted,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Recent reactions on this topic
+              </div>
+              {recentLoading && (
+                <div style={{ fontSize: 12, color: C.muted }}>Loading…</div>
+              )}
+              {recentError && !recentLoading && (
+                <div style={{ fontSize: 12, color: C.rose }}>Could not load recent claims.</div>
+              )}
+              {!recentLoading &&
+                !recentError &&
+                recentPositions &&
+                recentPositions.length === 0 && (
+                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+                    No recent claims yet. React on Discover to build history for this topic.
+                  </div>
+                )}
+              {!recentLoading &&
+                recentPositions &&
+                recentPositions.map((row, i) => {
+                  const chip = reactionStanceChip(row.stance);
+                  return (
+                    <div
+                      key={`${row.claim.id}-${row.createdAt}-${i}`}
+                      style={{
+                        padding: "10px 12px",
+                        background: C.bg,
+                        borderRadius: 6,
+                        border: `1px solid ${C.border}`,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            padding: "3px 8px",
+                            borderRadius: 4,
+                            background: chip.bg,
+                            color: chip.color,
+                          }}
+                        >
+                          {chip.label}
+                        </span>
+                        <span style={{ fontSize: 10, color: C.muted }}>
+                          {row.context.replace(/_/g, " ")} ·{" "}
+                          {new Date(row.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: C.textSoft, lineHeight: 1.45 }}>
+                        {row.claim.textPreview}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
 
             {selectedCluster && selectedCluster.nodeIds.length > 1 && (

@@ -506,7 +506,7 @@ function MindlayerMapDemo() {
       <div style={{
         padding: "14px 24px 12px",
         borderBottom: `1px solid ${C.border}`,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        display: "flex", alignItems: "center",
         flexShrink: 0, zIndex: 5,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -517,16 +517,6 @@ function MindlayerMapDemo() {
             fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
             color: C.muted, paddingLeft: 14, borderLeft: `1px solid ${C.border}`,
           }}>Belief Map</div>
-        </div>
-        <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
-          {(["affirm","disagree","ambivalent","passive"] as const).map(k => (
-            <div key={k} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", background: POS_COLORS[k].stroke, opacity: 0.9 }} />
-              <span style={{ fontSize: 10, color: C.muted }}>
-                {k === "affirm" ? "Agrees" : k === "disagree" ? "Disagrees" : k === "ambivalent" ? "Ambivalent" : "Passive"}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
 
