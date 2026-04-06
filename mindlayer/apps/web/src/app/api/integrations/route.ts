@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
     const userId = user.id;
 
-    const [connections, sourcesByProvider] = await Promise.all([
+    const [connections, sourcesByProvider, lastTakeoutSource] = await Promise.all([
       db.connectedSource.findMany({ where: { userId } }),
       db.source.groupBy({
         by: ['surface'],
@@ -30,6 +30,14 @@ export async function GET(request: NextRequest) {
           surface: { in: Object.values(SURFACE_MAP) },
         },
         _count: true,
+      }),
+      db.source.findFirst({
+        where: {
+          userId,
+          surface: { in: ['google_takeout_youtube', 'google_takeout_chrome'] },
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true },
       }),
     ]);
 
@@ -50,6 +58,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       integrations,
+      googleTakeoutLastImportAt: lastTakeoutSource?.createdAt.toISOString() ?? null,
     });
   } catch (error) {
     console.error('Integrations status error:', error);

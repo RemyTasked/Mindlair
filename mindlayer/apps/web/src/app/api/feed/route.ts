@@ -12,6 +12,7 @@ const CATEGORIES = [
   'philosophy',
   'culture',
   'productivity',
+  'sports',
 ] as const;
 
 type Category = typeof CATEGORIES[number];
@@ -224,8 +225,8 @@ export async function GET(request: NextRequest) {
     // Sort by score
     filteredPosts.sort((a, b) => b.score - a.score);
 
-    // Discover: omit posts the user already answered (non-skip reactions)
-    if (filter === 'discover' && filteredPosts.length > 0) {
+    // For You, Discover, etc.: omit posts the user already answered (non-skip reactions). Following keeps full author feed.
+    if (filter !== 'following' && filteredPosts.length > 0) {
       const discoverIds = filteredPosts.map(p => p.id);
       const answered = await db.postReaction.findMany({
         where: {

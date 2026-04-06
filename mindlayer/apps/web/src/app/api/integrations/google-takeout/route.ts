@@ -14,6 +14,40 @@ import JSZip from 'jszip';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+/** Resolve Takeout paths inside a ZIP by basename (nested Takeout/ folders). */
+function pickTakeoutZipPaths(zip: JSZip): { youtube: string | null; chrome: string | null } {
+  const names = Object.keys(zip.files).filter((path) => !zip.files[path].dir);
+  const norm = (p: string) => p.replace(/\\/g, '/');
+
+  const watchHtml = names.filter((path) => {
+    const base = norm(path).split('/').pop() || '';
+    return /^watch-history\.html$/i.test(base);
+  });
+  let youtube: string | null = null;
+  if (watchHtml.length) {
+    youtube =
+      watchHtml.find((p) => /youtube/i.test(norm(p))) ||
+      watchHtml.find((p) => /my\s*activity/i.test(norm(p))) ||
+      watchHtml[0];
+  }
+
+  const chromeJson = names.filter((path) => {
+    const n = norm(path);
+    if (!/chrome/i.test(n)) return false;
+    const base = (n.split('/').pop() || '').toLowerCase();
+    return base === 'browserhistory.json' || base === 'history.json';
+  });
+  let chrome: string | null = null;
+  if (chromeJson.length) {
+    chrome =
+      chromeJson.find((p) => /browserhistory\.json$/i.test(norm(p))) ||
+      chromeJson.find((p) => /[/\\]history\.json$/i.test(norm(p))) ||
+      chromeJson[0];
+  }
+
+  return { youtube, chrome };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthFromRequest(request);
@@ -69,7 +103,11 @@ export async function POST(request: NextRequest) {
     } else {
       // Try to detect file type
       const content = buffer.toString('utf-8');
-      if (content.includes('youtube.com/watch')) {
+      if (
+        /youtube\.com\/watch/i.test(content) ||
+        /youtu\.be\//i.test(content) ||
+        /youtube\.com\/shorts/i.test(content)
+      ) {
         youtubeItems = parseYouTubeWatchHistory(content);
       } else if (content.startsWith('{') || content.startsWith('[')) {
         chromeItems = parseChromeHistory(content);

@@ -27,7 +27,6 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import JSZip from "jszip";
 
 const C = {
   bg: "#0f0e0c",
@@ -54,6 +53,7 @@ interface Integration {
 
 interface IntegrationsData {
   integrations: Integration[];
+  googleTakeoutLastImportAt: string | null;
 }
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
@@ -73,7 +73,6 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
   const [syncing, setSyncing] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
   const [takeoutUploading, setTakeoutUploading] = useState(false);
-  const [takeoutResult, setTakeoutResult] = useState<{ youtube: number; chrome: number; total: number } | null>(null);
   const [takeoutError, setTakeoutError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -81,7 +80,10 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
       const res = await fetch("/api/integrations");
       if (res.ok) {
         const json = await res.json();
-        setData(json);
+        setData({
+          integrations: json.integrations ?? [],
+          googleTakeoutLastImportAt: json.googleTakeoutLastImportAt ?? null,
+        });
       }
     } catch {
       // silent
@@ -114,9 +116,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
 
   const totalConnected = data?.integrations.filter((i) => i.connected).length || 0;
 
-  const totalSources = data?.integrations.reduce((sum, i) => sum + i.sourceCount, 0) || 0;
-
-  const hasAtLeastOneSource = totalConnected > 0 || totalSources > 0;
+  const googleTakeoutLastImportAt = data?.googleTakeoutLastImportAt ?? null;
+  const hasAtLeastOneSource = totalConnected > 0 || !!googleTakeoutLastImportAt;
   const isDesktop = platform === "mac" || platform === "windows" || platform === "linux";
   const isMobile = platform === "ios" || platform === "android";
 
@@ -196,90 +197,24 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
 
     setTakeoutUploading(true);
     setTakeoutError(null);
-    setTakeoutResult(null);
 
     try {
-      // If it's a ZIP file, extract relevant files client-side and upload them separately
-      if (file.name.endsWith('.zip')) {
-        const arrayBuffer = await file.arrayBuffer();
-        const zip = await JSZip.loadAsync(arrayBuffer);
-        
-        // Find YouTube watch history
-        const youtubeFiles = zip.file(/watch-history\.html$/i);
-        const youtubeFile = youtubeFiles.find(f => 
-          f.name.includes('YouTube') || f.name.includes('history')
-        ) || youtubeFiles[0];
-        
-        // Find Chrome history
-        const chromeFiles = zip.file(/BrowserHistory\.json$/i);
-        const chromeFile = chromeFiles[0];
-        
-        if (!youtubeFile && !chromeFile) {
-          setTakeoutError("No YouTube or Chrome history found in this ZIP. Make sure you selected the right data when exporting.");
-          return;
-        }
+      const formData = new FormData();
+      formData.append("file", file);
 
-        let totalYoutube = 0;
-        let totalChrome = 0;
+      const res = await fetch("/api/integrations/google-takeout", {
+        method: "POST",
+        body: formData,
+      });
 
-        // Upload YouTube history if found
-        if (youtubeFile) {
-          const content = await youtubeFile.async('blob');
-          const formData = new FormData();
-          formData.append("file", content, "watch-history.html");
-          formData.append("type", "youtube");
-          
-          const response = await fetch("/api/integrations/google-takeout", {
-            method: "POST",
-            body: formData,
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            totalYoutube = data.imported?.youtube || 0;
-          }
-        }
-
-        // Upload Chrome history if found
-        if (chromeFile) {
-          const content = await chromeFile.async('blob');
-          const formData = new FormData();
-          formData.append("file", content, "BrowserHistory.json");
-          formData.append("type", "chrome");
-          
-          const response = await fetch("/api/integrations/google-takeout", {
-            method: "POST",
-            body: formData,
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            totalChrome = data.imported?.chrome || 0;
-          }
-        }
-
-        setTakeoutResult({ youtube: totalYoutube, chrome: totalChrome, total: totalYoutube + totalChrome });
-        await fetchData();
-      } else {
-        // For non-ZIP files, upload directly
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/api/integrations/google-takeout", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setTakeoutError(data.message || `Upload failed`);
-          return;
-        }
-
-        const data = await res.json();
-        setTakeoutResult(data.imported);
-        await fetchData();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setTakeoutError(data.message || `Upload failed`);
+        return;
       }
+
+      await res.json();
+      await fetchData();
     } catch (err) {
       console.error("Takeout upload error:", err);
       setTakeoutError("Failed to process file. Make sure it's a valid Google Takeout export.");
@@ -501,7 +436,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 description="Articles, highlights & podcasts"
                 icon={<BookOpen className="w-5 h-5" style={{ color: "#f0c040" }} />}
                 connected={!!getIntegration("readwise")?.connected}
-                sourceCount={getIntegration("readwise")?.sourceCount || 0}
+                lastSyncAt={getIntegration("readwise")?.lastSyncAt ?? null}
                 syncing={syncing === "readwise"}
                 onConnect={connectReadwise}
                 onSync={() => syncIntegration("readwise")}
@@ -516,7 +451,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 description="Your reading list"
                 icon={<FileText className="w-5 h-5" style={{ color: C.textSoft }} />}
                 connected={!!getIntegration("instapaper")?.connected}
-                sourceCount={getIntegration("instapaper")?.sourceCount || 0}
+                lastSyncAt={getIntegration("instapaper")?.lastSyncAt ?? null}
                 syncing={syncing === "instapaper"}
                 onConnect={connectInstapaper}
                 onSync={() => syncIntegration("instapaper")}
@@ -531,7 +466,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 description="Podcast episodes you've listened to"
                 icon={<Music className="w-5 h-5" style={{ color: "#1DB954" }} />}
                 connected={!!getIntegration("spotify")?.connected}
-                sourceCount={getIntegration("spotify")?.sourceCount || 0}
+                lastSyncAt={getIntegration("spotify")?.lastSyncAt ?? null}
                 syncing={syncing === "spotify"}
                 onConnect={connectSpotify}
                 onSync={() => syncIntegration("spotify")}
@@ -627,22 +562,12 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                         <li>Choose &quot;.zip&quot; format, then download and upload here</li>
                       </ol>
                     </div>
-                    {takeoutResult && (
-                      <div
-                        style={{
-                          marginTop: 10,
-                          padding: "8px 12px",
-                          background: `${C.accent}15`,
-                          borderRadius: 6,
-                          border: `1px solid ${C.accent}30`,
-                        }}
-                      >
-                        <p style={{ fontSize: 12, color: C.accent }}>
-                          <Check className="w-3 h-3 inline mr-1" />
-                          Imported {takeoutResult.total} items ({takeoutResult.youtube} videos, {takeoutResult.chrome} articles)
-                        </p>
-                      </div>
-                    )}
+                    <p style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
+                      Last successful import:{" "}
+                      {googleTakeoutLastImportAt
+                        ? new Date(googleTakeoutLastImportAt).toLocaleString()
+                        : "—"}
+                    </p>
                     {takeoutError && (
                       <div
                         style={{
@@ -660,13 +585,13 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 </div>
               </div>
 
-              {totalSources > 0 && (
+              {hasAtLeastOneSource && (
                 <div
                   className="rounded-lg p-3 text-center text-sm font-medium"
                   style={{ background: `${C.accent}12`, color: C.accent }}
                 >
                   <Check className="w-4 h-4 inline mr-1" />
-                  {totalSources} sources in your map
+                  Connected services or Takeout data will show up on your map
                 </div>
               )}
             </>
@@ -862,13 +787,16 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 <Check className="w-8 h-8" style={{ color: C.accent }} />
               </div>
 
-              {totalConnected > 0 || totalSources > 0 ? (
+              {hasAtLeastOneSource ? (
                 <div className="space-y-3 mb-8">
                   {totalConnected > 0 && (
                     <SummaryRow label="Services connected" value={totalConnected} />
                   )}
-                  {totalSources > 0 && (
-                    <SummaryRow label="Sources in your map" value={totalSources} />
+                  {googleTakeoutLastImportAt && (
+                    <SummaryRow
+                      label="Last Takeout import"
+                      value={new Date(googleTakeoutLastImportAt).toLocaleString()}
+                    />
                   )}
                 </div>
               ) : (
@@ -905,7 +833,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    {totalConnected > 0 ? "Explore your map" : "Continue to map"}
+                    {hasAtLeastOneSource ? "Explore your map" : "Continue to map"}
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </>
                 )}
@@ -955,7 +883,7 @@ function IntegrationRow({
   description,
   icon,
   connected,
-  sourceCount,
+  lastSyncAt,
   syncing,
   onConnect,
   onSync,
@@ -969,7 +897,7 @@ function IntegrationRow({
   description: string;
   icon: React.ReactNode;
   connected: boolean;
-  sourceCount: number;
+  lastSyncAt: string | null;
   syncing: boolean;
   onConnect: () => void;
   onSync: () => void;
@@ -1074,9 +1002,10 @@ function IntegrationRow({
             <p className="text-xs" style={{ color: C.muted }}>
               {description}
             </p>
-            {connected && sourceCount > 0 && (
-              <p className="text-xs mt-0.5" style={{ color: C.accent }}>
-                {sourceCount} sources imported
+            {connected && (
+              <p className="text-xs mt-0.5" style={{ color: C.muted }}>
+                Last successful sync:{" "}
+                {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : "Never synced"}
               </p>
             )}
           </div>
@@ -1499,7 +1428,7 @@ function ExtensionLink({ browser }: { browser: string }) {
   );
 }
 
-function SummaryRow({ label, value }: { label: string; value: number }) {
+function SummaryRow({ label, value }: { label: string; value: string | number }) {
   return (
     <div
       className="flex items-center justify-between px-4 py-3 rounded-lg"

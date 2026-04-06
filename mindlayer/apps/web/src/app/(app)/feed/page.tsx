@@ -30,6 +30,7 @@ import {
   Lightbulb as Philosophy,
   Globe,
   Zap,
+  Trophy,
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
@@ -83,6 +84,7 @@ const CATEGORIES = [
   { id: 'philosophy', label: 'Philosophy', icon: Philosophy, color: '#c084fc' },
   { id: 'culture', label: 'Culture', icon: Globe, color: '#fbbf24' },
   { id: 'productivity', label: 'Productivity', icon: Zap, color: '#34d399' },
+  { id: 'sports', label: 'Sports', icon: Trophy, color: '#f97316' },
 ] as const;
 
 type CategoryType = typeof CATEGORIES[number]['id'] | null;

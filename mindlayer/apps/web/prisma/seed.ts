@@ -625,6 +625,60 @@ The risk is that your interests don't lead anywhere useful. But the alternative�
   },
 
   // ============================================
+  // SPORTS (5 posts)
+  // ============================================
+  {
+    headlineClaim: "The 'hot hand' in basketball is real enough that teams should act like it is",
+    body: `For decades, textbooks said streak shooting was a cognitive illusion — randomness dressed up as momentum. Newer work with richer data and better models suggests the effect is small but not always zero, and the cost of ignoring a heating shooter is asymmetric.
+
+Even if you are skeptical of the effect size, defense and play-calling already behave as if heat exists: switches, traps, and late-clock isolations track who "has it tonight." The interesting debate is not binary; it is when belief outruns evidence and when ignoring the signal is lazier than testing it.
+
+A falsifiable claim: over a large sample, conditional on shot quality proxies, recent makes still predict the next attempt slightly better than coin-flips would. If that holds, "ride the hot hand" is not superstition — it is a modest edge managers should price correctly.`,
+    authorStance: 'arguing',
+    topicTags: ['sports', 'basketball', 'statistics', 'decision-making'],
+  },
+  {
+    headlineClaim: "Salary caps mostly shuffle who gets paid, not whether owners keep surplus",
+    body: `Caps are sold as competitive balance and fan fairness. They also function as a coordinated brake on labor's share of league revenue. Stars still capture huge upside; the middle class and rookies absorb more of the compression.
+
+The test is what happens to total player compensation versus revenue over time, and how risk shifts to shorter contracts, incentives, and non-guaranteed money. Fans get closer games on paper; unions negotiate harder for exceptions.
+
+If you want parity, caps help a little. If you want labor power, caps are a feature, not a bug, for franchise balance sheets — and the debate should name that tradeoff honestly.`,
+    authorStance: 'exploring',
+    topicTags: ['sports', 'economics', 'labor', 'policy'],
+  },
+  {
+    headlineClaim: "Youth sports have become a pay-to-play pipeline that screens for income, not love of the game",
+    body: `Travel teams, private coaching, and tournament fees filter who stays in the funnel by middle school. Talent exists everywhere; access does not. The result is a narrower base and a stranger merit story than we tell on broadcast.
+
+Reform is not "abolish competitive sports." It is subsidized leagues, better public facilities, sane scheduling so multi-sport kids exist, and coaches paid like educators when programs claim developmental missions.
+
+The claim worth arguing: countries and communities that widen early access see better late-stage outcomes — not because everyone goes pro, but because more kids stay active and the talent pool deepens.`,
+    authorStance: 'steelmanning',
+    topicTags: ['sports', 'youth', 'inequality', 'health'],
+  },
+  {
+    headlineClaim: "Fourth-and-short aggression is correct often enough that conservative punting is a market inefficiency",
+    body: `Expected points models have been screaming for years: midfield fourth-and-short is frequently worth more than a punt's field-position lottery. Coaches still punt because job risk is asymmetric — a failed gamble is memorable; a wasted possession is noise.
+
+As analytics staffs grow, you see more go-for-it calls, but culture lags spreadsheets. Fans reward "guts" only when it works; media narratives punish failures on repeat.
+
+If decision-makers internalized base rates instead of highlights, we'd see fewer surrender punts and more honest postgame explanations than "we liked our defense today."`,
+    authorStance: 'arguing',
+    topicTags: ['sports', 'football', 'analytics', 'strategy'],
+  },
+  {
+    headlineClaim: "National-team fandom is cosplay with a passport — and that is mostly fine",
+    body: `You did not clear a hurdle at dawn or scout teenagers in the rain. You bought a scarf and learned two chants. The emotional payoff is still real: synchronized hope, strangers hugging, a calendar event that is not about work.
+
+Critics say it is manufactured identity. Maybe — but so are a lot of healthy rituals. The line is when nationalism curdles into hostility; the game is an excuse either way.
+
+Enjoy the tournament. Tip your bartender. Remember the athletes did the work; you did the cheering — both can matter without pretending they're the same job.`,
+    authorStance: 'exploring',
+    topicTags: ['sports', 'culture', 'identity', 'fandom'],
+  },
+
+  // ============================================
   // Playful / everyday Discover mix (shorter)
   // ============================================
   {
@@ -775,7 +829,7 @@ Sports analytics meet group chat chaos. Nobody reads the waiver wire until 11:58
 
 Hate the game or love it — either way you're still checking injuries on a Tuesday.`,
     authorStance: 'exploring',
-    topicTags: ['culture', 'sports', 'social'],
+    topicTags: ['sports', 'culture', 'social'],
   },
   {
     headlineClaim: "The best productivity hack is admitting you will never inbox zero",

@@ -28,47 +28,53 @@ export interface TakeoutParseResult {
   errors: string[];
 }
 
+/** Href capture: www/m youtube watch|shorts, or youtu.be (Takeout may HTML-encode &). */
+const YT_HREF_CAPTURE =
+  '(https:\\/\\/(?:www\\.|m\\.)?youtube\\.com\\/(?:watch\\?[^"#\\s>]+|shorts\\/[a-zA-Z0-9_-]+)|https:\\/\\/youtu\\.be\\/[a-zA-Z0-9_-]+(?:\\?[^"#\\s>]*)?)';
+
 /**
  * Parse YouTube watch history from Takeout HTML file.
  * The HTML structure has divs with class "content-cell" containing video info.
  */
 export function parseYouTubeWatchHistory(html: string): YouTubeWatchItem[] {
   const items: YouTubeWatchItem[] = [];
-  
-  // Match video entries - YouTube Takeout uses a specific HTML structure
-  // Each entry has: video link, channel link, and timestamp
-  const entryRegex = /<div class="content-cell[^"]*"[^>]*>[\s\S]*?<a href="(https:\/\/www\.youtube\.com\/watch\?v=[^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?(?:<a href="(https:\/\/www\.youtube\.com\/channel\/[^"]+)"[^>]*>([^<]+)<\/a>)?[\s\S]*?<br\s*\/?>[\s\S]*?(\w{3} \d{1,2}, \d{4}, \d{1,2}:\d{2}:\d{2}[^<]*)<\/div>/gi;
+
+  const entryRegex = new RegExp(
+    `<div class="content-cell[^"]*"[^>]*>[\\s\\S]*?<a href="${YT_HREF_CAPTURE}"[^>]*>([^<]+)<\\/a>[\\s\\S]*?(?:<a href="(https:\\/\\/(?:www\\.)?youtube\\.com\\/channel\\/[^"]+)"[^>]*>([^<]+)<\\/a>)?[\\s\\S]*?<br\\s*\\/?>[\\s\\S]*?(\\w{3} \\d{1,2}, \\d{4}, \\d{1,2}:\\d{2}:\\d{2}[^<]*)<\\/div>`,
+    'gi',
+  );
 
   let match;
   while ((match = entryRegex.exec(html)) !== null) {
     const [, videoUrl, title, channelUrl, channelName, timestamp] = match;
-    
+
     if (videoUrl && title) {
       items.push({
         title: decodeHtmlEntities(title.trim()),
-        url: videoUrl,
+        url: videoUrl.replace(/&amp;/g, '&'),
         channelName: channelName ? decodeHtmlEntities(channelName.trim()) : 'Unknown Channel',
-        channelUrl: channelUrl || null,
+        channelUrl: channelUrl ? channelUrl.replace(/&amp;/g, '&') : null,
         watchedAt: parseYouTubeTimestamp(timestamp),
       });
     }
   }
 
-  // Fallback: simpler pattern for different Takeout formats
+  // Fallback: any YouTube link + title in anchor
   if (items.length === 0) {
-    const simpleRegex = /Watched\s+<a[^>]*href="(https:\/\/www\.youtube\.com\/watch\?v=[^"]+)"[^>]*>([^<]+)<\/a>/gi;
+    const linkRe = new RegExp(`<a[^>]*href="${YT_HREF_CAPTURE}"[^>]*>([^<]+)<\\/a>`, 'gi');
     const timeRegex = /(\w{3} \d{1,2}, \d{4}, \d{1,2}:\d{2}:\d{2})/gi;
-    
-    const videoMatches = [...html.matchAll(simpleRegex)];
+
+    const videoMatches = [...html.matchAll(linkRe)];
     const timeMatches = [...html.matchAll(timeRegex)];
-    
+
     for (let i = 0; i < videoMatches.length; i++) {
       const [, url, title] = videoMatches[i];
+      if (!url || !title) continue;
       const timestamp = timeMatches[i]?.[1] || new Date().toISOString();
-      
+
       items.push({
         title: decodeHtmlEntities(title.trim()),
-        url,
+        url: url.replace(/&amp;/g, '&'),
         channelName: 'Unknown Channel',
         channelUrl: null,
         watchedAt: parseYouTubeTimestamp(timestamp),
@@ -79,30 +85,55 @@ export function parseYouTubeWatchHistory(html: string): YouTubeWatchItem[] {
   return items;
 }
 
+function extractChromeHistoryRows(data: unknown): Record<string, unknown>[] | null {
+  if (Array.isArray(data)) {
+    return data as Record<string, unknown>[];
+  }
+  if (!data || typeof data !== 'object') return null;
+  const o = data as Record<string, unknown>;
+  const keys = [
+    'Browser History',
+    'browser_history',
+    'BrowserHistory',
+    'History',
+    'history',
+  ];
+  for (const k of keys) {
+    const v = o[k];
+    if (Array.isArray(v)) return v as Record<string, unknown>[];
+  }
+  for (const v of Object.values(o)) {
+    if (!Array.isArray(v) || v.length === 0) continue;
+    const first = v[0];
+    if (first && typeof first === 'object' && ('url' in first || 'page_url' in first)) {
+      return v as Record<string, unknown>[];
+    }
+  }
+  return null;
+}
+
 /**
  * Parse Chrome browsing history from Takeout JSON file.
  */
 export function parseChromeHistory(jsonString: string): ChromeHistoryItem[] {
   const items: ChromeHistoryItem[] = [];
-  
+
   try {
     const data = JSON.parse(jsonString);
-    
-    // Handle both possible formats
-    const browserHistory = data['Browser History'] || data.browser_history || data;
-    
-    if (Array.isArray(browserHistory)) {
+    const browserHistory = extractChromeHistoryRows(data);
+
+    if (browserHistory) {
       for (const entry of browserHistory) {
-        const url = entry.url || entry.page_url;
-        const title = entry.title || entry.page_title || 'Untitled';
-        const timestamp = entry.time_usec || entry.last_visit_time || entry.time;
-        const visitCount = entry.visit_count || 1;
-        
-        if (url && !isInternalUrl(url)) {
+        const url = (entry.url || entry.page_url) as string | undefined;
+        const title = (entry.title || entry.page_title || 'Untitled') as string;
+        const timestamp = entry.time_usec ?? entry.last_visit_time ?? entry.time;
+        const visitCount = (entry.visit_count as number) || 1;
+
+        if (url && typeof url === 'string' && !isInternalUrl(url)) {
           items.push({
-            title: title.trim(),
+            title: String(title).trim(),
             url,
-            visitedAt: timestamp ? convertChromeTimestamp(timestamp) : new Date().toISOString(),
+            visitedAt: timestamp != null ? convertChromeTimestamp(timestamp as number | string) : new Date().toISOString(),
             visitCount,
           });
         }
@@ -111,7 +142,7 @@ export function parseChromeHistory(jsonString: string): ChromeHistoryItem[] {
   } catch (e) {
     console.error('Failed to parse Chrome history JSON:', e);
   }
-  
+
   return items;
 }
 
@@ -126,8 +157,13 @@ export function categorizeContent(url: string): { contentType: string; shouldImp
     return { contentType: 'other', shouldImport: false };
   }
   
-  // YouTube videos
-  if (lowerUrl.includes('youtube.com/watch') || lowerUrl.includes('youtu.be/')) {
+  // YouTube videos (watch, shorts, mobile)
+  if (
+    lowerUrl.includes('youtube.com/watch') ||
+    lowerUrl.includes('m.youtube.com/') ||
+    lowerUrl.includes('youtube.com/shorts/') ||
+    lowerUrl.includes('youtu.be/')
+  ) {
     return { contentType: 'video', shouldImport: true };
   }
   

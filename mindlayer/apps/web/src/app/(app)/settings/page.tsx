@@ -10,7 +10,6 @@ import {
   Clock, 
   Link2, 
   RefreshCw, 
-  Check,
   ExternalLink,
   BookOpen,
   FileText,
@@ -44,8 +43,6 @@ function detectDevice(): { platform: PlatformType; isMobile: boolean } {
   else if (ua.includes("linux")) platform = "linux";
   return { platform, isMobile };
 }
-import JSZip from "jszip";
-
 const GITHUB_REPO = "RemyTasked/Mindlair";
 const APP_VERSION = "0.1.0";
 
@@ -108,8 +105,8 @@ export default function SettingsPage() {
   const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
   const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
   const [takeoutUploading, setTakeoutUploading] = useState(false);
-  const [takeoutResult, setTakeoutResult] = useState<{ youtube: number; chrome: number; total: number } | null>(null);
   const [takeoutError, setTakeoutError] = useState<string | null>(null);
+  const [googleTakeoutLastImportAt, setGoogleTakeoutLastImportAt] = useState<string | null>(null);
   const [deviceInfo, setDeviceInfo] = useState<{ platform: PlatformType; isMobile: boolean } | null>(null);
 
   useEffect(() => {
@@ -140,6 +137,9 @@ export default function SettingsPage() {
       if (integrationsRes.ok) {
         const integrationsData = await integrationsRes.json();
         setIntegrations(integrationsData.integrations || []);
+        setGoogleTakeoutLastImportAt(
+          integrationsData.googleTakeoutLastImportAt ?? null,
+        );
       }
       
       if (apiKeysRes.ok) {
@@ -328,90 +328,23 @@ export default function SettingsPage() {
 
     setTakeoutUploading(true);
     setTakeoutError(null);
-    setTakeoutResult(null);
 
     try {
-      // If it's a ZIP file, extract relevant files client-side and upload them separately
-      if (file.name.endsWith('.zip')) {
-        const arrayBuffer = await file.arrayBuffer();
-        const zip = await JSZip.loadAsync(arrayBuffer);
-        
-        // Find YouTube watch history
-        const youtubeFiles = zip.file(/watch-history\.html$/i);
-        const youtubeFile = youtubeFiles.find(f => 
-          f.name.includes('YouTube') || f.name.includes('history')
-        ) || youtubeFiles[0];
-        
-        // Find Chrome history
-        const chromeFiles = zip.file(/BrowserHistory\.json$/i);
-        const chromeFile = chromeFiles[0];
-        
-        if (!youtubeFile && !chromeFile) {
-          setTakeoutError("No YouTube or Chrome history found in this ZIP. Make sure you selected 'YouTube and YouTube Music' or 'Chrome → BrowserHistory' when exporting.");
-          return;
-        }
+      const formData = new FormData();
+      formData.append("file", file);
 
-        let totalYoutube = 0;
-        let totalChrome = 0;
+      const response = await fetch("/api/integrations/google-takeout", {
+        method: "POST",
+        body: formData,
+      });
 
-        // Upload YouTube history if found
-        if (youtubeFile) {
-          const content = await youtubeFile.async('blob');
-          const formData = new FormData();
-          formData.append("file", content, "watch-history.html");
-          formData.append("type", "youtube");
-          
-          const response = await fetch("/api/integrations/google-takeout", {
-            method: "POST",
-            body: formData,
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            totalYoutube = data.imported?.youtube || 0;
-          }
-        }
-
-        // Upload Chrome history if found
-        if (chromeFile) {
-          const content = await chromeFile.async('blob');
-          const formData = new FormData();
-          formData.append("file", content, "BrowserHistory.json");
-          formData.append("type", "chrome");
-          
-          const response = await fetch("/api/integrations/google-takeout", {
-            method: "POST",
-            body: formData,
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            totalChrome = data.imported?.chrome || 0;
-          }
-        }
-
-        setTakeoutResult({ youtube: totalYoutube, chrome: totalChrome, total: totalYoutube + totalChrome });
-        fetchSettings();
-      } else {
-        // For non-ZIP files, upload directly
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const response = await fetch("/api/integrations/google-takeout", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          setTakeoutError(data.message || `Upload failed (${response.status})`);
-          return;
-        }
-
-        const data = await response.json();
-        setTakeoutResult(data.imported);
-        fetchSettings();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setTakeoutError(data.message || `Upload failed (${response.status})`);
+        return;
       }
+
+      await fetchSettings();
     } catch (err) {
       console.error("Takeout upload error:", err);
       setTakeoutError("Failed to process file. Make sure it's a valid Google Takeout export.");
@@ -429,9 +362,7 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        const result = await response.json();
-        alert(result.message || `Imported ${result.imported} new items from ${provider}`);
-        fetchSettings();
+        await fetchSettings();
       } else {
         const error = await response.json();
         alert(error.message || `Failed to sync ${provider}`);
@@ -626,15 +557,17 @@ export default function SettingsPage() {
                       <li>Wait for email, download ZIP, then upload here</li>
                     </ol>
                     <p className="text-zinc-600 pt-1">
-                      Supported files: <code className="text-zinc-500">watch-history.html</code>, <code className="text-zinc-500">BrowserHistory.json</code>, or the full ZIP
+                      Supported: full Takeout ZIP, or <code className="text-zinc-500">watch-history.html</code>,{" "}
+                      <code className="text-zinc-500">BrowserHistory.json</code> /{" "}
+                      <code className="text-zinc-500">History.json</code> (Chrome export)
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-2">
+                      Last successful import:{" "}
+                      {googleTakeoutLastImportAt
+                        ? new Date(googleTakeoutLastImportAt).toLocaleString()
+                        : "—"}
                     </p>
                   </div>
-                  {takeoutResult && (
-                    <div className="mt-2 p-2 bg-green-900/30 border border-green-800 rounded text-xs text-green-300">
-                      <Check className="w-3 h-3 inline mr-1" />
-                      Imported {takeoutResult.total} items ({takeoutResult.youtube} videos, {takeoutResult.chrome} articles)
-                    </div>
-                  )}
                   {takeoutError && (
                     <div className="mt-2 p-2 bg-red-900/30 border border-red-800 rounded text-xs text-red-300">
                       {takeoutError}
@@ -1100,9 +1033,12 @@ function IntegrationItem({
         <div>
           <p className="font-medium">{name}</p>
           <p className="text-sm text-zinc-500">{description}</p>
-          {isConnected && integration?.sourceCount > 0 && (
+          {isConnected && (
             <p className="text-xs text-zinc-400 mt-0.5">
-              {integration.sourceCount} sources imported
+              Last successful sync:{" "}
+              {integration?.lastSyncAt
+                ? new Date(integration.lastSyncAt).toLocaleString()
+                : "Never synced"}
             </p>
           )}
         </div>
