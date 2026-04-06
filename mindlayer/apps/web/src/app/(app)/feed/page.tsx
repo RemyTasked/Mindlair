@@ -407,16 +407,16 @@ export default function FeedPage() {
           </button>
         </div>
 
-        {/* Category Filter Pills */}
-        <div style={{ 
-          display: "flex", 
-          gap: 8, 
-          marginBottom: 24,
-          overflowX: "auto",
-          paddingBottom: 4,
-          msOverflowStyle: "none",
-          scrollbarWidth: "none",
-        }}>
+        {/* Category Filter Pills — wrap so narrow viewports need not scroll sideways */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginBottom: 24,
+            alignItems: "center",
+          }}
+        >
           <button
             onClick={() => setCategory(null)}
             style={{

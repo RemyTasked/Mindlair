@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import PersonalBeliefMap, { type MapApiPayload } from "@/components/personal-belief-map";
 
 // ── Colour system ──────────────────────────────────────────────
 const C = {
@@ -259,8 +260,8 @@ const ANIM_CSS = `
   }
 `;
 
-// ── Component ──────────────────────────────────────────────────
-export default function MindlayerMap() {
+// ── Demo map (sample data) ─────────────────────────────────────
+function MindlayerMapDemo() {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrubRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
@@ -1047,4 +1048,64 @@ export default function MindlayerMap() {
 
     </div>
   );
+}
+
+export default function MindlayerMap() {
+  const [payload, setPayload] = useState<MapApiPayload | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/map")
+      .then(res => {
+        if (!res.ok) throw new Error("map fetch failed");
+        return res.json();
+      })
+      .then((data: MapApiPayload) => {
+        if (!cancelled) setPayload(data);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!payload && !failed) {
+    return (
+      <div
+        style={{
+          background: C.bg,
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "'Inter', system-ui, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: C.accent,
+            animation: "ml-boot-pulse 1.2s ease-in-out infinite",
+          }}
+        />
+        <style>{`
+          @keyframes ml-boot-pulse {
+            0%, 100% { opacity: 0.35; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.15); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (failed || !payload?.readiness?.usePersonalMap) {
+    return <MindlayerMapDemo />;
+  }
+
+  return <PersonalBeliefMap payload={payload} />;
 }

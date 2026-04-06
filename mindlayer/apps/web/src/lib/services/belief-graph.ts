@@ -444,6 +444,152 @@ export async function getBeliefMap(userId: string): Promise<{
   return { nodes, edges };
 }
 
+/** Connected components on the map graph (tension edges). */
+export interface MapCluster {
+  id: string;
+  label: string;
+  nodeIds: string[];
+  dominantDirection: string;
+}
+
+function modeDirection(arr: string[]): string | undefined {
+  const counts = new Map<string, number>();
+  let maxCount = 0;
+  let maxValue: string | undefined;
+  for (const val of arr) {
+    const count = (counts.get(val) || 0) + 1;
+    counts.set(val, count);
+    if (count > maxCount) {
+      maxCount = count;
+      maxValue = val;
+    }
+  }
+  return maxValue;
+}
+
+export function clusterMapNodes(nodes: MapNode[], edges: MapEdge[]): MapCluster[] {
+  if (nodes.length === 0) return [];
+
+  const adjacency = new Map<string, Set<string>>();
+  for (const node of nodes) {
+    adjacency.set(node.id, new Set());
+  }
+  for (const edge of edges) {
+    adjacency.get(edge.source)?.add(edge.target);
+    adjacency.get(edge.target)?.add(edge.source);
+  }
+
+  const visited = new Set<string>();
+  const clusters: MapCluster[] = [];
+
+  for (const node of nodes) {
+    if (visited.has(node.id)) continue;
+
+    const clusterIds: string[] = [];
+    const queue = [node.id];
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+
+      visited.add(current);
+      clusterIds.push(current);
+
+      const neighbors = adjacency.get(current) || new Set();
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    if (clusterIds.length > 0) {
+      const clusterNodesList = nodes.filter(n => clusterIds.includes(n.id));
+      const directions = clusterNodesList.map(n => n.direction);
+      const dominantDirection = modeDirection(directions) || 'mixed';
+      const primaryLabel =
+        clusterNodesList.sort((a, b) => b.label.length - a.label.length)[0]?.label || 'Cluster';
+
+      clusters.push({
+        id: `cluster-${clusters.length}`,
+        label: primaryLabel,
+        nodeIds: clusterIds,
+        dominantDirection,
+      });
+    }
+  }
+
+  return clusters;
+}
+
+const MIN_DISCOVERY_CLAIMS_FOR_PERSONAL_MAP = 5;
+const MIN_SOURCE_RICH_CLUSTERS = 2;
+
+/** Opinions from digest, Discover feed reactions, and realtime capture. */
+const DISCOVERY_POSITION_CONTEXTS = ['digest', 'post_reaction', 'realtime'] as const;
+
+export interface MapReadiness {
+  discoveryClaimCount: number;
+  sourceRichClusterCount: number;
+  usePersonalMap: boolean;
+}
+
+/**
+ * Switch off demo map once the user has enough discover-style opinions
+ * (digest + feed reactions) or extracted claims across multiple tension clusters.
+ */
+export async function getMapReadiness(
+  userId: string,
+  graph: { nodes: MapNode[]; edges: MapEdge[] }
+): Promise<MapReadiness> {
+  const [discoveryGroups, conceptRows] = await Promise.all([
+    db.position.groupBy({
+      by: ['claimId'],
+      where: {
+        userId,
+        stance: { not: 'skip' },
+        context: { in: [...DISCOVERY_POSITION_CONTEXTS] },
+      },
+    }),
+    db.claimConcept.findMany({
+      where: { claim: { source: { userId } } },
+      select: { conceptId: true },
+      distinct: ['conceptId'],
+    }),
+  ]);
+
+  const discoveryClaimCount = discoveryGroups.length;
+
+  const conceptsWithExtractedClaims = new Set(conceptRows.map(r => r.conceptId));
+  const clusters = clusterMapNodes(graph.nodes, graph.edges);
+
+  let sourceRichClusterCount = 0;
+  for (const c of clusters) {
+    if (c.nodeIds.some(id => conceptsWithExtractedClaims.has(id))) {
+      sourceRichClusterCount++;
+    }
+  }
+
+  // No beliefs yet, but multiple concepts already tagged from the user's sources (e.g. imports).
+  if (
+    sourceRichClusterCount < MIN_SOURCE_RICH_CLUSTERS &&
+    graph.nodes.length === 0 &&
+    conceptsWithExtractedClaims.size >= MIN_SOURCE_RICH_CLUSTERS
+  ) {
+    sourceRichClusterCount = conceptsWithExtractedClaims.size;
+  }
+
+  const usePersonalMap =
+    discoveryClaimCount >= MIN_DISCOVERY_CLAIMS_FOR_PERSONAL_MAP ||
+    sourceRichClusterCount >= MIN_SOURCE_RICH_CLUSTERS;
+
+  return {
+    discoveryClaimCount,
+    sourceRichClusterCount,
+    usePersonalMap,
+  };
+}
+
 export interface TimelineEntry {
   date: string;
   conceptId: string;
