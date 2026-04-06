@@ -464,7 +464,7 @@ function MindlayerMapDemo() {
             Connect sources to build your own
           </a>
         </div>
-        <a href="/wrapped" style={{
+        <a href="/fingerprint" style={{
           background: `${C.surface}`,
           border: `1px solid ${C.border}`,
           borderRadius: 6,
@@ -483,7 +483,7 @@ function MindlayerMapDemo() {
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             animation: "ml-shimmer 3s linear infinite",
-          }}>Your 2025 Wrapped</span>
+          }}>Mindlair Fingerprint</span>
           <span style={{ fontSize: 11, color: C.muted }}>→</span>
         </a>
       </div>
@@ -497,7 +497,7 @@ function MindlayerMapDemo() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.04em" }}>
-            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </div>
           <div style={{
             fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",

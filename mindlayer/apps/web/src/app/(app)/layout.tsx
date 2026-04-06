@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare } from "lucide-react";
+import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationBanner } from "@/components/push-notifications";
 
@@ -46,6 +46,7 @@ export default function AppLayout({
             <NavLink href="/publish" icon={PenSquare}>Publish</NavLink>
             <NavLink href="/inbox" icon={Inbox}>Inbox</NavLink>
             <NavLink href="/map" icon={Map}>Map</NavLink>
+            <NavLink href="/fingerprint" icon={Fingerprint}>Fingerprint</NavLink>
             <NavLink href="/timeline" icon={Brain}>Timeline</NavLink>
             <NavLink href="/nudges" icon={Lightbulb}>Nudges</NavLink>
           </nav>

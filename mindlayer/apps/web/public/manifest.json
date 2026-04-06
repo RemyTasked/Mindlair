@@ -89,10 +89,10 @@
       "description": "View your belief map"
     },
     {
-      "name": "Wrapped",
-      "short_name": "Wrapped",
-      "url": "/wrapped",
-      "description": "Your annual thinking review"
+      "name": "Fingerprint",
+      "short_name": "Fingerprint",
+      "url": "/fingerprint",
+      "description": "Intellectual fingerprint and year in review"
     }
   ],
   "categories": ["productivity", "education", "lifestyle"],

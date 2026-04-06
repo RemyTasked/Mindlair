@@ -6,6 +6,7 @@ const STATIC_ASSETS = [
   '/',
   '/map',
   '/wrapped',
+  '/fingerprint',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -13,7 +14,7 @@ const STATIC_ASSETS = [
   '/offline',
 ];
 
-const APP_SHELL_ROUTES = ['/map', '/wrapped', '/inbox', '/timeline', '/nudges', '/settings', '/feed', '/publish', '/profile'];
+const APP_SHELL_ROUTES = ['/map', '/wrapped', '/fingerprint', '/inbox', '/timeline', '/nudges', '/settings', '/feed', '/publish', '/profile'];
 
 const AUTH_ROUTES = ['/login', '/verify', '/onboarding'];
 

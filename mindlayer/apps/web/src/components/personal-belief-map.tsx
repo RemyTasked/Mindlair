@@ -188,7 +188,7 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
           )}
         </span>
         <a
-          href="/wrapped"
+          href="/fingerprint"
           style={{
             background: C.bg,
             border: `1px solid ${C.border}`,
@@ -201,7 +201,7 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
             flexShrink: 0,
           }}
         >
-          Your 2025 Wrapped →
+          Mindlair Fingerprint →
         </a>
       </div>
 
@@ -220,7 +220,7 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.04em" }}>
-            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+            Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
           </div>
           <div
             style={{

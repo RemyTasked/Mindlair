@@ -52,6 +52,7 @@ export function middleware(request: NextRequest) {
       pathname.startsWith('/settings') ||
       pathname.startsWith('/query') ||
       pathname.startsWith('/wrapped') ||
+      pathname.startsWith('/fingerprint') ||
       pathname.startsWith('/onboarding')) {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
     

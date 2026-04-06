@@ -1,7 +1,5 @@
-"use client";
-
-import MindlayerWrapped from "@/components/mindlayer-wrapped";
+import { redirect } from "next/navigation";
 
 export default function WrappedPage() {
-  return <MindlayerWrapped />;
+  redirect("/fingerprint?tab=wrapped");
 }
