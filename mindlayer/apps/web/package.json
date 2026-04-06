@@ -9,7 +9,11 @@
     "lint": "next lint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "npx tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
@@ -41,6 +45,7 @@
     "prisma": "^6.0.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.7.0",
     "typescript": "^5.0.0"
   }
 }

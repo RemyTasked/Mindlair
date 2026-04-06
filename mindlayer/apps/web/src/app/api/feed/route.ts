@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
 
+const EDITORIAL_EMAIL = 'discover@mindlair.app';
+
+const CATEGORIES = [
+  'technology',
+  'psychology', 
+  'economics',
+  'health',
+  'philosophy',
+  'culture',
+  'productivity',
+] as const;
+
+type Category = typeof CATEGORIES[number];
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthFromRequest(request);
@@ -16,6 +30,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const cursor = searchParams.get('cursor');
     const filter = searchParams.get('filter'); // 'following', 'discover', or null for mixed
+    const category = searchParams.get('category') as Category | null; // category filter
 
     // Get user's belief map (engaged concepts)
     const userBeliefs = await db.belief.findMany({
@@ -44,17 +59,31 @@ export async function GET(request: NextRequest) {
     ].filter(id => id !== user.id);
 
     // Build base query
-    const baseWhere = {
+    const baseWhere: any = {
       status: 'published' as const,
       authorId: { notIn: [...blockedIds, user.id] }, // Exclude blocked users and self
     };
 
-    // Get posts with their topic tags and reaction stats
+    // Add category filter if provided
+    if (category && CATEGORIES.includes(category)) {
+      baseWhere.topicTags = { has: category };
+    }
+
+    // Get posts with their topic tags, reaction stats, and source info
     let posts = await db.post.findMany({
       where: baseWhere,
       include: {
         author: {
-          select: { id: true, name: true, avatarUrl: true },
+          select: { id: true, name: true, avatarUrl: true, email: true },
+        },
+        source: {
+          select: { 
+            url: true, 
+            title: true, 
+            outlet: true, 
+            author: true,
+            contentType: true,
+          },
         },
         reactions: {
           select: { stance: true },
@@ -137,6 +166,61 @@ export async function GET(request: NextRequest) {
       filteredPosts = scoredPosts.filter(p => !followingIds.includes(p.authorId));
     }
 
+    // Backfill with editorial content if Discover feed is sparse
+    if ((filter === 'discover' || !filter) && filteredPosts.length < 15) {
+      const existingIds = filteredPosts.map(p => p.id);
+      
+      const editorialWhere: any = {
+        status: 'published' as const,
+        author: { email: EDITORIAL_EMAIL },
+        id: { notIn: existingIds },
+      };
+      
+      if (category && CATEGORIES.includes(category)) {
+        editorialWhere.topicTags = { has: category };
+      }
+
+      const editorialPosts = await db.post.findMany({
+        where: editorialWhere,
+        include: {
+          author: {
+            select: { id: true, name: true, avatarUrl: true, email: true },
+          },
+          source: {
+            select: { 
+              url: true, 
+              title: true, 
+              outlet: true, 
+              author: true,
+              contentType: true,
+            },
+          },
+          reactions: {
+            select: { stance: true },
+          },
+          _count: {
+            select: { reactions: true },
+          },
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: 30 - filteredPosts.length,
+      });
+
+      // Score editorial posts and merge
+      const scoredEditorial = editorialPosts.map(post => {
+        const reactionCounts = post.reactions.reduce(
+          (acc, r) => {
+            acc[r.stance] = (acc[r.stance] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+        return { ...post, score: 10, reactionCounts, isEditorial: true };
+      });
+
+      filteredPosts = [...filteredPosts, ...scoredEditorial];
+    }
+
     // Sort by score
     filteredPosts.sort((a, b) => b.score - a.score);
 
@@ -173,13 +257,25 @@ export async function GET(request: NextRequest) {
         authorStance: post.authorStance,
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
-        author: post.author,
+        author: {
+          id: post.author.id,
+          name: post.author.name,
+          avatarUrl: post.author.avatarUrl,
+        },
+        source: post.source ? {
+          url: post.source.url,
+          title: post.source.title,
+          outlet: post.source.outlet,
+          author: post.source.author,
+          contentType: post.source.contentType,
+        } : null,
         isFollowing: followingIds.includes(post.authorId),
+        isEditorial: post.author.email === EDITORIAL_EMAIL,
         totalReactions: post._count.reactions,
-        // Only show reaction counts if user has reacted
         userReaction: userReactionMap.get(post.id) || null,
         reactionCounts: userReactionMap.has(post.id) ? post.reactionCounts : null,
       })),
+      categories: CATEGORIES,
       nextCursor,
       hasMore,
     });

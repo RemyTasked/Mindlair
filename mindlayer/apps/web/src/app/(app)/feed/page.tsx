@@ -18,6 +18,19 @@ import {
   Filter,
   Users,
   Compass,
+  ExternalLink,
+  BookOpen,
+  Headphones,
+  Video,
+  FileText,
+  Sparkles,
+  Cpu,
+  Brain,
+  DollarSign,
+  Heart,
+  Lightbulb as Philosophy,
+  Globe,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -34,6 +47,14 @@ const C = {
   blue: "#4a9eff",
 };
 
+interface FeedSource {
+  url: string;
+  title: string | null;
+  outlet: string | null;
+  author: string | null;
+  contentType: string;
+}
+
 interface FeedPost {
   id: string;
   headlineClaim: string;
@@ -46,11 +67,25 @@ interface FeedPost {
     name: string | null;
     avatarUrl: string | null;
   };
+  source: FeedSource | null;
   isFollowing: boolean;
+  isEditorial: boolean;
   totalReactions: number;
   userReaction: string | null;
   reactionCounts: Record<string, number> | null;
 }
+
+const CATEGORIES = [
+  { id: 'technology', label: 'Tech', icon: Cpu, color: '#4a9eff' },
+  { id: 'psychology', label: 'Psychology', icon: Brain, color: '#e57373' },
+  { id: 'economics', label: 'Money', icon: DollarSign, color: '#a3c47a' },
+  { id: 'health', label: 'Health', icon: Heart, color: '#f472b6' },
+  { id: 'philosophy', label: 'Philosophy', icon: Philosophy, color: '#c084fc' },
+  { id: 'culture', label: 'Culture', icon: Globe, color: '#fbbf24' },
+  { id: 'productivity', label: 'Productivity', icon: Zap, color: '#34d399' },
+] as const;
+
+type CategoryType = typeof CATEGORIES[number]['id'] | null;
 
 const stanceColors = {
   arguing: C.green,
@@ -80,6 +115,7 @@ export default function FeedPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
+  const [category, setCategory] = useState<CategoryType>(null);
   const [reactingPostId, setReactingPostId] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -96,6 +132,7 @@ export default function FeedPage() {
       const params = new URLSearchParams();
       if (cursor) params.set("cursor", cursor);
       if (filter !== "all") params.set("filter", filter);
+      if (category) params.set("category", category);
 
       const response = await fetch(`/api/feed?${params}`);
       if (!response.ok) {
@@ -121,7 +158,7 @@ export default function FeedPage() {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [filter]);
+  }, [filter, category]);
 
   useEffect(() => {
     fetchPosts();
@@ -315,6 +352,67 @@ export default function FeedPage() {
           </button>
         </div>
 
+        {/* Category Filter Pills */}
+        <div style={{ 
+          display: "flex", 
+          gap: 8, 
+          marginBottom: 24,
+          overflowX: "auto",
+          paddingBottom: 4,
+          msOverflowStyle: "none",
+          scrollbarWidth: "none",
+        }}>
+          <button
+            onClick={() => setCategory(null)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 14px",
+              background: category === null ? `${C.accent}20` : C.surface,
+              border: `1px solid ${category === null ? C.accent : C.border}`,
+              borderRadius: 20,
+              cursor: "pointer",
+              color: category === null ? C.accent : C.textSoft,
+              fontSize: 13,
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+              transition: "all 0.2s",
+            }}
+          >
+            <Sparkles size={14} />
+            All
+          </button>
+          {CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = category === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setCategory(cat.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 14px",
+                  background: isActive ? `${cat.color}20` : C.surface,
+                  border: `1px solid ${isActive ? cat.color : C.border}`,
+                  borderRadius: 20,
+                  cursor: "pointer",
+                  color: isActive ? cat.color : C.textSoft,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  whiteSpace: "nowrap",
+                  transition: "all 0.2s",
+                }}
+              >
+                <Icon size={14} />
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Error State */}
         {error && (
           <div style={{
@@ -501,6 +599,96 @@ export default function FeedPage() {
                         {tag}
                       </span>
                     ))}
+                  </div>
+                )}
+
+                {/* Source Link */}
+                {post.source && (
+                  <a
+                    href={post.source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "12px 16px",
+                      background: C.bg,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 10,
+                      marginBottom: 16,
+                      textDecoration: "none",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = C.accent;
+                      e.currentTarget.style.background = `${C.accent}08`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = C.border;
+                      e.currentTarget.style.background = C.bg;
+                    }}
+                  >
+                    <div style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      background: `${C.accent}15`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      {post.source.contentType === 'podcast' ? (
+                        <Headphones size={18} style={{ color: C.accent }} />
+                      ) : post.source.contentType === 'video' ? (
+                        <Video size={18} style={{ color: C.accent }} />
+                      ) : (
+                        <BookOpen size={18} style={{ color: C.accent }} />
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ 
+                        color: C.text, 
+                        fontSize: 13, 
+                        fontWeight: 500,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}>
+                        {post.source.title || "View Source"}
+                      </div>
+                      <div style={{ 
+                        color: C.muted, 
+                        fontSize: 12,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}>
+                        {post.source.outlet && <span>{post.source.outlet}</span>}
+                        {post.source.outlet && post.source.author && <span>·</span>}
+                        {post.source.author && <span>{post.source.author}</span>}
+                      </div>
+                    </div>
+                    <ExternalLink size={16} style={{ color: C.muted, flexShrink: 0 }} />
+                  </a>
+                )}
+
+                {/* Editorial Badge */}
+                {post.isEditorial && !post.source && (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 12px",
+                    background: `${C.accent}10`,
+                    borderRadius: 8,
+                    marginBottom: 16,
+                  }}>
+                    <Sparkles size={14} style={{ color: C.accent }} />
+                    <span style={{ color: C.accent, fontSize: 12, fontWeight: 500 }}>
+                      Featured Claim
+                    </span>
                   </div>
                 )}
 
