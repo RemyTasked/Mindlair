@@ -42,12 +42,12 @@ export async function GET(request: NextRequest) {
 
     const engagedConceptIds = userBeliefs.map(b => b.conceptId);
 
-    // Get users this person follows
-    const following = await db.follow.findMany({
-      where: { followerId: user.id },
-      select: { followingId: true },
+    // Get users this person is subscribed to
+    const subscriptions = await db.subscription.findMany({
+      where: { subscriberId: user.id },
+      select: { subscribedToId: true },
     });
-    const followingIds = following.map(f => f.followingId);
+    const subscribedIds = subscriptions.map(s => s.subscribedToId);
 
     // Get blocked users (both directions)
     const blocks = await db.block.findMany({

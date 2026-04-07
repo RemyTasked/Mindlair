@@ -385,10 +385,12 @@ export default function FeedPage() {
         {/* Filter Tabs */}
         <div style={{ 
           display: "flex", 
+          flexWrap: "wrap",
           gap: 8, 
           marginBottom: 24,
           borderBottom: `1px solid ${C.border}`,
           paddingBottom: 12,
+          alignItems: "center",
         }}>
           {[
             { id: "all" as FilterType, label: "For You", icon: Filter },
@@ -402,7 +404,7 @@ export default function FeedPage() {
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
-                padding: "8px 16px",
+                padding: "8px 12px",
                 background: filter === tab.id ? `${C.accent}20` : "transparent",
                 border: "none",
                 borderRadius: 8,
@@ -426,6 +428,7 @@ export default function FeedPage() {
               border: "none",
               cursor: "pointer",
               color: C.muted,
+              flexShrink: 0,
             }}
           >
             <RefreshCw size={18} />
