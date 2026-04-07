@@ -71,18 +71,18 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Layer 3 - Publishing */}
+      {/* Layer 3 - Posting */}
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-10">
             <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: C.blue, border: `1px solid ${C.blue}40`, borderRadius: 6, padding: "4px 10px" }}>Layer 3</span>
-            <h2 style={{ fontSize: 22, fontWeight: 700 }}>Publishing Lair</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700 }}>Posting Lair</h2>
           </div>
           <p style={{ fontSize: 15, color: C.textSoft, marginBottom: 28, maxWidth: 600 }}>
-            Writing isn&apos;t separate from mapping — it&apos;s the highest-confidence signal. When you publish, your post feeds the same pipeline as everything else you read.
+            Writing isn&apos;t separate from mapping — it&apos;s the highest-confidence signal. When you post, your content feeds the same pipeline as everything else you read.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-            <Step n={9} title="Claim-Based Publishing" description="Write a specific, falsifiable position — not a topic. Add your argument (500-1500 words). Signal your stance: Arguing, Exploring, or Steelmanning." color={C.blue} />
+            <Step n={9} title="Claim-Based Posting" description="Write a specific, falsifiable position — not a topic. Add your argument (500-1500 words). Signal your stance: Arguing, Exploring, or Steelmanning." color={C.blue} />
             <Step n={10} title="AI Extracts & Links" description="Same claim extraction pipeline. Your headline becomes a claim. Topics auto-tagged. Concepts link to your existing map clusters." color={C.blue} />
             <Step n={11} title="Readers React" description="Others see your claim, react with Agree/Disagree/Complicated. Their reaction updates their map. Your map sees the response patterns." color={C.blue} />
             <Step n={12} title="Similar Claims Cluster" description="Posts on the same topic or with semantically similar claims appear in the same map cluster. The social layer compounds the mapping layer." color={C.blue} />
@@ -101,7 +101,7 @@ export default function HowItWorksPage() {
             <InfoCard title="Echo Detection" description="Same direction 5–6 times without counterpoint? Flagged. Primes the nudge engine." color={C.accent} />
             <InfoCard title="Gentle Nudges" description={`"This take on X is worth a look." One counter-angle. Engage or don't.`} color={C.amber} />
             <InfoCard title="Living Map" description="Topic clusters by engagement. Timeline scrubber to watch thinking evolve." color={C.blue} />
-            <InfoCard title="Publishing Compounds" description="Your published posts are strongest signals. Read, react, write — all feed the same map." color="#a3c47a" />
+            <InfoCard title="Posting Compounds" description="Your posts are strongest signals. Read, react, write — all feed the same map." color="#a3c47a" />
           </div>
         </div>
       </section>

@@ -27,7 +27,7 @@ const STANCE_LABELS = {
   steelmanning: "Steelmanning",
 };
 
-type FilterType = "all" | "following" | "discover";
+type FilterType = "all" | "subscriptions" | "discover";
 
 export function FeedScreen({ navigation }: Props) {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -162,14 +162,14 @@ export function FeedScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.filterRow}>
-        {(["all", "following", "discover"] as FilterType[]).map((f) => (
+        {(["all", "subscriptions", "discover"] as FilterType[]).map((f) => (
           <TouchableOpacity
             key={f}
             style={[styles.filterButton, filter === f && styles.filterButtonActive]}
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === "all" ? "For You" : f === "following" ? "Following" : "Discover"}
+              {f === "all" ? "For You" : f === "subscriptions" ? "Subscriptions" : "Discover"}
             </Text>
           </TouchableOpacity>
         ))}
@@ -197,7 +197,7 @@ export function FeedScreen({ navigation }: Props) {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>No posts yet</Text>
-              <Text style={styles.emptyHint}>Be the first to publish!</Text>
+              <Text style={styles.emptyHint}>Be the first to post!</Text>
             </View>
           }
           ListFooterComponent={

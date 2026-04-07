@@ -197,7 +197,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Publishing Lair ── */}
+      {/* ── Posting Lair ── */}
       <section className="py-20 px-6" style={{
         background: "#1a1916",
         borderTop: "1px solid #2a2825",
@@ -211,13 +211,13 @@ export default function HomePage() {
               border: "1px solid #3a5a7a", borderRadius: 20,
               padding: "5px 14px", marginBottom: 20,
             }}>
-              Publishing Lair
+              Posting Lair
             </div>
             <h2 style={{
               fontSize: "clamp(1.8rem, 3.5vw, 2.4rem)",
               fontWeight: 700, marginBottom: 16,
             }}>
-              Publish your thinking.{" "}
+              Post your thinking.{" "}
               <span style={{ color: "#d4915a" }}>Shape the conversation.</span>
             </h2>
             <p style={{
@@ -323,7 +323,7 @@ export default function HomePage() {
           <div className="text-center mt-12">
             <Link href="/login">
               <Button size="lg" variant="outline" style={{ borderColor: "#6b9fc4", background: "transparent", color: "#6b9fc4" }}>
-                Start Publishing
+                Start Posting
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>

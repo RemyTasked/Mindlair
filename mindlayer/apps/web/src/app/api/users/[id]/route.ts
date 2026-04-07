@@ -22,8 +22,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         _count: {
           select: {
             posts: { where: { status: 'published' } },
-            followers: true,
-            following: true,
+            subscribers: true,
+            subscriptions: true,
           },
         },
       },
@@ -66,20 +66,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get relationship status if authenticated
     let relationship = null;
     if (user && user.id !== targetUserId) {
-      const [following, followedBy, blocking, blockedBy] = await Promise.all([
-        db.follow.findUnique({
+      const [subscribed, subscribedBy, blocking, blockedBy] = await Promise.all([
+        db.subscription.findUnique({
           where: {
-            followerId_followingId: {
-              followerId: user.id,
-              followingId: targetUserId,
+            subscriberId_subscribedToId: {
+              subscriberId: user.id,
+              subscribedToId: targetUserId,
             },
           },
         }),
-        db.follow.findUnique({
+        db.subscription.findUnique({
           where: {
-            followerId_followingId: {
-              followerId: targetUserId,
-              followingId: user.id,
+            subscriberId_subscribedToId: {
+              subscriberId: targetUserId,
+              subscribedToId: user.id,
             },
           },
         }),
@@ -102,8 +102,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       ]);
 
       relationship = {
-        following: !!following,
-        followedBy: !!followedBy,
+        subscribed: !!subscribed,
+        subscribedBy: !!subscribedBy,
         blocking: !!blocking,
         blockedBy: !!blockedBy,
       };
@@ -135,8 +135,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         avatarUrl: targetUser.avatarUrl,
         memberSince: targetUser.createdAt.toISOString(),
         postCount: targetUser._count.posts,
-        followerCount: targetUser._count.followers,
-        followingCount: targetUser._count.following,
+        subscriberCount: targetUser._count.subscribers,
+        subscriptionCount: targetUser._count.subscriptions,
       },
       relationship,
       beliefMap: beliefs.map(b => ({

@@ -118,7 +118,7 @@ export function HomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("Publish")}
             >
               <Text style={styles.primaryActionIcon}>✍️</Text>
-              <Text style={styles.primaryActionText}>Publish</Text>
+              <Text style={styles.primaryActionText}>Post</Text>
               <Text style={styles.primaryActionSubtext}>Share your thinking</Text>
             </TouchableOpacity>
           </View>

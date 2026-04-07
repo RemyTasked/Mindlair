@@ -39,8 +39,8 @@ model User {
   // Publishing Layer
   posts             Post[]
   postReactions     PostReaction[]
-  following         Follow[]       @relation("Following")
-  followers         Follow[]       @relation("Followers")
+  subscriptions     Subscription[] @relation("Subscriptions")
+  subscribers       Subscription[] @relation("Subscribers")
   blocking          Block[]        @relation("Blocking")
   blockedBy         Block[]        @relation("BlockedBy")
 
@@ -485,18 +485,18 @@ model PostReaction {
   @@map("post_reactions")
 }
 
-model Follow {
-  id          String   @id @default(cuid())
-  followerId  String
-  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
-  followingId String
-  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
+model Subscription {
+  id             String   @id @default(cuid())
+  subscriberId   String
+  subscriber     User     @relation("Subscriptions", fields: [subscriberId], references: [id], onDelete: Cascade)
+  subscribedToId String
+  subscribedTo   User     @relation("Subscribers", fields: [subscribedToId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
 
-  @@unique([followerId, followingId])
-  @@index([followerId])
-  @@index([followingId])
-  @@map("follows")
+  @@unique([subscriberId, subscribedToId])
+  @@index([subscriberId])
+  @@index([subscribedToId])
+  @@map("subscriptions")
 }
 
 model Block {

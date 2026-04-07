@@ -62,12 +62,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    // Also remove any follows in both directions
-    await db.follow.deleteMany({
+    // Also remove any subscriptions in both directions
+    await db.subscription.deleteMany({
       where: {
         OR: [
-          { followerId: user.id, followingId: targetUserId },
-          { followerId: targetUserId, followingId: user.id },
+          { subscriberId: user.id, subscribedToId: targetUserId },
+          { subscriberId: targetUserId, subscribedToId: user.id },
         ],
       },
     });

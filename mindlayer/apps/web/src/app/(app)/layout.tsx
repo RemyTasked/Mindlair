@@ -52,7 +52,7 @@ export default function AppLayout({
 
           <nav className="flex-1 px-3">
             <NavLink href="/feed" icon={Rss}>Feed</NavLink>
-            <NavLink href="/publish" icon={PenSquare}>Publish</NavLink>
+            <NavLink href="/publish" icon={PenSquare}>Post</NavLink>
             <NavLink href="/inbox" icon={Inbox}>Inbox</NavLink>
             <NavLink href="/map" icon={Map}>Map</NavLink>
             <NavLink href="/fingerprint" icon={Fingerprint}>Fingerprint</NavLink>

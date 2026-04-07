@@ -77,7 +77,7 @@ function AppNavigator() {
           <Stack.Screen
             name="Publish"
             component={PublishScreen}
-            options={{ title: "Publish" }}
+            options={{ title: "Post" }}
           />
           <Stack.Screen
             name="Settings"

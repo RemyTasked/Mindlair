@@ -118,7 +118,7 @@ export function PublishScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Publish</Text>
+            <Text style={styles.title}>Post</Text>
             <Text style={styles.subtitle}>
               Share your thinking. Every post shapes your belief map.
             </Text>
@@ -198,9 +198,9 @@ export function PublishScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>What happens when you publish:</Text>
+            <Text style={styles.infoTitle}>What happens when you post:</Text>
             <Text style={styles.infoText}>
-              Your post goes through AI screening, then claim extraction. The claims become part of your belief map — publishing is the strongest signal of what you actually think.
+              Your post goes through AI screening, then claim extraction. The claims become part of your belief map — posting is the strongest signal of what you actually think.
             </Text>
           </View>
         </ScrollView>
@@ -226,7 +226,7 @@ export function PublishScreen({ navigation }: Props) {
             {isSubmitting ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.publishButtonText}>Publish</Text>
+              <Text style={styles.publishButtonText}>Post</Text>
             )}
           </TouchableOpacity>
         </View>

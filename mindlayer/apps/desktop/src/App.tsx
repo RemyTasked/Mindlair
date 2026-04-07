@@ -165,7 +165,7 @@ function App() {
           className={activeTab === "publish" ? "active" : ""} 
           onClick={() => setActiveTab("publish")}
         >
-          Publish
+          Post
         </button>
         <button 
           className={activeTab === "captures" ? "active" : ""} 
@@ -494,7 +494,7 @@ function Settings({
 function FeedTab() {
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "following" | "discover">("all");
+  const [filter, setFilter] = useState<"all" | "subscriptions" | "discover">("all");
 
   useEffect(() => {
     loadFeed();
@@ -537,13 +537,13 @@ function FeedTab() {
       <div className="feed-header">
         <h2>Feed</h2>
         <div className="feed-filters">
-          {(["all", "following", "discover"] as const).map((f) => (
+          {(["all", "subscriptions", "discover"] as const).map((f) => (
             <button
               key={f}
               className={`filter-btn ${filter === f ? "active" : ""}`}
               onClick={() => setFilter(f)}
             >
-              {f === "all" ? "For You" : f === "following" ? "Following" : "Discover"}
+              {f === "all" ? "For You" : f === "subscriptions" ? "Subscriptions" : "Discover"}
             </button>
           ))}
         </div>
@@ -554,7 +554,7 @@ function FeedTab() {
       ) : posts.length === 0 ? (
         <div className="feed-empty">
           <p>No posts yet</p>
-          <p className="hint">Be the first to publish!</p>
+          <p className="hint">Be the first to post!</p>
         </div>
       ) : (
         <div className="feed-posts">
@@ -691,7 +691,7 @@ function PublishTab() {
 
   return (
     <div className="publish-tab">
-      <h2>Publish</h2>
+      <h2>Post</h2>
       <p className="publish-subtitle">Share your thinking. Every post shapes your belief map.</p>
 
       <div className="form-group">
@@ -759,8 +759,8 @@ function PublishTab() {
       </div>
 
       <div className="publish-info">
-        <strong>What happens when you publish:</strong> Your post goes through AI screening, 
-        then claim extraction. The claims become part of your belief map — publishing is 
+        <strong>What happens when you post:</strong> Your post goes through AI screening, 
+        then claim extraction. The claims become part of your belief map — posting is 
         the strongest signal of what you actually think.
       </div>
 
@@ -769,7 +769,7 @@ function PublishTab() {
         onClick={handlePublish}
         disabled={!canPublish}
       >
-        {isSubmitting ? "Publishing..." : "Publish"}
+        {isSubmitting ? "Posting..." : "Post"}
       </button>
     </div>
   );

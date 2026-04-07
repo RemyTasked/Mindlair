@@ -74,7 +74,7 @@ interface FeedPost {
     author: { id: string; name: string | null; avatarUrl: string | null };
   } | null;
   source: FeedSource | null;
-  isFollowing: boolean;
+  isSubscribed: boolean;
   isEditorial: boolean;
   totalReactions: number;
   userReaction: string | null;
@@ -392,7 +392,7 @@ export default function FeedPage() {
         }}>
           {[
             { id: "all" as FilterType, label: "For You", icon: Filter },
-            { id: "following" as FilterType, label: "Following", icon: Users },
+            { id: "subscriptions" as FilterType, label: "Subscriptions", icon: Users },
             { id: "discover" as FilterType, label: "Discover", icon: Compass },
           ].map((tab) => (
             <button
@@ -525,12 +525,12 @@ export default function FeedPage() {
               <MessageSquare size={28} style={{ color: C.muted }} />
             </div>
             <h3 style={{ color: C.text, fontSize: 18, marginBottom: 8 }}>
-              {filter === "following" ? "No posts from people you follow" : "No posts yet"}
+              {filter === "subscriptions" ? "No posts from your subscriptions" : "No posts yet"}
             </h3>
             <p style={{ color: C.textSoft, fontSize: 14, marginBottom: 24 }}>
-              {filter === "following" 
-                ? "Follow people to see their posts here" 
-                : "Be the first to publish something"}
+              {filter === "subscriptions" 
+                ? "Subscribe to people to see their posts here" 
+                : "Be the first to post something"}
             </p>
             <Link href="/publish">
               <Button style={{ background: C.accent, color: "#fff", border: "none" }}>
@@ -604,14 +604,14 @@ export default function FeedPage() {
                     <div>
                       <div style={{ color: C.text, fontSize: 14, fontWeight: 500 }}>
                         {post.author.name || "Anonymous"}
-                        {post.isFollowing && (
+                        {post.isSubscribed && (
                           <span style={{ 
                             color: C.accent, 
                             fontSize: 11, 
                             marginLeft: 6,
                             fontWeight: 400,
                           }}>
-                            Following
+                            Subscribed
                           </span>
                         )}
                       </div>

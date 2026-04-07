@@ -35,7 +35,7 @@ export async function generateFeed(
   options: {
     limit?: number;
     cursor?: string;
-    filter?: 'following' | 'discover' | null;
+    filter?: 'subscriptions' | 'discover' | null;
   } = {}
 ): Promise<{
   posts: ScoredPost[];
@@ -50,12 +50,12 @@ export async function generateFeed(
     include: { concept: true },
   });
 
-  // Get users this person follows
-  const following = await db.follow.findMany({
-    where: { followerId: userId },
-    select: { followingId: true },
+  // Get users this person is subscribed to
+  const subscriptions = await db.subscription.findMany({
+    where: { subscriberId: userId },
+    select: { subscribedToId: true },
   });
-  const followingIds = following.map(f => f.followingId);
+  const subscribedIds = subscriptions.map(s => s.subscribedToId);
 
   // Get blocked users (both directions)
   const blocks = await db.block.findMany({
@@ -90,14 +90,14 @@ export async function generateFeed(
   });
 
   // Score posts
-  const scoredPosts = scorePostsForFeed(posts as FeedPost[], userBeliefs, followingIds);
+  const scoredPosts = scorePostsForFeed(posts as FeedPost[], userBeliefs, subscribedIds);
 
   // Apply filter
   let filteredPosts = scoredPosts;
-  if (filter === 'following') {
-    filteredPosts = scoredPosts.filter(p => followingIds.includes(p.authorId));
+  if (filter === 'subscriptions') {
+    filteredPosts = scoredPosts.filter(p => subscribedIds.includes(p.authorId));
   } else if (filter === 'discover') {
-    filteredPosts = scoredPosts.filter(p => !followingIds.includes(p.authorId));
+    filteredPosts = scoredPosts.filter(p => !subscribedIds.includes(p.authorId));
   }
 
   // Sort by score
@@ -123,13 +123,13 @@ export async function generateFeed(
 function scorePostsForFeed(
   posts: FeedPost[],
   userBeliefs: UserBelief[],
-  followingIds: string[]
+  subscribedIds: string[]
 ): ScoredPost[] {
   return posts.map(post => {
     let score = 0;
 
-    // 1. Following boost (+50)
-    if (followingIds.includes(post.authorId)) {
+    // 1. Subscription boost (+50)
+    if (subscribedIds.includes(post.authorId)) {
       score += 50;
     }
 

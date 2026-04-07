@@ -302,10 +302,10 @@ function PublishPageContent() {
             color: C.text,
             marginBottom: 8,
           }}>
-            Publish
+            Post
           </h1>
           <p style={{ color: C.textSoft, fontSize: 15 }}>
-            Share your thinking. Every post you publish shapes your belief map.
+            Share your thinking. Every post shapes your belief map.
           </p>
         </div>
 
@@ -736,12 +736,12 @@ function PublishPageContent() {
               ) : (
                 <Send size={16} />
               )}
-              <span style={{ marginLeft: 8 }}>Publish</span>
+              <span style={{ marginLeft: 8 }}>Post</span>
             </Button>
           </div>
         </div>
 
-        {/* Publishing Note */}
+        {/* Posting Note */}
         <div style={{
           marginTop: 32,
           padding: 16,
@@ -750,9 +750,9 @@ function PublishPageContent() {
           borderRadius: 12,
         }}>
           <p style={{ color: C.textSoft, fontSize: 13, lineHeight: 1.6 }}>
-            <strong style={{ color: C.accent }}>What happens when you publish:</strong>{" "}
+            <strong style={{ color: C.accent }}>What happens when you post:</strong>{" "}
             Your post goes through AI screening, then claim extraction. The claims 
-            become part of your belief map — publishing is the strongest signal of 
+            become part of your belief map — posting is the strongest signal of 
             what you actually think.
           </p>
         </div>

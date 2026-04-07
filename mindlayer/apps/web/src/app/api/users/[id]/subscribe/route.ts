@@ -19,7 +19,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (targetUserId === user.id) {
       return NextResponse.json(
-        { code: 'VALIDATION_ERROR', message: 'Cannot follow yourself' },
+        { code: 'VALIDATION_ERROR', message: 'Cannot subscribe to yourself' },
         { status: 400 }
       );
     }
@@ -48,40 +48,40 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (blocked) {
       return NextResponse.json(
-        { code: 'BLOCKED', message: 'Cannot follow this user' },
+        { code: 'BLOCKED', message: 'Cannot subscribe to this user' },
         { status: 403 }
       );
     }
 
-    // Check if already following
-    const existingFollow = await db.follow.findUnique({
+    // Check if already subscribed
+    const existingSubscription = await db.subscription.findUnique({
       where: {
-        followerId_followingId: {
-          followerId: user.id,
-          followingId: targetUserId,
+        subscriberId_subscribedToId: {
+          subscriberId: user.id,
+          subscribedToId: targetUserId,
         },
       },
     });
 
-    if (existingFollow) {
+    if (existingSubscription) {
       return NextResponse.json({
         success: true,
-        following: true,
-        message: 'Already following',
+        subscribed: true,
+        message: 'Already subscribed',
       });
     }
 
-    await db.follow.create({
+    await db.subscription.create({
       data: {
-        followerId: user.id,
-        followingId: targetUserId,
+        subscriberId: user.id,
+        subscribedToId: targetUserId,
       },
     });
 
     await db.analyticsEvent.create({
       data: {
         userId: user.id,
-        type: 'user_followed',
+        type: 'user_subscribed',
         surface: 'web',
         payload: { targetUserId },
       },
@@ -89,12 +89,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       success: true,
-      following: true,
+      subscribed: true,
     });
   } catch (error) {
-    console.error('Follow error:', error);
+    console.error('Subscribe error:', error);
     return NextResponse.json(
-      { code: 'INTERNAL_ERROR', message: 'Failed to follow user' },
+      { code: 'INTERNAL_ERROR', message: 'Failed to subscribe to user' },
       { status: 500 }
     );
   }
@@ -111,31 +111,31 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const follow = await db.follow.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: {
-        followerId_followingId: {
-          followerId: user.id,
-          followingId: targetUserId,
+        subscriberId_subscribedToId: {
+          subscriberId: user.id,
+          subscribedToId: targetUserId,
         },
       },
     });
 
-    if (!follow) {
+    if (!subscription) {
       return NextResponse.json({
         success: true,
-        following: false,
-        message: 'Not following',
+        subscribed: false,
+        message: 'Not subscribed',
       });
     }
 
-    await db.follow.delete({
-      where: { id: follow.id },
+    await db.subscription.delete({
+      where: { id: subscription.id },
     });
 
     await db.analyticsEvent.create({
       data: {
         userId: user.id,
-        type: 'user_unfollowed',
+        type: 'user_unsubscribed',
         surface: 'web',
         payload: { targetUserId },
       },
@@ -143,12 +143,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       success: true,
-      following: false,
+      subscribed: false,
     });
   } catch (error) {
-    console.error('Unfollow error:', error);
+    console.error('Unsubscribe error:', error);
     return NextResponse.json(
-      { code: 'INTERNAL_ERROR', message: 'Failed to unfollow user' },
+      { code: 'INTERNAL_ERROR', message: 'Failed to unsubscribe from user' },
       { status: 500 }
     );
   }
@@ -165,22 +165,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const follow = await db.follow.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: {
-        followerId_followingId: {
-          followerId: user.id,
-          followingId: targetUserId,
+        subscriberId_subscribedToId: {
+          subscriberId: user.id,
+          subscribedToId: targetUserId,
         },
       },
     });
 
     return NextResponse.json({
-      following: !!follow,
+      subscribed: !!subscription,
     });
   } catch (error) {
-    console.error('Get follow status error:', error);
+    console.error('Get subscription status error:', error);
     return NextResponse.json(
-      { code: 'INTERNAL_ERROR', message: 'Failed to get follow status' },
+      { code: 'INTERNAL_ERROR', message: 'Failed to get subscription status' },
       { status: 500 }
     );
   }

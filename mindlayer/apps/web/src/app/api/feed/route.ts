@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
     const cursor = searchParams.get('cursor');
-    const filter = searchParams.get('filter'); // 'following', 'discover', or null for mixed
+    const filter = searchParams.get('filter'); // 'subscriptions', 'discover', or null for mixed
     const category = searchParams.get('category') as Category | null; // category filter
 
     // Get user's belief map (engaged concepts)
@@ -103,8 +103,8 @@ export async function GET(request: NextRequest) {
     const scoredPosts = posts.map(post => {
       let score = 0;
 
-      // 1. Following boost
-      if (followingIds.includes(post.authorId)) {
+      // 1. Subscription boost
+      if (subscribedIds.includes(post.authorId)) {
         score += 50;
       }
 
@@ -163,10 +163,10 @@ export async function GET(request: NextRequest) {
 
     // Apply filter
     let filteredPosts = scoredPosts;
-    if (filter === 'following') {
-      filteredPosts = scoredPosts.filter(p => followingIds.includes(p.authorId));
+    if (filter === 'subscriptions') {
+      filteredPosts = scoredPosts.filter(p => subscribedIds.includes(p.authorId));
     } else if (filter === 'discover') {
-      filteredPosts = scoredPosts.filter(p => !followingIds.includes(p.authorId));
+      filteredPosts = scoredPosts.filter(p => !subscribedIds.includes(p.authorId));
     }
 
     // Backfill with editorial content if Discover feed is sparse
@@ -228,8 +228,8 @@ export async function GET(request: NextRequest) {
     // Sort by score
     filteredPosts.sort((a, b) => b.score - a.score);
 
-    // For You, Discover, etc.: omit posts the user already answered (non-skip reactions). Following keeps full author feed.
-    if (filter !== 'following' && filteredPosts.length > 0) {
+    // For You, Discover, etc.: omit posts the user already answered (non-skip reactions). Subscriptions keeps full author feed.
+    if (filter !== 'subscriptions' && filteredPosts.length > 0) {
       const discoverIds = filteredPosts.map(p => p.id);
       const answered = await db.postReaction.findMany({
         where: {
@@ -288,7 +288,7 @@ export async function GET(request: NextRequest) {
           author: post.source.author,
           contentType: post.source.contentType,
         } : null,
-        isFollowing: followingIds.includes(post.authorId),
+        isSubscribed: subscribedIds.includes(post.authorId),
         isEditorial: post.author.email === EDITORIAL_EMAIL,
         totalReactions: post._count.reactions,
         userReaction: userReactionMap.get(post.id) || null,

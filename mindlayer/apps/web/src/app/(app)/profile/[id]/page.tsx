@@ -59,12 +59,12 @@ interface ProfileData {
     avatarUrl: string | null;
     memberSince: string;
     postCount: number;
-    followerCount: number;
-    followingCount: number;
+    subscriberCount: number;
+    subscriptionCount: number;
   };
   relationship: {
-    following: boolean;
-    followedBy: boolean;
+    subscribed: boolean;
+    subscribedBy: boolean;
     blocking: boolean;
     blockedBy: boolean;
   } | null;
@@ -131,14 +131,14 @@ export default function ProfilePage() {
     fetchProfile();
   }, [fetchProfile]);
 
-  const handleFollow = async () => {
+  const handleSubscribe = async () => {
     if (!profile) return;
     setIsActioning(true);
 
     try {
-      const isFollowing = profile.relationship?.following;
-      const response = await fetch(`/api/users/${userId}/follow`, {
-        method: isFollowing ? "DELETE" : "POST",
+      const isSubscribed = profile.relationship?.subscribed;
+      const response = await fetch(`/api/users/${userId}/subscribe`, {
+        method: isSubscribed ? "DELETE" : "POST",
       });
 
       if (response.ok) {
@@ -146,16 +146,16 @@ export default function ProfilePage() {
           ...profile,
           relationship: {
             ...profile.relationship!,
-            following: !isFollowing,
+            subscribed: !isSubscribed,
           },
           user: {
             ...profile.user,
-            followerCount: profile.user.followerCount + (isFollowing ? -1 : 1),
+            subscriberCount: profile.user.subscriberCount + (isSubscribed ? -1 : 1),
           },
         });
       }
     } catch (err) {
-      console.error("Follow error:", err);
+      console.error("Subscribe error:", err);
     } finally {
       setIsActioning(false);
     }
@@ -292,12 +292,12 @@ export default function ProfilePage() {
                   <span style={{ color: C.muted }}>posts</span>
                 </span>
                 <span>
-                  <strong style={{ color: C.text }}>{profile.user.followerCount}</strong>{" "}
-                  <span style={{ color: C.muted }}>followers</span>
+                  <strong style={{ color: C.text }}>{profile.user.subscriberCount}</strong>{" "}
+                  <span style={{ color: C.muted }}>subscribers</span>
                 </span>
                 <span>
-                  <strong style={{ color: C.text }}>{profile.user.followingCount}</strong>{" "}
-                  <span style={{ color: C.muted }}>following</span>
+                  <strong style={{ color: C.text }}>{profile.user.subscriptionCount}</strong>{" "}
+                  <span style={{ color: C.muted }}>subscriptions</span>
                 </span>
               </div>
             </div>
@@ -314,25 +314,25 @@ export default function ProfilePage() {
             }}>
               {!profile.relationship.blocking && (
                 <Button
-                  onClick={handleFollow}
+                  onClick={handleSubscribe}
                   disabled={isActioning}
                   style={{
-                    background: profile.relationship.following ? "transparent" : C.accent,
-                    border: `1px solid ${profile.relationship.following ? C.border : C.accent}`,
-                    color: profile.relationship.following ? C.textSoft : "#fff",
+                    background: profile.relationship.subscribed ? "transparent" : C.accent,
+                    border: `1px solid ${profile.relationship.subscribed ? C.border : C.accent}`,
+                    color: profile.relationship.subscribed ? C.textSoft : "#fff",
                   }}
                 >
                   {isActioning ? (
                     <Loader2 size={16} className="animate-spin" />
-                  ) : profile.relationship.following ? (
+                  ) : profile.relationship.subscribed ? (
                     <>
                       <UserMinus size={16} />
-                      <span style={{ marginLeft: 8 }}>Unfollow</span>
+                      <span style={{ marginLeft: 8 }}>Unsubscribe</span>
                     </>
                   ) : (
                     <>
                       <UserPlus size={16} />
-                      <span style={{ marginLeft: 8 }}>Follow</span>
+                      <span style={{ marginLeft: 8 }}>Subscribe</span>
                     </>
                   )}
                 </Button>
@@ -468,7 +468,7 @@ export default function ProfilePage() {
             marginTop: 16,
             textAlign: "center",
           }}>
-            The map is the profile — no follower counts, just how they think.
+            The map is the profile — no subscriber counts, just how they think.
           </p>
         </motion.div>
 
