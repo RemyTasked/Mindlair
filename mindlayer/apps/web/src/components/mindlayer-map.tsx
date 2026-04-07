@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import PersonalBeliefMap, { type MapApiPayload } from "@/components/personal-belief-map";
+import PersonalBeliefMap, {
+  type MapApiPayload,
+  type MapTimelinePayload,
+} from "@/components/personal-belief-map";
 
 // ── Colour system ──────────────────────────────────────────────
 const C = {
@@ -1075,6 +1078,7 @@ function MindlayerMapDemo() {
 
 export default function MindlayerMap() {
   const [payload, setPayload] = useState<MapApiPayload | null>(null);
+  const [timeline, setTimeline] = useState<MapTimelinePayload | null>(null);
   const [failed, setFailed] = useState(false);
   const hadSuccessRef = useRef(false);
 
@@ -1082,17 +1086,26 @@ export default function MindlayerMap() {
     let cancelled = false;
 
     const load = () => {
-      fetch("/api/map")
-        .then(res => {
+      Promise.all([
+        fetch("/api/map").then(res => {
           if (!res.ok) throw new Error("map fetch failed");
-          return res.json();
-        })
-        .then((data: MapApiPayload) => {
-          if (!cancelled) {
-            setPayload(data);
-            setFailed(false);
-            hadSuccessRef.current = true;
-          }
+          return res.json() as Promise<MapApiPayload>;
+        }),
+        fetch("/api/map/timeline?interval=month&months=18")
+          .then(res =>
+            res.ok
+              ? (res.json() as Promise<MapTimelinePayload>).catch(() => null)
+              : Promise.resolve(null),
+          )
+          .catch(() => null),
+      ])
+        .then(([data, tl]) => {
+          if (cancelled) return;
+          setPayload(data);
+          setFailed(false);
+          hadSuccessRef.current = true;
+          if (tl && Array.isArray(tl.snapshots)) setTimeline(tl);
+          else setTimeline(null);
         })
         .catch(() => {
           if (!cancelled && !hadSuccessRef.current) setFailed(true);
@@ -1147,5 +1160,5 @@ export default function MindlayerMap() {
     return <MindlayerMapDemo />;
   }
 
-  return <PersonalBeliefMap payload={payload} />;
+  return <PersonalBeliefMap payload={payload} timeline={timeline} />;
 }

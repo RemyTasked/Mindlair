@@ -4,6 +4,7 @@ import { getAuthFromRequest } from '@/lib/auth';
 import { extractClaims } from '@/lib/services/ai';
 import { linkClaimToConcepts, updateBeliefGraph } from '@/lib/services/belief-graph';
 import { screenPostContent } from '@/lib/services/moderation';
+import { buildExtractionTextForPublish } from '@/lib/posts/referenced-post';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -22,6 +23,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const post = await db.post.findUnique({
       where: { id },
+      include: {
+        referencedPost: {
+          select: { headlineClaim: true, topicTags: true },
+        },
+      },
     });
 
     if (!post) {
@@ -99,11 +105,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
     const conceptLabels = existingConcepts.map(c => c.label);
 
-    // 4. Extract claims from the post content
+    // 4. Extract claims from the post content (include referenced post context for clustering)
+    const extractionText = buildExtractionTextForPublish(
+      post.body,
+      post.referencedPost,
+    );
     const analysis = await extractClaims(
       {
         title: post.headlineClaim,
-        text: post.body,
+        text: extractionText,
         url: `/post/${id}`,
       },
       conceptLabels

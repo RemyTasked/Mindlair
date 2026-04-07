@@ -38,13 +38,20 @@ interface PostDetail {
   headlineClaim: string;
   body: string;
   authorStance: string;
-  publishedAt: string;
+  status?: string;
+  publishedAt?: string | null;
   topicTags: string[];
   author: {
     id: string;
     name: string | null;
     avatarUrl: string | null;
   };
+  referencedPost: {
+    id: string;
+    headlineClaim: string;
+    publishedAt: string | null;
+    author: { id: string; name: string | null; avatarUrl: string | null };
+  } | null;
   totalReactions: number;
   userReaction: string | null;
   reactionCounts: Record<string, number> | null;
@@ -202,6 +209,35 @@ export default function PostDetailPage() {
           Back
         </button>
 
+        {post.referencedPost && (
+          <div
+            style={{
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 24,
+            }}
+          >
+            <div style={{ color: C.muted, fontSize: 12, marginBottom: 8 }}>In response to</div>
+            <Link
+              href={`/post/${post.referencedPost.id}`}
+              style={{
+                color: C.accent,
+                fontSize: 16,
+                fontWeight: 500,
+                textDecoration: "underline",
+                textUnderlineOffset: 3,
+              }}
+            >
+              {post.referencedPost.headlineClaim}
+            </Link>
+            <div style={{ color: C.textSoft, fontSize: 13, marginTop: 6 }}>
+              {post.referencedPost.author?.name || "Anonymous"}
+            </div>
+          </div>
+        )}
+
         {/* Author Stance Banner */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -294,6 +330,7 @@ export default function PostDetailPage() {
                 <div style={{ color: C.text, fontWeight: 500 }}>
                   {post.author.name || "Anonymous"}
                 </div>
+                {post.publishedAt && (
                 <div style={{ 
                   display: "flex", 
                   alignItems: "center", 
@@ -308,6 +345,7 @@ export default function PostDetailPage() {
                     year: 'numeric',
                   })}
                 </div>
+                )}
               </div>
             </Link>
           </div>
@@ -455,6 +493,25 @@ export default function PostDetailPage() {
             })}
           </div>
         </motion.div>
+
+        {(Boolean(post.publishedAt) || post.status === "published") && (
+          <div style={{ marginTop: 24 }}>
+            <Link
+              href={`/publish?ref=${post.id}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                color: C.accent,
+                fontSize: 14,
+                fontWeight: 500,
+                textDecoration: "none",
+              }}
+            >
+              Write a response
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

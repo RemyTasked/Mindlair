@@ -68,6 +68,11 @@ interface FeedPost {
     name: string | null;
     avatarUrl: string | null;
   };
+  referencedPost?: {
+    id: string;
+    headlineClaim: string;
+    author: { id: string; name: string | null; avatarUrl: string | null };
+  } | null;
   source: FeedSource | null;
   isFollowing: boolean;
   isEditorial: boolean;
@@ -630,6 +635,21 @@ export default function FeedPage() {
                     </span>
                   </div>
                 </div>
+
+                {post.referencedPost && (
+                  <div style={{ marginBottom: 10 }}>
+                    <span style={{ color: C.muted, fontSize: 12, marginRight: 6 }}>In response to</span>
+                    <Link
+                      href={`/post/${post.referencedPost.id}`}
+                      onClick={persistFeedContextForPost}
+                      style={{ color: C.accent, fontSize: 12, fontWeight: 500, textDecoration: "underline", textUnderlineOffset: 2 }}
+                    >
+                      {post.referencedPost.headlineClaim.length > 72
+                        ? `${post.referencedPost.headlineClaim.slice(0, 72)}…`
+                        : post.referencedPost.headlineClaim}
+                    </Link>
+                  </div>
+                )}
 
                 {/* Headline + excerpt — tap through to full post */}
                 <Link

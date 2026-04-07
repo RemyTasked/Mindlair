@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
+import {
+  referencedPostSelect,
+  serializeReferencedPost,
+  validateReferencedPostId,
+} from '@/lib/posts/referenced-post';
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,6 +42,7 @@ export async function GET(request: NextRequest) {
         author: {
           select: { id: true, name: true, avatarUrl: true },
         },
+        referencedPost: { select: referencedPostSelect },
         _count: {
           select: { reactions: true },
         },
@@ -61,6 +67,7 @@ export async function GET(request: NextRequest) {
         topicTags: post.topicTags,
         author: post.author,
         reactionCount: post._count.reactions,
+        referencedPost: serializeReferencedPost(post.referencedPost),
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
       })),
@@ -87,7 +94,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { headlineClaim, postBody, authorStance } = body;
+    const { headlineClaim, postBody, authorStance, referencedPostId: rawRef } = body;
+
+    let referencedPostId: string | null = null;
+    if (rawRef !== undefined && rawRef !== null) {
+      if (typeof rawRef !== 'string') {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'referencedPostId must be a string' },
+          { status: 400 }
+        );
+      }
+      const refCheck = await validateReferencedPostId(rawRef.trim(), user.id);
+      if (!refCheck.ok) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: refCheck.message },
+          { status: refCheck.status }
+        );
+      }
+      referencedPostId = refCheck.id;
+    }
 
     if (!headlineClaim || typeof headlineClaim !== 'string') {
       return NextResponse.json(
@@ -155,6 +180,7 @@ export async function POST(request: NextRequest) {
         body: postBody.trim(),
         authorStance,
         status: 'draft',
+        ...(referencedPostId !== null ? { referencedPostId } : {}),
       },
     });
 
@@ -167,6 +193,7 @@ export async function POST(request: NextRequest) {
           postId: post.id,
           authorStance,
           wordCount,
+          referencedPostId: post.referencedPostId,
         },
       },
     });
@@ -178,6 +205,7 @@ export async function POST(request: NextRequest) {
         body: post.body,
         authorStance: post.authorStance,
         status: post.status,
+        referencedPostId: post.referencedPostId,
         createdAt: post.createdAt.toISOString(),
       },
     });

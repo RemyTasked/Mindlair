@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
+import { referencedPostSelect, serializeReferencedPost } from '@/lib/posts/referenced-post';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -120,6 +121,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         authorStance: true,
         publishedAt: true,
         topicTags: true,
+        referencedPost: { select: referencedPostSelect },
         _count: { select: { reactions: true } },
       },
       orderBy: { publishedAt: 'desc' },
@@ -152,6 +154,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         publishedAt: p.publishedAt?.toISOString(),
         topicTags: p.topicTags,
         reactionCount: p._count.reactions,
+        referencedPost: serializeReferencedPost(p.referencedPost),
       })),
     });
   } catch (error) {

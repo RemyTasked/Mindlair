@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
+import {
+  referencedPostSelect,
+  serializeReferencedPost,
+  validateReferencedPostId,
+} from '@/lib/posts/referenced-post';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -17,6 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         author: {
           select: { id: true, name: true, avatarUrl: true },
         },
+        referencedPost: { select: referencedPostSelect },
         reactions: user
           ? {
               where: { userId: user.id },
@@ -94,6 +100,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         totalReactions: post._count.reactions,
         userReaction,
         reactionCounts,
+        referencedPostId: post.referencedPostId,
+        referencedPost: serializeReferencedPost(post.referencedPost),
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
       },
@@ -178,9 +186,37 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updates.authorStance = body.authorStance;
     }
 
+    if (body.referencedPostId !== undefined) {
+      const raw =
+        body.referencedPostId === null || body.referencedPostId === ''
+          ? null
+          : typeof body.referencedPostId === 'string'
+            ? body.referencedPostId.trim()
+            : null;
+      if (body.referencedPostId !== null && body.referencedPostId !== '' && typeof body.referencedPostId !== 'string') {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'referencedPostId must be a string or null' },
+          { status: 400 }
+        );
+      }
+      const refCheck = await validateReferencedPostId(raw, user.id, id);
+      if (!refCheck.ok) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: refCheck.message },
+          { status: refCheck.status }
+        );
+      }
+      updates.referencedPostId = refCheck.id;
+    }
+
     const updated = await db.post.update({
       where: { id },
       data: updates,
+    });
+
+    const withRef = await db.post.findUnique({
+      where: { id: updated.id },
+      include: { referencedPost: { select: referencedPostSelect } },
     });
 
     return NextResponse.json({
@@ -190,6 +226,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         body: updated.body,
         authorStance: updated.authorStance,
         status: updated.status,
+        referencedPostId: updated.referencedPostId,
+        referencedPost: serializeReferencedPost(withRef?.referencedPost ?? null),
         createdAt: updated.createdAt.toISOString(),
         updatedAt: updated.updatedAt.toISOString(),
       },

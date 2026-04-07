@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
+import { referencedPostSelect, serializeReferencedPost } from '@/lib/posts/referenced-post';
 
 const EDITORIAL_EMAIL = 'discover@mindlair.app';
 
@@ -77,6 +78,7 @@ export async function GET(request: NextRequest) {
         author: {
           select: { id: true, name: true, avatarUrl: true, email: true },
         },
+        referencedPost: { select: referencedPostSelect },
         source: {
           select: { 
             url: true, 
@@ -187,6 +189,7 @@ export async function GET(request: NextRequest) {
           author: {
             select: { id: true, name: true, avatarUrl: true, email: true },
           },
+          referencedPost: { select: referencedPostSelect },
           source: {
             select: { 
               url: true, 
@@ -290,6 +293,7 @@ export async function GET(request: NextRequest) {
         totalReactions: post._count.reactions,
         userReaction: userReactionMap.get(post.id) || null,
         reactionCounts: userReactionMap.has(post.id) ? post.reactionCounts : null,
+        referencedPost: serializeReferencedPost(post.referencedPost),
       })),
       categories: CATEGORIES,
       nextCursor,

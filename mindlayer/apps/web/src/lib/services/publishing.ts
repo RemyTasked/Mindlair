@@ -3,6 +3,7 @@ import { extractClaims } from './ai';
 import { linkClaimToConcepts, updateBeliefGraph } from './belief-graph';
 import { screenPostContent } from './moderation';
 import { findSimilarPosts, extractConceptsFromHeadline, resolveConceptBatch } from './concept-resolver';
+import { buildExtractionTextForPublish } from '@/lib/posts/referenced-post';
 
 interface PublishResult {
   success: boolean;
@@ -16,6 +17,11 @@ interface PublishResult {
 export async function publishPost(postId: string, userId: string): Promise<PublishResult> {
   const post = await db.post.findUnique({
     where: { id: postId },
+    include: {
+      referencedPost: {
+        select: { headlineClaim: true, topicTags: true },
+      },
+    },
   });
 
   if (!post) {
@@ -75,10 +81,11 @@ export async function publishPost(postId: string, userId: string): Promise<Publi
   const conceptLabels = existingConcepts.map(c => c.label);
 
   // 5. Extract claims from the post content
+  const extractionText = buildExtractionTextForPublish(post.body, post.referencedPost);
   const analysis = await extractClaims(
     {
       title: post.headlineClaim,
-      text: post.body,
+      text: extractionText,
       url: `/post/${postId}`,
     },
     conceptLabels

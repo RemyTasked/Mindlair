@@ -525,14 +525,82 @@ export async function getBeliefMap(userId: string): Promise<{
     positionCount: belief.positionCount,
   }));
 
-  const edges: MapEdge[] = tensions.map(tension => ({
+  const tensionEdges: MapEdge[] = tensions.map(tension => ({
     source: tension.conceptAId,
     target: tension.conceptBId,
     type: 'tension' as const,
     weight: tension.surfacedCount,
   }));
 
-  return { nodes, edges };
+  const conceptIdSet = new Set(nodes.map(n => n.id));
+  const relatedEdges = await getCooccurrenceRelatedEdges(userId, conceptIdSet, tensionEdges);
+
+  return { nodes, edges: [...tensionEdges, ...relatedEdges] };
+}
+
+/** Concepts that co-occur on the same claim (from user's positions), min 2 shared claims; skips tension pairs. */
+async function getCooccurrenceRelatedEdges(
+  userId: string,
+  conceptIds: Set<string>,
+  tensionEdges: MapEdge[],
+): Promise<MapEdge[]> {
+  const tensionPairs = new Set<string>();
+  for (const e of tensionEdges) {
+    const a = e.source < e.target ? e.source : e.target;
+    const b = e.source < e.target ? e.target : e.source;
+    tensionPairs.add(`${a}\0${b}`);
+  }
+
+  const positions = await db.position.findMany({
+    where: { userId, stance: { not: 'skip' } },
+    select: { claimId: true },
+  });
+  const claimIdSet = new Set(positions.map(p => p.claimId));
+  const claimIds = [...claimIdSet];
+  if (claimIds.length === 0) return [];
+
+  const ccs = await db.claimConcept.findMany({
+    where: { claimId: { in: claimIds } },
+    select: { claimId: true, conceptId: true },
+  });
+
+  const byClaim = new Map<string, string[]>();
+  for (const row of ccs) {
+    if (!conceptIds.has(row.conceptId)) continue;
+    const arr = byClaim.get(row.claimId) ?? [];
+    arr.push(row.conceptId);
+    byClaim.set(row.claimId, arr);
+  }
+
+  const pairCounts = new Map<string, { a: string; b: string; n: number }>();
+  for (const ids of byClaim.values()) {
+    const uniq = [...new Set(ids)];
+    for (let i = 0; i < uniq.length; i++) {
+      for (let j = i + 1; j < uniq.length; j++) {
+        const x = uniq[i];
+        const y = uniq[j];
+        const lo = x < y ? x : y;
+        const hi = x < y ? y : x;
+        const key = `${lo}\0${hi}`;
+        if (tensionPairs.has(key)) continue;
+        const cur = pairCounts.get(key);
+        if (cur) cur.n += 1;
+        else pairCounts.set(key, { a: lo, b: hi, n: 1 });
+      }
+    }
+  }
+
+  const out: MapEdge[] = [];
+  for (const { a, b, n } of pairCounts.values()) {
+    if (n < 2) continue;
+    out.push({
+      source: a,
+      target: b,
+      type: 'related',
+      weight: Math.min(n, 10),
+    });
+  }
+  return out;
 }
 
 /** Connected components on the map graph (tension edges). */

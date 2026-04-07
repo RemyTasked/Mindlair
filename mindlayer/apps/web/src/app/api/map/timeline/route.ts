@@ -32,9 +32,17 @@ export async function GET(request: NextRequest) {
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
     const conceptId = searchParams.get('conceptId');
+    const monthsBackRaw = searchParams.get('months');
+    const monthsBack = Math.min(36, Math.max(1, parseInt(monthsBackRaw || '18', 10) || 18));
 
-    const startDate = startDateParam ? new Date(startDateParam) : undefined;
+    let startDate = startDateParam ? new Date(startDateParam) : undefined;
     const endDate = endDateParam ? new Date(endDateParam) : undefined;
+
+    if (!startDateParam) {
+      const end = endDate ?? new Date();
+      startDate = new Date(end);
+      startDate.setMonth(startDate.getMonth() - monthsBack);
+    }
 
     let timeline = await getBeliefTimeline(userId, startDate, endDate);
 

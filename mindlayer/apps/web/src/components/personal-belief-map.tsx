@@ -1,6 +1,17 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { computeClusterLayout } from "@/lib/map/cluster-layout";
+import {
+  interpolateTimelineActivity,
+  filterEdgesGated,
+  activityToVisual,
+  maxCountInActivity,
+  discoveryForIndex,
+  type TimelineSnapshot,
+  type LerpedConceptActivity,
+} from "@/lib/map/timeline-scrub";
+import MapTimelineScrubber from "@/components/map-timeline-scrubber";
 
 /** Mirrors `/api/map` + belief-graph shapes (client-safe; do not import belief-graph here). */
 interface MapNode {
@@ -21,7 +32,7 @@ interface MapEdge {
   weight: number;
 }
 
-interface MapCluster {
+export interface MapCluster {
   id: string;
   label: string;
   nodeIds: string[];
@@ -46,6 +57,7 @@ const C = {
   accentGlow: "#d4915a30",
   blue: "#6b9fc4",
   amber: "#d4915a",
+  amberDim: "#7a4a20",
   green: "#a3c47a",
   rose: "#e57373",
   chipBlue: "#4a9eff",
@@ -66,7 +78,27 @@ const ANIM_CSS = `
     0%, 100% { stroke-opacity: 0.35; }
     50%      { stroke-opacity: 0.55; }
   }
+  @keyframes pb-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 `;
+
+function formatLastActive(iso: string | null): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    const diff = Date.now() - d.getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days <= 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 7) return `${days} days ago`;
+    if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+    return d.toLocaleDateString();
+  } catch {
+    return iso;
+  }
+}
 
 export type MapApiPayload = {
   nodes: MapNode[];
@@ -81,7 +113,13 @@ export type MapApiPayload = {
   readiness: MapReadiness;
 };
 
-function stanceForNode(node: MapNode): string {
+export type MapTimelinePayload = {
+  snapshots: TimelineSnapshot[];
+  interval: string;
+  dateRange?: { start?: string; end?: string };
+};
+
+function stanceForNode(node: Pick<MapNode, "direction">): string {
   const d = node.direction;
   if (d === "positive" || d === "negative" || d === "mixed") return d;
   return "mixed";
@@ -107,7 +145,29 @@ function reactionStanceChip(stance: string): { label: string; bg: string; color:
   }
 }
 
-export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload }) {
+interface ConceptSummary {
+  reactionCount: number;
+  sourceCount: number;
+  lastActive: string | null;
+  sources: Array<{ id: string; title: string; url: string; outlet: string | null; date: string }>;
+}
+
+interface TensionRow {
+  otherId: string;
+  otherLabel: string;
+  tensionType: string;
+  surfacedCount: number;
+  resolved: boolean;
+  explanation: string | null;
+}
+
+export default function PersonalBeliefMap({
+  payload,
+  timeline,
+}: {
+  payload: MapApiPayload;
+  timeline?: MapTimelinePayload | null;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ w: 900, h: 520 });
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -116,8 +176,18 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
   const [recentLoading, setRecentLoading] = useState(false);
   const [recentPositions, setRecentPositions] = useState<MapRecentPosition[] | null>(null);
   const [recentError, setRecentError] = useState(false);
+  const [timeValue, setTimeValue] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hoverSummary, setHoverSummary] = useState<ConceptSummary | null>(null);
+  const [detailSummary, setDetailSummary] = useState<ConceptSummary | null>(null);
+  const [tensionRows, setTensionRows] = useState<TensionRow[] | null>(null);
+  const [showSources, setShowSources] = useState(false);
+  const [showTension, setShowTension] = useState(false);
 
   const { nodes, edges, clusters, stats, readiness } = payload;
+  const snapshots = timeline?.snapshots ?? [];
+  const useTimeline = snapshots.length >= 2;
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
@@ -132,7 +202,8 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
     if (!el) return;
     const measure = () => {
       const r = el.getBoundingClientRect();
-      setDims({ w: r.width, h: Math.max(320, Math.min(r.height - 160, 540)) });
+      const reserve = useTimeline ? 260 : 160;
+      setDims({ w: r.width, h: Math.max(320, Math.min(r.height - reserve, 540)) });
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -142,32 +213,91 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
       ro.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, []);
+  }, [useTimeline]);
 
-  const nodePos = useMemo(() => {
-    const n = nodes.length;
-    const cx = dims.w / 2;
-    const cy = dims.h / 2;
-    const r = Math.min(dims.w, dims.h) * (n <= 4 ? 0.22 : n <= 8 ? 0.28 : 0.32);
-    const out: Record<string, { x: number; y: number }> = {};
-    if (n === 0) return out;
-    nodes.forEach((node, i) => {
-      const angle = (2 * Math.PI * i) / n - Math.PI / 2;
-      out[node.id] = {
-        x: cx + r * Math.cos(angle),
-        y: cy + r * Math.sin(angle),
+  const maxIdx = Math.max(0, snapshots.length - 1);
+
+  useEffect(() => {
+    if (useTimeline) setTimeValue(maxIdx);
+  }, [useTimeline, maxIdx]);
+
+  const nodeLabelMap = useMemo(
+    () => new Map(nodes.map(n => [n.id, n.label])),
+    [nodes],
+  );
+
+  const activity = useMemo(() => {
+    if (!useTimeline) return new Map<string, LerpedConceptActivity>();
+    let act = interpolateTimelineActivity(snapshots, timeValue, nodeLabelMap);
+    for (const n of nodes) {
+      if (!act.has(n.id)) {
+        act.set(n.id, { positionCount: 0, direction: n.direction, label: n.label });
+      }
+    }
+    return act;
+  }, [useTimeline, snapshots, timeValue, nodeLabelMap, nodes]);
+
+  const maxC = useMemo(() => (useTimeline ? maxCountInActivity(activity) : 1), [useTimeline, activity]);
+
+  const effectiveEdges = useMemo(() => {
+    if (!useTimeline) return edges;
+    return filterEdgesGated(
+      edges.map(e => ({ ...e })),
+      activity,
+      1,
+    );
+  }, [useTimeline, edges, activity]);
+
+  const nodePos = useMemo(
+    () => computeClusterLayout(nodes, clusters, dims.w, dims.h),
+    [nodes, clusters, dims.w, dims.h],
+  );
+
+  const activeCount = useMemo(() => {
+    if (!useTimeline) return nodes.length;
+    return nodes.filter(n => {
+      const v = activityToVisual(activity.get(n.id), maxC);
+      return v.opacity > 0.42;
+    }).length;
+  }, [useTimeline, nodes, activity, maxC]);
+
+  const peakCount = useMemo(() => {
+    if (!useTimeline) return nodes.filter(n => n.strength >= 0.65).length;
+    return nodes.filter(n => {
+      const c = activity.get(n.id)?.positionCount ?? 0;
+      return maxC > 0 && c >= maxC * 0.72;
+    }).length;
+  }, [useTimeline, nodes, activity, maxC]);
+
+  const discoveryText = useMemo(() => {
+    if (!useTimeline || snapshots.length < 2) return null;
+    const idx = Math.min(Math.max(0, Math.round(timeValue)), snapshots.length - 1);
+    return discoveryForIndex(snapshots, idx);
+  }, [useTimeline, snapshots, timeValue]);
+
+  const visForNode = useCallback(
+    (node: MapNode) => {
+      if (!useTimeline) {
+        return { sizeMult: 1, opacity: 1, direction: node.direction };
+      }
+      const act = activity.get(node.id);
+      const v = activityToVisual(act, maxC);
+      return {
+        sizeMult: v.sizeMult,
+        opacity: v.opacity,
+        direction: act && act.positionCount > 0 ? act.direction : node.direction,
       };
-    });
-    return out;
-  }, [nodes, dims.w, dims.h]);
+    },
+    [useTimeline, activity, maxC],
+  );
 
   const curveOffsets = useMemo(
     () =>
-      edges.map((_, i) => ({
+      effectiveEdges.map((_, i) => ({
         ox: Math.sin(i * 2.7 + 1.3) * 36,
         oy: Math.cos(i * 3.1 + 0.7) * 36,
       })),
-    [edges]
+    [effectiveEdges],
   );
 
   const nodeById = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
@@ -181,6 +311,71 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
     }
     return m;
   }, [clusters]);
+
+  useEffect(() => {
+    if (!hoveredId) {
+      setHoverSummary(null);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      fetch(`/api/map/concept-summary?conceptId=${encodeURIComponent(hoveredId)}`)
+        .then(r => (r.ok ? r.json() : null))
+        .then(data => {
+          if (data) setHoverSummary(data as ConceptSummary);
+        })
+        .catch(() => setHoverSummary(null));
+    }, 200);
+    return () => clearTimeout(t);
+  }, [hoveredId]);
+
+  useEffect(() => {
+    if (!selected) {
+      setDetailSummary(null);
+      setTensionRows(null);
+      setShowSources(false);
+      setShowTension(false);
+      return;
+    }
+    const id = selected.id;
+    Promise.all([
+      fetch(`/api/map/concept-summary?conceptId=${encodeURIComponent(id)}`).then(r =>
+        r.ok ? r.json() : null,
+      ),
+      fetch(`/api/map/tensions-for?conceptId=${encodeURIComponent(id)}`).then(r =>
+        r.ok ? r.json() : null,
+      ),
+    ])
+      .then(([sum, ten]) => {
+        if (sum) setDetailSummary(sum as ConceptSummary);
+        if (ten?.tensions) setTensionRows(ten.tensions as TensionRow[]);
+      })
+      .catch(() => {
+        setDetailSummary(null);
+        setTensionRows(null);
+      });
+  }, [selected]);
+
+  useEffect(() => {
+    if (!selected) {
+      setRecentPositions(null);
+      setRecentError(false);
+      setRecentLoading(false);
+      return;
+    }
+    setRecentLoading(true);
+    setRecentError(false);
+    fetch(`/api/map/recent-positions?conceptId=${encodeURIComponent(selected.id)}`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error("recent"))))
+      .then(data => {
+        setRecentPositions((data?.positions as MapRecentPosition[]) ?? []);
+        setRecentLoading(false);
+      })
+      .catch(() => {
+        setRecentError(true);
+        setRecentLoading(false);
+        setRecentPositions(null);
+      });
+  }, [selected]);
 
   if (!dims.w) {
     return <div style={{ background: C.bg, height: "100vh" }} />;
@@ -362,7 +557,8 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
             <svg width="100%" height="100%" style={{ display: "block" }} viewBox={`0 0 ${dims.w} ${dims.h}`}>
               <defs>
                 {nodes.map(n => {
-                  const stance = stanceForNode(n);
+                  const vis = visForNode(n);
+                  const stance = stanceForNode({ direction: vis.direction });
                   const col = POS_COLORS[stance];
                   return (
                     <radialGradient key={n.id} id={`pg-${n.id}`} cx="45%" cy="38%" r="62%">
@@ -383,7 +579,7 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
 
               <rect width={dims.w} height={dims.h} fill={C.bg} />
 
-              {edges.map((link, i) => {
+              {effectiveEdges.map((link, i) => {
                 const sp = nodePos[link.source];
                 const tp = nodePos[link.target];
                 if (!sp || !tp) return null;
@@ -396,35 +592,40 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
                     fill="none"
                     stroke={tension ? C.amber : C.muted}
                     strokeWidth={Math.max(1, (link.weight || 1) * 0.35)}
-                    strokeDasharray={tension ? "6,4" : "2,5"}
-                    strokeOpacity={0.35}
+                    strokeDasharray={tension ? "6,4" : "4,6"}
+                    strokeOpacity={tension ? 0.42 : 0.28}
                   />
                 );
               })}
 
               {nodes.map((node, ni) => {
-                const stance = stanceForNode(node);
+                const vis = visForNode(node);
+                const stance = stanceForNode({ direction: vis.direction });
                 const col = POS_COLORS[stance];
                 const p = nodePos[node.id];
                 if (!p) return null;
-                const baseR = 18 + node.strength * 42;
+                const baseR = (18 + node.strength * 42) * vis.sizeMult;
                 const isHov = hoveredId === node.id;
                 const isSel = selected?.id === node.id;
                 const r = isHov ? baseR * 1.06 : baseR;
-                const hasTension = edges.some(
+                const hasTension = effectiveEdges.some(
                   e =>
                     e.type === "tension" &&
-                    (e.source === node.id || e.target === node.id)
+                    (e.source === node.id || e.target === node.id),
                 );
 
                 return (
                   <g
                     key={node.id}
                     transform={`translate(${p.x}, ${p.y})`}
-                    style={{ cursor: "pointer" }}
+                    style={{ cursor: "pointer", opacity: vis.opacity }}
                     onMouseEnter={() => setHoveredId(node.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    onClick={() => setSelected(isSel ? null : node)}
+                    onClick={() => {
+                      setShowSources(false);
+                      setShowTension(false);
+                      setSelected(isSel ? null : node);
+                    }}
                   >
                     {hasTension && (
                       <circle
@@ -482,8 +683,12 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
                 const node = nodeById.get(hoveredId);
                 const p = nodePos[hoveredId];
                 if (!node || !p) return null;
-                const tw = 200;
-                const th = 52;
+                const hVis = visForNode(node);
+                const hStance = stanceForNode({ direction: hVis.direction });
+                const hCol = POS_COLORS[hStance];
+                const tw = 210;
+                const extra = hoverSummary ? 36 : 0;
+                const th = 52 + extra;
                 const tx = p.x + 28;
                 const ty = p.y - 28;
                 const ax = tx + tw > dims.w - 12 ? p.x - tw - 28 : tx;
@@ -497,20 +702,62 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
                       height={th}
                       rx={7}
                       fill={C.surface}
-                      stroke={C.border}
+                      stroke={hCol.stroke}
                       strokeWidth={1}
-                      strokeOpacity={0.8}
+                      strokeOpacity={0.45}
                     />
                     <text x={ax + 11} y={ay + 18} fontSize={11} fontWeight={600} fill={C.text}>
                       {node.label}
                     </text>
-                    <text x={ax + 11} y={ay + 36} fontSize={10} fill={C.muted}>
+                    <text x={ax + 11} y={ay + 33} fontSize={10} fill={hCol.stroke}>
+                      {hCol.label}
+                    </text>
+                    <text x={ax + 11} y={ay + 48} fontSize={10} fill={C.muted}>
                       Strength {(node.strength * 100).toFixed(0)}% · Positions {node.positionCount}
                     </text>
+                    {hoverSummary && (
+                      <text x={ax + 11} y={ay + 64} fontSize={9} fill={C.muted}>
+                        {hoverSummary.sourceCount} sources · {hoverSummary.reactionCount} reactions ·{" "}
+                        {formatLastActive(hoverSummary.lastActive)}
+                      </text>
+                    )}
                   </g>
                 );
               })()}
             </svg>
+          )}
+
+          {nodes.length > 0 && useTimeline && discoveryText && (
+            <div
+              key={Math.round(timeValue)}
+              style={{
+                position: "absolute",
+                bottom: 14,
+                left: 20,
+                right: selected ? 0 : 20,
+                maxWidth: 420,
+                background: `${C.surface}f0`,
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                padding: "10px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                animation: "pb-fade-in 0.3s ease-out",
+                backdropFilter: "blur(6px)",
+              }}
+            >
+              <div
+                style={{
+                  width: 3,
+                  height: 28,
+                  borderRadius: 2,
+                  flexShrink: 0,
+                  background: C.accent,
+                }}
+              />
+              <div style={{ fontSize: 12, lineHeight: 1.55, color: C.textSoft }}>{discoveryText}</div>
+            </div>
           )}
         </div>
 
@@ -534,10 +781,23 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{selected.label}</div>
                 <div style={{ fontSize: 11, color: C.muted }}>Aggregated from your reactions</div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: POS_COLORS[stanceForNode(selected)].stroke,
+                    marginTop: 4,
+                  }}
+                >
+                  {POS_COLORS[stanceForNode(selected)].label}
+                </div>
               </div>
               <button
                 type="button"
-                onClick={() => setSelected(null)}
+                onClick={() => {
+                  setShowSources(false);
+                  setShowTension(false);
+                  setSelected(null);
+                }}
                 style={{
                   background: "none",
                   border: "none",
@@ -616,6 +876,282 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
                 </div>
               </div>
             </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setShowSources(!showSources)}
+                style={{
+                  background: showSources ? C.accentDim : C.bg,
+                  borderRadius: 6,
+                  padding: "10px 12px",
+                  border: `1px solid ${showSources ? C.accent : C.border}`,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "background 0.2s, border-color 0.2s",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 9,
+                    color: C.muted,
+                    marginBottom: 3,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Sources
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: showSources ? C.accent : C.text,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  {detailSummary != null ? detailSummary.sourceCount : "…"}
+                  <span style={{ fontSize: 10, color: C.muted }}>{showSources ? "▲" : "▼"}</span>
+                </div>
+              </button>
+              <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+                <div
+                  style={{
+                    fontSize: 9,
+                    color: C.muted,
+                    marginBottom: 3,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Reactions
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                  {detailSummary != null ? detailSummary.reactionCount : "…"}
+                </div>
+              </div>
+              <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+                <div
+                  style={{
+                    fontSize: 9,
+                    color: C.muted,
+                    marginBottom: 3,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Last active
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                  {detailSummary != null ? formatLastActive(detailSummary.lastActive) : "…"}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (tensionRows && tensionRows.length > 0) setShowTension(!showTension);
+                }}
+                disabled={!tensionRows || tensionRows.length === 0}
+                style={{
+                  background: showTension ? C.amberDim : C.bg,
+                  borderRadius: 6,
+                  padding: "10px 12px",
+                  border: `1px solid ${showTension ? C.amber : C.border}`,
+                  cursor: tensionRows && tensionRows.length > 0 ? "pointer" : "default",
+                  textAlign: "left",
+                  opacity: tensionRows && tensionRows.length > 0 ? 1 : 0.55,
+                  transition: "background 0.2s, border-color 0.2s",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 9,
+                    color: C.muted,
+                    marginBottom: 3,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Tension
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color:
+                      tensionRows && tensionRows.length > 0 ? C.amber : C.text,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  {tensionRows == null
+                    ? "…"
+                    : tensionRows.length > 0
+                      ? `${tensionRows.length} linked`
+                      : "None"}
+                  {tensionRows && tensionRows.length > 0 && (
+                    <span style={{ fontSize: 10, color: C.muted }}>{showTension ? "▲" : "▼"}</span>
+                  )}
+                </div>
+              </button>
+            </div>
+
+            {showSources && detailSummary && detailSummary.sources.length > 0 && (
+              <div
+                style={{
+                  background: C.bg,
+                  borderRadius: 8,
+                  border: `1px solid ${C.accent}40`,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderBottom: `1px solid ${C.border}`,
+                    background: `${C.accent}10`,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: C.accent,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Recent sources
+                  </div>
+                </div>
+                <div style={{ maxHeight: 220, overflowY: "auto" }}>
+                  {detailSummary.sources.map((source, i) => (
+                    <a
+                      key={source.id}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "block",
+                        padding: "10px 12px",
+                        borderBottom:
+                          i < detailSummary.sources.length - 1 ? `1px solid ${C.border}` : "none",
+                        textDecoration: "none",
+                        color: "inherit",
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = `${C.accent}08`;
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 500,
+                          color: C.text,
+                          marginBottom: 4,
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {source.title}
+                      </div>
+                      <div style={{ fontSize: 10, color: C.muted }}>
+                        {source.outlet ?? "Source"}
+                        <span style={{ margin: "0 6px" }}>·</span>
+                        {new Date(source.date).toLocaleDateString()}
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showTension && tensionRows && tensionRows.length > 0 && (
+              <div
+                style={{
+                  background: C.bg,
+                  borderRadius: 8,
+                  border: `1px solid ${C.amber}40`,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderBottom: `1px solid ${C.border}`,
+                    background: `${C.amber}10`,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: C.amber,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Tensions
+                  </div>
+                </div>
+                <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 14 }}>
+                  {tensionRows.map((row, ri) => {
+                    const other = nodeById.get(row.otherId);
+                    const isLast = ri === tensionRows.length - 1;
+                    return (
+                      <div
+                        key={`${row.otherId}-${row.tensionType}`}
+                        style={{
+                          borderBottom: isLast ? "none" : `1px solid ${C.border}`,
+                          paddingBottom: isLast ? 0 : 12,
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 6 }}>
+                          With {row.otherLabel}
+                          <span style={{ fontWeight: 400, color: C.muted, marginLeft: 8 }}>
+                            {row.tensionType.replace(/_/g, " ")} · {row.surfacedCount}×
+                            {row.resolved ? " · resolved" : ""}
+                          </span>
+                        </div>
+                        {row.explanation && (
+                          <p style={{ fontSize: 12, lineHeight: 1.55, color: C.textSoft, margin: "0 0 10px" }}>
+                            {row.explanation}
+                          </p>
+                        )}
+                        {other && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelected(other);
+                              setShowTension(false);
+                              setShowSources(false);
+                            }}
+                            style={{
+                              width: "100%",
+                              padding: "8px 12px",
+                              background: C.surface,
+                              border: `1px solid ${C.border}`,
+                              borderRadius: 6,
+                              color: C.textSoft,
+                              fontSize: 11,
+                              fontWeight: 500,
+                              cursor: "pointer",
+                            }}
+                          >
+                            View {row.otherLabel} →
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div
@@ -724,6 +1260,20 @@ export default function PersonalBeliefMap({ payload }: { payload: MapApiPayload 
           </div>
         )}
       </div>
+
+      {useTimeline && snapshots.length >= 2 && (
+        <MapTimelineScrubber
+          snapshots={snapshots}
+          timeValue={timeValue}
+          setTimeValue={setTimeValue}
+          isDragging={isDragging}
+          setIsDragging={setIsDragging}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          activeCount={activeCount}
+          peakCount={peakCount}
+        />
+      )}
 
       <div
         style={{

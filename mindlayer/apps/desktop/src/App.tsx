@@ -614,8 +614,18 @@ function PublishTab() {
   const [headlineClaim, setHeadlineClaim] = useState("");
   const [body, setBody] = useState("");
   const [authorStance, setAuthorStance] = useState<"arguing" | "exploring" | "steelmanning">("arguing");
+  const [referencedPostId, setReferencedPostId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  useEffect(() => {
+    try {
+      const ref = new URLSearchParams(window.location.search).get("ref");
+      setReferencedPostId(ref && ref.trim() ? ref.trim() : null);
+    } catch {
+      setReferencedPostId(null);
+    }
+  }, []);
 
   const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
   const charCount = headlineClaim.length;
@@ -639,7 +649,12 @@ function PublishTab() {
       const createResponse = await fetch("http://localhost:3000/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ headlineClaim, postBody: body, authorStance }),
+        body: JSON.stringify({
+          headlineClaim,
+          postBody: body,
+          authorStance,
+          ...(referencedPostId ? { referencedPostId } : {}),
+        }),
       });
       const createData = await createResponse.json();
       

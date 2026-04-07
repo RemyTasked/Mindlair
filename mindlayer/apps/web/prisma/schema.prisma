@@ -452,6 +452,11 @@ model Post {
   aiScreeningPassed Boolean          @default(false)
   moderationStatus  ModerationStatus @default(pending)
 
+  // Optional post this one responds to (published posts only)
+  referencedPostId String?
+  referencedPost   Post?   @relation("PostReferences", fields: [referencedPostId], references: [id], onDelete: SetNull)
+  referencingPosts Post[] @relation("PostReferences")
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -460,6 +465,7 @@ model Post {
   @@index([authorId])
   @@index([publishedAt])
   @@index([status])
+  @@index([referencedPostId])
   @@map("posts")
 }
 

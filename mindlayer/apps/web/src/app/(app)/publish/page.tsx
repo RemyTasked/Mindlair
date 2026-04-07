@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
@@ -17,7 +17,8 @@ import {
   Smile,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 const EMOJI_CATEGORIES = {
   "Smileys": ["😀", "😃", "😄", "😁", "😅", "😂", "🤣", "😊", "😇", "🙂", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥"],
@@ -63,8 +64,17 @@ const stanceInfo = {
   },
 };
 
-export default function PublishPage() {
+function PublishPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [referencedPostId, setReferencedPostId] = useState<string | null>(null);
+  const [refPreview, setRefPreview] = useState<{
+    id: string;
+    headlineClaim: string;
+    author: { id: string; name: string | null; avatarUrl: string | null };
+  } | null>(null);
+  const [refLoadError, setRefLoadError] = useState<string | null>(null);
+
   const [headlineClaim, setHeadlineClaim] = useState("");
   const [body, setBody] = useState("");
   const [authorStance, setAuthorStance] = useState<AuthorStance>("arguing");
@@ -78,6 +88,57 @@ export default function PublishPage() {
   const [emojiCategory, setEmojiCategory] = useState<keyof typeof EMOJI_CATEGORIES>("Smileys");
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cursorPositionRef = useRef<number>(0);
+
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (!ref || !ref.trim()) {
+      setReferencedPostId(null);
+      setRefPreview(null);
+      setRefLoadError(null);
+      return;
+    }
+    const id = ref.trim();
+    let cancelled = false;
+    (async () => {
+      setRefLoadError(null);
+      try {
+        const res = await fetch(`/api/posts/${encodeURIComponent(id)}`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (!cancelled) {
+            setRefLoadError(typeof data.message === "string" ? data.message : "Could not load referenced post");
+            setReferencedPostId(null);
+            setRefPreview(null);
+          }
+          return;
+        }
+        if (!cancelled && data.post) {
+          setReferencedPostId(data.post.id);
+          setRefPreview({
+            id: data.post.id,
+            headlineClaim: data.post.headlineClaim,
+            author: data.post.author,
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setRefLoadError("Could not load referenced post");
+          setReferencedPostId(null);
+          setRefPreview(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams]);
+
+  const clearReferencedPost = () => {
+    setReferencedPostId(null);
+    setRefPreview(null);
+    setRefLoadError(null);
+    router.replace("/publish");
+  };
 
   const insertEmoji = (emoji: string) => {
     const textarea = bodyTextareaRef.current;
@@ -127,6 +188,7 @@ export default function PublishPage() {
             headlineClaim,
             postBody: body,
             authorStance,
+            referencedPostId,
           }),
         });
         
@@ -143,6 +205,7 @@ export default function PublishPage() {
             headlineClaim,
             postBody: body,
             authorStance,
+            ...(referencedPostId ? { referencedPostId } : {}),
           }),
         });
         
@@ -180,6 +243,7 @@ export default function PublishPage() {
             headlineClaim,
             postBody: body,
             authorStance,
+            ...(referencedPostId ? { referencedPostId } : {}),
           }),
         });
         
@@ -221,7 +285,7 @@ export default function PublishPage() {
     }, 5000);
     
     return () => clearTimeout(timer);
-  }, [headlineClaim, body, authorStance]);
+  }, [headlineClaim, body, authorStance, referencedPostId]);
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, padding: "24px 16px 100px" }}>
@@ -244,6 +308,68 @@ export default function PublishPage() {
             Share your thinking. Every post you publish shapes your belief map.
           </p>
         </div>
+
+        {/* Referenced post preview */}
+        {refPreview && (
+          <div
+            style={{
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 16,
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ color: C.muted, fontSize: 12, marginBottom: 6 }}>In response to</div>
+              <Link
+                href={`/post/${refPreview.id}`}
+                style={{ color: C.accent, fontSize: 15, fontWeight: 500, textDecoration: "underline", textUnderlineOffset: 3 }}
+              >
+                {refPreview.headlineClaim}
+              </Link>
+              <div style={{ color: C.textSoft, fontSize: 13, marginTop: 6 }}>
+                {refPreview.author?.name || "Anonymous"}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={clearReferencedPost}
+              style={{
+                background: "transparent",
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                padding: "8px 12px",
+                color: C.textSoft,
+                fontSize: 13,
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
+        {refLoadError && (
+          <div
+            style={{
+              background: `${C.rose}12`,
+              border: `1px solid ${C.rose}35`,
+              borderRadius: 12,
+              padding: 12,
+              marginBottom: 16,
+              color: C.rose,
+              fontSize: 13,
+            }}
+          >
+            {refLoadError}
+          </div>
+        )}
 
         {/* Error Banner */}
         <AnimatePresence>
@@ -631,5 +757,19 @@ export default function PublishPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ minHeight: "100vh", background: "#0f0e0c", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Loader2 size={32} className="animate-spin" style={{ color: "#d4915a" }} />
+        </div>
+      }
+    >
+      <PublishPageContent />
+    </Suspense>
   );
 }
