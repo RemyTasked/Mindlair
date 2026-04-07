@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import { computeOrganicLayout, CATEGORY_COLORS, CATEGORY_LABELS, type OrganicPosition } from "@/lib/map/organic-layout";
+import { computeOrganicLayout, categoryColor, formatCategoryLabel, type OrganicPosition } from "@/lib/map/organic-layout";
 import {
   interpolateTimelineActivity,
   filterEdgesGated,
@@ -13,16 +13,12 @@ import {
 } from "@/lib/map/timeline-scrub";
 import MapTimelineScrubber from "@/components/map-timeline-scrubber";
 
-type MapCategory = 
-  | 'technology' 
-  | 'psychology' 
-  | 'economics' 
-  | 'health' 
-  | 'philosophy' 
-  | 'culture' 
-  | 'productivity' 
-  | 'sports' 
-  | 'general';
+interface UserCategory {
+  name: string;
+  conceptCount: number;
+  positionCount: number;
+  color: string;
+}
 
 /** Mirrors `/api/map` + belief-graph shapes (client-safe; do not import belief-graph here). */
 interface MapNode {
@@ -34,7 +30,7 @@ interface MapNode {
   stability: number;
   echoFlagged: boolean;
   positionCount: number;
-  category: MapCategory;
+  category: string;
   mergedFrom?: string[];
   totalPositionCount?: number;
 }
@@ -118,6 +114,7 @@ export type MapApiPayload = {
   nodes: MapNode[];
   edges: MapEdge[];
   clusters: MapCluster[];
+  categories?: UserCategory[];
   mergedInto?: Record<string, string>;
   stats: {
     totalConcepts: number;
@@ -201,9 +198,23 @@ export default function PersonalBeliefMap({
   const [showSources, setShowSources] = useState(false);
   const [showTension, setShowTension] = useState(false);
 
-  const { nodes, edges, clusters, stats, readiness } = payload;
+  const { nodes, edges, clusters, categories, stats, readiness } = payload;
   const snapshots = timeline?.snapshots ?? [];
   const useTimeline = snapshots.length >= 2;
+  
+  const categoryColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (categories) {
+      for (const cat of categories) {
+        map.set(cat.name, cat.color);
+      }
+    }
+    return map;
+  }, [categories]);
+  
+  const getCatColor = useCallback((catName: string): string => {
+    return categoryColorMap.get(catName) || categoryColor(catName);
+  }, [categoryColorMap]);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
@@ -270,8 +281,8 @@ export default function PersonalBeliefMap({
       mergedFrom: n.mergedFrom || [],
       totalPositionCount: n.totalPositionCount ?? n.positionCount,
     }));
-    return computeOrganicLayout(mergedNodes, dims.w, dims.h);
-  }, [nodes, dims.w, dims.h]);
+    return computeOrganicLayout(mergedNodes, categories || [], dims.w, dims.h);
+  }, [nodes, categories, dims.w, dims.h]);
 
   const nodePos = useMemo(() => {
     const out: Record<string, { x: number; y: number }> = {};
@@ -683,7 +694,7 @@ export default function PersonalBeliefMap({
                     e.type === "tension" &&
                     (e.source === node.id || e.target === node.id),
                 );
-                const categoryColor = CATEGORY_COLORS[node.category] || CATEGORY_COLORS.general;
+                const nodeCatColor = getCatColor(node.category);
                 const radiusMotionStyle = {
                   transition: isScrubAnimating ? "none" : "r 0.45s ease",
                 } as const;
@@ -722,14 +733,14 @@ export default function PersonalBeliefMap({
                       <circle
                         r={r + 10}
                         fill="none"
-                        stroke={categoryColor}
+                        stroke={nodeCatColor}
                         strokeWidth={1.5}
                         strokeOpacity={0.75}
                       />
                     )}
                     <circle
                       r={r + 4}
-                      fill={categoryColor}
+                      fill={nodeCatColor}
                       fillOpacity={0.15}
                       style={{
                         animation: `pb-breathe ${3.4 + ni * 0.15}s ease-in-out infinite`,
@@ -739,7 +750,7 @@ export default function PersonalBeliefMap({
                     <circle
                       r={r}
                       fill={`url(#pg-${node.id})`}
-                      stroke={categoryColor}
+                      stroke={nodeCatColor}
                       strokeWidth={isSel ? 2.5 : isHov ? 2 : 1.5}
                       strokeOpacity={isSel || isHov ? 1 : 0.65}
                       filter={isHov ? "url(#pglow)" : "none"}
@@ -777,8 +788,8 @@ export default function PersonalBeliefMap({
                 const hVis = visForNode(node);
                 const hStance = stanceForNode({ direction: hVis.direction });
                 const hCol = POS_COLORS[hStance];
-                const categoryColor = CATEGORY_COLORS[node.category] || CATEGORY_COLORS.general;
-                const categoryLabel = CATEGORY_LABELS[node.category] || 'General';
+                const hoverCatColor = getCatColor(node.category);
+                const hoverCatLabel = formatCategoryLabel(node.category);
                 const tw = 220;
                 const hasMerged = (node.mergedFrom?.length ?? 0) > 0;
                 const extra = (hoverSummary ? 18 : 0) + (hasMerged ? 16 : 0);
@@ -796,15 +807,15 @@ export default function PersonalBeliefMap({
                       height={th}
                       rx={7}
                       fill={C.surface}
-                      stroke={categoryColor}
+                      stroke={hoverCatColor}
                       strokeWidth={1}
                       strokeOpacity={0.55}
                     />
                     <text x={ax + 11} y={ay + 18} fontSize={11} fontWeight={600} fill={C.text}>
                       {node.label}
                     </text>
-                    <text x={ax + 11} y={ay + 33} fontSize={9} fill={categoryColor}>
-                      {categoryLabel}
+                    <text x={ax + 11} y={ay + 33} fontSize={9} fill={hoverCatColor}>
+                      {hoverCatLabel}
                     </text>
                     <text x={ax + 11} y={ay + 48} fontSize={10} fill={hCol.stroke}>
                       {hCol.label}
@@ -819,7 +830,7 @@ export default function PersonalBeliefMap({
                       </text>
                     )}
                     {hasMerged && (
-                      <text x={ax + 11} y={ay + (hoverSummary ? 93 : 78)} fontSize={9} fill={categoryColor}>
+                      <text x={ax + 11} y={ay + (hoverSummary ? 93 : 78)} fontSize={9} fill={hoverCatColor}>
                         +{node.mergedFrom!.length} concepts merged into this planet
                       </text>
                     )}
@@ -875,11 +886,11 @@ export default function PersonalBeliefMap({
                 maxWidth: 280,
               }}
             >
-              {(Object.entries(CATEGORY_COLORS) as [MapCategory, string][])
-                .filter(([cat]) => nodes.some(n => n.category === cat))
-                .map(([cat, color]) => (
+              {(categories || [])
+                .filter(cat => nodes.some(n => n.category === cat.name))
+                .map(cat => (
                   <div
-                    key={cat}
+                    key={cat.name}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -895,11 +906,11 @@ export default function PersonalBeliefMap({
                         width: 8,
                         height: 8,
                         borderRadius: "50%",
-                        background: color,
+                        background: cat.color,
                       }}
                     />
                     <span style={{ fontSize: 9, color: C.textSoft }}>
-                      {CATEGORY_LABELS[cat]}
+                      {formatCategoryLabel(cat.name)}
                     </span>
                   </div>
                 ))}
@@ -935,11 +946,11 @@ export default function PersonalBeliefMap({
                       letterSpacing: "0.06em",
                       padding: "3px 8px",
                       borderRadius: 4,
-                      background: `${CATEGORY_COLORS[selected.category] || CATEGORY_COLORS.general}20`,
-                      color: CATEGORY_COLORS[selected.category] || CATEGORY_COLORS.general,
+                      background: `${getCatColor(selected.category)}20`,
+                      color: getCatColor(selected.category),
                     }}
                   >
-                    {CATEGORY_LABELS[selected.category] || 'General'}
+                    {formatCategoryLabel(selected.category)}
                   </span>
                   {(selected.mergedFrom?.length ?? 0) > 0 && (
                     <span style={{ fontSize: 10, color: C.muted }}>
@@ -1323,7 +1334,7 @@ export default function PersonalBeliefMap({
               <div
                 style={{
                   fontSize: 9,
-                  color: CATEGORY_COLORS[selected.category] || CATEGORY_COLORS.general,
+                  color: getCatColor(selected.category),
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   fontWeight: 600,
@@ -1349,7 +1360,7 @@ export default function PersonalBeliefMap({
                 recentPositions &&
                 recentPositions.map((row, i) => {
                   const chip = reactionStanceChip(row.stance);
-                  const categoryColor = CATEGORY_COLORS[selected.category] || CATEGORY_COLORS.general;
+                  const claimCatColor = getCatColor(selected.category);
                   return (
                     <div
                       key={`${row.claim.id}-${row.createdAt}-${i}`}
@@ -1358,7 +1369,7 @@ export default function PersonalBeliefMap({
                         background: C.bg,
                         borderRadius: 6,
                         border: `1px solid ${C.border}`,
-                        borderLeft: `3px solid ${categoryColor}`,
+                        borderLeft: `3px solid ${claimCatColor}`,
                         display: "flex",
                         flexDirection: "column",
                         gap: 6,
@@ -1395,8 +1406,8 @@ export default function PersonalBeliefMap({
                                 fontSize: 9,
                                 padding: "2px 6px",
                                 borderRadius: 3,
-                                background: `${categoryColor}15`,
-                                color: categoryColor,
+                                background: `${claimCatColor}15`,
+                                color: claimCatColor,
                               }}
                             >
                               {concept}

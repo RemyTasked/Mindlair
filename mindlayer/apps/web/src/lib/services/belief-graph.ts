@@ -478,18 +478,19 @@ export async function ensureMappingClaimsForPost(
   return claims.filter(c => c.claimConcepts.length > 0);
 }
 
-export type MapCategory = 
-  | 'technology' 
-  | 'psychology' 
-  | 'economics' 
-  | 'health' 
-  | 'philosophy' 
-  | 'culture' 
-  | 'productivity' 
-  | 'sports' 
-  | 'general';
+export interface UserCategory {
+  name: string;
+  conceptCount: number;
+  positionCount: number;
+  color: string;
+}
 
-const CATEGORY_KEYWORDS: Record<MapCategory, string[]> = {
+const DEFAULT_CATEGORIES = [
+  'technology', 'psychology', 'economics', 'health',
+  'philosophy', 'culture', 'productivity', 'sports'
+];
+
+const FALLBACK_KEYWORDS: Record<string, string[]> = {
   technology: [
     'ai', 'artificial intelligence', 'machine learning', 'ml', 'software', 'hardware',
     'computer', 'programming', 'code', 'tech', 'digital', 'internet', 'web', 'app',
@@ -538,32 +539,193 @@ const CATEGORY_KEYWORDS: Record<MapCategory, string[]> = {
     'basketball', 'baseball', 'tennis', 'golf', 'running', 'swimming', 'cycling',
     'olympic', 'fitness', 'workout', 'gym', 'match', 'tournament', 'season',
   ],
-  general: [],
 };
 
-export function categorizeConceptLabel(label: string): MapCategory {
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+
+export function categoryColor(name: string): string {
+  const hash = hashString(name.toLowerCase());
+  const hue = hash % 360;
+  const sat = 55 + (hash % 25);
+  const light = 50 + (hash % 15);
+  return `hsl(${hue}, ${sat}%, ${light}%)`;
+}
+
+function labelMatchesKeywords(label: string, categoryName: string): boolean {
+  const keywords = FALLBACK_KEYWORDS[categoryName];
+  if (!keywords) return false;
+  
   const lowerLabel = label.toLowerCase();
-  
-  let bestMatch: MapCategory = 'general';
-  let bestScore = 0;
-  
-  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS) as [MapCategory, string[]][]) {
-    if (category === 'general') continue;
-    
-    let score = 0;
-    for (const keyword of keywords) {
-      if (lowerLabel.includes(keyword)) {
-        score += keyword.length;
-      }
+  for (const keyword of keywords) {
+    if (lowerLabel.includes(keyword)) {
+      return true;
     }
-    
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = category;
+  }
+  return false;
+}
+
+export async function getUserCategories(userId: string): Promise<UserCategory[]> {
+  const posts = await db.post.findMany({
+    where: { authorId: userId, status: 'published' },
+    select: { topicTags: true }
+  });
+  
+  const tagCounts = new Map<string, number>();
+  for (const post of posts) {
+    for (const tag of post.topicTags) {
+      const normalizedTag = tag.toLowerCase().trim();
+      if (normalizedTag) {
+        tagCounts.set(normalizedTag, (tagCounts.get(normalizedTag) || 0) + 1);
+      }
     }
   }
   
-  return bestMatch;
+  const beliefs = await db.belief.findMany({
+    where: { userId },
+    include: { concept: true },
+  });
+  
+  const conceptsByCategory = new Map<string, { concepts: Set<string>; positions: number }>();
+  
+  for (const belief of beliefs) {
+    const conceptLabel = belief.concept.label.toLowerCase();
+    
+    let assignedCategory: string | null = null;
+    
+    for (const [tag] of tagCounts) {
+      if (conceptLabel.includes(tag) || tag.includes(conceptLabel)) {
+        assignedCategory = tag;
+        break;
+      }
+    }
+    
+    if (!assignedCategory) {
+      for (const [tag] of tagCounts) {
+        const tagWords = tag.split(/\s+/);
+        const labelWords = conceptLabel.split(/\s+/);
+        const hasOverlap = tagWords.some(tw => 
+          labelWords.some(lw => tw.length > 2 && lw.length > 2 && 
+            (tw.includes(lw) || lw.includes(tw)))
+        );
+        if (hasOverlap) {
+          assignedCategory = tag;
+          break;
+        }
+      }
+    }
+    
+    if (!assignedCategory) {
+      for (const defaultCat of DEFAULT_CATEGORIES) {
+        if (labelMatchesKeywords(conceptLabel, defaultCat)) {
+          assignedCategory = defaultCat;
+          break;
+        }
+      }
+    }
+    
+    if (!assignedCategory) {
+      assignedCategory = 'general';
+    }
+    
+    const existing = conceptsByCategory.get(assignedCategory) || { concepts: new Set(), positions: 0 };
+    existing.concepts.add(belief.conceptId);
+    existing.positions += belief.positionCount;
+    conceptsByCategory.set(assignedCategory, existing);
+  }
+  
+  for (const [tag, count] of tagCounts) {
+    if (!conceptsByCategory.has(tag) && count >= 2) {
+      conceptsByCategory.set(tag, { concepts: new Set(), positions: count });
+    }
+  }
+  
+  const categories: UserCategory[] = [];
+  for (const [name, data] of conceptsByCategory) {
+    categories.push({
+      name,
+      conceptCount: data.concepts.size,
+      positionCount: data.positions,
+      color: categoryColor(name),
+    });
+  }
+  
+  categories.sort((a, b) => b.positionCount - a.positionCount);
+  
+  const topCategories = categories.slice(0, 11);
+  
+  const hasGeneral = topCategories.some(c => c.name === 'general');
+  if (!hasGeneral) {
+    const restPositions = categories.slice(11).reduce((sum, c) => sum + c.positionCount, 0);
+    const restConcepts = categories.slice(11).reduce((sum, c) => sum + c.conceptCount, 0);
+    if (restPositions > 0 || restConcepts > 0) {
+      topCategories.push({
+        name: 'general',
+        conceptCount: restConcepts,
+        positionCount: restPositions,
+        color: categoryColor('general'),
+      });
+    }
+  }
+  
+  if (topCategories.length === 0) {
+    return DEFAULT_CATEGORIES.map(name => ({
+      name,
+      conceptCount: 0,
+      positionCount: 0,
+      color: categoryColor(name),
+    }));
+  }
+  
+  return topCategories;
+}
+
+export function assignConceptToCategory(
+  conceptLabel: string,
+  userCategories: UserCategory[]
+): string {
+  const lowerLabel = conceptLabel.toLowerCase();
+  
+  for (const cat of userCategories) {
+    if (cat.name === 'general') continue;
+    if (lowerLabel === cat.name || lowerLabel.includes(cat.name) || cat.name.includes(lowerLabel)) {
+      return cat.name;
+    }
+  }
+  
+  for (const cat of userCategories) {
+    if (cat.name === 'general') continue;
+    const catWords = cat.name.split(/\s+/);
+    const labelWords = lowerLabel.split(/\s+/);
+    const hasOverlap = catWords.some(cw => 
+      labelWords.some(lw => cw.length > 2 && lw.length > 2 && 
+        (cw.includes(lw) || lw.includes(cw)))
+    );
+    if (hasOverlap) {
+      return cat.name;
+    }
+  }
+  
+  for (const cat of userCategories) {
+    if (cat.name === 'general') continue;
+    const keywords = FALLBACK_KEYWORDS[cat.name];
+    if (keywords) {
+      for (const keyword of keywords) {
+        if (lowerLabel.includes(keyword)) {
+          return cat.name;
+        }
+      }
+    }
+  }
+  
+  return 'general';
 }
 
 export interface MapNode {
@@ -575,7 +737,7 @@ export interface MapNode {
   stability: number;
   echoFlagged: boolean;
   positionCount: number;
-  category: MapCategory;
+  category: string;
 }
 
 export interface MapEdge {
@@ -736,7 +898,10 @@ export function mergeSmallConcepts(
 export async function getBeliefMap(userId: string): Promise<{
   nodes: MapNode[];
   edges: MapEdge[];
+  categories: UserCategory[];
 }> {
+  const userCategories = await getUserCategories(userId);
+  
   const beliefs = await db.belief.findMany({
     where: { userId },
     include: { concept: true },
@@ -760,7 +925,7 @@ export async function getBeliefMap(userId: string): Promise<{
     stability: belief.stability,
     echoFlagged: belief.echoFlagged,
     positionCount: belief.positionCount,
-    category: categorizeConceptLabel(belief.concept.label),
+    category: assignConceptToCategory(belief.concept.label, userCategories),
   }));
 
   const tensionEdges: MapEdge[] = tensions.map(tension => ({
@@ -773,7 +938,7 @@ export async function getBeliefMap(userId: string): Promise<{
   const conceptIdSet = new Set(nodes.map(n => n.id));
   const relatedEdges = await getCooccurrenceRelatedEdges(userId, conceptIdSet, tensionEdges);
 
-  return { nodes, edges: [...tensionEdges, ...relatedEdges] };
+  return { nodes, edges: [...tensionEdges, ...relatedEdges], categories: userCategories };
 }
 
 /** Concepts that co-occur on the same claim (from user's positions), min 2 shared claims; skips tension pairs. */

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
     const userId = user.id;
 
-    const { nodes: rawNodes, edges: rawEdges } = await getBeliefMap(userId);
+    const { nodes: rawNodes, edges: rawEdges, categories } = await getBeliefMap(userId);
     const readiness = await getMapReadiness(userId, { nodes: rawNodes, edges: rawEdges });
     
     const { nodes: mergedNodes, edges: mergedEdges, mergedInto } = mergeSmallConcepts(
@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       nodes: mergedNodes,
       edges: mergedEdges,
       clusters,
+      categories,
       mergedInto,
       stats: {
         totalConcepts: rawNodes.length,

@@ -1,23 +1,20 @@
-import { MapCategory, MergedMapNode } from '../services/belief-graph';
+import { MergedMapNode, UserCategory, categoryColor } from '../services/belief-graph';
 
 export interface OrganicPosition {
   x: number;
   y: number;
   radius: number;
-  category: MapCategory;
+  category: string;
 }
 
-const CATEGORY_ZONES: Record<MapCategory, { row: number; col: number }> = {
-  philosophy: { row: 0, col: 0 },
-  psychology: { row: 0, col: 1 },
-  health: { row: 0, col: 2 },
-  economics: { row: 1, col: 0 },
-  general: { row: 1, col: 1 },
-  sports: { row: 1, col: 2 },
-  technology: { row: 2, col: 0 },
-  culture: { row: 2, col: 1 },
-  productivity: { row: 2, col: 2 },
-};
+export interface ZoneBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  centerX: number;
+  centerY: number;
+}
 
 function seededRandom(seed: number): () => number {
   let state = seed;
@@ -38,11 +35,119 @@ function hashString(str: string): number {
 }
 
 /**
- * Compute organic, scattered planet positions grouped by category zones.
+ * Compute dynamic zone allocation based on user categories.
+ * Categories with more engagement get larger zones.
+ * Uses a treemap-style allocation for variable-sized regions.
+ */
+export function computeDynamicZones(
+  categories: UserCategory[],
+  width: number,
+  height: number
+): Map<string, ZoneBounds> {
+  const zones = new Map<string, ZoneBounds>();
+  
+  if (categories.length === 0) {
+    return zones;
+  }
+  
+  const padding = Math.min(width, height) * 0.06;
+  const usableWidth = width - padding * 2;
+  const usableHeight = height - padding * 2;
+  
+  const sorted = [...categories].sort((a, b) => b.positionCount - a.positionCount);
+  
+  const totalPositions = Math.max(1, sorted.reduce((sum, c) => sum + c.positionCount, 0));
+  
+  if (sorted.length <= 4) {
+    const cols = sorted.length <= 2 ? sorted.length : 2;
+    const rows = Math.ceil(sorted.length / cols);
+    const cellWidth = usableWidth / cols;
+    const cellHeight = usableHeight / rows;
+    
+    sorted.forEach((cat, i) => {
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      const x = padding + col * cellWidth;
+      const y = padding + row * cellHeight;
+      
+      zones.set(cat.name, {
+        x,
+        y,
+        width: cellWidth,
+        height: cellHeight,
+        centerX: x + cellWidth / 2,
+        centerY: y + cellHeight / 2,
+      });
+    });
+    
+    return zones;
+  }
+  
+  const gridSize = Math.ceil(Math.sqrt(sorted.length));
+  const cellWidth = usableWidth / gridSize;
+  const cellHeight = usableHeight / gridSize;
+  
+  const centerCol = (gridSize - 1) / 2;
+  const centerRow = (gridSize - 1) / 2;
+  
+  const cells: { row: number; col: number; distFromCenter: number }[] = [];
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
+      const dist = Math.sqrt((row - centerRow) ** 2 + (col - centerCol) ** 2);
+      cells.push({ row, col, distFromCenter: dist });
+    }
+  }
+  
+  cells.sort((a, b) => a.distFromCenter - b.distFromCenter);
+  
+  sorted.forEach((cat, i) => {
+    if (i >= cells.length) return;
+    
+    const cell = cells[i];
+    const weight = cat.positionCount / totalPositions;
+    const sizeBoost = 0.8 + weight * 0.4;
+    
+    const adjustedWidth = cellWidth * Math.min(1.2, sizeBoost);
+    const adjustedHeight = cellHeight * Math.min(1.2, sizeBoost);
+    
+    const x = padding + cell.col * cellWidth + (cellWidth - adjustedWidth) / 2;
+    const y = padding + cell.row * cellHeight + (cellHeight - adjustedHeight) / 2;
+    
+    zones.set(cat.name, {
+      x,
+      y,
+      width: adjustedWidth,
+      height: adjustedHeight,
+      centerX: x + adjustedWidth / 2,
+      centerY: y + adjustedHeight / 2,
+    });
+  });
+  
+  if (!zones.has('general') && sorted.length < cells.length) {
+    const lastCell = cells[sorted.length];
+    const x = padding + lastCell.col * cellWidth;
+    const y = padding + lastCell.row * cellHeight;
+    
+    zones.set('general', {
+      x,
+      y,
+      width: cellWidth,
+      height: cellHeight,
+      centerX: x + cellWidth / 2,
+      centerY: y + cellHeight / 2,
+    });
+  }
+  
+  return zones;
+}
+
+/**
+ * Compute organic, scattered planet positions grouped by dynamic category zones.
  * Planets are sized based on engagement (totalPositionCount).
  */
 export function computeOrganicLayout(
   nodes: MergedMapNode[],
+  categories: UserCategory[],
   width: number,
   height: number
 ): Record<string, OrganicPosition> {
@@ -50,18 +155,15 @@ export function computeOrganicLayout(
   
   if (nodes.length === 0) return out;
   
-  const padding = Math.min(width, height) * 0.08;
-  const usableWidth = width - padding * 2;
-  const usableHeight = height - padding * 2;
+  const zones = computeDynamicZones(categories, width, height);
   
-  const zoneWidth = usableWidth / 3;
-  const zoneHeight = usableHeight / 3;
+  const padding = Math.min(width, height) * 0.06;
   
   const maxPositionCount = Math.max(...nodes.map(n => n.totalPositionCount), 1);
-  const minRadius = Math.min(width, height) * 0.025;
-  const maxRadius = Math.min(width, height) * 0.08;
+  const minRadius = Math.min(width, height) * 0.022;
+  const maxRadius = Math.min(width, height) * 0.07;
   
-  const nodesByCategory = new Map<MapCategory, MergedMapNode[]>();
+  const nodesByCategory = new Map<string, MergedMapNode[]>();
   for (const node of nodes) {
     const existing = nodesByCategory.get(node.category) || [];
     existing.push(node);
@@ -73,17 +175,42 @@ export function computeOrganicLayout(
   function doesOverlap(x: number, y: number, r: number): boolean {
     for (const p of placements) {
       const dist = Math.sqrt((x - p.x) ** 2 + (y - p.y) ** 2);
-      if (dist < r + p.r + 4) return true;
+      if (dist < r + p.r + 3) return true;
     }
     return false;
   }
   
   for (const [category, categoryNodes] of nodesByCategory) {
-    const zone = CATEGORY_ZONES[category];
-    const zoneLeft = padding + zone.col * zoneWidth;
-    const zoneTop = padding + zone.row * zoneHeight;
-    const zoneCenterX = zoneLeft + zoneWidth / 2;
-    const zoneCenterY = zoneTop + zoneHeight / 2;
+    let zone = zones.get(category);
+    
+    if (!zone) {
+      zone = zones.get('general');
+    }
+    
+    if (!zone) {
+      const fallbackCat = categories[0];
+      if (fallbackCat) {
+        zone = zones.get(fallbackCat.name);
+      }
+    }
+    
+    if (!zone) {
+      zone = {
+        x: padding,
+        y: padding,
+        width: width - padding * 2,
+        height: height - padding * 2,
+        centerX: width / 2,
+        centerY: height / 2,
+      };
+    }
+    
+    const zoneCenterX = zone.centerX;
+    const zoneCenterY = zone.centerY;
+    const zoneWidth = zone.width;
+    const zoneHeight = zone.height;
+    const zoneLeft = zone.x;
+    const zoneTop = zone.y;
     
     categoryNodes.sort((a, b) => b.totalPositionCount - a.totalPositionCount);
     
@@ -103,7 +230,7 @@ export function computeOrganicLayout(
       
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const angle = rand() * Math.PI * 2;
-        const distance = rand() * Math.min(spreadX, spreadY) * (0.3 + attempt * 0.02);
+        const distance = rand() * Math.min(spreadX, spreadY) * (0.3 + attempt * 0.015);
         
         const x = zoneCenterX + Math.cos(angle) * distance;
         const y = zoneCenterY + Math.sin(angle) * distance;
@@ -122,7 +249,7 @@ export function computeOrganicLayout(
       if (!placed) {
         for (let attempt = 0; attempt < 20; attempt++) {
           const angle = (attempt / 20) * Math.PI * 2;
-          const distance = (spreadX + spreadY) / 2 * (0.5 + attempt * 0.03);
+          const distance = (spreadX + spreadY) / 2 * (0.5 + attempt * 0.025);
           const x = zoneCenterX + Math.cos(angle) * distance;
           const y = zoneCenterY + Math.sin(angle) * distance;
           
@@ -137,8 +264,8 @@ export function computeOrganicLayout(
         }
       }
       
-      const jitterX = (rand() - 0.5) * 6;
-      const jitterY = (rand() - 0.5) * 6;
+      const jitterX = (rand() - 0.5) * 5;
+      const jitterY = (rand() - 0.5) * 5;
       bestX += jitterX;
       bestY += jitterY;
       
@@ -156,46 +283,21 @@ export function computeOrganicLayout(
   return out;
 }
 
-export const CATEGORY_COLORS: Record<MapCategory, string> = {
-  technology: '#3b82f6',
-  psychology: '#a855f7',
-  economics: '#22c55e',
-  health: '#ef4444',
-  philosophy: '#8b5cf6',
-  culture: '#f97316',
-  productivity: '#eab308',
-  sports: '#06b6d4',
-  general: '#6b7280',
-};
-
-export const CATEGORY_LABELS: Record<MapCategory, string> = {
-  technology: 'Technology',
-  psychology: 'Psychology',
-  economics: 'Economics',
-  health: 'Health',
-  philosophy: 'Philosophy',
-  culture: 'Culture',
-  productivity: 'Productivity',
-  sports: 'Sports',
-  general: 'General',
-};
-
 export function getCategoryZoneBounds(
-  category: MapCategory,
+  categoryName: string,
+  categories: UserCategory[],
   width: number,
   height: number
-): { x: number; y: number; width: number; height: number } {
-  const padding = Math.min(width, height) * 0.08;
-  const usableWidth = width - padding * 2;
-  const usableHeight = height - padding * 2;
-  const zoneWidth = usableWidth / 3;
-  const zoneHeight = usableHeight / 3;
-  
-  const zone = CATEGORY_ZONES[category];
-  return {
-    x: padding + zone.col * zoneWidth,
-    y: padding + zone.row * zoneHeight,
-    width: zoneWidth,
-    height: zoneHeight,
-  };
+): ZoneBounds | null {
+  const zones = computeDynamicZones(categories, width, height);
+  return zones.get(categoryName) || null;
+}
+
+export { categoryColor };
+
+export function formatCategoryLabel(name: string): string {
+  return name
+    .split(/[\s_-]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 }
