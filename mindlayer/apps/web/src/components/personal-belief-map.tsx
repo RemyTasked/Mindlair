@@ -291,6 +291,30 @@ export default function PersonalBeliefMap({
     [useTimeline, activity, maxC],
   );
 
+  /** Timeline scrub: weak topics drift slightly outward from center (landing-map parity). */
+  const displayPos = useMemo(() => {
+    if (!useTimeline) return nodePos;
+    const cx = dims.w / 2;
+    const cy = dims.h / 2;
+    const minD = Math.min(dims.w, dims.h);
+    const out: Record<string, { x: number; y: number }> = {};
+    for (const node of nodes) {
+      const p = nodePos[node.id];
+      if (!p) continue;
+      const vis = visForNode(node);
+      const fade = Math.max(0, 1 - vis.sizeMult);
+      const dx = p.x - cx;
+      const dy = p.y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const push = fade * minD * 0.07;
+      out[node.id] = {
+        x: p.x + (dx / dist) * push,
+        y: p.y + (dy / dist) * push,
+      };
+    }
+    return out;
+  }, [useTimeline, nodePos, nodes, dims.w, dims.h, visForNode]);
+
   const curveOffsets = useMemo(
     () =>
       effectiveEdges.map((_, i) => ({
@@ -376,6 +400,8 @@ export default function PersonalBeliefMap({
         setRecentPositions(null);
       });
   }, [selected]);
+
+  const isScrubAnimating = useTimeline && (isDragging || isPlaying);
 
   if (!dims.w) {
     return <div style={{ background: C.bg, height: "100vh" }} />;
@@ -580,20 +606,30 @@ export default function PersonalBeliefMap({
               <rect width={dims.w} height={dims.h} fill={C.bg} />
 
               {effectiveEdges.map((link, i) => {
-                const sp = nodePos[link.source];
-                const tp = nodePos[link.target];
+                const sp = displayPos[link.source];
+                const tp = displayPos[link.target];
                 if (!sp || !tp) return null;
                 const cv = curveOffsets[i] ?? { ox: 0, oy: 0 };
                 const tension = link.type === "tension";
+                const ns = nodeById.get(link.source);
+                const nt = nodeById.get(link.target);
+                const sOp = ns ? visForNode(ns).opacity : 1;
+                const tOp = nt ? visForNode(nt).opacity : 1;
+                const edgeFade = Math.min(sOp, tOp);
+                const baseOp = tension ? 0.42 : 0.28;
+                const baseW = Math.max(1, (link.weight || 1) * 0.35);
                 return (
                   <path
                     key={`${link.source}-${link.target}-${i}`}
                     d={`M ${sp.x} ${sp.y} Q ${(sp.x + tp.x) / 2 + cv.ox} ${(sp.y + tp.y) / 2 + cv.oy} ${tp.x} ${tp.y}`}
                     fill="none"
                     stroke={tension ? C.amber : C.muted}
-                    strokeWidth={Math.max(1, (link.weight || 1) * 0.35)}
+                    strokeWidth={Math.max(0.5, baseW * (0.5 + 0.5 * edgeFade))}
                     strokeDasharray={tension ? "6,4" : "4,6"}
-                    strokeOpacity={tension ? 0.42 : 0.28}
+                    strokeOpacity={baseOp * edgeFade}
+                    style={{
+                      transition: isScrubAnimating ? "none" : "stroke-opacity 0.45s ease, stroke-width 0.45s ease",
+                    }}
                   />
                 );
               })}
@@ -602,7 +638,7 @@ export default function PersonalBeliefMap({
                 const vis = visForNode(node);
                 const stance = stanceForNode({ direction: vis.direction });
                 const col = POS_COLORS[stance];
-                const p = nodePos[node.id];
+                const p = displayPos[node.id];
                 if (!p) return null;
                 const baseR = (18 + node.strength * 42) * vis.sizeMult;
                 const isHov = hoveredId === node.id;
@@ -613,12 +649,19 @@ export default function PersonalBeliefMap({
                     e.type === "tension" &&
                     (e.source === node.id || e.target === node.id),
                 );
+                const radiusMotionStyle = {
+                  transition: isScrubAnimating ? "none" : "r 0.45s ease",
+                } as const;
 
                 return (
                   <g
                     key={node.id}
                     transform={`translate(${p.x}, ${p.y})`}
-                    style={{ cursor: "pointer", opacity: vis.opacity }}
+                    style={{
+                      cursor: "pointer",
+                      opacity: vis.opacity,
+                      transition: isScrubAnimating ? "none" : "opacity 0.45s ease",
+                    }}
                     onMouseEnter={() => setHoveredId(node.id)}
                     onMouseLeave={() => setHoveredId(null)}
                     onClick={() => {
@@ -664,6 +707,7 @@ export default function PersonalBeliefMap({
                       strokeWidth={isSel ? 2 : isHov ? 1.5 : 1}
                       strokeOpacity={isSel || isHov ? 1 : 0.55}
                       filter={isHov ? "url(#pglow)" : "none"}
+                      style={radiusMotionStyle}
                     />
                     <text
                       textAnchor="middle"
@@ -681,7 +725,7 @@ export default function PersonalBeliefMap({
 
               {hoveredId && !selected && (() => {
                 const node = nodeById.get(hoveredId);
-                const p = nodePos[hoveredId];
+                const p = displayPos[hoveredId];
                 if (!node || !p) return null;
                 const hVis = visForNode(node);
                 const hStance = stanceForNode({ direction: hVis.direction });
