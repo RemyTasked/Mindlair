@@ -86,12 +86,13 @@ export default function HomePage() {
       </section>
 
       {/* ── Map Demo ── */}
-      <section className="px-6 pb-16">
+      <section className="px-6 pb-16 overflow-hidden">
         <div className="max-w-5xl mx-auto relative">
           <div style={{
-            position: "absolute", inset: -60, zIndex: 0,
-            background: "radial-gradient(ellipse at center, #d4915a08 0%, transparent 70%)",
+            position: "absolute", inset: 0, zIndex: 0,
+            background: "radial-gradient(ellipse at center, #d4915a12 0%, transparent 60%)",
             pointerEvents: "none",
+            transform: "scale(1.3)",
           }} />
           <div style={{ position: "relative", zIndex: 1 }}>
             <LandingMapDemo />
@@ -268,7 +269,7 @@ export default function HomePage() {
               </p>
 
               {/* Topic Tags */}
-              <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
                 {["remote work", "real estate", "urban planning"].map(tag => (
                   <span key={tag} style={{
                     fontSize: 11, color: "#7a7469",

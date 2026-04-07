@@ -112,12 +112,12 @@ const stanceIcons = {
   steelmanning: Lightbulb,
 };
 
-type FilterType = "all" | "following" | "discover";
+type FilterType = "all" | "subscriptions" | "discover";
 
 const FEED_RESTORE_KEY = "mindlayer_feed_restore";
 
 function isFilterType(v: unknown): v is FilterType {
-  return v === "all" || v === "following" || v === "discover";
+  return v === "all" || v === "subscriptions" || v === "discover";
 }
 
 function isCategoryType(v: unknown): v is NonNullable<CategoryType> {

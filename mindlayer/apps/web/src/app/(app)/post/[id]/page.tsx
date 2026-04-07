@@ -88,36 +88,42 @@ export default function PostDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isReacting, setIsReacting] = useState(false);
 
-  const fetchPost = useCallback(async () => {
+  useEffect(() => {
+    const controller = new AbortController();
+    
+    setPost(null);
     setIsLoading(true);
     setError(null);
 
-    try {
-      const response = await fetch(`/api/posts/${postId}`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError("Post not found");
-          return;
+    fetch(`/api/posts/${postId}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError("Post not found");
+            return;
+          }
+          if (response.status === 403) {
+            setError("You cannot view this post");
+            return;
+          }
+          throw new Error("Failed to load post");
         }
-        if (response.status === 403) {
-          setError("You cannot view this post");
-          return;
+        const data = await response.json();
+        setPost(data.post);
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          setError(err instanceof Error ? err.message : "An error occurred");
         }
-        throw new Error("Failed to load post");
-      }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
 
-      const data = await response.json();
-      setPost(data.post);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
+    return () => controller.abort();
   }, [postId]);
-
-  useEffect(() => {
-    fetchPost();
-  }, [fetchPost]);
 
   const handleReaction = async (stance: string) => {
     if (!post) return;

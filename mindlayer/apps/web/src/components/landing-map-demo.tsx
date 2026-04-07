@@ -262,7 +262,7 @@ export default function LandingMapDemo() {
         <span style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: C.muted }}>
           Belief Map
         </span>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "center", justifyContent: "flex-end" }}>
           {(["affirm", "disagree", "ambivalent", "passive"] as const).map(k => (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: POS_COLORS[k].stroke }} />

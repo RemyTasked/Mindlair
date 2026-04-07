@@ -88,7 +88,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#0f0e0c" />
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased overflow-x-hidden">
         {children}
         <ServiceWorkerRegister />
       </body>
