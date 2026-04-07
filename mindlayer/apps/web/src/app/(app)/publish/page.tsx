@@ -445,7 +445,7 @@ function PublishPageContent() {
             )}
           </AnimatePresence>
 
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-2">
             {(Object.keys(stanceInfo) as AuthorStance[]).map((stance) => {
               const info = stanceInfo[stance];
               const Icon = info.icon;
@@ -454,11 +454,11 @@ function PublishPageContent() {
               return (
                 <motion.button
                   key={stance}
+                  className="min-w-0 w-full"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setAuthorStance(stance)}
                   style={{
-                    flex: 1,
                     background: isSelected ? `${info.color}20` : C.surface,
                     border: `1px solid ${isSelected ? info.color : C.border}`,
                     borderRadius: 12,
@@ -482,6 +482,7 @@ function PublishPageContent() {
                     fontSize: 12, 
                     textAlign: "left",
                     lineHeight: 1.4,
+                    overflowWrap: "break-word",
                   }}>
                     {info.description}
                   </p>
