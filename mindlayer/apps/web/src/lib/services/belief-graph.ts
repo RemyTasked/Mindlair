@@ -496,6 +496,11 @@ export interface MapEdge {
   weight: number;
 }
 
+/** Edges that define spatial layout clusters (connected components on the map). */
+export function layoutClusteringEdges(edges: MapEdge[]): MapEdge[] {
+  return edges.filter(e => e.type === 'tension' || e.type === 'related');
+}
+
 export async function getBeliefMap(userId: string): Promise<{
   nodes: MapNode[];
   edges: MapEdge[];
@@ -603,7 +608,7 @@ async function getCooccurrenceRelatedEdges(
   return out;
 }
 
-/** Connected components on the map graph (tension edges). */
+/** Connected component of the map graph (see `clusterMapNodes`). */
 export interface MapCluster {
   id: string;
   label: string;
@@ -626,6 +631,10 @@ function modeDirection(arr: string[]): string | undefined {
   return maxValue;
 }
 
+/**
+ * Connected components for map layout: uses tension and related edges only
+ * (`layoutClusteringEdges`), so new edge types do not affect grouping by default.
+ */
 export function clusterMapNodes(nodes: MapNode[], edges: MapEdge[]): MapCluster[] {
   if (nodes.length === 0) return [];
 
@@ -633,7 +642,7 @@ export function clusterMapNodes(nodes: MapNode[], edges: MapEdge[]): MapCluster[
   for (const node of nodes) {
     adjacency.set(node.id, new Set());
   }
-  for (const edge of edges) {
+  for (const edge of layoutClusteringEdges(edges)) {
     adjacency.get(edge.source)?.add(edge.target);
     adjacency.get(edge.target)?.add(edge.source);
   }

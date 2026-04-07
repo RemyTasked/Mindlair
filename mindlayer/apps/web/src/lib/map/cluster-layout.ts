@@ -9,8 +9,9 @@ interface MapNode {
 }
 
 /**
- * Place tension-graph clusters in the plane: multi-node clusters get a local mini-ring;
- * singletons share an outer ring. Produces stable positions for SVG.
+ * Place map clusters in the plane. Cluster membership matches the API: connected components
+ * over tension + related edges (`clusterMapNodes` in `belief-graph.ts`).
+ * Multi-node components get a local mini-ring; singletons share an outer ring.
  */
 export function computeClusterLayout(
   nodes: MapNode[],

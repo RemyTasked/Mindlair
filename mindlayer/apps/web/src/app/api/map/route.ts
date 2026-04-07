@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
 
     const { nodes, edges } = await getBeliefMap(userId);
     const readiness = await getMapReadiness(userId, { nodes, edges });
+    // Layout clusters = connected components over tension + related edges (see clusterMapNodes).
     const clusters = clusterMapNodes(nodes, edges);
 
     return NextResponse.json({
