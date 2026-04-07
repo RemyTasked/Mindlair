@@ -478,6 +478,94 @@ export async function ensureMappingClaimsForPost(
   return claims.filter(c => c.claimConcepts.length > 0);
 }
 
+export type MapCategory = 
+  | 'technology' 
+  | 'psychology' 
+  | 'economics' 
+  | 'health' 
+  | 'philosophy' 
+  | 'culture' 
+  | 'productivity' 
+  | 'sports' 
+  | 'general';
+
+const CATEGORY_KEYWORDS: Record<MapCategory, string[]> = {
+  technology: [
+    'ai', 'artificial intelligence', 'machine learning', 'ml', 'software', 'hardware',
+    'computer', 'programming', 'code', 'tech', 'digital', 'internet', 'web', 'app',
+    'data', 'algorithm', 'crypto', 'blockchain', 'robot', 'automation', 'cyber',
+    'cloud', 'network', 'mobile', 'device', 'startup', 'silicon', 'gpu', 'cpu',
+  ],
+  psychology: [
+    'psychology', 'mental', 'brain', 'mind', 'cognitive', 'behavior', 'emotion',
+    'therapy', 'anxiety', 'depression', 'consciousness', 'memory', 'learning',
+    'motivation', 'personality', 'trauma', 'stress', 'mindfulness', 'meditation',
+    'neuroscience', 'perception', 'decision', 'bias', 'habit', 'addiction',
+  ],
+  economics: [
+    'economics', 'economy', 'money', 'finance', 'market', 'stock', 'trade',
+    'investment', 'bank', 'inflation', 'gdp', 'tax', 'debt', 'capital', 'wealth',
+    'poverty', 'income', 'wage', 'price', 'supply', 'demand', 'monetary', 'fiscal',
+    'budget', 'business', 'commerce', 'profit', 'cost', 'asset', 'currency',
+  ],
+  health: [
+    'health', 'medical', 'medicine', 'doctor', 'hospital', 'disease', 'illness',
+    'nutrition', 'diet', 'exercise', 'fitness', 'sleep', 'wellness', 'vaccine',
+    'drug', 'treatment', 'therapy', 'patient', 'symptom', 'cancer', 'heart',
+    'immune', 'virus', 'bacteria', 'genetic', 'dna', 'body', 'physical',
+  ],
+  philosophy: [
+    'philosophy', 'ethics', 'moral', 'truth', 'logic', 'reason', 'existence',
+    'meaning', 'value', 'virtue', 'justice', 'freedom', 'consciousness', 'soul',
+    'metaphysics', 'epistemology', 'ontology', 'aesthetic', 'stoic', 'nihil',
+    'existential', 'rational', 'wisdom', 'belief', 'knowledge', 'reality',
+  ],
+  culture: [
+    'culture', 'art', 'music', 'film', 'movie', 'book', 'literature', 'media',
+    'social', 'society', 'tradition', 'religion', 'faith', 'spiritual', 'language',
+    'history', 'heritage', 'identity', 'community', 'family', 'relationship',
+    'fashion', 'food', 'travel', 'entertainment', 'celebrity', 'trend', 'meme',
+  ],
+  productivity: [
+    'productivity', 'work', 'career', 'job', 'efficiency', 'management', 'goal',
+    'habit', 'routine', 'schedule', 'planning', 'organization', 'focus', 'time',
+    'task', 'project', 'deadline', 'meeting', 'team', 'leadership', 'skill',
+    'learning', 'growth', 'success', 'achievement', 'performance', 'output',
+  ],
+  sports: [
+    'sports', 'sport', 'athlete', 'game', 'team', 'player', 'coach', 'training',
+    'competition', 'championship', 'league', 'score', 'win', 'football', 'soccer',
+    'basketball', 'baseball', 'tennis', 'golf', 'running', 'swimming', 'cycling',
+    'olympic', 'fitness', 'workout', 'gym', 'match', 'tournament', 'season',
+  ],
+  general: [],
+};
+
+export function categorizeConceptLabel(label: string): MapCategory {
+  const lowerLabel = label.toLowerCase();
+  
+  let bestMatch: MapCategory = 'general';
+  let bestScore = 0;
+  
+  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS) as [MapCategory, string[]][]) {
+    if (category === 'general') continue;
+    
+    let score = 0;
+    for (const keyword of keywords) {
+      if (lowerLabel.includes(keyword)) {
+        score += keyword.length;
+      }
+    }
+    
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = category;
+    }
+  }
+  
+  return bestMatch;
+}
+
 export interface MapNode {
   id: string;
   label: string;
@@ -487,6 +575,7 @@ export interface MapNode {
   stability: number;
   echoFlagged: boolean;
   positionCount: number;
+  category: MapCategory;
 }
 
 export interface MapEdge {
@@ -499,6 +588,149 @@ export interface MapEdge {
 /** Edges that define spatial layout clusters (connected components on the map). */
 export function layoutClusteringEdges(edges: MapEdge[]): MapEdge[] {
   return edges.filter(e => e.type === 'tension' || e.type === 'related');
+}
+
+export interface MergedMapNode extends MapNode {
+  mergedFrom: string[];
+  totalPositionCount: number;
+}
+
+export interface MergeResult {
+  nodes: MergedMapNode[];
+  edges: MapEdge[];
+  mergedInto: Record<string, string>;
+}
+
+/**
+ * Merges small concepts (low engagement) into their most connected neighbor.
+ * Concepts with positionCount < minPositions get merged:
+ * 1. Into their most connected neighbor (by edge weight)
+ * 2. If no neighbor, into nearest same-category node
+ */
+export function mergeSmallConcepts(
+  nodes: MapNode[],
+  edges: MapEdge[],
+  minPositions = 3
+): MergeResult {
+  const mergedInto: Record<string, string> = {};
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  
+  const adjacency = new Map<string, Map<string, number>>();
+  for (const node of nodes) {
+    adjacency.set(node.id, new Map());
+  }
+  for (const edge of edges) {
+    const srcAdj = adjacency.get(edge.source);
+    const tgtAdj = adjacency.get(edge.target);
+    if (srcAdj) {
+      srcAdj.set(edge.target, (srcAdj.get(edge.target) || 0) + edge.weight);
+    }
+    if (tgtAdj) {
+      tgtAdj.set(edge.source, (tgtAdj.get(edge.source) || 0) + edge.weight);
+    }
+  }
+  
+  const smallNodes = nodes
+    .filter(n => n.positionCount < minPositions)
+    .sort((a, b) => a.positionCount - b.positionCount);
+  
+  const largeNodes = nodes.filter(n => n.positionCount >= minPositions);
+  const absorbedIds = new Set<string>();
+  
+  for (const smallNode of smallNodes) {
+    if (absorbedIds.has(smallNode.id)) continue;
+    
+    const neighbors = adjacency.get(smallNode.id) || new Map<string, number>();
+    let bestTarget: string | null = null;
+    let bestWeight = 0;
+    
+    for (const [neighborId, weight] of neighbors) {
+      if (absorbedIds.has(neighborId)) continue;
+      const neighbor = nodeMap.get(neighborId);
+      if (!neighbor) continue;
+      
+      if (neighbor.positionCount >= minPositions && weight > bestWeight) {
+        bestWeight = weight;
+        bestTarget = neighborId;
+      }
+    }
+    
+    if (!bestTarget) {
+      const sameCategory = largeNodes.filter(
+        n => n.category === smallNode.category && !absorbedIds.has(n.id)
+      );
+      if (sameCategory.length > 0) {
+        sameCategory.sort((a, b) => b.positionCount - a.positionCount);
+        bestTarget = sameCategory[0].id;
+      }
+    }
+    
+    if (!bestTarget && largeNodes.length > 0) {
+      const available = largeNodes.filter(n => !absorbedIds.has(n.id));
+      if (available.length > 0) {
+        available.sort((a, b) => b.positionCount - a.positionCount);
+        bestTarget = available[0].id;
+      }
+    }
+    
+    if (bestTarget) {
+      mergedInto[smallNode.id] = bestTarget;
+      absorbedIds.add(smallNode.id);
+    }
+  }
+  
+  const mergedNodes: MergedMapNode[] = [];
+  for (const node of nodes) {
+    if (absorbedIds.has(node.id)) continue;
+    
+    const absorbed = Object.entries(mergedInto)
+      .filter(([, target]) => target === node.id)
+      .map(([source]) => source);
+    
+    const absorbedNodes = absorbed.map(id => nodeMap.get(id)!).filter(Boolean);
+    const totalPositionCount = node.positionCount + 
+      absorbedNodes.reduce((sum, n) => sum + n.positionCount, 0);
+    
+    mergedNodes.push({
+      ...node,
+      mergedFrom: absorbed,
+      totalPositionCount,
+    });
+  }
+  
+  if (mergedNodes.length === 0 && smallNodes.length > 0) {
+    const biggest = smallNodes.reduce((a, b) => 
+      a.positionCount >= b.positionCount ? a : b
+    );
+    
+    for (const node of smallNodes) {
+      if (node.id !== biggest.id) {
+        mergedInto[node.id] = biggest.id;
+        absorbedIds.add(node.id);
+      }
+    }
+    
+    const absorbed = Object.entries(mergedInto)
+      .filter(([, target]) => target === biggest.id)
+      .map(([source]) => source);
+    
+    const absorbedNodes = absorbed.map(id => nodeMap.get(id)!).filter(Boolean);
+    const totalPositionCount = biggest.positionCount +
+      absorbedNodes.reduce((sum, n) => sum + n.positionCount, 0);
+    
+    mergedNodes.push({
+      ...biggest,
+      mergedFrom: absorbed,
+      totalPositionCount,
+    });
+  }
+  
+  const remainingNodeIds = new Set(mergedNodes.map(n => n.id));
+  const mergedEdges = edges.filter(
+    e => remainingNodeIds.has(e.source) && remainingNodeIds.has(e.target)
+  );
+  
+  return { nodes: mergedNodes, edges: mergedEdges, mergedInto };
 }
 
 export async function getBeliefMap(userId: string): Promise<{
@@ -528,6 +760,7 @@ export async function getBeliefMap(userId: string): Promise<{
     stability: belief.stability,
     echoFlagged: belief.echoFlagged,
     positionCount: belief.positionCount,
+    category: categorizeConceptLabel(belief.concept.label),
   }));
 
   const tensionEdges: MapEdge[] = tensions.map(tension => ({

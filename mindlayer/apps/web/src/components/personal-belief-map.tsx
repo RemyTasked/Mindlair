@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import { computeClusterLayout } from "@/lib/map/cluster-layout";
+import { computeOrganicLayout, CATEGORY_COLORS, CATEGORY_LABELS, type OrganicPosition } from "@/lib/map/organic-layout";
 import {
   interpolateTimelineActivity,
   filterEdgesGated,
@@ -13,6 +13,17 @@ import {
 } from "@/lib/map/timeline-scrub";
 import MapTimelineScrubber from "@/components/map-timeline-scrubber";
 
+type MapCategory = 
+  | 'technology' 
+  | 'psychology' 
+  | 'economics' 
+  | 'health' 
+  | 'philosophy' 
+  | 'culture' 
+  | 'productivity' 
+  | 'sports' 
+  | 'general';
+
 /** Mirrors `/api/map` + belief-graph shapes (client-safe; do not import belief-graph here). */
 interface MapNode {
   id: string;
@@ -23,6 +34,9 @@ interface MapNode {
   stability: number;
   echoFlagged: boolean;
   positionCount: number;
+  category: MapCategory;
+  mergedFrom?: string[];
+  totalPositionCount?: number;
 }
 
 interface MapEdge {
@@ -104,8 +118,10 @@ export type MapApiPayload = {
   nodes: MapNode[];
   edges: MapEdge[];
   clusters: MapCluster[];
+  mergedInto?: Record<string, string>;
   stats: {
     totalConcepts: number;
+    visiblePlanets?: number;
     echoFlaggedCount: number;
     tensionCount: number;
     averageStrength: number;
@@ -129,7 +145,7 @@ interface MapRecentPosition {
   stance: string;
   context: string;
   createdAt: string;
-  claim: { id: string; textPreview: string };
+  claim: { id: string; textPreview: string; contributingConcepts?: string[] };
 }
 
 function reactionStanceChip(stance: string): { label: string; bg: string; color: string } {
@@ -248,10 +264,25 @@ export default function PersonalBeliefMap({
     );
   }, [useTimeline, edges, activity]);
 
-  const nodePos = useMemo(
-    () => computeClusterLayout(nodes, clusters, dims.w, dims.h),
-    [nodes, clusters, dims.w, dims.h],
-  );
+  const organicLayout = useMemo(() => {
+    const mergedNodes = nodes.map(n => ({
+      ...n,
+      mergedFrom: n.mergedFrom || [],
+      totalPositionCount: n.totalPositionCount ?? n.positionCount,
+    }));
+    return computeOrganicLayout(mergedNodes, dims.w, dims.h);
+  }, [nodes, dims.w, dims.h]);
+
+  const nodePos = useMemo(() => {
+    const out: Record<string, { x: number; y: number }> = {};
+    for (const node of nodes) {
+      const pos = organicLayout[node.id];
+      if (pos) {
+        out[node.id] = { x: pos.x, y: pos.y };
+      }
+    }
+    return out;
+  }, [nodes, organicLayout]);
 
   const activeCount = useMemo(() => {
     if (!useTimeline) return nodes.length;
@@ -388,7 +419,9 @@ export default function PersonalBeliefMap({
     }
     setRecentLoading(true);
     setRecentError(false);
-    fetch(`/api/map/recent-positions?conceptId=${encodeURIComponent(selected.id)}`)
+    const mergedIds = selected.mergedFrom?.join(',') || '';
+    const url = `/api/map/recent-positions?conceptId=${encodeURIComponent(selected.id)}&limit=5${mergedIds ? `&mergedIds=${encodeURIComponent(mergedIds)}` : ''}`;
+    fetch(url)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error("recent"))))
       .then(data => {
         setRecentPositions((data?.positions as MapRecentPosition[]) ?? []);
@@ -639,16 +672,18 @@ export default function PersonalBeliefMap({
                 const stance = stanceForNode({ direction: vis.direction });
                 const col = POS_COLORS[stance];
                 const p = displayPos[node.id];
-                if (!p) return null;
-                const baseR = (18 + node.strength * 42) * vis.sizeMult;
+                const orgPos = organicLayout[node.id];
+                if (!p || !orgPos) return null;
+                const baseR = orgPos.radius * vis.sizeMult;
                 const isHov = hoveredId === node.id;
                 const isSel = selected?.id === node.id;
-                const r = isHov ? baseR * 1.06 : baseR;
+                const r = isHov ? baseR * 1.08 : baseR;
                 const hasTension = effectiveEdges.some(
                   e =>
                     e.type === "tension" &&
                     (e.source === node.id || e.target === node.id),
                 );
+                const categoryColor = CATEGORY_COLORS[node.category] || CATEGORY_COLORS.general;
                 const radiusMotionStyle = {
                   transition: isScrubAnimating ? "none" : "r 0.45s ease",
                 } as const;
@@ -672,7 +707,7 @@ export default function PersonalBeliefMap({
                   >
                     {hasTension && (
                       <circle
-                        r={r * 0.58 + 8}
+                        r={r + 8}
                         fill="none"
                         stroke={C.amber}
                         strokeWidth={1}
@@ -685,40 +720,52 @@ export default function PersonalBeliefMap({
                     )}
                     {isSel && (
                       <circle
-                        r={r * 0.58 + 12}
+                        r={r + 10}
                         fill="none"
-                        stroke={col.stroke}
+                        stroke={categoryColor}
                         strokeWidth={1.5}
                         strokeOpacity={0.75}
                       />
                     )}
                     <circle
-                      r={r * 0.58}
-                      fill={col.stroke}
+                      r={r + 4}
+                      fill={categoryColor}
+                      fillOpacity={0.15}
                       style={{
                         animation: `pb-breathe ${3.4 + ni * 0.15}s ease-in-out infinite`,
                         animationDelay: `${ni * 0.3}s`,
                       }}
                     />
                     <circle
-                      r={r * 0.48}
+                      r={r}
                       fill={`url(#pg-${node.id})`}
-                      stroke={col.stroke}
-                      strokeWidth={isSel ? 2 : isHov ? 1.5 : 1}
-                      strokeOpacity={isSel || isHov ? 1 : 0.55}
+                      stroke={categoryColor}
+                      strokeWidth={isSel ? 2.5 : isHov ? 2 : 1.5}
+                      strokeOpacity={isSel || isHov ? 1 : 0.65}
                       filter={isHov ? "url(#pglow)" : "none"}
                       style={radiusMotionStyle}
                     />
                     <text
                       textAnchor="middle"
                       dy="0.35em"
-                      fontSize={Math.max(9, Math.min(12, r * 0.22))}
+                      fontSize={Math.max(8, Math.min(11, r * 0.35))}
                       fill={C.text}
                       fontWeight={isSel ? 600 : 400}
                       style={{ pointerEvents: "none", userSelect: "none" }}
                     >
-                      {node.label.length > 22 ? `${node.label.slice(0, 20)}…` : node.label}
+                      {node.label.length > 18 ? `${node.label.slice(0, 16)}…` : node.label}
                     </text>
+                    {(node.mergedFrom?.length ?? 0) > 0 && (
+                      <text
+                        textAnchor="middle"
+                        dy={r * 0.5 + 8}
+                        fontSize={7}
+                        fill={C.muted}
+                        style={{ pointerEvents: "none", userSelect: "none" }}
+                      >
+                        +{node.mergedFrom!.length} merged
+                      </text>
+                    )}
                   </g>
                 );
               })}
@@ -730,9 +777,12 @@ export default function PersonalBeliefMap({
                 const hVis = visForNode(node);
                 const hStance = stanceForNode({ direction: hVis.direction });
                 const hCol = POS_COLORS[hStance];
-                const tw = 210;
-                const extra = hoverSummary ? 36 : 0;
-                const th = 52 + extra;
+                const categoryColor = CATEGORY_COLORS[node.category] || CATEGORY_COLORS.general;
+                const categoryLabel = CATEGORY_LABELS[node.category] || 'General';
+                const tw = 220;
+                const hasMerged = (node.mergedFrom?.length ?? 0) > 0;
+                const extra = (hoverSummary ? 18 : 0) + (hasMerged ? 16 : 0);
+                const th = 70 + extra;
                 const tx = p.x + 28;
                 const ty = p.y - 28;
                 const ax = tx + tw > dims.w - 12 ? p.x - tw - 28 : tx;
@@ -746,23 +796,31 @@ export default function PersonalBeliefMap({
                       height={th}
                       rx={7}
                       fill={C.surface}
-                      stroke={hCol.stroke}
+                      stroke={categoryColor}
                       strokeWidth={1}
-                      strokeOpacity={0.45}
+                      strokeOpacity={0.55}
                     />
                     <text x={ax + 11} y={ay + 18} fontSize={11} fontWeight={600} fill={C.text}>
                       {node.label}
                     </text>
-                    <text x={ax + 11} y={ay + 33} fontSize={10} fill={hCol.stroke}>
+                    <text x={ax + 11} y={ay + 33} fontSize={9} fill={categoryColor}>
+                      {categoryLabel}
+                    </text>
+                    <text x={ax + 11} y={ay + 48} fontSize={10} fill={hCol.stroke}>
                       {hCol.label}
                     </text>
-                    <text x={ax + 11} y={ay + 48} fontSize={10} fill={C.muted}>
-                      Strength {(node.strength * 100).toFixed(0)}% · Positions {node.positionCount}
+                    <text x={ax + 11} y={ay + 63} fontSize={10} fill={C.muted}>
+                      Strength {(node.strength * 100).toFixed(0)}% · Positions {node.totalPositionCount ?? node.positionCount}
                     </text>
                     {hoverSummary && (
-                      <text x={ax + 11} y={ay + 64} fontSize={9} fill={C.muted}>
+                      <text x={ax + 11} y={ay + 78} fontSize={9} fill={C.muted}>
                         {hoverSummary.sourceCount} sources · {hoverSummary.reactionCount} reactions ·{" "}
                         {formatLastActive(hoverSummary.lastActive)}
+                      </text>
+                    )}
+                    {hasMerged && (
+                      <text x={ax + 11} y={ay + (hoverSummary ? 93 : 78)} fontSize={9} fill={categoryColor}>
+                        +{node.mergedFrom!.length} concepts merged into this planet
                       </text>
                     )}
                   </g>
@@ -803,6 +861,50 @@ export default function PersonalBeliefMap({
               <div style={{ fontSize: 12, lineHeight: 1.55, color: C.textSoft }}>{discoveryText}</div>
             </div>
           )}
+
+          {nodes.length > 0 && !selected && (
+            <div
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 6,
+                justifyContent: "flex-end",
+                maxWidth: 280,
+              }}
+            >
+              {(Object.entries(CATEGORY_COLORS) as [MapCategory, string][])
+                .filter(([cat]) => nodes.some(n => n.category === cat))
+                .map(([cat, color]) => (
+                  <div
+                    key={cat}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "3px 8px",
+                      background: `${C.surface}e0`,
+                      borderRadius: 4,
+                      border: `1px solid ${C.border}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: color,
+                      }}
+                    />
+                    <span style={{ fontSize: 9, color: C.textSoft }}>
+                      {CATEGORY_LABELS[cat]}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
 
         {selected && (
@@ -824,7 +926,27 @@ export default function PersonalBeliefMap({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{selected.label}</div>
-                <div style={{ fontSize: 11, color: C.muted }}>Aggregated from your reactions</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      padding: "3px 8px",
+                      borderRadius: 4,
+                      background: `${CATEGORY_COLORS[selected.category] || CATEGORY_COLORS.general}20`,
+                      color: CATEGORY_COLORS[selected.category] || CATEGORY_COLORS.general,
+                    }}
+                  >
+                    {CATEGORY_LABELS[selected.category] || 'General'}
+                  </span>
+                  {(selected.mergedFrom?.length ?? 0) > 0 && (
+                    <span style={{ fontSize: 10, color: C.muted }}>
+                      +{selected.mergedFrom!.length} merged
+                    </span>
+                  )}
+                </div>
                 <div
                   style={{
                     fontSize: 11,
@@ -885,7 +1007,7 @@ export default function PersonalBeliefMap({
                 >
                   Positions
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{selected.positionCount}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{selected.totalPositionCount ?? selected.positionCount}</div>
               </div>
               <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
                 <div
@@ -1201,12 +1323,13 @@ export default function PersonalBeliefMap({
               <div
                 style={{
                   fontSize: 9,
-                  color: C.muted,
+                  color: CATEGORY_COLORS[selected.category] || CATEGORY_COLORS.general,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
+                  fontWeight: 600,
                 }}
               >
-                Recent reactions on this topic
+                Claims that fed this planet
               </div>
               {recentLoading && (
                 <div style={{ fontSize: 12, color: C.muted }}>Loading…</div>
@@ -1219,13 +1342,14 @@ export default function PersonalBeliefMap({
                 recentPositions &&
                 recentPositions.length === 0 && (
                   <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
-                    No recent claims yet. React on Discover to build history for this topic.
+                    No claims yet. React on Discover to grow this planet.
                   </div>
                 )}
               {!recentLoading &&
                 recentPositions &&
                 recentPositions.map((row, i) => {
                   const chip = reactionStanceChip(row.stance);
+                  const categoryColor = CATEGORY_COLORS[selected.category] || CATEGORY_COLORS.general;
                   return (
                     <div
                       key={`${row.claim.id}-${row.createdAt}-${i}`}
@@ -1234,6 +1358,7 @@ export default function PersonalBeliefMap({
                         background: C.bg,
                         borderRadius: 6,
                         border: `1px solid ${C.border}`,
+                        borderLeft: `3px solid ${categoryColor}`,
                         display: "flex",
                         flexDirection: "column",
                         gap: 6,
@@ -1255,13 +1380,30 @@ export default function PersonalBeliefMap({
                           {chip.label}
                         </span>
                         <span style={{ fontSize: 10, color: C.muted }}>
-                          {row.context.replace(/_/g, " ")} ·{" "}
                           {new Date(row.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                       <div style={{ fontSize: 12, color: C.textSoft, lineHeight: 1.45 }}>
                         {row.claim.textPreview}
                       </div>
+                      {row.claim.contributingConcepts && row.claim.contributingConcepts.length > 0 && (
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                          {row.claim.contributingConcepts.slice(0, 3).map((concept, ci) => (
+                            <span
+                              key={ci}
+                              style={{
+                                fontSize: 9,
+                                padding: "2px 6px",
+                                borderRadius: 3,
+                                background: `${categoryColor}15`,
+                                color: categoryColor,
+                              }}
+                            >
+                              {concept}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

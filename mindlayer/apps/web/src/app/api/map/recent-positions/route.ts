@@ -28,21 +28,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const limitParam = request.nextUrl.searchParams.get('limit');
+    const limit = limitParam ? Math.min(Math.max(1, parseInt(limitParam, 10) || 5), 20) : 5;
+
+    const mergedIdsParam = request.nextUrl.searchParams.get('mergedIds');
+    const mergedIds = mergedIdsParam ? mergedIdsParam.split(',').map(id => id.trim()).filter(Boolean) : [];
+
+    const allConceptIds = [conceptId.trim(), ...mergedIds];
+
     const rows = await db.position.findMany({
       where: {
         userId: user.id,
         stance: { not: 'skip' },
         claim: {
-          claimConcepts: { some: { conceptId: conceptId.trim() } },
+          claimConcepts: { some: { conceptId: { in: allConceptIds } } },
         },
       },
       orderBy: { createdAt: 'desc' },
-      take: 8,
+      take: limit,
       select: {
         stance: true,
         context: true,
         createdAt: true,
-        claim: { select: { id: true, text: true } },
+        claim: { 
+          select: { 
+            id: true, 
+            text: true,
+            claimConcepts: {
+              where: { conceptId: { in: allConceptIds } },
+              select: { concept: { select: { label: true } } },
+            },
+          } 
+        },
       },
     });
 
@@ -53,6 +70,7 @@ export async function GET(request: NextRequest) {
       claim: {
         id: r.claim.id,
         textPreview: previewText(r.claim.text),
+        contributingConcepts: r.claim.claimConcepts.map(cc => cc.concept.label),
       },
     }));
 

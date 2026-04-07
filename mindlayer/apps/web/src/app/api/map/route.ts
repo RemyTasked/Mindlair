@@ -3,6 +3,7 @@ import {
   getBeliefMap,
   clusterMapNodes,
   getMapReadiness,
+  mergeSmallConcepts,
 } from '@/lib/services/belief-graph';
 import { getAuthFromRequest } from '@/lib/auth';
 
@@ -17,22 +18,30 @@ export async function GET(request: NextRequest) {
     }
     const userId = user.id;
 
-    const { nodes, edges } = await getBeliefMap(userId);
-    const readiness = await getMapReadiness(userId, { nodes, edges });
-    // Layout clusters = connected components over tension + related edges (see clusterMapNodes).
-    const clusters = clusterMapNodes(nodes, edges);
+    const { nodes: rawNodes, edges: rawEdges } = await getBeliefMap(userId);
+    const readiness = await getMapReadiness(userId, { nodes: rawNodes, edges: rawEdges });
+    
+    const { nodes: mergedNodes, edges: mergedEdges, mergedInto } = mergeSmallConcepts(
+      rawNodes,
+      rawEdges,
+      3
+    );
+    
+    const clusters = clusterMapNodes(mergedNodes, mergedEdges);
 
     return NextResponse.json({
-      nodes,
-      edges,
+      nodes: mergedNodes,
+      edges: mergedEdges,
       clusters,
+      mergedInto,
       stats: {
-        totalConcepts: nodes.length,
-        echoFlaggedCount: nodes.filter(n => n.echoFlagged).length,
-        tensionCount: edges.filter(e => e.type === 'tension').length,
+        totalConcepts: rawNodes.length,
+        visiblePlanets: mergedNodes.length,
+        echoFlaggedCount: mergedNodes.filter(n => n.echoFlagged).length,
+        tensionCount: mergedEdges.filter(e => e.type === 'tension').length,
         averageStrength:
-          nodes.length > 0
-            ? nodes.reduce((sum, n) => sum + n.strength, 0) / nodes.length
+          mergedNodes.length > 0
+            ? mergedNodes.reduce((sum, n) => sum + n.strength, 0) / mergedNodes.length
             : 0,
       },
       readiness,
