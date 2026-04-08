@@ -5,12 +5,16 @@ import {
   clearSessionCookie,
   deleteSession,
   deleteAllUserSessions,
+  setSessionCookie,
 } from '@/lib/auth';
 
 const SESSION_COOKIE_NAME = 'mindlayer_session';
 
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
+    
     const user = await getSessionFromCookie();
 
     if (!user) {
@@ -18,6 +22,10 @@ export async function GET() {
         { authenticated: false, user: null },
         { status: 200 }
       );
+    }
+
+    if (sessionCookie?.value) {
+      await setSessionCookie(sessionCookie.value);
     }
 
     return NextResponse.json({

@@ -5,7 +5,18 @@ import db from './db';
 
 const SESSION_COOKIE_NAME = 'mindlayer_session';
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const SESSION_REFRESH_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000; // Refresh if less than 7 days left
 const MAGIC_LINK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production' || 
+         process.env.VERCEL_ENV === 'production' ||
+         process.env.RAILWAY_ENVIRONMENT === 'production';
+}
+
+function getCookieDomain(): string | undefined {
+  return process.env.COOKIE_DOMAIN || undefined;
+}
 
 export interface AuthUser {
   id: string;
@@ -96,18 +107,27 @@ export async function createSession(
 
 export async function setSessionCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
+  const domain = getCookieDomain();
+  
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction(),
     sameSite: 'lax',
     maxAge: SESSION_DURATION_MS / 1000,
     path: '/',
+    ...(domain && { domain }),
   });
 }
 
 export async function clearSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  const domain = getCookieDomain();
+  
+  cookieStore.delete({
+    name: SESSION_COOKIE_NAME,
+    path: '/',
+    ...(domain && { domain }),
+  });
 }
 
 export async function getSessionFromCookie(): Promise<AuthUser | null> {
@@ -121,7 +141,7 @@ export async function getSessionFromCookie(): Promise<AuthUser | null> {
   return getSessionByToken(sessionCookie.value);
 }
 
-export async function getSessionByToken(token: string): Promise<AuthUser | null> {
+export async function getSessionByToken(token: string, refreshIfNeeded: boolean = false): Promise<AuthUser | null> {
   const hashedToken = hashToken(token);
 
   const session = await db.session.findUnique({
@@ -136,6 +156,14 @@ export async function getSessionByToken(token: string): Promise<AuthUser | null>
   if (session.expiresAt < new Date()) {
     await db.session.delete({ where: { id: session.id } });
     return null;
+  }
+
+  const timeUntilExpiry = session.expiresAt.getTime() - Date.now();
+  if (refreshIfNeeded && timeUntilExpiry < SESSION_REFRESH_THRESHOLD_MS) {
+    await db.session.update({
+      where: { id: session.id },
+      data: { expiresAt: new Date(Date.now() + SESSION_DURATION_MS) },
+    });
   }
 
   return {
@@ -262,7 +290,7 @@ export async function getAuthFromRequest(request: NextRequest): Promise<AuthUser
 
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
   if (sessionCookie?.value) {
-    return getSessionByToken(sessionCookie.value);
+    return getSessionByToken(sessionCookie.value, true);
   }
 
   return null;

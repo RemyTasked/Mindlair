@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint } from "lucide-react";
@@ -20,6 +21,10 @@ export default function AppLayout({
   const pathname = usePathname() ?? "";
   const isMap = pathname === "/map";
   const isFeed = pathname === "/feed";
+
+  useEffect(() => {
+    fetch("/api/auth/session").catch(() => {});
+  }, []);
 
   return (
     <div
