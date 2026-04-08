@@ -410,6 +410,12 @@ export default function PersonalBeliefMap({
       setShowTension(false);
       return;
     }
+    
+    setDetailSummary(null);
+    setTensionRows(null);
+    setShowSources(false);
+    setShowTension(false);
+    
     const id = selected.id;
     Promise.all([
       fetch(`/api/map/concept-summary?conceptId=${encodeURIComponent(id)}`).then(r =>
@@ -668,16 +674,22 @@ export default function PersonalBeliefMap({
                 const sOp = ns ? visForNode(ns).opacity : 1;
                 const tOp = nt ? visForNode(nt).opacity : 1;
                 const edgeFade = Math.min(sOp, tOp);
-                const baseOp = tension ? 0.42 : 0.28;
-                const baseW = Math.max(1, (link.weight || 1) * 0.35);
+                const baseOp = tension ? 0.5 : 0.4;
+                const baseW = Math.max(1.2, (link.weight || 1) * 0.5);
+                const weight = link.weight || 1;
+                const dashPattern = tension
+                  ? "6,4"
+                  : weight >= 2
+                    ? "none"
+                    : "4,6";
                 return (
                   <path
                     key={`${link.source}-${link.target}-${i}`}
                     d={`M ${sp.x} ${sp.y} Q ${(sp.x + tp.x) / 2 + cv.ox} ${(sp.y + tp.y) / 2 + cv.oy} ${tp.x} ${tp.y}`}
                     fill="none"
                     stroke={tension ? C.amber : C.muted}
-                    strokeWidth={Math.max(0.5, baseW * (0.5 + 0.5 * edgeFade))}
-                    strokeDasharray={tension ? "6,4" : "4,6"}
+                    strokeWidth={Math.max(0.8, baseW * (0.6 + 0.4 * edgeFade))}
+                    strokeDasharray={dashPattern}
                     strokeOpacity={baseOp * edgeFade}
                     style={{
                       transition: isScrubAnimating ? "none" : "stroke-opacity 0.45s ease, stroke-width 0.45s ease",
