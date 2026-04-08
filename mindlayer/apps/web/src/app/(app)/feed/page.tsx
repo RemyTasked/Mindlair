@@ -63,6 +63,7 @@ interface FeedPost {
   authorStance: string;
   publishedAt: string;
   topicTags: string[];
+  thumbnailUrl: string | null;
   author: {
     id: string;
     name: string | null;
@@ -652,6 +653,36 @@ export default function FeedPage() {
                         : post.referencedPost.headlineClaim}
                     </Link>
                   </div>
+                )}
+
+                {/* Thumbnail */}
+                {post.thumbnailUrl && (
+                  <Link
+                    href={`/post/${post.id}`}
+                    onClick={persistFeedContextForPost}
+                    style={{ display: "block", marginBottom: 12 }}
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        borderRadius: 12,
+                        overflow: "hidden",
+                        border: `1px solid ${C.border}`,
+                      }}
+                    >
+                      <img
+                        src={post.thumbnailUrl}
+                        alt=""
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          aspectRatio: "16/9",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    </div>
+                  </Link>
                 )}
 
                 {/* Headline + excerpt — tap through to full post */}

@@ -276,6 +276,7 @@ export async function GET(request: NextRequest) {
         authorStance: post.authorStance,
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
+        thumbnailUrl: post.thumbnailUrl,
         author: {
           id: post.author.id,
           name: post.author.name,

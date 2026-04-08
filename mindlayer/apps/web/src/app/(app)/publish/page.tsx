@@ -16,6 +16,8 @@ import {
   Info,
   Smile,
   X,
+  ImagePlus,
+  Trash2,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -86,7 +88,10 @@ function PublishPageContent() {
   const [showStanceHelp, setShowStanceHelp] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiCategory, setEmojiCategory] = useState<keyof typeof EMOJI_CATEGORIES>("Smileys");
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const cursorPositionRef = useRef<number>(0);
 
   useEffect(() => {
@@ -165,6 +170,43 @@ function PublishPageContent() {
     cursorPositionRef.current = (e.target as HTMLTextAreaElement).selectionStart;
   };
 
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingThumbnail(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to upload image");
+      }
+
+      setThumbnailUrl(data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload image");
+    } finally {
+      setIsUploadingThumbnail(false);
+      if (thumbnailInputRef.current) {
+        thumbnailInputRef.current.value = "";
+      }
+    }
+  };
+
+  const removeThumbnail = () => {
+    setThumbnailUrl(null);
+  };
+
   const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
   const charCount = headlineClaim.length;
   
@@ -189,6 +231,7 @@ function PublishPageContent() {
             postBody: body,
             authorStance,
             referencedPostId,
+            thumbnailUrl,
           }),
         });
         
@@ -206,6 +249,7 @@ function PublishPageContent() {
             postBody: body,
             authorStance,
             ...(referencedPostId ? { referencedPostId } : {}),
+            ...(thumbnailUrl ? { thumbnailUrl } : {}),
           }),
         });
         
@@ -244,6 +288,7 @@ function PublishPageContent() {
             postBody: body,
             authorStance,
             ...(referencedPostId ? { referencedPostId } : {}),
+            ...(thumbnailUrl ? { thumbnailUrl } : {}),
           }),
         });
         
@@ -285,7 +330,7 @@ function PublishPageContent() {
     }, 5000);
     
     return () => clearTimeout(timer);
-  }, [headlineClaim, body, authorStance, referencedPostId]);
+  }, [headlineClaim, body, authorStance, referencedPostId, thumbnailUrl]);
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, padding: "24px 16px 100px" }}>
@@ -370,6 +415,96 @@ function PublishPageContent() {
             {refLoadError}
           </div>
         )}
+
+        {/* Thumbnail Upload */}
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500, display: "block", marginBottom: 8 }}>
+            Thumbnail (optional)
+          </label>
+          
+          <input
+            ref={thumbnailInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleThumbnailUpload}
+            style={{ display: "none" }}
+          />
+
+          {thumbnailUrl ? (
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: 400,
+                borderRadius: 12,
+                overflow: "hidden",
+                border: `1px solid ${C.border}`,
+              }}
+            >
+              <img
+                src={thumbnailUrl}
+                alt="Post thumbnail"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  aspectRatio: "16/9",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+              <button
+                onClick={removeThumbnail}
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  background: "rgba(0,0,0,0.7)",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: 8,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Trash2 size={16} style={{ color: C.rose }} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => thumbnailInputRef.current?.click()}
+              disabled={isUploadingThumbnail}
+              style={{
+                width: "100%",
+                maxWidth: 400,
+                aspectRatio: "16/9",
+                background: C.surface,
+                border: `2px dashed ${C.border}`,
+                borderRadius: 12,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                cursor: isUploadingThumbnail ? "not-allowed" : "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => !isUploadingThumbnail && (e.currentTarget.style.borderColor = C.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
+            >
+              {isUploadingThumbnail ? (
+                <Loader2 size={24} className="animate-spin" style={{ color: C.accent }} />
+              ) : (
+                <>
+                  <ImagePlus size={32} style={{ color: C.muted }} />
+                  <span style={{ color: C.textSoft, fontSize: 14 }}>Click to upload thumbnail</span>
+                  <span style={{ color: C.muted, fontSize: 12 }}>JPEG, PNG, WebP, GIF (max 2MB)</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
 
         {/* Error Banner */}
         <AnimatePresence>

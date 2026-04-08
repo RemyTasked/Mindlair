@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
         status: post.status,
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
+        thumbnailUrl: post.thumbnailUrl,
         author: post.author,
         reactionCount: post._count.reactions,
         referencedPost: serializeReferencedPost(post.referencedPost),
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { headlineClaim, postBody, authorStance, referencedPostId: rawRef } = body;
+    const { headlineClaim, postBody, authorStance, referencedPostId: rawRef, thumbnailUrl } = body;
 
     let referencedPostId: string | null = null;
     if (rawRef !== undefined && rawRef !== null) {
@@ -181,6 +182,7 @@ export async function POST(request: NextRequest) {
         authorStance,
         status: 'draft',
         ...(referencedPostId !== null ? { referencedPostId } : {}),
+        ...(thumbnailUrl && typeof thumbnailUrl === 'string' ? { thumbnailUrl } : {}),
       },
     });
 
@@ -206,6 +208,7 @@ export async function POST(request: NextRequest) {
         authorStance: post.authorStance,
         status: post.status,
         referencedPostId: post.referencedPostId,
+        thumbnailUrl: post.thumbnailUrl,
         createdAt: post.createdAt.toISOString(),
       },
     });

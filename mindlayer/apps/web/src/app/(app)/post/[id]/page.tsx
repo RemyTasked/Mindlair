@@ -42,6 +42,7 @@ interface PostDetail {
   status?: string;
   publishedAt?: string | null;
   topicTags: string[];
+  thumbnailUrl?: string | null;
   author: {
     id: string;
     name: string | null;
@@ -295,6 +296,28 @@ export default function PostDetailPage() {
           }}>
             {post.headlineClaim}
           </h1>
+
+          {/* Thumbnail */}
+          {post.thumbnailUrl && (
+            <div
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                overflow: "hidden",
+                marginBottom: 24,
+              }}
+            >
+              <img
+                src={post.thumbnailUrl}
+                alt=""
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                }}
+              />
+            </div>
+          )}
 
           {/* Author Info */}
           <div style={{ 

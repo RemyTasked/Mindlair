@@ -456,6 +456,9 @@ model Post {
   // AI-suggested topic tags
   topicTags     String[] @default([])
 
+  // Optional thumbnail image
+  thumbnailUrl  String?
+
   // Moderation
   aiScreeningPassed Boolean          @default(false)
   moderationStatus  ModerationStatus @default(pending)

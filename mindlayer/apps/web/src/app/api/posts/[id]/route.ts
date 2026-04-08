@@ -96,6 +96,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         status: post.status,
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
+        thumbnailUrl: post.thumbnailUrl,
         author: post.author,
         totalReactions: post._count.reactions,
         userReaction,
@@ -210,6 +211,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updates.referencedPostId = refCheck.id;
     }
 
+    if (body.thumbnailUrl !== undefined) {
+      updates.thumbnailUrl = body.thumbnailUrl === '' ? null : body.thumbnailUrl;
+    }
+
     const updated = await db.post.update({
       where: { id },
       data: updates,
@@ -227,6 +232,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         body: updated.body,
         authorStance: updated.authorStance,
         status: updated.status,
+        thumbnailUrl: updated.thumbnailUrl,
         referencedPostId: updated.referencedPostId,
         referencedPost: serializeReferencedPost(withRef?.referencedPost ?? null),
         createdAt: updated.createdAt.toISOString(),

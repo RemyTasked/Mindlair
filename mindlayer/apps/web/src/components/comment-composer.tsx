@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ThumbsUp, ThumbsDown, HelpCircle, Send, Loader2, AlertCircle } from "lucide-react";
+import { ThumbsUp, ThumbsDown, HelpCircle, Send, Loader2, AlertCircle, Smile, X } from "lucide-react";
 import type { CommentData } from "./comment-section";
+
+const EMOJI_CATEGORIES = {
+  "Smileys": ["😀", "😃", "😄", "😁", "😅", "😂", "🤣", "😊", "😇", "🙂", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😜", "🤪", "😝", "🤗", "🤔", "🤐", "🤨", "😐", "😑", "😶", "😏", "🙄", "😬"],
+  "Gestures": ["👍", "👎", "👊", "✊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝", "🙏", "💪", "👈", "👉", "👆", "👇", "☝️", "✌️", "🤞", "🤟", "🤘", "🤙", "👀"],
+  "Symbols": ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "💔", "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "⭐", "🌟", "✨", "⚡", "🔥", "💥", "💫", "💯", "✅", "❌", "❓", "❗", "⚠️"],
+};
 
 const C = {
   bg: "#0f0e0c",
@@ -41,6 +47,37 @@ export function CommentComposer({ postId, defaultStance, onCommentCreated }: Com
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [emojiCategory, setEmojiCategory] = useState<keyof typeof EMOJI_CATEGORIES>("Smileys");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const cursorPositionRef = useRef<number>(0);
+
+  const insertEmoji = (emoji: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const start = cursorPositionRef.current;
+    const newBody = body.slice(0, start) + emoji + body.slice(start);
+    setBody(newBody);
+    
+    setTimeout(() => {
+      const newPosition = start + emoji.length;
+      textarea.focus();
+      textarea.setSelectionRange(newPosition, newPosition);
+      cursorPositionRef.current = newPosition;
+    }, 0);
+    
+    setShowEmojiPicker(false);
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setBody(e.target.value);
+    cursorPositionRef.current = e.target.selectionStart;
+  };
+
+  const handleTextSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    cursorPositionRef.current = (e.target as HTMLTextAreaElement).selectionStart;
+  };
 
   const wordCount = countWords(body);
   const isOverLimit = wordCount > MAX_WORDS;
@@ -126,27 +163,136 @@ export function CommentComposer({ postId, defaultStance, onCommentCreated }: Com
         })}
       </div>
 
-      <div style={{ padding: 16 }}>
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Add your take — 150 words max..."
-          disabled={!stance || isSubmitting}
-          style={{
-            width: "100%",
-            minHeight: 100,
-            padding: 12,
-            background: C.bg,
-            border: `1px solid ${isOverLimit ? C.rose : C.border}`,
-            borderRadius: 6,
-            color: C.text,
-            fontSize: 14,
-            lineHeight: 1.6,
-            resize: "vertical",
-            outline: "none",
-            opacity: stance ? 1 : 0.5,
-          }}
-        />
+      <div style={{ padding: 16, position: "relative" }}>
+        <div style={{ position: "relative" }}>
+          <textarea
+            ref={textareaRef}
+            value={body}
+            onChange={handleTextChange}
+            onSelect={handleTextSelect}
+            onClick={handleTextSelect}
+            placeholder="Add your take — 150 words max... Use emojis! 😊"
+            disabled={!stance || isSubmitting}
+            style={{
+              width: "100%",
+              minHeight: 100,
+              padding: 12,
+              paddingRight: 48,
+              background: C.bg,
+              border: `1px solid ${isOverLimit ? C.rose : C.border}`,
+              borderRadius: 6,
+              color: C.text,
+              fontSize: 14,
+              lineHeight: 1.6,
+              resize: "vertical",
+              outline: "none",
+              opacity: stance ? 1 : 0.5,
+            }}
+          />
+
+          {/* Emoji Picker Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            disabled={!stance || isSubmitting}
+            style={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              padding: 6,
+              background: showEmojiPicker ? `${C.accent}20` : "transparent",
+              border: "none",
+              borderRadius: 4,
+              cursor: stance && !isSubmitting ? "pointer" : "not-allowed",
+              opacity: stance ? 1 : 0.5,
+            }}
+          >
+            <Smile size={18} style={{ color: showEmojiPicker ? C.accent : C.muted }} />
+          </button>
+        </div>
+
+        {/* Emoji Picker Dropdown */}
+        <AnimatePresence>
+          {showEmojiPicker && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              style={{
+                position: "absolute",
+                right: 16,
+                top: 56,
+                zIndex: 50,
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: 10,
+                padding: 12,
+                width: 280,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ color: C.textSoft, fontSize: 12, fontWeight: 500 }}>Pick an emoji</span>
+                <button
+                  onClick={() => setShowEmojiPicker(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
+                >
+                  <X size={14} style={{ color: C.muted }} />
+                </button>
+              </div>
+              
+              {/* Category Tabs */}
+              <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
+                {(Object.keys(EMOJI_CATEGORIES) as Array<keyof typeof EMOJI_CATEGORIES>).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setEmojiCategory(cat)}
+                    style={{
+                      background: emojiCategory === cat ? `${C.accent}20` : "transparent",
+                      border: `1px solid ${emojiCategory === cat ? C.accent : C.border}`,
+                      borderRadius: 4,
+                      padding: "3px 8px",
+                      fontSize: 10,
+                      color: emojiCategory === cat ? C.accent : C.muted,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Emoji Grid */}
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "repeat(8, 1fr)", 
+                gap: 2,
+                maxHeight: 140,
+                overflowY: "auto",
+              }}>
+                {EMOJI_CATEGORIES[emojiCategory].map((emoji, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => insertEmoji(emoji)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      fontSize: 18,
+                      padding: 4,
+                      cursor: "pointer",
+                      borderRadius: 4,
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = C.border)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div
           style={{
