@@ -162,7 +162,15 @@ interface ConceptSummary {
   reactionCount: number;
   sourceCount: number;
   lastActive: string | null;
-  sources: Array<{ id: string; title: string; url: string; outlet: string | null; date: string }>;
+  sources: Array<{ id: string; title: string; url: string; outlet: string | null; date: string; stance: string }>;
+  insightText: string | null;
+  engagementByMonth: Array<{ month: string; count: number }>;
+  belief: {
+    direction: string;
+    strength: number;
+    stability: number;
+    echoFlagged: boolean;
+  } | null;
 }
 
 interface TensionRow {
@@ -990,71 +998,6 @@ export default function PersonalBeliefMap({
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
-                <div
-                  style={{
-                    fontSize: 9,
-                    color: C.muted,
-                    marginBottom: 3,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Strength
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                  {(selected.strength * 100).toFixed(0)}%
-                </div>
-              </div>
-              <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
-                <div
-                  style={{
-                    fontSize: 9,
-                    color: C.muted,
-                    marginBottom: 3,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Positions
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{selected.totalPositionCount ?? selected.positionCount}</div>
-              </div>
-              <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
-                <div
-                  style={{
-                    fontSize: 9,
-                    color: C.muted,
-                    marginBottom: 3,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Stability
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                  {(selected.stability * 100).toFixed(0)}%
-                </div>
-              </div>
-              <div style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}` }}>
-                <div
-                  style={{
-                    fontSize: 9,
-                    color: C.muted,
-                    marginBottom: 3,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Echo flagged
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: selected.echoFlagged ? C.amber : C.text }}>
-                  {selected.echoFlagged ? "Yes" : "No"}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               <button
                 type="button"
                 onClick={() => setShowSources(!showSources)}
@@ -1167,14 +1110,38 @@ export default function PersonalBeliefMap({
                   {tensionRows == null
                     ? "…"
                     : tensionRows.length > 0
-                      ? `${tensionRows.length} linked`
-                      : "None"}
+                      ? "Yes"
+                      : "No"}
                   {tensionRows && tensionRows.length > 0 && (
                     <span style={{ fontSize: 10, color: C.muted }}>{showTension ? "▲" : "▼"}</span>
                   )}
                 </div>
               </button>
             </div>
+
+            {detailSummary?.insightText && (
+              <div
+                style={{
+                  padding: "12px 14px",
+                  background: C.bg,
+                  borderRadius: 8,
+                  border: `1px solid ${C.border}`,
+                  borderLeft: `3px solid ${getCatColor(selected.category)}`,
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 12,
+                    fontStyle: "italic",
+                    lineHeight: 1.55,
+                    color: C.textSoft,
+                  }}
+                >
+                  "{detailSummary.insightText}"
+                </p>
+              </div>
+            )}
 
             {showSources && detailSummary && detailSummary.sources.length > 0 && (
               <div
@@ -1205,45 +1172,75 @@ export default function PersonalBeliefMap({
                   </div>
                 </div>
                 <div style={{ maxHeight: 220, overflowY: "auto" }}>
-                  {detailSummary.sources.map((source, i) => (
-                    <a
-                      key={source.id}
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: "block",
-                        padding: "10px 12px",
-                        borderBottom:
-                          i < detailSummary.sources.length - 1 ? `1px solid ${C.border}` : "none",
-                        textDecoration: "none",
-                        color: "inherit",
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.background = `${C.accent}08`;
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      <div
+                  {detailSummary.sources.map((source, i) => {
+                    const stanceChip = source.stance ? reactionStanceChip(source.stance) : null;
+                    return (
+                      <a
+                        key={source.id}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
-                          fontSize: 12,
-                          fontWeight: 500,
-                          color: C.text,
-                          marginBottom: 4,
-                          lineHeight: 1.4,
+                          display: "block",
+                          padding: "10px 12px",
+                          borderBottom:
+                            i < detailSummary.sources.length - 1 ? `1px solid ${C.border}` : "none",
+                          textDecoration: "none",
+                          color: "inherit",
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = `${C.accent}08`;
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = "transparent";
                         }}
                       >
-                        {source.title}
-                      </div>
-                      <div style={{ fontSize: 10, color: C.muted }}>
-                        {source.outlet ?? "Source"}
-                        <span style={{ margin: "0 6px" }}>·</span>
-                        {new Date(source.date).toLocaleDateString()}
-                      </div>
-                    </a>
-                  ))}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            justifyContent: "space-between",
+                            gap: 8,
+                            marginBottom: 4,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 500,
+                              color: C.text,
+                              lineHeight: 1.4,
+                              flex: 1,
+                            }}
+                          >
+                            {source.title}
+                          </div>
+                          {stanceChip && (
+                            <span
+                              style={{
+                                fontSize: 8,
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.04em",
+                                padding: "2px 6px",
+                                borderRadius: 3,
+                                background: stanceChip.bg,
+                                color: stanceChip.color,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {stanceChip.label === "Agree" ? "Agreed" : stanceChip.label === "Disagree" ? "Disagreed" : stanceChip.label}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 10, color: C.muted }}>
+                          {source.outlet ?? "Source"}
+                          <span style={{ margin: "0 6px" }}>·</span>
+                          {new Date(source.date).toLocaleDateString()}
+                        </div>
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1330,6 +1327,72 @@ export default function PersonalBeliefMap({
               </div>
             )}
 
+            {detailSummary?.engagementByMonth && detailSummary.engagementByMonth.length > 0 && (
+              <div
+                style={{
+                  background: C.bg,
+                  borderRadius: 8,
+                  border: `1px solid ${C.border}`,
+                  padding: "12px 14px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 9,
+                    color: C.muted,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    marginBottom: 10,
+                    fontWeight: 600,
+                  }}
+                >
+                  Engagement This Year
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-end",
+                    gap: 3,
+                    height: 40,
+                  }}
+                >
+                  {(() => {
+                    const maxCount = Math.max(...detailSummary.engagementByMonth.map(m => m.count), 1);
+                    return detailSummary.engagementByMonth.map((item, idx) => {
+                      const heightPct = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                      const barHeight = Math.max(2, (heightPct / 100) * 36);
+                      return (
+                        <div
+                          key={idx}
+                          title={`${item.month}: ${item.count}`}
+                          style={{
+                            flex: 1,
+                            height: barHeight,
+                            background: item.count > 0 ? getCatColor(selected.category) : `${C.muted}40`,
+                            borderRadius: 2,
+                            transition: "height 0.3s ease",
+                            opacity: item.count > 0 ? 0.85 : 0.3,
+                          }}
+                        />
+                      );
+                    });
+                  })()}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: 6,
+                    fontSize: 8,
+                    color: C.muted,
+                  }}
+                >
+                  <span>{detailSummary.engagementByMonth[0]?.month}</span>
+                  <span>{detailSummary.engagementByMonth[detailSummary.engagementByMonth.length - 1]?.month}</span>
+                </div>
+              </div>
+            )}
+
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div
                 style={{
@@ -1340,7 +1403,7 @@ export default function PersonalBeliefMap({
                   fontWeight: 600,
                 }}
               >
-                Claims that fed this planet
+                Top Claims
               </div>
               {recentLoading && (
                 <div style={{ fontSize: 12, color: C.muted }}>Loading…</div>
@@ -1360,7 +1423,6 @@ export default function PersonalBeliefMap({
                 recentPositions &&
                 recentPositions.map((row, i) => {
                   const chip = reactionStanceChip(row.stance);
-                  const claimCatColor = getCatColor(selected.category);
                   return (
                     <div
                       key={`${row.claim.id}-${row.createdAt}-${i}`}
@@ -1369,52 +1431,39 @@ export default function PersonalBeliefMap({
                         background: C.bg,
                         borderRadius: 6,
                         border: `1px solid ${C.border}`,
-                        borderLeft: `3px solid ${claimCatColor}`,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 6,
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: 12,
+                          fontStyle: "italic",
+                          color: C.textSoft,
+                          lineHeight: 1.5,
+                          marginBottom: 8,
+                        }}
+                      >
+                        "{row.claim.textPreview}"
+                      </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span
                           style={{
-                            fontSize: 10,
+                            fontSize: 8,
                             fontWeight: 600,
                             textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                            padding: "3px 8px",
-                            borderRadius: 4,
+                            letterSpacing: "0.04em",
+                            padding: "2px 6px",
+                            borderRadius: 3,
                             background: chip.bg,
                             color: chip.color,
                           }}
                         >
                           {chip.label}
                         </span>
-                        <span style={{ fontSize: 10, color: C.muted }}>
+                        <span style={{ fontSize: 9, color: C.muted }}>
                           {new Date(row.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <div style={{ fontSize: 12, color: C.textSoft, lineHeight: 1.45 }}>
-                        {row.claim.textPreview}
-                      </div>
-                      {row.claim.contributingConcepts && row.claim.contributingConcepts.length > 0 && (
-                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                          {row.claim.contributingConcepts.slice(0, 3).map((concept, ci) => (
-                            <span
-                              key={ci}
-                              style={{
-                                fontSize: 9,
-                                padding: "2px 6px",
-                                borderRadius: 3,
-                                background: `${claimCatColor}15`,
-                                color: claimCatColor,
-                              }}
-                            >
-                              {concept}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
