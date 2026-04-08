@@ -45,6 +45,7 @@ interface CommentSectionProps {
   postId: string;
   postAuthorId: string;
   hasReacted: boolean;
+  userReactionStance?: string | null;
   commentsEnabled?: boolean;
   onReactionRequired?: () => void;
 }
@@ -53,6 +54,7 @@ export function CommentSection({
   postId,
   postAuthorId,
   hasReacted,
+  userReactionStance,
   commentsEnabled = true,
   onReactionRequired,
 }: CommentSectionProps) {
@@ -273,6 +275,7 @@ export function CommentSection({
 
       <CommentComposer
         postId={postId}
+        defaultStance={userReactionStance}
         onCommentCreated={handleCommentCreated}
       />
 

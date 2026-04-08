@@ -514,6 +514,7 @@ export default function PostDetailPage() {
               postId={post.id}
               postAuthorId={post.author.id}
               hasReacted={!!post.userReaction && post.userReaction !== "skip"}
+              userReactionStance={post.userReaction || null}
               commentsEnabled={post.commentsEnabled !== false}
             />
           </motion.div>

@@ -26,6 +26,7 @@ function countWords(text: string): number {
 
 interface CommentComposerProps {
   postId: string;
+  defaultStance?: string | null;
   onCommentCreated: (comment: CommentData) => void;
 }
 
@@ -35,8 +36,8 @@ const stanceOptions = [
   { value: "complicated", label: "Complicated", icon: HelpCircle, color: C.blue },
 ];
 
-export function CommentComposer({ postId, onCommentCreated }: CommentComposerProps) {
-  const [stance, setStance] = useState<string | null>(null);
+export function CommentComposer({ postId, defaultStance, onCommentCreated }: CommentComposerProps) {
+  const [stance, setStance] = useState<string | null>(defaultStance || null);
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -129,11 +130,7 @@ export function CommentComposer({ postId, onCommentCreated }: CommentComposerPro
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder={
-            stance
-              ? "Add your take — 150 words max..."
-              : "Select your position above to start writing..."
-          }
+          placeholder="Add your take — 150 words max..."
           disabled={!stance || isSubmitting}
           style={{
             width: "100%",
