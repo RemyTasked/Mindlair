@@ -30,6 +30,58 @@ export async function updateBeliefGraph(
   }
 }
 
+/**
+ * Updates the belief graph from a comment on a post.
+ * Extracts concepts from comment text and creates positions with context 'comment'.
+ */
+export async function updateBeliefGraphFromComment(
+  userId: string,
+  postId: string,
+  commentBody: string,
+  stance: 'agree' | 'disagree' | 'complicated'
+): Promise<void> {
+  const claims = await ensureMappingClaimsForPost(postId);
+  
+  if (claims.length === 0) {
+    return;
+  }
+  
+  const commentConcepts = extractConceptsFromHeadline(commentBody);
+  
+  for (const claim of claims) {
+    const existingConceptIds = claim.claimConcepts.map(cc => cc.conceptId);
+    
+    let additionalConceptIds: string[] = [];
+    if (commentConcepts.length > 0) {
+      additionalConceptIds = await linkClaimToConcepts(claim.id, commentConcepts);
+    }
+    
+    const allConceptIds = [...new Set([...existingConceptIds, ...additionalConceptIds])];
+    
+    const existingPosition = await db.position.findFirst({
+      where: {
+        userId,
+        claimId: claim.id,
+        context: 'comment',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    await db.position.create({
+      data: {
+        userId,
+        claimId: claim.id,
+        stance,
+        note: commentBody.slice(0, 500),
+        context: 'comment',
+        supersedesId: existingPosition?.id,
+      },
+    });
+    
+    await updateBeliefGraph(userId, claim.id, stance, allConceptIds);
+  }
+}
+
 async function updateBelief(
   userId: string,
   conceptId: string,
@@ -1091,8 +1143,8 @@ export function clusterMapNodes(nodes: MapNode[], edges: MapEdge[]): MapCluster[
 const MIN_DISCOVERY_CLAIMS_FOR_PERSONAL_MAP = 5;
 const MIN_SOURCE_RICH_CLUSTERS = 2;
 
-/** Opinions from digest, Discover feed reactions, and realtime capture. */
-const DISCOVERY_POSITION_CONTEXTS = ['digest', 'post_reaction', 'realtime'] as const;
+/** Opinions from digest, Discover feed reactions, comments, and realtime capture. */
+const DISCOVERY_POSITION_CONTEXTS = ['digest', 'post_reaction', 'comment', 'realtime'] as const;
 
 export interface MapReadiness {
   discoveryClaimCount: number;

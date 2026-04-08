@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { CommentSection } from "@/components/comment-section";
 import { 
   User,
   ThumbsUp,
@@ -55,6 +56,7 @@ interface PostDetail {
   totalReactions: number;
   userReaction: string | null;
   reactionCounts: Record<string, number> | null;
+  commentsEnabled?: boolean;
 }
 
 const stanceInfo = {
@@ -499,6 +501,23 @@ export default function PostDetailPage() {
             })}
           </div>
         </motion.div>
+
+        {/* Comments Section */}
+        {(Boolean(post.publishedAt) || post.status === "published") && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            style={{ marginTop: 24 }}
+          >
+            <CommentSection
+              postId={post.id}
+              postAuthorId={post.author.id}
+              hasReacted={!!post.userReaction && post.userReaction !== "skip"}
+              commentsEnabled={post.commentsEnabled !== false}
+            />
+          </motion.div>
+        )}
 
         {(Boolean(post.publishedAt) || post.status === "published") && (
           <div style={{ marginTop: 24 }}>

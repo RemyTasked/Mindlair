@@ -102,6 +102,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         reactionCounts,
         referencedPostId: post.referencedPostId,
         referencedPost: serializeReferencedPost(post.referencedPost),
+        commentsEnabled: post.commentsEnabled,
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
       },

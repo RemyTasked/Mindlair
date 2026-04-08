@@ -339,3 +339,66 @@ Return 3-5 most relevant blind spots.`,
     return [];
   }
 }
+
+export interface CommentScreeningResult {
+  passes: boolean;
+  flags: string[];
+  confidence: number;
+}
+
+const COMMENT_SCREENING_PROMPT = `You are a content moderator for a thoughtful discussion platform.
+
+Screen this comment for:
+1. Harassment, personal attacks, or targeted abuse
+2. Hate speech or discriminatory language
+3. Spam, self-promotion, or off-topic content
+4. Threats or calls for violence
+5. Doxxing or sharing private information
+
+The platform encourages disagreement and debate, so:
+- Strong opinions are OK
+- Criticism of ideas is OK
+- Sarcasm or dry humor is usually OK
+- Profanity alone is not grounds for rejection
+
+Only flag content that would make the discussion hostile or unsafe.
+
+Respond in JSON format:
+{
+  "passes": true/false,
+  "flags": ["list", "of", "concerns"] or [],
+  "confidence": 0.0-1.0
+}`;
+
+export async function screenComment(body: string): Promise<CommentScreeningResult> {
+  if (!body || body.trim().length === 0) {
+    return { passes: false, flags: ['empty_content'], confidence: 1.0 };
+  }
+  
+  if (body.length > 1000) {
+    return { passes: false, flags: ['too_long'], confidence: 1.0 };
+  }
+  
+  try {
+    const result = await claudeJSON<{
+      passes: boolean;
+      flags: string[];
+      confidence: number;
+    }>({
+      system: COMMENT_SCREENING_PROMPT,
+      user: `Screen this comment:\n\n"${body}"`,
+      model: FAST_MODEL,
+      temperature: 0.1,
+      maxTokens: 200,
+    });
+    
+    return {
+      passes: result.passes ?? true,
+      flags: result.flags || [],
+      confidence: result.confidence ?? 0.8,
+    };
+  } catch (error) {
+    console.error('Comment screening error:', error);
+    return { passes: true, flags: [], confidence: 0.5 };
+  }
+}

@@ -44,6 +44,10 @@ model User {
   blocking          Block[]        @relation("Blocking")
   blockedBy         Block[]        @relation("BlockedBy")
 
+  // Comments
+  comments          Comment[]         @relation("Comments")
+  commentReactions  CommentReaction[] @relation("CommentReactions")
+
   @@map("users")
 }
 
@@ -124,6 +128,10 @@ model UserSettings {
   smsEnabled   Boolean @default(false)
   emailEnabled Boolean @default(true)
   phoneNumber  String?
+
+  // Comment digest preferences
+  commentDigestInterval Int       @default(240) // minutes (4 hours default)
+  lastCommentDigestAt   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -462,6 +470,10 @@ model Post {
 
   reactions     PostReaction[]
 
+  // Comments
+  commentsEnabled Boolean   @default(true)
+  comments        Comment[]
+
   @@index([authorId])
   @@index([publishedAt])
   @@index([status])
@@ -511,6 +523,45 @@ model Block {
   @@index([blockerId])
   @@index([blockedId])
   @@map("blocks")
+}
+
+model Comment {
+  id       String @id @default(cuid())
+  postId   String
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation("Comments", fields: [authorId], references: [id], onDelete: Cascade)
+
+  stance String            // agree, disagree, complicated (NOT skip)
+  body   String @db.VarChar(1000) // ~150 words max
+
+  // Moderation
+  aiScreeningPassed Boolean          @default(false)
+  isHiddenByAuthor  Boolean          @default(false)
+  moderationStatus  ModerationStatus @default(pending)
+
+  createdAt DateTime @default(now())
+
+  reactions CommentReaction[]
+
+  @@index([postId, createdAt])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model CommentReaction {
+  id        String   @id @default(cuid())
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("CommentReactions", fields: [userId], references: [id], onDelete: Cascade)
+
+  stance    String   // agree, disagree, complicated
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@map("comment_reactions")
 }
 
 // ============================================

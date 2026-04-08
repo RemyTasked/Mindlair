@@ -19,6 +19,8 @@ export const surfaceSchema = z.enum([
 
 export const stanceSchema = z.enum(['agree', 'disagree', 'complicated', 'skip']);
 
+export const commentStanceSchema = z.enum(['agree', 'disagree', 'complicated']);
+
 export const contentTypeSchema = z.enum(['article', 'video', 'podcast', 'thread', 'book', 'audio']);
 
 export const ingestContentSchema = z.object({
@@ -93,9 +95,38 @@ export const updateSettingsSchema = z.object({
   timezone: z.string().optional(),
 });
 
+// Comment validation helpers
+const MAX_COMMENT_WORDS = 150;
+
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+}
+
+export const createCommentSchema = z.object({
+  stance: commentStanceSchema,
+  body: z.string()
+    .min(1, 'Comment cannot be empty')
+    .max(1000, 'Comment too long')
+    .refine(
+      (text) => countWords(text) <= MAX_COMMENT_WORDS,
+      `Comment must be ${MAX_COMMENT_WORDS} words or less`
+    ),
+});
+
+export const commentReactionSchema = z.object({
+  stance: commentStanceSchema,
+});
+
+export const moderateCommentSchema = z.object({
+  action: z.enum(['hide', 'unhide']),
+});
+
 export type IngestContentInput = z.infer<typeof ingestContentSchema>;
 export type ExtractClaimInput = z.infer<typeof extractClaimSchema>;
 export type SubmitReactionInput = z.infer<typeof submitReactionSchema>;
 export type CompleteDigestInput = z.infer<typeof completeDigestSchema>;
 export type NudgeFeedbackInput = z.infer<typeof nudgeFeedbackSchema>;
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
+export type CreateCommentInput = z.infer<typeof createCommentSchema>;
+export type CommentReactionInput = z.infer<typeof commentReactionSchema>;
+export type ModerateCommentInput = z.infer<typeof moderateCommentSchema>;
