@@ -215,6 +215,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const { stance, body: commentBody } = validation.data;
+    const annotationId = typeof body.annotationId === 'string' ? body.annotationId : null;
 
     const post = await db.post.findUnique({
       where: { id: postId },
@@ -269,6 +270,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    if (annotationId) {
+      const annotation = await db.annotation.findUnique({
+        where: { id: annotationId },
+        select: { postId: true },
+      });
+      if (!annotation || annotation.postId !== postId) {
+        return NextResponse.json(
+          { code: 'INVALID_ANNOTATION', message: 'Annotation not found or does not belong to this post' },
+          { status: 400 }
+        );
+      }
+    }
+
     const accountAge = Date.now() - new Date(user.createdAt).getTime();
     const accountAgeDays = accountAge / (24 * 60 * 60 * 1000);
 
@@ -308,6 +322,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         body: commentBody,
         aiScreeningPassed: screening.passes,
         moderationStatus: screening.passes ? 'approved' : 'flagged',
+        ...(annotationId ? { annotationId } : {}),
       },
       include: {
         author: {
@@ -340,6 +355,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           stance,
           wordCount: commentBody.split(/\s+/).length,
           passed: screening.passes,
+          ...(annotationId ? { annotationId } : {}),
         },
       },
     });
@@ -362,6 +378,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         reactionCounts: { agree: 0, disagree: 0, complicated: 0 },
         userReaction: null,
         pending: !screening.passes,
+        annotationId: annotationId || null,
       },
     });
   } catch (error) {

@@ -220,6 +220,34 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updates.referencedPostId = refCheck.id;
     }
 
+    if (body.referencedAnnotationId !== undefined) {
+      if (body.referencedAnnotationId === null || body.referencedAnnotationId === '') {
+        updates.referencedAnnotationId = null;
+      } else if (typeof body.referencedAnnotationId === 'string') {
+        const annotation = await db.annotation.findUnique({
+          where: { id: body.referencedAnnotationId },
+          select: { id: true, postId: true },
+        });
+        if (!annotation) {
+          return NextResponse.json(
+            { code: 'VALIDATION_ERROR', message: 'Referenced annotation not found' },
+            { status: 400 }
+          );
+        }
+        const targetPostId = updates.referencedPostId ?? post.referencedPostId;
+        if (targetPostId && annotation.postId !== targetPostId) {
+          return NextResponse.json(
+            { code: 'VALIDATION_ERROR', message: 'Annotation does not belong to the referenced post' },
+            { status: 400 }
+          );
+        }
+        updates.referencedAnnotationId = annotation.id;
+        if (!targetPostId) {
+          updates.referencedPostId = annotation.postId;
+        }
+      }
+    }
+
     if (body.thumbnailUrl !== undefined) {
       updates.thumbnailUrl = body.thumbnailUrl === '' ? null : body.thumbnailUrl;
     }
@@ -281,6 +309,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         seoTitle: updated.seoTitle,
         seoDescription: updated.seoDescription,
         referencedPostId: updated.referencedPostId,
+        referencedAnnotationId: updated.referencedAnnotationId,
         referencedPost: serializeReferencedPost(withRef?.referencedPost ?? null),
         createdAt: updated.createdAt.toISOString(),
         updatedAt: updated.updatedAt.toISOString(),

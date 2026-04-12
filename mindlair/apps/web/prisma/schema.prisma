@@ -48,6 +48,9 @@ model User {
   comments          Comment[]         @relation("Comments")
   commentReactions  CommentReaction[] @relation("CommentReactions")
 
+  // Annotations
+  annotations       Annotation[]
+
   @@map("users")
 }
 
@@ -473,6 +476,13 @@ model Post {
   referencedPost   Post?   @relation("PostReferences", fields: [referencedPostId], references: [id], onDelete: SetNull)
   referencingPosts Post[] @relation("PostReferences")
 
+  // Optional annotation this post responds to (for precise passage references)
+  referencedAnnotationId String?
+  referencedAnnotation   Annotation? @relation("PostAnnotationReferences", fields: [referencedAnnotationId], references: [id], onDelete: SetNull)
+
+  // Annotations on this post
+  annotations Annotation[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -486,6 +496,7 @@ model Post {
   @@index([publishedAt])
   @@index([status])
   @@index([referencedPostId])
+  @@index([referencedAnnotationId])
   @@index([slug])
   @@map("posts")
 }
@@ -541,6 +552,10 @@ model Comment {
   authorId String
   author   User   @relation("Comments", fields: [authorId], references: [id], onDelete: Cascade)
 
+  // Optional: comment on a specific annotation (null = general comment on post)
+  annotationId String?
+  annotation   Annotation? @relation(fields: [annotationId], references: [id], onDelete: SetNull)
+
   stance String            // agree, disagree, complicated (NOT skip)
   body   String @db.VarChar(1000) // ~150 words max
 
@@ -555,6 +570,7 @@ model Comment {
 
   @@index([postId, createdAt])
   @@index([authorId])
+  @@index([annotationId])
   @@map("comments")
 }
 
@@ -571,6 +587,45 @@ model CommentReaction {
   @@unique([commentId, userId])
   @@index([commentId])
   @@map("comment_reactions")
+}
+
+// ============================================
+// Annotations (Text Highlights with Comments)
+// ============================================
+
+model Annotation {
+  id        String @id @default(cuid())
+  postId    String
+  post      Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // The selected text (stored for display even if post is edited)
+  selectedText String @db.Text
+
+  // Location reference (multiple strategies for robustness)
+  textHash      String   // Hash of selected text for identification
+  startOffset   Int?     // Character offset in plain text (may drift if edited)
+  endOffset     Int?
+  contextBefore String?  @db.VarChar(100) // ~50 chars before selection for re-anchoring
+  contextAfter  String?  @db.VarChar(100) // ~50 chars after selection
+
+  // Status
+  isResolved Boolean @default(false) // Author can mark as resolved
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Comments on this annotation
+  comments Comment[]
+
+  // Posts that reference this annotation
+  referencingPosts Post[] @relation("PostAnnotationReferences")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([textHash])
+  @@map("annotations")
 }
 
 // ============================================

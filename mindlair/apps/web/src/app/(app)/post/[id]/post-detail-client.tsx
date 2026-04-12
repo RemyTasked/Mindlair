@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CommentSection } from "@/components/comment-section";
+import { AnnotatedContent } from "@/components/annotated-content";
+import { AnnotationData } from "@/components/annotation-composer";
 import { 
   User,
   ThumbsUp,
@@ -17,6 +19,7 @@ import {
   Lightbulb,
   AlertTriangle,
   Calendar,
+  Highlighter,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -98,6 +101,7 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
   const [error, setError] = useState<string | null>(initialError || null);
   const [isReacting, setIsReacting] = useState(false);
   const [isNarrow, setIsNarrow] = useState(false);
+  const [annotations, setAnnotations] = useState<AnnotationData[]>([]);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 640px)");
@@ -106,6 +110,25 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  const fetchAnnotations = useCallback(async () => {
+    if (!post?.id) return;
+    try {
+      const res = await fetch(`/api/posts/${post.id}/annotations`);
+      if (res.ok) {
+        const data = await res.json();
+        setAnnotations(data.annotations || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch annotations:', err);
+    }
+  }, [post?.id]);
+
+  useEffect(() => {
+    if (post?.id && (post.status === 'published' || post.publishedAt)) {
+      fetchAnnotations();
+    }
+  }, [post?.id, post?.status, post?.publishedAt, fetchAnnotations]);
 
   useEffect(() => {
     if (initialPost || initialError) return;
@@ -401,15 +424,40 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
           </div>
 
           {/* Body */}
-          <div
+          <AnnotatedContent
+            postId={post.id}
+            html={post.body}
+            annotations={annotations}
+            onAnnotationsChange={setAnnotations}
+            hasReacted={!!post.userReaction && post.userReaction !== "skip"}
             className="post-body-prose"
             style={{
               color: C.text,
               fontSize: isNarrow ? 15 : 17,
               lineHeight: 1.8,
             }}
-            dangerouslySetInnerHTML={{ __html: post.body }}
           />
+          
+          {/* Annotation hint */}
+          {post.userReaction && post.userReaction !== "skip" && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 16,
+                padding: "10px 14px",
+                background: `${C.accent}10`,
+                border: `1px solid ${C.accent}25`,
+                borderRadius: 8,
+                color: C.textSoft,
+                fontSize: 13,
+              }}
+            >
+              <Highlighter size={16} style={{ color: C.accent }} />
+              <span>Select text to add annotations or write a response</span>
+            </div>
+          )}
           <style jsx global>{`
             .post-body-prose {
               word-wrap: break-word;

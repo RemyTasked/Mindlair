@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
       headlineClaim, 
       postBody, 
       authorStance, 
-      referencedPostId: rawRef, 
+      referencedPostId: rawRef,
+      referencedAnnotationId: rawAnnotationRef,
       thumbnailUrl,
       slug: rawSlug,
       seoTitle,
@@ -126,6 +127,30 @@ export async function POST(request: NextRequest) {
         );
       }
       referencedPostId = refCheck.id;
+    }
+
+    let referencedAnnotationId: string | null = null;
+    if (rawAnnotationRef && typeof rawAnnotationRef === 'string') {
+      const annotation = await db.annotation.findUnique({
+        where: { id: rawAnnotationRef },
+        select: { id: true, postId: true },
+      });
+      if (!annotation) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Referenced annotation not found' },
+          { status: 400 }
+        );
+      }
+      if (referencedPostId && annotation.postId !== referencedPostId) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Annotation does not belong to the referenced post' },
+          { status: 400 }
+        );
+      }
+      referencedAnnotationId = annotation.id;
+      if (!referencedPostId) {
+        referencedPostId = annotation.postId;
+      }
     }
 
     if (!headlineClaim || typeof headlineClaim !== 'string') {
@@ -222,6 +247,7 @@ export async function POST(request: NextRequest) {
         authorStance,
         status: 'draft',
         ...(referencedPostId !== null ? { referencedPostId } : {}),
+        ...(referencedAnnotationId !== null ? { referencedAnnotationId } : {}),
         ...(thumbnailUrl && typeof thumbnailUrl === 'string' ? { thumbnailUrl } : {}),
         ...(slug ? { slug } : {}),
         ...(validSeoTitle ? { seoTitle: validSeoTitle } : {}),
@@ -251,6 +277,7 @@ export async function POST(request: NextRequest) {
         authorStance: post.authorStance,
         status: post.status,
         referencedPostId: post.referencedPostId,
+        referencedAnnotationId: post.referencedAnnotationId,
         thumbnailUrl: post.thumbnailUrl,
         slug: post.slug,
         seoTitle: post.seoTitle,

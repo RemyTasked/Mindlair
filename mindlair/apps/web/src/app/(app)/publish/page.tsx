@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Link as LinkIcon,
   Search,
+  Quote,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -70,10 +71,15 @@ function PublishPageContent() {
   const isEditMode = !!editId;
   
   const [referencedPostId, setReferencedPostId] = useState<string | null>(null);
+  const [referencedAnnotationId, setReferencedAnnotationId] = useState<string | null>(null);
   const [refPreview, setRefPreview] = useState<{
     id: string;
     headlineClaim: string;
     author: { id: string; name: string | null; avatarUrl: string | null };
+  } | null>(null);
+  const [annotationPreview, setAnnotationPreview] = useState<{
+    id: string;
+    selectedText: string;
   } | null>(null);
   const [refLoadError, setRefLoadError] = useState<string | null>(null);
 
@@ -154,10 +160,15 @@ function PublishPageContent() {
   }, [editId]);
 
   useEffect(() => {
-    const ref = searchParams.get("ref");
+    const ref = searchParams.get("ref") || searchParams.get("referencedPostId");
+    const annotationId = searchParams.get("referencedAnnotationId");
+    const highlightText = searchParams.get("highlightText");
+    
     if (!ref || !ref.trim()) {
       setReferencedPostId(null);
       setRefPreview(null);
+      setReferencedAnnotationId(null);
+      setAnnotationPreview(null);
       setRefLoadError(null);
       return;
     }
@@ -173,6 +184,8 @@ function PublishPageContent() {
             setRefLoadError(typeof data.message === "string" ? data.message : "Could not load referenced post");
             setReferencedPostId(null);
             setRefPreview(null);
+            setReferencedAnnotationId(null);
+            setAnnotationPreview(null);
           }
           return;
         }
@@ -183,12 +196,35 @@ function PublishPageContent() {
             headlineClaim: data.post.headlineClaim,
             author: data.post.author,
           });
+          
+          if (annotationId) {
+            try {
+              const annotationRes = await fetch(`/api/annotations/${annotationId}`);
+              const annotationData = await annotationRes.json();
+              if (annotationRes.ok && annotationData.annotation) {
+                setReferencedAnnotationId(annotationId);
+                setAnnotationPreview({
+                  id: annotationId,
+                  selectedText: annotationData.annotation.selectedText,
+                });
+              }
+            } catch {
+              console.warn("Failed to load annotation preview");
+            }
+          } else if (highlightText) {
+            setAnnotationPreview({
+              id: "",
+              selectedText: highlightText,
+            });
+          }
         }
       } catch {
         if (!cancelled) {
           setRefLoadError("Could not load referenced post");
           setReferencedPostId(null);
           setRefPreview(null);
+          setReferencedAnnotationId(null);
+          setAnnotationPreview(null);
         }
       }
     })();
@@ -200,6 +236,8 @@ function PublishPageContent() {
   const clearReferencedPost = () => {
     setReferencedPostId(null);
     setRefPreview(null);
+    setReferencedAnnotationId(null);
+    setAnnotationPreview(null);
     setRefLoadError(null);
     if (isEditMode) {
       router.replace(`/publish?edit=${editId}`);
@@ -269,6 +307,7 @@ function PublishPageContent() {
             postBody: body,
             authorStance,
             referencedPostId,
+            referencedAnnotationId,
             thumbnailUrl,
             slug: slug || null,
             seoTitle: seoTitle || null,
@@ -290,6 +329,7 @@ function PublishPageContent() {
             postBody: body,
             authorStance,
             ...(referencedPostId ? { referencedPostId } : {}),
+            ...(referencedAnnotationId ? { referencedAnnotationId } : {}),
             ...(thumbnailUrl ? { thumbnailUrl } : {}),
             ...(slug ? { slug } : {}),
             ...(seoTitle ? { seoTitle } : {}),
@@ -332,6 +372,7 @@ function PublishPageContent() {
             postBody: body,
             authorStance,
             ...(referencedPostId ? { referencedPostId } : {}),
+            ...(referencedAnnotationId ? { referencedAnnotationId } : {}),
             ...(thumbnailUrl ? { thumbnailUrl } : {}),
             ...(slug ? { slug } : {}),
             ...(seoTitle ? { seoTitle } : {}),
@@ -377,7 +418,7 @@ function PublishPageContent() {
     }, 5000);
     
     return () => clearTimeout(timer);
-  }, [headlineClaim, body, authorStance, referencedPostId, thumbnailUrl, isLoadingPost]);
+  }, [headlineClaim, body, authorStance, referencedPostId, referencedAnnotationId, thumbnailUrl, isLoadingPost]);
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, padding: "24px 16px 100px" }}>
@@ -445,7 +486,9 @@ function PublishPageContent() {
               border: `1px solid ${C.border}`,
               borderRadius: 12,
               padding: 16,
-              marginBottom: 16,
+              marginBottom: annotationPreview ? 0 : 16,
+              borderBottomLeftRadius: annotationPreview ? 0 : 12,
+              borderBottomRightRadius: annotationPreview ? 0 : 12,
               display: "flex",
               alignItems: "flex-start",
               justifyContent: "space-between",
@@ -480,6 +523,40 @@ function PublishPageContent() {
             >
               Remove
             </button>
+          </div>
+        )}
+
+        {/* Annotation preview (quoted passage) */}
+        {refPreview && annotationPreview && (
+          <div
+            style={{
+              background: C.bg,
+              border: `1px solid ${C.border}`,
+              borderTop: "none",
+              borderRadius: "0 0 12px 12px",
+              padding: 16,
+              marginBottom: 16,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <Quote size={16} style={{ color: C.accent, flexShrink: 0, marginTop: 2 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ color: C.muted, fontSize: 11, marginBottom: 4 }}>Responding to passage:</div>
+                <p
+                  style={{
+                    color: C.textSoft,
+                    fontSize: 14,
+                    lineHeight: 1.5,
+                    margin: 0,
+                    fontStyle: "italic",
+                  }}
+                >
+                  "{annotationPreview.selectedText.length > 200
+                    ? annotationPreview.selectedText.slice(0, 200) + "..."
+                    : annotationPreview.selectedText}"
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
