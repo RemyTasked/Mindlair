@@ -1,0 +1,1 @@
+/Users/clodelremy/Meet Cute/mindlair/node_modules/@embedded-postgres/darwin-x64/native/bin/postgres "-D" "/Users/clodelremy/Meet Cute/mindlair/apps/web/tmp-pg-data" "-p" "5433"

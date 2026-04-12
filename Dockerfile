@@ -9,14 +9,14 @@ RUN apt-get update -y && \
 
 WORKDIR /app
 
-COPY mindlayer/package.json ./
-COPY mindlayer/apps/web/package.json ./apps/web/
-COPY mindlayer/packages/ ./packages/
+COPY mindlair/package.json ./
+COPY mindlair/apps/web/package.json ./apps/web/
+COPY mindlair/packages/ ./packages/
 
 RUN npm install --ignore-scripts
 RUN cd apps/web && rm -rf node_modules package-lock.json && npm install
 
-COPY mindlayer/ .
+COPY mindlair/ .
 
 RUN cd apps/web && npx prisma generate
 

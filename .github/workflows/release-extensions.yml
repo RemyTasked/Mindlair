@@ -37,19 +37,19 @@ jobs:
           sudo apt-get install -y imagemagick librsvg2-bin
 
       - name: Generate icons
-        working-directory: mindlayer/apps/extension/icons
+        working-directory: mindlair/apps/extension/icons
         run: |
           chmod +x generate-icons.sh
           ./generate-icons.sh
 
       - name: Build extensions
-        working-directory: mindlayer/apps/extension
+        working-directory: mindlair/apps/extension
         run: |
           chmod +x build.sh
           ./build.sh
 
       - name: Update manifest versions
-        working-directory: mindlayer/apps/extension
+        working-directory: mindlair/apps/extension
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           
@@ -60,19 +60,19 @@ jobs:
           sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" firefox/manifest.json
 
       - name: Create Chrome extension ZIP
-        working-directory: mindlayer/apps/extension
+        working-directory: mindlair/apps/extension
         run: |
           cd chrome
           zip -r ../mindlair-chrome-${{ steps.version.outputs.version }}.zip . -x "*.sh" -x "*.svg"
 
       - name: Create Firefox extension ZIP
-        working-directory: mindlayer/apps/extension
+        working-directory: mindlair/apps/extension
         run: |
           cd firefox
           zip -r ../mindlair-firefox-${{ steps.version.outputs.version }}.zip . -x "*.sh" -x "*.svg"
 
       - name: Create Edge extension ZIP (same as Chrome)
-        working-directory: mindlayer/apps/extension
+        working-directory: mindlair/apps/extension
         run: |
           cp mindlair-chrome-${{ steps.version.outputs.version }}.zip mindlair-edge-${{ steps.version.outputs.version }}.zip
 
@@ -80,19 +80,19 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mindlair-chrome-${{ steps.version.outputs.version }}
-          path: mindlayer/apps/extension/mindlair-chrome-${{ steps.version.outputs.version }}.zip
+          path: mindlair/apps/extension/mindlair-chrome-${{ steps.version.outputs.version }}.zip
 
       - name: Upload Firefox extension artifact
         uses: actions/upload-artifact@v4
         with:
           name: mindlair-firefox-${{ steps.version.outputs.version }}
-          path: mindlayer/apps/extension/mindlair-firefox-${{ steps.version.outputs.version }}.zip
+          path: mindlair/apps/extension/mindlair-firefox-${{ steps.version.outputs.version }}.zip
 
       - name: Upload Edge extension artifact
         uses: actions/upload-artifact@v4
         with:
           name: mindlair-edge-${{ steps.version.outputs.version }}
-          path: mindlayer/apps/extension/mindlair-edge-${{ steps.version.outputs.version }}.zip
+          path: mindlair/apps/extension/mindlair-edge-${{ steps.version.outputs.version }}.zip
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -127,8 +127,8 @@ jobs:
             ---
             *Store versions coming soon!*
           files: |
-            mindlayer/apps/extension/mindlair-chrome-${{ steps.version.outputs.version }}.zip
-            mindlayer/apps/extension/mindlair-firefox-${{ steps.version.outputs.version }}.zip
-            mindlayer/apps/extension/mindlair-edge-${{ steps.version.outputs.version }}.zip
+            mindlair/apps/extension/mindlair-chrome-${{ steps.version.outputs.version }}.zip
+            mindlair/apps/extension/mindlair-firefox-${{ steps.version.outputs.version }}.zip
+            mindlair/apps/extension/mindlair-edge-${{ steps.version.outputs.version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

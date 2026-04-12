@@ -34,13 +34,13 @@ jobs:
           gradle-version: 8.5
       
       - name: Create Gradle Wrapper
-        working-directory: mindlayer/apps/android
+        working-directory: mindlair/apps/android
         run: |
           gradle wrapper --gradle-version 8.5
           chmod +x gradlew
       
       - name: Build Debug APK
-        working-directory: mindlayer/apps/android
+        working-directory: mindlair/apps/android
         run: |
           ./gradlew assembleDebug --no-daemon --stacktrace --info || {
             echo "=== BUILD FAILED ==="
@@ -50,7 +50,7 @@ jobs:
           }
       
       - name: Build Release APK
-        working-directory: mindlayer/apps/android
+        working-directory: mindlair/apps/android
         run: ./gradlew assembleRelease --no-daemon --stacktrace
       
       - name: Sign Release APK
@@ -60,7 +60,7 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        working-directory: mindlayer/apps/android
+        working-directory: mindlair/apps/android
         run: |
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > keystore.jks
           
@@ -86,7 +86,7 @@ jobs:
           fi
       
       - name: Rename APKs
-        working-directory: mindlayer/apps/android/app/build/outputs/apk
+        working-directory: mindlair/apps/android/app/build/outputs/apk
         run: |
           mv debug/app-debug.apk debug/mindlair-${{ steps.version.outputs.VERSION }}-debug.apk
           if [ -f release/mindlair-release-signed.apk ]; then
@@ -99,13 +99,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mindlair-debug-apk
-          path: mindlayer/apps/android/app/build/outputs/apk/debug/*.apk
+          path: mindlair/apps/android/app/build/outputs/apk/debug/*.apk
       
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: mindlair-release-apk
-          path: mindlayer/apps/android/app/build/outputs/apk/release/*.apk
+          path: mindlair/apps/android/app/build/outputs/apk/release/*.apk
       
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -128,8 +128,8 @@ jobs:
             ### Requirements
             - Android 8.0 (API 26) or higher
           files: |
-            mindlayer/apps/android/app/build/outputs/apk/debug/*.apk
-            mindlayer/apps/android/app/build/outputs/apk/release/*.apk
+            mindlair/apps/android/app/build/outputs/apk/debug/*.apk
+            mindlair/apps/android/app/build/outputs/apk/release/*.apk
           draft: false
           prerelease: false
         env:
