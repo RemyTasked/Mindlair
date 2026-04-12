@@ -14,22 +14,17 @@ import {
   Eye,
   Lightbulb,
   Info,
-  Smile,
-  X,
   ImagePlus,
   Trash2,
   ArrowLeft,
+  ChevronDown,
+  Link as LinkIcon,
+  Search,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { RichEditor, getWordCount } from "@/components/rich-editor";
 
-const EMOJI_CATEGORIES = {
-  "Smileys": ["😀", "😃", "😄", "😁", "😅", "😂", "🤣", "😊", "😇", "🙂", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥"],
-  "Gestures": ["👍", "👎", "👊", "✊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝", "🙏", "✍️", "💪", "🦾", "🖐️", "✋", "🖖", "👋", "🤚", "🖐", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉", "👆", "👇", "☝️", "👀", "👁️", "🗣️", "👤", "👥"],
-  "Objects": ["💡", "📚", "📖", "📝", "✏️", "📌", "📍", "🔍", "🔎", "💻", "🖥️", "📱", "⌨️", "🖱️", "💾", "💿", "📀", "🎬", "📷", "📹", "🎥", "📺", "📻", "🎙️", "🎧", "🎤", "🎵", "🎶", "🎼", "🎹", "🥁", "🎸", "🎺", "🎻", "🪕", "🎯", "🏆", "🥇", "🥈", "🥉"],
-  "Symbols": ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "⭐", "🌟", "✨", "⚡", "🔥", "💥", "💫", "💯", "✅", "❌", "❓", "❗", "⚠️", "🚫", "♻️", "✳️", "❇️", "🔰", "⚜️", "🔱", "📛", "🔴"],
-  "Nature": ["🌸", "💮", "🏵️", "🌹", "🥀", "🌺", "🌻", "🌼", "🌷", "🌱", "🪴", "🌲", "🌳", "🌴", "🌵", "🌿", "☘️", "🍀", "🍁", "🍂", "🍃", "🌾", "🌎", "🌍", "🌏", "🌙", "⭐", "🌟", "☀️", "🌤️", "⛅", "🌥️", "☁️", "🌧️", "⛈️", "🌩️", "🌈", "❄️", "💧", "🌊"],
-};
 
 const C = {
   bg: "#0f0e0c",
@@ -70,6 +65,10 @@ const stanceInfo = {
 function PublishPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  const editId = searchParams.get("edit");
+  const isEditMode = !!editId;
+  
   const [referencedPostId, setReferencedPostId] = useState<string | null>(null);
   const [refPreview, setRefPreview] = useState<{
     id: string;
@@ -87,13 +86,72 @@ function PublishPageContent() {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showStanceHelp, setShowStanceHelp] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [emojiCategory, setEmojiCategory] = useState<keyof typeof EMOJI_CATEGORIES>("Smileys");
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
-  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isLoadingPost, setIsLoadingPost] = useState(false);
+  const [showSeoSettings, setShowSeoSettings] = useState(false);
+  const [slug, setSlug] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
-  const cursorPositionRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!editId) return;
+    
+    let cancelled = false;
+    setIsLoadingPost(true);
+    setError(null);
+    
+    (async () => {
+      try {
+        const res = await fetch(`/api/posts/${encodeURIComponent(editId)}`);
+        const data = await res.json();
+        
+        if (!res.ok) {
+          if (!cancelled) {
+            setError(data.message || "Could not load post");
+            setIsLoadingPost(false);
+          }
+          return;
+        }
+        
+        if (!cancelled && data.post) {
+          const post = data.post;
+          
+          if (post.status !== "draft") {
+            setError("Only draft posts can be edited");
+            setIsLoadingPost(false);
+            return;
+          }
+          
+          setDraftId(post.id);
+          setHeadlineClaim(post.headlineClaim || "");
+          setBody(post.body || "");
+          setAuthorStance(post.authorStance || "arguing");
+          setThumbnailUrl(post.thumbnailUrl || null);
+          setSlug(post.slug || "");
+          setSeoTitle(post.seoTitle || "");
+          setSeoDescription(post.seoDescription || "");
+          
+          if (post.referencedPostId) {
+            setReferencedPostId(post.referencedPostId);
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Could not load post");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPost(false);
+        }
+      }
+    })();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [editId]);
 
   useEffect(() => {
     const ref = searchParams.get("ref");
@@ -143,32 +201,11 @@ function PublishPageContent() {
     setReferencedPostId(null);
     setRefPreview(null);
     setRefLoadError(null);
-    router.replace("/publish");
-  };
-
-  const insertEmoji = (emoji: string) => {
-    const textarea = bodyTextareaRef.current;
-    if (!textarea) return;
-    
-    const start = cursorPositionRef.current;
-    const newBody = body.slice(0, start) + emoji + body.slice(start);
-    setBody(newBody);
-    
-    setTimeout(() => {
-      const newPosition = start + emoji.length;
-      textarea.focus();
-      textarea.setSelectionRange(newPosition, newPosition);
-      cursorPositionRef.current = newPosition;
-    }, 0);
-  };
-
-  const handleBodyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setBody(e.target.value);
-    cursorPositionRef.current = e.target.selectionStart;
-  };
-
-  const handleBodySelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
-    cursorPositionRef.current = (e.target as HTMLTextAreaElement).selectionStart;
+    if (isEditMode) {
+      router.replace(`/publish?edit=${editId}`);
+    } else {
+      router.replace("/publish");
+    }
   };
 
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,12 +245,12 @@ function PublishPageContent() {
     setThumbnailUrl(null);
   };
 
-  const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
+  const wordCount = getWordCount(body);
   const charCount = headlineClaim.length;
   
   const isValidClaim = charCount >= 10 && charCount <= 280;
   const isValidBody = wordCount >= 100 && wordCount <= 2000;
-  const canPublish = isValidClaim && isValidBody && !isSubmitting && !isPublishing;
+  const canPublish = isValidClaim && isValidBody && !isSubmitting && !isPublishing && !isLoadingPost;
 
   const saveDraft = async () => {
     if (!headlineClaim.trim()) return;
@@ -233,6 +270,9 @@ function PublishPageContent() {
             authorStance,
             referencedPostId,
             thumbnailUrl,
+            slug: slug || null,
+            seoTitle: seoTitle || null,
+            seoDescription: seoDescription || null,
           }),
         });
         
@@ -251,6 +291,9 @@ function PublishPageContent() {
             authorStance,
             ...(referencedPostId ? { referencedPostId } : {}),
             ...(thumbnailUrl ? { thumbnailUrl } : {}),
+            ...(slug ? { slug } : {}),
+            ...(seoTitle ? { seoTitle } : {}),
+            ...(seoDescription ? { seoDescription } : {}),
           }),
         });
         
@@ -290,6 +333,9 @@ function PublishPageContent() {
             authorStance,
             ...(referencedPostId ? { referencedPostId } : {}),
             ...(thumbnailUrl ? { thumbnailUrl } : {}),
+            ...(slug ? { slug } : {}),
+            ...(seoTitle ? { seoTitle } : {}),
+            ...(seoDescription ? { seoDescription } : {}),
           }),
         });
         
@@ -324,14 +370,14 @@ function PublishPageContent() {
 
   // Auto-save draft after inactivity
   useEffect(() => {
-    if (!headlineClaim.trim() || body.trim().length < 50) return;
+    if (isLoadingPost || !headlineClaim.trim() || getWordCount(body) < 20) return;
     
     const timer = setTimeout(() => {
       saveDraft();
     }, 5000);
     
     return () => clearTimeout(timer);
-  }, [headlineClaim, body, authorStance, referencedPostId, thumbnailUrl]);
+  }, [headlineClaim, body, authorStance, referencedPostId, thumbnailUrl, isLoadingPost]);
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, padding: "24px 16px 100px" }}>
@@ -368,13 +414,29 @@ function PublishPageContent() {
             color: C.text,
             marginBottom: 8,
           }}>
-            Post
+            {isEditMode ? "Edit Draft" : "Post"}
           </h1>
           <p style={{ color: C.textSoft, fontSize: 15 }}>
-            Share your thinking. Every post shapes your belief map.
+            {isEditMode 
+              ? "Continue working on your draft."
+              : "Share your thinking. Every post shapes your belief map."}
           </p>
         </div>
 
+        {/* Loading State for Edit Mode */}
+        {isLoadingPost && (
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center",
+            padding: 48,
+          }}>
+            <Loader2 size={32} className="animate-spin" style={{ color: C.accent }} />
+          </div>
+        )}
+
+        {!isLoadingPost && (
+          <>
         {/* Referenced post preview */}
         {refPreview && (
           <div
@@ -694,36 +756,16 @@ function PublishPageContent() {
         </div>
 
         {/* Body Editor */}
-        <div style={{ marginBottom: 24, position: "relative" }}>
+        <div style={{ marginBottom: 24 }}>
           <div style={{ 
             display: "flex", 
             justifyContent: "space-between", 
             alignItems: "center",
             marginBottom: 8,
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500 }}>
-                Your Argument
-              </label>
-              <button
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                style={{
-                  background: showEmojiPicker ? `${C.accent}20` : "transparent",
-                  border: `1px solid ${showEmojiPicker ? C.accent : C.border}`,
-                  borderRadius: 8,
-                  padding: "6px 10px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  color: showEmojiPicker ? C.accent : C.muted,
-                  fontSize: 13,
-                }}
-              >
-                <Smile size={16} />
-                <span>Emoji</span>
-              </button>
-            </div>
+            <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500 }}>
+              Your Argument
+            </label>
             <span style={{ 
               color: isValidBody ? C.muted : wordCount > 2000 ? C.rose : C.accent, 
               fontSize: 12 
@@ -731,114 +773,159 @@ function PublishPageContent() {
               {wordCount} / 100-2000 words
             </span>
           </div>
+          
+          <RichEditor
+            content={body}
+            onChange={setBody}
+            placeholder="Make your case. Use formatting to structure your argument."
+          />
+        </div>
 
-          {/* Emoji Picker */}
+        {/* SEO Settings (Collapsible) */}
+        <div style={{ marginBottom: 24 }}>
+          <button
+            onClick={() => setShowSeoSettings(!showSeoSettings)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              width: "100%",
+              padding: "12px 16px",
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: showSeoSettings ? "12px 12px 0 0" : 12,
+              cursor: "pointer",
+              color: C.textSoft,
+              fontSize: 14,
+              fontWeight: 500,
+              textAlign: "left",
+            }}
+          >
+            <Search size={16} />
+            SEO & URL Settings
+            <ChevronDown
+              size={16}
+              style={{
+                marginLeft: "auto",
+                transform: showSeoSettings ? "rotate(180deg)" : "none",
+                transition: "transform 0.2s",
+              }}
+            />
+          </button>
+
           <AnimatePresence>
-            {showEmojiPicker && (
+            {showSeoSettings && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
                 style={{
-                  position: "absolute",
-                  top: 40,
-                  left: 0,
-                  zIndex: 50,
                   background: C.surface,
                   border: `1px solid ${C.border}`,
-                  borderRadius: 12,
-                  padding: 12,
-                  width: 320,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                  borderTop: "none",
+                  borderRadius: "0 0 12px 12px",
+                  padding: 16,
+                  overflow: "hidden",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ color: C.textSoft, fontSize: 13, fontWeight: 500 }}>Pick an emoji</span>
-                  <button
-                    onClick={() => setShowEmojiPicker(false)}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
-                  >
-                    <X size={16} style={{ color: C.muted }} />
-                  </button>
-                </div>
-                
-                {/* Category Tabs */}
-                <div style={{ display: "flex", gap: 4, marginBottom: 12, flexWrap: "wrap" }}>
-                  {(Object.keys(EMOJI_CATEGORIES) as Array<keyof typeof EMOJI_CATEGORIES>).map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setEmojiCategory(cat)}
+                {/* URL Slug */}
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500, display: "block", marginBottom: 8 }}>
+                    Custom URL Slug
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <LinkIcon size={14} style={{ color: C.muted, flexShrink: 0 }} />
+                    <input
+                      type="text"
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                      placeholder="my-custom-url"
                       style={{
-                        background: emojiCategory === cat ? `${C.accent}20` : "transparent",
-                        border: `1px solid ${emojiCategory === cat ? C.accent : C.border}`,
-                        borderRadius: 6,
-                        padding: "4px 8px",
-                        fontSize: 11,
-                        color: emojiCategory === cat ? C.accent : C.muted,
-                        cursor: "pointer",
+                        flex: 1,
+                        background: C.bg,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 8,
+                        padding: "10px 12px",
+                        color: C.text,
+                        fontSize: 14,
+                        outline: "none",
                       }}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                    />
+                  </div>
+                  <p style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>
+                    {slug 
+                      ? `mindlair.app/post/${slug}`
+                      : "Leave blank to use post ID as URL"
+                    }
+                  </p>
                 </div>
 
-                {/* Emoji Grid */}
-                <div style={{ 
-                  display: "grid", 
-                  gridTemplateColumns: "repeat(8, 1fr)", 
-                  gap: 4,
-                  maxHeight: 200,
-                  overflowY: "auto",
-                }}>
-                  {EMOJI_CATEGORIES[emojiCategory].map((emoji, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        insertEmoji(emoji);
-                        setShowEmojiPicker(false);
-                      }}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        fontSize: 20,
-                        padding: 4,
-                        cursor: "pointer",
-                        borderRadius: 4,
-                        transition: "background 0.15s",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = C.border)}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+                {/* SEO Title */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500 }}>
+                      SEO Title (optional)
+                    </label>
+                    <span style={{ color: seoTitle.length > 60 ? C.rose : C.muted, fontSize: 11 }}>
+                      {seoTitle.length}/70
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={seoTitle}
+                    onChange={(e) => setSeoTitle(e.target.value.slice(0, 70))}
+                    placeholder={headlineClaim || "Defaults to your headline"}
+                    style={{
+                      width: "100%",
+                      background: C.bg,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      color: C.text,
+                      fontSize: 14,
+                      outline: "none",
+                    }}
+                  />
+                  <p style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>
+                    Custom title for search engines and social sharing
+                  </p>
+                </div>
+
+                {/* SEO Description */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500 }}>
+                      Meta Description (optional)
+                    </label>
+                    <span style={{ color: seoDescription.length > 155 ? C.rose : C.muted, fontSize: 11 }}>
+                      {seoDescription.length}/160
+                    </span>
+                  </div>
+                  <textarea
+                    value={seoDescription}
+                    onChange={(e) => setSeoDescription(e.target.value.slice(0, 160))}
+                    placeholder="Brief description for search results..."
+                    rows={2}
+                    style={{
+                      width: "100%",
+                      background: C.bg,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      color: C.text,
+                      fontSize: 14,
+                      lineHeight: 1.5,
+                      resize: "none",
+                      outline: "none",
+                    }}
+                  />
+                  <p style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>
+                    Shown in Google search results and social media previews
+                  </p>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-          
-          <textarea
-            ref={bodyTextareaRef}
-            value={body}
-            onChange={handleBodyChange}
-            onSelect={handleBodySelect}
-            onClick={handleBodySelect}
-            placeholder="Make your case. Focus on the argument, not the formatting. Use emojis to express yourself! 😊"
-            style={{
-              width: "100%",
-              background: C.surface,
-              border: `1px solid ${C.border}`,
-              borderRadius: 12,
-              padding: 16,
-              color: C.text,
-              fontSize: 15,
-              lineHeight: 1.7,
-              resize: "vertical",
-              minHeight: 300,
-              outline: "none",
-            }}
-          />
         </div>
 
         {/* Actions */}
@@ -892,7 +979,7 @@ function PublishPageContent() {
               ) : (
                 <Send size={16} />
               )}
-              <span style={{ marginLeft: 8 }}>Post</span>
+              <span style={{ marginLeft: 8 }}>{isEditMode ? "Publish" : "Post"}</span>
             </Button>
           </div>
         </div>
@@ -912,6 +999,8 @@ function PublishPageContent() {
             what you actually think.
           </p>
         </div>
+          </>
+        )}
       </motion.div>
     </div>
   );

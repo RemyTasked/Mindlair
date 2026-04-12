@@ -459,6 +459,11 @@ model Post {
   // Optional thumbnail image
   thumbnailUrl  String?
 
+  // SEO & Custom URL
+  slug           String?  @unique  // Custom URL slug (auto-generated from headline if not set)
+  seoTitle       String?           // Custom SEO title (defaults to headlineClaim)
+  seoDescription String?           // Custom meta description (defaults to truncated body)
+
   // Moderation
   aiScreeningPassed Boolean          @default(false)
   moderationStatus  ModerationStatus @default(pending)
@@ -481,6 +486,7 @@ model Post {
   @@index([publishedAt])
   @@index([status])
   @@index([referencedPostId])
+  @@index([slug])
   @@map("posts")
 }
 

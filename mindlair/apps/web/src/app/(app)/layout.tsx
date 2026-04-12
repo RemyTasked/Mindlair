@@ -2,11 +2,12 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint, FileText } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationBanner } from "@/components/push-notifications";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/hooks/use-session";
 
 const C = {
   bg: "#0f0e0c", surface: "#1a1916", border: "#2a2825",
@@ -19,12 +20,37 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "";
+  const router = useRouter();
   const isMap = pathname === "/map";
   const isFeed = pathname === "/feed";
+  
+  const { isLoading, isAuthenticated, error } = useSession();
 
+  // Redirect to login if not authenticated (after loading completes)
   useEffect(() => {
-    fetch("/api/auth/session").catch(() => {});
-  }, []);
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [isLoading, isAuthenticated, pathname, router]);
+
+  // Show loading state while checking session
+  if (isLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: C.bg }}
+      >
+        <div className="animate-pulse" style={{ color: C.accent, fontSize: 20 }}>
+          Mind<span style={{ fontStyle: "italic", fontWeight: 500 }}>lair</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show nothing (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div
@@ -58,6 +84,7 @@ export default function AppLayout({
           <nav className="flex-1 px-3">
             <NavLink href="/feed" icon={Rss}>Feed</NavLink>
             <NavLink href="/publish" icon={PenSquare}>Post</NavLink>
+            <NavLink href="/my-posts" icon={FileText}>My Posts</NavLink>
             <NavLink href="/inbox" icon={Inbox}>Inbox</NavLink>
             <NavLink href="/map" icon={Map}>Map</NavLink>
             <NavLink href="/fingerprint" icon={Fingerprint}>Fingerprint</NavLink>

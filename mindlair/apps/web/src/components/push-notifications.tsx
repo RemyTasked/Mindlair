@@ -69,15 +69,30 @@ export function PushNotifications({ onSubscriptionChange }: PushNotificationsPro
       setPermission(permissionResult as PermissionState);
 
       if (permissionResult !== "granted") {
-        setError("Permission denied");
+        setError("Permission denied. Please enable notifications in your browser settings.");
         setIsLoading(false);
         return;
       }
 
       const registration = await navigator.serviceWorker.ready;
+      
       const vapidResponse = await fetch("/api/push/vapid-key");
-      if (!vapidResponse.ok) throw new Error("Failed to get VAPID key");
+      if (!vapidResponse.ok) {
+        const errorData = await vapidResponse.json().catch(() => ({}));
+        if (errorData.error === "VAPID key not configured") {
+          setError("Push notifications are not configured on the server.");
+          setIsLoading(false);
+          return;
+        }
+        throw new Error("Failed to get VAPID key");
+      }
+      
       const { publicKey } = await vapidResponse.json();
+      if (!publicKey) {
+        setError("Push notifications are not configured on the server.");
+        setIsLoading(false);
+        return;
+      }
 
       const keyArray = urlBase64ToUint8Array(publicKey);
       const subscription = await registration.pushManager.subscribe({
@@ -91,13 +106,17 @@ export function PushNotifications({ onSubscriptionChange }: PushNotificationsPro
         body: JSON.stringify({ subscription: subscription.toJSON(), deviceName: getDeviceName() }),
       });
 
-      if (!response.ok) throw new Error("Failed to save subscription");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to save subscription");
+      }
 
       setIsSubscribed(true);
       onSubscriptionChange?.(true);
     } catch (err) {
       console.error("Subscribe error:", err);
-      setError("Failed to enable notifications");
+      const message = err instanceof Error ? err.message : "Failed to enable notifications";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -143,10 +162,20 @@ export function PushNotifications({ onSubscriptionChange }: PushNotificationsPro
   };
 
   if (permission === "unsupported") {
+    const isIOS = typeof navigator !== "undefined" && /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const isStandalone = typeof window !== "undefined" && (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as Navigator & { standalone?: boolean }).standalone);
+    
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.muted }}>
-        <AlertCircle style={{ width: 16, height: 16 }} />
-        <span>Push notifications are not supported on this device</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: C.muted }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <AlertCircle style={{ width: 16, height: 16 }} />
+          <span>Push notifications are not available</span>
+        </div>
+        {isIOS && !isStandalone && (
+          <div style={{ fontSize: 12, color: C.muted, paddingLeft: 24, lineHeight: 1.5 }}>
+            <strong style={{ color: C.textSoft }}>iOS users:</strong> To enable push notifications, add this app to your home screen first. Tap the share button and select &quot;Add to Home Screen&quot;.
+          </div>
+        )}
       </div>
     );
   }

@@ -28,6 +28,7 @@ import {
   Smartphone,
   Share,
 } from "lucide-react";
+import { PushNotifications } from "@/components/push-notifications";
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
 
@@ -846,27 +847,36 @@ export default function SettingsPage() {
               How should we notify you about digests and nudges?
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <NotificationToggle
-              label="Push notifications"
-              description="Get notified when your digest and nudges are ready"
-              enabled={settings.notifications.push}
-              onToggle={(enabled) =>
-                updateSettings({
-                  notifications: { ...settings.notifications, push: enabled },
-                })
-              }
-            />
-            <NotificationToggle
-              label="Email notifications"
-              description="Receive digest summaries and nudges via email"
-              enabled={settings.notifications.email}
-              onToggle={(enabled) =>
-                updateSettings({
-                  notifications: { ...settings.notifications, email: enabled },
-                })
-              }
-            />
+          <CardContent className="space-y-6">
+            {/* Push Notifications - Browser Setup */}
+            <div>
+              <h4 className="font-medium text-sm mb-3">Push Notifications</h4>
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+                <PushNotifications 
+                  onSubscriptionChange={(subscribed) => {
+                    if (subscribed !== settings.notifications.push) {
+                      updateSettings({
+                        notifications: { ...settings.notifications, push: subscribed },
+                      });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Email Toggle */}
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
+              <NotificationToggle
+                label="Email notifications"
+                description="Receive digest summaries and nudges via email"
+                enabled={settings.notifications.email}
+                onToggle={(enabled) =>
+                  updateSettings({
+                    notifications: { ...settings.notifications, email: enabled },
+                  })
+                }
+              />
+            </div>
           </CardContent>
         </Card>
 

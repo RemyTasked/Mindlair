@@ -5,7 +5,7 @@ import db from './db';
 
 const SESSION_COOKIE_NAME = 'mindlair_session';
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-const SESSION_REFRESH_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000; // Refresh if less than 7 days left
+const SESSION_REFRESH_THRESHOLD_MS = 25 * 24 * 60 * 60 * 1000; // Refresh if less than 25 days left (more aggressive)
 const MAGIC_LINK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
 function isProduction(): boolean {

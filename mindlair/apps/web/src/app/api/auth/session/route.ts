@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import {
-  getSessionFromCookie,
+  getSessionByToken,
   clearSessionCookie,
   deleteSession,
   deleteAllUserSessions,
@@ -15,18 +15,27 @@ export async function GET() {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
     
-    const user = await getSessionFromCookie();
-
-    if (!user) {
+    if (!sessionCookie?.value) {
       return NextResponse.json(
         { authenticated: false, user: null },
         { status: 200 }
       );
     }
 
-    if (sessionCookie?.value) {
-      await setSessionCookie(sessionCookie.value);
+    // Validate session and refresh expiry if needed (pass true for refreshIfNeeded)
+    const user = await getSessionByToken(sessionCookie.value, true);
+
+    if (!user) {
+      // Session was invalid or expired - clear the cookie
+      await clearSessionCookie();
+      return NextResponse.json(
+        { authenticated: false, user: null },
+        { status: 200 }
+      );
     }
+
+    // Refresh the cookie to extend its lifetime
+    await setSessionCookie(sessionCookie.value);
 
     return NextResponse.json({
       authenticated: true,

@@ -11,27 +11,50 @@ const PUBLIC_PATHS = [
   '/security',
   '/how-it-works',
   '/install',
+  '/offline',
 ];
 
 const PUBLIC_API_PATHS = [
   '/api/auth/magic-link',
   '/api/auth/verify',
   '/api/auth/session',
+  '/api/push/vapid-key',
+];
+
+const PROTECTED_APP_PATHS = [
+  '/map',
+  '/timeline',
+  '/inbox',
+  '/settings',
+  '/query',
+  '/wrapped',
+  '/fingerprint',
+  '/onboarding',
+  '/feed',
+  '/publish',
+  '/my-posts',
+  '/post',
+  '/profile',
+  '/nudges',
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Skip static files and Next.js internals
   if (pathname.startsWith('/_next') || 
       pathname.startsWith('/static') ||
+      pathname.startsWith('/icons') ||
       pathname.includes('.')) {
     return NextResponse.next();
   }
 
+  // Allow public paths
   if (PUBLIC_PATHS.includes(pathname) || PUBLIC_API_PATHS.includes(pathname)) {
     return NextResponse.next();
   }
 
+  // Handle API routes
   if (pathname.startsWith('/api/')) {
     const apiKey = request.headers.get('x-api-key');
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
@@ -46,14 +69,12 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  if (pathname.startsWith('/map') || 
-      pathname.startsWith('/timeline') || 
-      pathname.startsWith('/inbox') ||
-      pathname.startsWith('/settings') ||
-      pathname.startsWith('/query') ||
-      pathname.startsWith('/wrapped') ||
-      pathname.startsWith('/fingerprint') ||
-      pathname.startsWith('/onboarding')) {
+  // Check if path requires authentication
+  const requiresAuth = PROTECTED_APP_PATHS.some(p => 
+    pathname === p || pathname.startsWith(p + '/')
+  );
+
+  if (requiresAuth) {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
     
     if (!sessionCookie?.value) {

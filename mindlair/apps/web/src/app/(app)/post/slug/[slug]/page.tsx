@@ -1,11 +1,10 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import db from "@/lib/db";
-import { isCuid } from "@/lib/utils/slug";
-import { PostDetailClient } from "./post-detail-client";
+import { PostDetailClient } from "../../[id]/post-detail-client";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 function truncateText(text: string, maxLength: number): string {
@@ -15,13 +14,9 @@ function truncateText(text: string, maxLength: number): string {
   return plainText.slice(0, maxLength - 3) + "...";
 }
 
-async function getPost(identifier: string) {
-  const whereClause = isCuid(identifier)
-    ? { id: identifier }
-    : { slug: identifier };
-
+async function getPostBySlug(slug: string) {
   const post = await db.post.findUnique({
-    where: whereClause,
+    where: { slug },
     include: {
       author: {
         select: { id: true, name: true, avatarUrl: true },
@@ -33,8 +28,8 @@ async function getPost(identifier: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const post = await getPost(id);
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return {
@@ -75,13 +70,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...(post.thumbnailUrl ? { images: [post.thumbnailUrl] } : {}),
     },
     alternates: {
-      canonical: post.slug ? `/post/${post.slug}` : `/post/${post.id}`,
+      canonical: `/post/slug/${slug}`,
     },
   };
 }
 
-export default async function PostDetailPage({ params }: PageProps) {
-  const { id } = await params;
+export default async function PostSlugPage({ params }: PageProps) {
+  const { slug } = await params;
   
-  return <PostDetailClient postId={id} />;
+  // Verify the slug exists
+  const post = await db.post.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+
+  if (!post) {
+    notFound();
+  }
+
+  // Render using the post's ID (the client component will fetch full data)
+  return <PostDetailClient postId={post.id} />;
 }

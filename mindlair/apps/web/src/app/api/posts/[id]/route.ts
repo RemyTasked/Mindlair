@@ -6,6 +6,7 @@ import {
   serializeReferencedPost,
   validateReferencedPostId,
 } from '@/lib/posts/referenced-post';
+import { isValidSlug, isSlugAvailable, isCuid } from '@/lib/utils/slug';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -13,11 +14,16 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = await params;
+    const { id: identifier } = await params;
     const user = await getAuthFromRequest(request);
 
+    // Support lookup by ID or slug
+    const whereClause = isCuid(identifier)
+      ? { id: identifier }
+      : { slug: identifier };
+
     const post = await db.post.findUnique({
-      where: { id },
+      where: whereClause,
       include: {
         author: {
           select: { id: true, name: true, avatarUrl: true },
@@ -97,6 +103,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
         thumbnailUrl: post.thumbnailUrl,
+        slug: post.slug,
+        seoTitle: post.seoTitle,
+        seoDescription: post.seoDescription,
         author: post.author,
         totalReactions: post._count.reactions,
         userReaction,
@@ -215,6 +224,41 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updates.thumbnailUrl = body.thumbnailUrl === '' ? null : body.thumbnailUrl;
     }
 
+    // Handle slug updates
+    if (body.slug !== undefined) {
+      if (body.slug === '' || body.slug === null) {
+        updates.slug = null;
+      } else if (typeof body.slug === 'string') {
+        const trimmedSlug = body.slug.trim().toLowerCase();
+        if (!isValidSlug(trimmedSlug)) {
+          return NextResponse.json(
+            { code: 'VALIDATION_ERROR', message: 'Invalid slug format. Use only lowercase letters, numbers, and hyphens (3-80 characters).' },
+            { status: 400 }
+          );
+        }
+        if (!(await isSlugAvailable(trimmedSlug, id))) {
+          return NextResponse.json(
+            { code: 'VALIDATION_ERROR', message: 'This URL slug is already taken. Please choose a different one.' },
+            { status: 400 }
+          );
+        }
+        updates.slug = trimmedSlug;
+      }
+    }
+
+    // Handle SEO fields
+    if (body.seoTitle !== undefined) {
+      updates.seoTitle = body.seoTitle === '' || body.seoTitle === null
+        ? null
+        : String(body.seoTitle).trim().slice(0, 70);
+    }
+
+    if (body.seoDescription !== undefined) {
+      updates.seoDescription = body.seoDescription === '' || body.seoDescription === null
+        ? null
+        : String(body.seoDescription).trim().slice(0, 160);
+    }
+
     const updated = await db.post.update({
       where: { id },
       data: updates,
@@ -233,6 +277,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         authorStance: updated.authorStance,
         status: updated.status,
         thumbnailUrl: updated.thumbnailUrl,
+        slug: updated.slug,
+        seoTitle: updated.seoTitle,
+        seoDescription: updated.seoDescription,
         referencedPostId: updated.referencedPostId,
         referencedPost: serializeReferencedPost(withRef?.referencedPost ?? null),
         createdAt: updated.createdAt.toISOString(),

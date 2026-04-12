@@ -6,6 +6,7 @@ import {
   serializeReferencedPost,
   validateReferencedPostId,
 } from '@/lib/posts/referenced-post';
+import { isValidSlug, isSlugAvailable } from '@/lib/utils/slug';
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,6 +67,9 @@ export async function GET(request: NextRequest) {
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
         thumbnailUrl: post.thumbnailUrl,
+        slug: post.slug,
+        seoTitle: post.seoTitle,
+        seoDescription: post.seoDescription,
         author: post.author,
         reactionCount: post._count.reactions,
         referencedPost: serializeReferencedPost(post.referencedPost),
@@ -95,7 +99,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { headlineClaim, postBody, authorStance, referencedPostId: rawRef, thumbnailUrl } = body;
+    const { 
+      headlineClaim, 
+      postBody, 
+      authorStance, 
+      referencedPostId: rawRef, 
+      thumbnailUrl,
+      slug: rawSlug,
+      seoTitle,
+      seoDescription,
+    } = body;
 
     let referencedPostId: string | null = null;
     if (rawRef !== undefined && rawRef !== null) {
@@ -151,6 +164,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate slug if provided
+    let slug: string | null = null;
+    if (rawSlug && typeof rawSlug === 'string') {
+      const trimmedSlug = rawSlug.trim().toLowerCase();
+      if (!isValidSlug(trimmedSlug)) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Invalid slug format. Use only lowercase letters, numbers, and hyphens (3-80 characters).' },
+          { status: 400 }
+        );
+      }
+      if (!(await isSlugAvailable(trimmedSlug))) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'This URL slug is already taken. Please choose a different one.' },
+          { status: 400 }
+        );
+      }
+      slug = trimmedSlug;
+    }
+
+    // Validate SEO fields
+    const validSeoTitle = seoTitle && typeof seoTitle === 'string' && seoTitle.trim().length > 0
+      ? seoTitle.trim().slice(0, 70)
+      : null;
+    const validSeoDescription = seoDescription && typeof seoDescription === 'string' && seoDescription.trim().length > 0
+      ? seoDescription.trim().slice(0, 160)
+      : null;
+
     // Check rate limit for new accounts (7 days old = limited)
     const accountAge = Date.now() - new Date(user.createdAt).getTime();
     const isNewAccount = accountAge < 7 * 24 * 60 * 60 * 1000;
@@ -183,6 +223,9 @@ export async function POST(request: NextRequest) {
         status: 'draft',
         ...(referencedPostId !== null ? { referencedPostId } : {}),
         ...(thumbnailUrl && typeof thumbnailUrl === 'string' ? { thumbnailUrl } : {}),
+        ...(slug ? { slug } : {}),
+        ...(validSeoTitle ? { seoTitle: validSeoTitle } : {}),
+        ...(validSeoDescription ? { seoDescription: validSeoDescription } : {}),
       },
     });
 
@@ -209,6 +252,9 @@ export async function POST(request: NextRequest) {
         status: post.status,
         referencedPostId: post.referencedPostId,
         thumbnailUrl: post.thumbnailUrl,
+        slug: post.slug,
+        seoTitle: post.seoTitle,
+        seoDescription: post.seoDescription,
         createdAt: post.createdAt.toISOString(),
       },
     });
