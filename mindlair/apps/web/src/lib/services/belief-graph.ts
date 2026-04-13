@@ -1,6 +1,12 @@
 import db from '@/lib/db';
 import { detectContradictions, identifyBlindSpots } from './ai';
-import { extractConceptsFromHeadline, resolveConcept, resolveConceptBatch } from './concept-resolver';
+import {
+  extractConceptsFromHeadline,
+  normalizeConceptLabel,
+  resolveConcept,
+  resolveConceptBatch,
+  sanitizeConceptLabels,
+} from './concept-resolver';
 
 type Stance = 'agree' | 'disagree' | 'complicated' | 'skip';
 type BeliefDirection = 'positive' | 'negative' | 'mixed';
@@ -46,7 +52,7 @@ export async function updateBeliefGraphFromComment(
     return;
   }
   
-  const commentConcepts = extractConceptsFromHeadline(commentBody);
+  const commentConcepts = await extractConceptsFromHeadline(commentBody);
   
   for (const claim of claims) {
     const existingConceptIds = claim.claimConcepts.map(cc => cc.conceptId);
@@ -417,7 +423,10 @@ export async function linkClaimToConcepts(
   claimId: string,
   conceptLabels: string[]
 ): Promise<string[]> {
-  const resolved = await resolveConceptBatch(conceptLabels);
+  const cleaned = sanitizeConceptLabels(conceptLabels);
+  if (cleaned.length === 0) return [];
+
+  const resolved = await resolveConceptBatch(cleaned);
   const conceptIds: string[] = [];
 
   for (const r of resolved) {
@@ -443,13 +452,23 @@ async function buildConceptLabelsForPost(
   headlineClaim: string,
   topicTags: string[],
 ): Promise<string[]> {
+  const rawTags = topicTags.filter(Boolean).map(t => String(t).trim());
+  const tags = sanitizeConceptLabels(rawTags);
   const fromHeadline = await extractConceptsFromHeadline(headlineClaim);
-  const merged = [...new Set([...fromHeadline, ...topicTags.filter(Boolean)])];
-  if (merged.length === 0) {
-    const t = headlineClaim.trim();
-    return [t.slice(0, 72) || 'topic'];
+
+  if (tags.length > 0) {
+    const tagKeys = new Set(tags.map(t => normalizeConceptLabel(t)));
+    const extras = fromHeadline.filter(h => !tagKeys.has(normalizeConceptLabel(h)));
+    return [...tags, ...extras];
   }
-  return merged;
+
+  if (fromHeadline.length > 0) return fromHeadline;
+
+  const t = headlineClaim.trim();
+  const fallback = (t.slice(0, 72) || 'topic').trim();
+  const sanitizedFallback = sanitizeConceptLabels([fallback]);
+  if (sanitizedFallback.length > 0) return sanitizedFallback;
+  return [fallback.slice(0, 48) || 'topic'];
 }
 
 /**

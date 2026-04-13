@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
 import { extractClaims } from '@/lib/services/ai';
 import { linkClaimToConcepts, updateBeliefGraph } from '@/lib/services/belief-graph';
+import { sanitizeConceptLabels } from '@/lib/services/concept-resolver';
 import { screenPostContent } from '@/lib/services/moderation';
 import { buildExtractionTextForPublish } from '@/lib/posts/referenced-post';
 
@@ -123,6 +124,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const createdClaimIds: string[] = [];
     const allConceptIds: string[] = [];
 
+    const primaryTopicLabels =
+      analysis.primaryTopic?.trim()
+        ? sanitizeConceptLabels([analysis.primaryTopic.trim()])
+        : [];
+
     for (const extractedClaim of analysis.claims) {
       const claim = await db.claim.create({
         data: {
@@ -136,8 +142,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
       createdClaimIds.push(claim.id);
 
-      if (extractedClaim.concepts.length > 0) {
-        const conceptIds = await linkClaimToConcepts(claim.id, extractedClaim.concepts);
+      const conceptLabels = [
+        ...primaryTopicLabels,
+        ...(extractedClaim.concepts ?? []),
+      ];
+      if (conceptLabels.length > 0) {
+        const conceptIds = await linkClaimToConcepts(claim.id, conceptLabels);
         allConceptIds.push(...conceptIds);
       }
     }

@@ -206,6 +206,11 @@ export default function PersonalBeliefMap({
   const [tensionRows, setTensionRows] = useState<TensionRow[] | null>(null);
   const [showSources, setShowSources] = useState(false);
   const [showTension, setShowTension] = useState(false);
+  /** Desktop: show category legend while pointer is over map panel */
+  const [hoverMapLegend, setHoverMapLegend] = useState(false);
+  /** Touch: user toggles category legend */
+  const [touchLegendOpen, setTouchLegendOpen] = useState(false);
+  const legendLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { nodes, edges, clusters, categories, stats, readiness } = payload;
   const snapshots = timeline?.snapshots ?? [];
@@ -243,6 +248,48 @@ export default function PersonalBeliefMap({
     hoverMq.addEventListener("change", syncHover);
     return () => hoverMq.removeEventListener("change", syncHover);
   }, []);
+
+  useEffect(() => {
+    if (selected) {
+      setTouchLegendOpen(false);
+      setHoverMapLegend(false);
+    }
+  }, [selected]);
+
+  useEffect(() => {
+    return () => {
+      if (legendLeaveTimerRef.current) clearTimeout(legendLeaveTimerRef.current);
+    };
+  }, []);
+
+  const activeCategories = useMemo(
+    () =>
+      (categories || []).filter(cat => nodes.some(n => n.category === cat.name)),
+    [categories, nodes],
+  );
+
+  const showCategoryLegend =
+    nodes.length > 0 &&
+    !selected &&
+    activeCategories.length > 0 &&
+    ((canHover && hoverMapLegend) || (!canHover && touchLegendOpen));
+
+  const handleMapLegendEnter = useCallback(() => {
+    if (!canHover) return;
+    if (legendLeaveTimerRef.current) {
+      clearTimeout(legendLeaveTimerRef.current);
+      legendLeaveTimerRef.current = null;
+    }
+    setHoverMapLegend(true);
+  }, [canHover]);
+
+  const handleMapLegendLeave = useCallback(() => {
+    if (!canHover) return;
+    legendLeaveTimerRef.current = setTimeout(() => {
+      setHoverMapLegend(false);
+      legendLeaveTimerRef.current = null;
+    }, 150);
+  }, [canHover]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -609,6 +656,8 @@ export default function PersonalBeliefMap({
         }}
       >
         <div
+          onMouseEnter={handleMapLegendEnter}
+          onMouseLeave={handleMapLegendLeave}
           style={{
             flex: isNarrow && selected ? "0 0 auto" : 1,
             minHeight: 0,
@@ -947,47 +996,82 @@ export default function PersonalBeliefMap({
             </div>
           )}
 
-          {nodes.length > 0 && !selected && (
-            <div
+          {nodes.length > 0 && !selected && !canHover && activeCategories.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTouchLegendOpen(o => !o)}
               style={{
                 position: "absolute",
                 top: 12,
                 right: 12,
+                zIndex: 12,
+                padding: "6px 10px",
+                borderRadius: 6,
+                border: `1px solid ${touchLegendOpen ? C.accent : C.border}`,
+                background: `${C.surface}f0`,
+                color: C.textSoft,
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              {touchLegendOpen ? "Close" : "Categories"}
+            </button>
+          )}
+
+          {showCategoryLegend && (
+            <div
+              style={{
+                position: "absolute",
+                top: canHover ? 12 : 48,
+                right: 12,
+                zIndex: 11,
+                maxWidth: 280,
+                width: "min(280px, calc(100% - 24px))",
+                maxHeight: "min(40vh, 320px)",
+                overflowY: "auto",
+                WebkitOverflowScrolling: "touch",
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 6,
                 justifyContent: "flex-end",
-                maxWidth: 280,
+                alignContent: "flex-start",
+                padding: 8,
+                boxSizing: "border-box",
+                background: `${C.surface}ee`,
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                backdropFilter: "blur(8px)",
               }}
             >
-              {(categories || [])
-                .filter(cat => nodes.some(n => n.category === cat.name))
-                .map(cat => (
+              {activeCategories.map(cat => (
+                <div
+                  key={cat.name}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    padding: "3px 8px",
+                    background: `${C.bg}cc`,
+                    borderRadius: 4,
+                    border: `1px solid ${C.border}`,
+                  }}
+                >
                   <div
-                    key={cat.name}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      padding: "3px 8px",
-                      background: `${C.surface}e0`,
-                      borderRadius: 4,
-                      border: `1px solid ${C.border}`,
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: cat.color,
+                      flexShrink: 0,
                     }}
-                  >
-                    <div
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: cat.color,
-                      }}
-                    />
-                    <span style={{ fontSize: 9, color: C.textSoft }}>
-                      {formatCategoryLabel(cat.name)}
-                    </span>
-                  </div>
-                ))}
+                  />
+                  <span style={{ fontSize: 9, color: C.textSoft }}>
+                    {formatCategoryLabel(cat.name)}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </div>

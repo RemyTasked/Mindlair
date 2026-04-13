@@ -59,7 +59,12 @@ Given the content below, extract the 1-3 most important claims being made. For e
 1. State the claim as a clear, standalone statement
 2. Classify the type: factual (verifiable), opinion (subjective view), prediction (future outcome), policy (should/shouldn't)
 3. Rate your confidence 0-1 that this is the core claim
-4. List 2-5 concepts/topics this claim relates to${conceptGuidance}
+4. List 1-3 substantive concepts/topics this claim relates to${conceptGuidance}
+
+Concept rules (critical):
+- Never output function words, vague intensifiers, or filler as concepts (e.g. "just", "only", "really", "very", "things", "something").
+- Prefer broad, stable topic labels (e.g. "housing policy" not "September rent tweet").
+- When the user's existing concept list applies, reuse those labels whenever the topic matches; do not invent near-duplicates.
 
 Focus on claims that:
 - Represent the author's main argument or thesis

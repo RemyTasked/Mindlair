@@ -108,12 +108,76 @@ const ALIAS_MAP: Record<string, string> = {
 
 const STOP_WORDS = new Set([
   'the', 'a', 'an', 'of', 'in', 'on', 'at', 'to', 'for', 'and', 'or',
-  'is', 'are', 'was', 'were', 'be', 'been', 'being', 'its', 'it',
+  'is', 'are', 'was', 'were', 'be', 'been', 'being', 'its', 'it', 'this', 'that',
+  'these', 'those', 'as', 'by', 'with', 'from', 'into', 'about', 'over', 'after',
+  'before', 'between', 'through', 'during', 'without', 'within', 'against',
+  'just', 'only', 'really', 'very', 'most', 'more', 'some', 'also', 'than', 'then',
+  'like', 'well', 'even', 'still', 'such', 'much', 'many', 'few', 'lot', 'lots',
+  'too', 'so', 'not', 'no', 'yes', 'but', 'if', 'when', 'how', 'why', 'what',
+  'who', 'which', 'where', 'while', 'because', 'since', 'until', 'both', 'either',
+  'neither', 'nor', 'yet', 'ever', 'never', 'always', 'maybe', 'perhaps', 'quite',
+  'rather', 'here', 'there', 'now', 'again', 'once', 'twice', 'thing',
+  'things', 'way', 'ways', 'time', 'times', 'day', 'days', 'year', 'years',
+]);
+
+/** Single-token topic labels shorter than this are dropped unless allowlisted. */
+const MIN_SINGLE_TOKEN_LEN = 4;
+
+/** Short labels that are valid substantive topics (aliases often map these). */
+const SHORT_TOPIC_ALLOWLIST = new Set([
+  'ai', 'ml', 'nft', 'nfts', 'gdp', 'ubi', 'fed', 'etf', 'ira', 'ceo', 'cto',
+  'eu', 'uk', 'us', 'un', 'nfl', 'nba', 'mlb', 'ufc', 'mma',
+]);
+
+/** Whole-string junk (normalized) — never link as a concept. */
+const CONCEPT_JUNK_LABELS = new Set([
+  'just', 'only', 'really', 'very', 'most', 'more', 'some', 'like', 'well', 'even',
+  'still', 'thing', 'things', 'stuff', 'something', 'anything', 'nothing', 'everything',
+  'someone', 'anyone', 'everyone', 'nobody', 'maybe', 'perhaps', 'unknown', 'general',
 ]);
 
 // ── Normalize ──────────────────────────────────────────────────
-function normalize(label: string): string {
+export function normalizeConceptLabel(label: string): string {
   return label.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function normalize(label: string): string {
+  return normalizeConceptLabel(label);
+}
+
+/**
+ * Filters concept strings before DB resolution — trims, dedupes, drops filler tokens.
+ */
+export function sanitizeConceptLabels(labels: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+
+  for (const raw of labels) {
+    const trimmed = typeof raw === 'string' ? raw.trim() : '';
+    if (trimmed.length < 2) continue;
+
+    const norm = normalizeConceptLabel(trimmed);
+    if (norm.length < 2) continue;
+    if (CONCEPT_JUNK_LABELS.has(norm)) continue;
+
+    const key = norm;
+    if (seen.has(key)) continue;
+
+    const hasSpace = /\s/.test(norm);
+    if (!hasSpace) {
+      if (norm.length < MIN_SINGLE_TOKEN_LEN && !SHORT_TOPIC_ALLOWLIST.has(norm)) continue;
+      if (STOP_WORDS.has(norm)) continue;
+    } else {
+      const parts = norm.split(/\s+/).filter(Boolean);
+      const substantive = parts.filter(p => p.length >= MIN_SINGLE_TOKEN_LEN && !STOP_WORDS.has(p));
+      if (substantive.length === 0) continue;
+    }
+
+    seen.add(key);
+    out.push(trimmed.length > 0 ? trimmed : norm);
+  }
+
+  return out;
 }
 
 function tokenize(label: string): string[] {
@@ -486,12 +550,11 @@ export async function extractConceptsFromHeadline(headlineClaim: string): Promis
   
   // If we found no known concepts, extract noun phrases as potential concepts
   if (concepts.length === 0) {
-    // Return significant words as potential new concepts
-    const significantTokens = tokens.filter(t => t.length >= 4);
-    return significantTokens.slice(0, 3);
+    const significantTokens = tokens.filter(t => t.length >= 5);
+    return sanitizeConceptLabels(significantTokens.slice(0, 3));
   }
-  
-  return [...new Set(concepts)];
+
+  return sanitizeConceptLabels([...new Set(concepts)]);
 }
 
 // ── Internal helpers ───────────────────────────────────────────
