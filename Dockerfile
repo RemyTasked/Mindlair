@@ -25,5 +25,5 @@ RUN npm run build:web
 ENV PORT=3000
 EXPOSE 3000
 
-# db push applies schema; db seed is idempotent (discover@mindlair.app posts for Discovery when no users post yet)
-CMD ["sh", "-c", "cd apps/web && npx prisma db push --skip-generate --accept-data-loss && npx prisma db seed && npm run start"]
+# db push applies schema; db seed creates posts; migrate-thumbnails updates existing posts with thumbnails
+CMD ["sh", "-c", "cd apps/web && npx prisma db push --skip-generate --accept-data-loss && npx prisma db seed && npx tsx prisma/migrate-thumbnails.ts && npm run start"]
