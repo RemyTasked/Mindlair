@@ -120,8 +120,9 @@ export default function AppLayout({
         borderTop: `1px solid ${C.border}`,
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}>
-        <div className="flex items-center justify-around py-2">
+        <div className="flex items-center justify-around gap-0.5 py-2 px-1">
           <MobileNavLink href="/feed" icon={Rss} label="Feed" />
+          <MobileNavLink href="/my-posts" icon={FileText} label="My Posts" />
           <MobileNavLink href="/map" icon={Map} label="Map" />
           <MobileNavLink href="/inbox" icon={Inbox} label="Inbox" />
           <MobileNavLink href="/nudges" icon={Lightbulb} label="Nudges" />
@@ -168,11 +169,13 @@ function MobileNavLink({
   return (
     <Link
       href={href}
-      className="flex flex-col items-center gap-1 px-3 py-1 transition-colors"
+      className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1 transition-colors"
       style={{ color: "#7a7469", textDecoration: "none" }}
     >
-      <Icon className="w-5 h-5" />
-      <span style={{ fontSize: 10 }}>{label}</span>
+      <Icon className="h-5 w-5 shrink-0" />
+      <span className="max-w-full text-center leading-tight" style={{ fontSize: 10 }}>
+        {label}
+      </span>
     </Link>
   );
 }
