@@ -36,17 +36,23 @@ export function AnnotationToolbar({
       return;
     }
 
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const toolbarWidth = 180;
-    const toolbarHeight = 44;
+    const toolbarWidth = 200;
+    const toolbarHeight = 48;
 
     let left = selection.rect.left + (selection.rect.width / 2) - (toolbarWidth / 2);
-    let top = selection.rect.top - toolbarHeight - 8;
+    let top = selection.rect.top - toolbarHeight - 12;
 
-    left = Math.max(8, Math.min(left, window.innerWidth - toolbarWidth - 8));
+    // Ensure toolbar stays within viewport
+    left = Math.max(12, Math.min(left, window.innerWidth - toolbarWidth - 12));
 
-    if (top < 8) {
-      top = selection.rect.bottom + 8;
+    // If toolbar would be above viewport (or overlap mobile browser UI), show below selection
+    if (top < 60) {
+      top = selection.rect.bottom + 12;
+    }
+
+    // On very small screens, center horizontally
+    if (window.innerWidth < 400) {
+      left = (window.innerWidth - toolbarWidth) / 2;
     }
 
     setPosition({ top, left });
@@ -82,32 +88,44 @@ export function AnnotationToolbar({
             e.stopPropagation();
             onAnnotate();
           }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAnnotate();
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            padding: '8px 12px',
+            padding: '10px 14px',
             background: 'transparent',
             border: 'none',
             borderRadius: 6,
             color: C.text,
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             cursor: 'pointer',
             transition: 'background 0.15s',
+            minHeight: 44,
+            WebkitTapHighlightColor: 'transparent',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = C.bg)}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           title="Add a comment on this selection"
         >
-          <MessageSquarePlus size={16} style={{ color: C.accent }} />
+          <MessageSquarePlus size={18} style={{ color: C.accent }} />
           Annotate
         </button>
 
-        <div style={{ width: 1, background: C.border, margin: '4px 0' }} />
+        <div style={{ width: 1, background: C.border, margin: '6px 0' }} />
 
         <button
           onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onWriteResponse();
+          }}
+          onTouchEnd={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onWriteResponse();
@@ -116,21 +134,23 @@ export function AnnotationToolbar({
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            padding: '8px 12px',
+            padding: '10px 14px',
             background: 'transparent',
             border: 'none',
             borderRadius: 6,
             color: C.text,
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             cursor: 'pointer',
             transition: 'background 0.15s',
+            minHeight: 44,
+            WebkitTapHighlightColor: 'transparent',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = C.bg)}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           title="Write a full post responding to this passage"
         >
-          <PenLine size={16} style={{ color: C.textSoft }} />
+          <PenLine size={18} style={{ color: C.textSoft }} />
           Respond
         </button>
       </motion.div>

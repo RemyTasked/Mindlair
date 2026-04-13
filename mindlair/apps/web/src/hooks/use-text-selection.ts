@@ -98,13 +98,14 @@ export function useTextSelection(containerRef: React.RefObject<HTMLElement | nul
   }, []);
 
   useEffect(() => {
-    const handleMouseDown = () => {
+    const handleSelectionStart = () => {
       isSelectingRef.current = true;
     };
 
-    const handleMouseUp = () => {
+    const handleSelectionEnd = () => {
       isSelectingRef.current = false;
-      setTimeout(handleSelectionChange, 10);
+      // Longer delay for mobile to let the selection finalize
+      setTimeout(handleSelectionChange, 50);
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -113,13 +114,33 @@ export function useTextSelection(containerRef: React.RefObject<HTMLElement | nul
       }
     };
 
-    document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mouseup', handleMouseUp);
+    // Also listen for the native selectionchange event (works well on mobile)
+    const handleNativeSelectionChange = () => {
+      if (!isSelectingRef.current) {
+        // Debounce to avoid rapid updates during selection
+        setTimeout(handleSelectionChange, 100);
+      }
+    };
+
+    // Mouse events (desktop)
+    document.addEventListener('mousedown', handleSelectionStart);
+    document.addEventListener('mouseup', handleSelectionEnd);
+    
+    // Touch events (mobile)
+    document.addEventListener('touchstart', handleSelectionStart);
+    document.addEventListener('touchend', handleSelectionEnd);
+    
+    // Native selection change (helps catch mobile text selection via long-press)
+    document.addEventListener('selectionchange', handleNativeSelectionChange);
+    
     document.addEventListener('keyup', handleKeyUp);
 
     return () => {
-      document.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousedown', handleSelectionStart);
+      document.removeEventListener('mouseup', handleSelectionEnd);
+      document.removeEventListener('touchstart', handleSelectionStart);
+      document.removeEventListener('touchend', handleSelectionEnd);
+      document.removeEventListener('selectionchange', handleNativeSelectionChange);
       document.removeEventListener('keyup', handleKeyUp);
     };
   }, [handleSelectionChange]);
