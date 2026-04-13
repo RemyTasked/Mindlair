@@ -84,7 +84,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (userReaction) {
       const counts = await db.postReaction.groupBy({
         by: ['stance'],
-        where: { postId: id },
+        where: { postId: post.id },
         _count: true,
       });
       reactionCounts = counts.reduce((acc, c) => {
