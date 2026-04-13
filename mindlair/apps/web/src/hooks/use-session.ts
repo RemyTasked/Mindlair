@@ -31,11 +31,28 @@ export function useSession() {
   });
 
   const checkSession = useCallback(async () => {
+    const fetchSession = async (): Promise<Response> => {
+      const maxAttempts = 3;
+      const backoffMs = [0, 400, 900];
+      let lastError: unknown;
+      for (let i = 0; i < maxAttempts; i++) {
+        if (backoffMs[i] > 0) {
+          await new Promise(r => setTimeout(r, backoffMs[i]));
+        }
+        try {
+          return await fetch("/api/auth/session", {
+            credentials: "include",
+          });
+        } catch (e) {
+          lastError = e;
+        }
+      }
+      throw lastError;
+    };
+
     try {
-      const response = await fetch("/api/auth/session", {
-        credentials: "include",
-      });
-      
+      const response = await fetchSession();
+
       const data = await response.json();
 
       if (data.authenticated && data.user) {

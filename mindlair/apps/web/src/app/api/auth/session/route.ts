@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import {
   getSessionByToken,
+  getSessionFromCookie,
   clearSessionCookie,
   deleteSession,
   deleteAllUserSessions,
   setSessionCookie,
 } from '@/lib/auth';
-
-const SESSION_COOKIE_NAME = 'mindlair_session';
+import { SESSION_COOKIE_NAME } from '@/lib/session-cookie';
 
 export async function GET() {
   try {

@@ -38,6 +38,9 @@ export default function InstallPage() {
         <p style={{ fontSize: 15, color: C.textSoft, maxWidth: 440, margin: "0 auto" }}>
           Sign in to start building your belief map. Works in any browser — install on mobile for push notifications and offline access.
         </p>
+        <p style={{ fontSize: 13, color: C.muted, maxWidth: 480, margin: "14px auto 0", lineHeight: 1.5 }}>
+          Stay signed in: use the same site address for Safari and your home-screen app, and open magic links in the browser you use for Mindlair.
+        </p>
       </header>
 
       {/* Sign In CTA */}

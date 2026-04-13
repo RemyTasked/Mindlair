@@ -181,6 +181,9 @@ export default function LoginPage() {
         <p style={{ textAlign: "center", fontSize: 13, color: C.muted, marginTop: 20 }}>
           No password required. We&apos;ll send you a magic link.
         </p>
+        <p style={{ textAlign: "center", fontSize: 12, color: C.muted, marginTop: 12, lineHeight: 1.5, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
+          On iPhone, open the email link in Safari, then add to Home Screen from that same site so your session isn&apos;t split across URLs.
+        </p>
       </div>
     </div>
   );

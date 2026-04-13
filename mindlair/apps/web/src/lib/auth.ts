@@ -2,8 +2,7 @@ import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 import db from './db';
-
-const SESSION_COOKIE_NAME = 'mindlair_session';
+import { SESSION_COOKIE_NAME } from './session-cookie';
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const SESSION_REFRESH_THRESHOLD_MS = 25 * 24 * 60 * 60 * 1000; // Refresh if less than 25 days left (more aggressive)
 const MAGIC_LINK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -105,28 +104,34 @@ export async function createSession(
   return token;
 }
 
+function sessionCookieAllowsDomain(): boolean {
+  return !SESSION_COOKIE_NAME.startsWith('__Host-');
+}
+
 export async function setSessionCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
-  const domain = getCookieDomain();
-  
+  const domain =
+    sessionCookieAllowsDomain() ? getCookieDomain() : undefined;
+
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: isProduction(),
+    secure: SESSION_COOKIE_NAME.startsWith('__Host-') || isProduction(),
     sameSite: 'lax',
     maxAge: SESSION_DURATION_MS / 1000,
     path: '/',
-    ...(domain && { domain }),
+    ...(domain ? { domain } : {}),
   });
 }
 
 export async function clearSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
-  const domain = getCookieDomain();
-  
+  const domain =
+    sessionCookieAllowsDomain() ? getCookieDomain() : undefined;
+
   cookieStore.delete({
     name: SESSION_COOKIE_NAME,
     path: '/',
-    ...(domain && { domain }),
+    ...(domain ? { domain } : {}),
   });
 }
 
