@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import db from '@/lib/db';
 import { getSessionFromRequest } from '@/lib/auth';
 
 export async function GET(
@@ -10,7 +10,7 @@ export async function GET(
     const { id } = await params;
     const session = await getSessionFromRequest(request);
 
-    const annotation = await prisma.annotation.findUnique({
+    const annotation = await db.annotation.findUnique({
       where: { id },
       include: {
         author: {
@@ -128,7 +128,7 @@ export async function PATCH(
       );
     }
 
-    const annotation = await prisma.annotation.findUnique({
+    const annotation = await db.annotation.findUnique({
       where: { id },
       include: {
         post: { select: { authorId: true } },
@@ -159,7 +159,7 @@ export async function PATCH(
       updates.isResolved = body.isResolved;
     }
 
-    const updated = await prisma.annotation.update({
+    const updated = await db.annotation.update({
       where: { id },
       data: updates,
     });
@@ -194,7 +194,7 @@ export async function DELETE(
       );
     }
 
-    const annotation = await prisma.annotation.findUnique({
+    const annotation = await db.annotation.findUnique({
       where: { id },
       select: { authorId: true },
     });
@@ -213,7 +213,7 @@ export async function DELETE(
       );
     }
 
-    await prisma.annotation.delete({ where: { id } });
+    await db.annotation.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

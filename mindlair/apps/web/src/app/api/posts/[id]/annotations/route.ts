@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import db from '@/lib/db';
 import { getSessionFromRequest } from '@/lib/auth';
 import crypto from 'crypto';
 
@@ -15,7 +15,7 @@ export async function GET(
     const { id: postId } = await params;
     const session = await getSessionFromRequest(request);
 
-    const post = await prisma.post.findUnique({
+    const post = await db.post.findUnique({
       where: { id: postId },
       select: { id: true, status: true, authorId: true },
     });
@@ -34,7 +34,7 @@ export async function GET(
       );
     }
 
-    const annotations = await prisma.annotation.findMany({
+    const annotations = await db.annotation.findMany({
       where: { postId },
       include: {
         author: {
@@ -89,7 +89,7 @@ export async function POST(
       );
     }
 
-    const post = await prisma.post.findUnique({
+    const post = await db.post.findUnique({
       where: { id: postId },
       select: { id: true, status: true, authorId: true },
     });
@@ -127,7 +127,7 @@ export async function POST(
 
     const textHash = hashText(selectedText);
 
-    const annotation = await prisma.annotation.create({
+    const annotation = await db.annotation.create({
       data: {
         postId,
         authorId: session.userId,
