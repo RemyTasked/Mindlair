@@ -169,7 +169,7 @@ function MobilePwaCard({
 }
 
 const GITHUB_REPO = "RemyTasked/Mindlair";
-const APP_VERSION = "0.1.0";
+const APP_VERSION = "0.2.0";
 const ANDROID_APK_FILE = `mindlair-${APP_VERSION}-debug.apk`;
 
 function AndroidApkCard() {
