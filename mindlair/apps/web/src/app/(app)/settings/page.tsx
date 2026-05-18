@@ -22,6 +22,7 @@ import {
   Share,
 } from "lucide-react";
 import { PushNotifications } from "@/components/push-notifications";
+import { APP_VERSION, GITHUB_REPO } from "@/lib/app-config";
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
 
@@ -37,8 +38,6 @@ function detectDevice(): { platform: PlatformType; isMobile: boolean } {
   else if (ua.includes("linux")) platform = "linux";
   return { platform, isMobile };
 }
-const GITHUB_REPO = "RemyTasked/Mindlair";
-const APP_VERSION = "0.1.0";
 
 interface DigestWindow {
   enabled: boolean;

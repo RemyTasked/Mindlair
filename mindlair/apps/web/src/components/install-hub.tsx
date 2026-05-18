@@ -12,6 +12,7 @@ import {
   Plus,
   Check,
 } from "lucide-react";
+import { APP_VERSION, GITHUB_REPO, ANDROID_APK_FILE, DESKTOP_DOWNLOADS } from "@/lib/app-config";
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
 
@@ -168,10 +169,6 @@ function MobilePwaCard({
   );
 }
 
-const GITHUB_REPO = "RemyTasked/Mindlair";
-const APP_VERSION = "0.2.0";
-const ANDROID_APK_FILE = `mindlair-${APP_VERSION}-debug.apk`;
-
 function AndroidApkCard() {
   return (
     <div style={{ border: `1px solid ${C.border}`, borderRadius: 14, padding: 24, background: C.surface }}>
@@ -216,16 +213,10 @@ function AndroidApkCard() {
   );
 }
 
-const DOWNLOADS: { os: string; label: string; file: string }[] = [
-  { os: "mac",     label: "macOS (Apple Silicon)", file: `Mindlair_${APP_VERSION}_aarch64.dmg` },
-  { os: "windows", label: "Windows",               file: `Mindlair_${APP_VERSION}_x64-setup.exe` },
-  { os: "linux",   label: "Linux (AppImage)",       file: `Mindlair_${APP_VERSION}_amd64.AppImage` },
-];
-
 function DesktopCard({ platform }: { platform: PlatformType }) {
   const primaryOs = platform === "windows" ? "windows" : platform === "linux" ? "linux" : "mac";
 
-  const sorted = [...DOWNLOADS].sort((a, b) => {
+  const sorted = [...DESKTOP_DOWNLOADS].sort((a, b) => {
     if (a.os === primaryOs && b.os !== primaryOs) return -1;
     if (a.os !== primaryOs && b.os === primaryOs) return 1;
     return 0;

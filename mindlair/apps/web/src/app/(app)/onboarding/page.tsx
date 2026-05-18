@@ -15,6 +15,7 @@ import {
   Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { APP_VERSION, GITHUB_REPO } from "@/lib/app-config";
 
 const C = {
   bg: "#0f0e0c",
@@ -32,9 +33,6 @@ const STEPS = ["capture", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
-
-const GITHUB_REPO = "RemyTasked/Mindlair";
-const APP_VERSION = "0.1.0";
 
 export default function OnboardingPage() {
   const router = useRouter();
