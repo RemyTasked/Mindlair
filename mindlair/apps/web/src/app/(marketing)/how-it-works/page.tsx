@@ -125,7 +125,7 @@ export default function HowItWorksPage() {
             Ready to map your thinking?
           </h2>
           <p style={{ color: C.textSoft, fontSize: 15, marginBottom: 32 }}>
-            Free to use. Import from Readwise or Instapaper to seed your map.
+            Free to use. Install the browser extension to start building your map.
           </p>
           <Link href="/login">
             <Button size="lg" variant="gradient">

@@ -3,6 +3,7 @@ import { submitReactionSchema } from '@/lib/validations';
 import db from '@/lib/db';
 import { updateBeliefGraph } from '@/lib/services/belief-graph';
 import { getAuthFromRequest } from '@/lib/auth';
+import { checkCommonCardTriggers, type AwardedCard } from '@/lib/services/card-detection';
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,12 +76,34 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Check for card awards
+    const cardAwards: AwardedCard[] = [];
+    
+    // Check position-related cards
+    const positionAwards = await checkCommonCardTriggers({
+      type: 'position_created',
+      userId,
+      payload: { positionId: position.id, claimId, stance },
+    });
+    cardAwards.push(...positionAwards);
+
+    // Check belief-related cards (if new beliefs were created)
+    if (conceptIds.length > 0) {
+      const beliefAwards = await checkCommonCardTriggers({
+        type: 'belief_created',
+        userId,
+        payload: { conceptId: conceptIds[0] },
+      });
+      cardAwards.push(...beliefAwards);
+    }
+
     return NextResponse.json({
       positionId: position.id,
       claimId,
       stance,
       createdAt: position.createdAt.toISOString(),
       isEvolution: !!previousPosition,
+      cardAwards: cardAwards.length > 0 ? cardAwards : undefined,
     });
   } catch (error) {
     console.error('Reaction error:', error);

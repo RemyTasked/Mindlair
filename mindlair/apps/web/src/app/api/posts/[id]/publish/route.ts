@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
+import { hasPublicDisplayName } from '@/lib/display-name-policy';
 import { extractClaims } from '@/lib/services/ai';
 import { linkClaimToConcepts, updateBeliefGraph } from '@/lib/services/belief-graph';
 import { sanitizeConceptLabels } from '@/lib/services/concept-resolver';
 import { screenPostContent } from '@/lib/services/moderation';
 import { buildExtractionTextForPublish } from '@/lib/posts/referenced-post';
+import { checkCommonCardTriggers, type AwardedCard } from '@/lib/services/card-detection';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -19,6 +21,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         { code: 'UNAUTHORIZED', message: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    if (!hasPublicDisplayName(user.name)) {
+      return NextResponse.json(
+        {
+          code: 'DISPLAY_NAME_REQUIRED',
+          message:
+            'Set a display name in Settings (at least 2 characters, not “Anonymous”) before publishing.',
+        },
+        { status: 403 }
       );
     }
 
@@ -92,7 +105,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         userId: user.id,
         url: `/post/${id}`,
         title: post.headlineClaim,
-        author: user.name || user.email,
+        author: user.name!.trim(),
         contentType: 'article',
         surface: 'mindlair_publish',
         consumedAt: new Date(),
@@ -210,6 +223,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     });
 
+    // Check for card awards
+    const cardAwards: AwardedCard[] = [];
+    const publishAwards = await checkCommonCardTriggers({
+      type: 'post_published',
+      userId: user.id,
+      payload: { postId: id },
+    });
+    cardAwards.push(...publishAwards);
+
     return NextResponse.json({
       success: true,
       post: {
@@ -220,6 +242,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         topicTags: publishedPost.topicTags,
       },
       claimsExtracted: createdClaimIds.length,
+      cardAwards: cardAwards.length > 0 ? cardAwards : undefined,
     });
   } catch (error) {
     console.error('Publish post error:', error);

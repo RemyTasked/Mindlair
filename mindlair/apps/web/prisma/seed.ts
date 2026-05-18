@@ -895,6 +895,353 @@ Close the laptop. The emails will wait. They always do.`,
   },
 ];
 
+// ============================================
+// Card Catalog
+// ============================================
+
+interface SeedCard {
+  slug: string;
+  name: string;
+  description: string;
+  hint: string;
+  tier: 'common' | 'rare' | 'legendary';
+  category: 'milestone' | 'habit' | 'archetype' | null;
+  sortOrder: number;
+  detectionRule?: Record<string, unknown>;
+}
+
+const SEED_CARDS: SeedCard[] = [
+  // ============================================
+  // COMMON TIER - Milestone and Habit Cards
+  // ============================================
+  {
+    slug: 'first_reaction',
+    name: 'First Reaction',
+    description: 'Took your first stance on a claim.',
+    hint: 'Engage with any claim in the app.',
+    tier: 'common',
+    category: 'milestone',
+    sortOrder: 1,
+    detectionRule: {
+      type: 'event',
+      event: 'position_created',
+      condition: 'first',
+    },
+  },
+  {
+    slug: 'first_light',
+    name: 'First Light',
+    description: 'Added your first claim to the map.',
+    hint: 'Take a position that adds a new node to your belief map.',
+    tier: 'common',
+    category: 'milestone',
+    sortOrder: 2,
+    detectionRule: {
+      type: 'event',
+      event: 'belief_created',
+      condition: 'first',
+    },
+  },
+  {
+    slug: 'first_words',
+    name: 'First Words',
+    description: 'Published your first post.',
+    hint: 'Write and publish a post sharing your perspective.',
+    tier: 'common',
+    category: 'milestone',
+    sortOrder: 3,
+    detectionRule: {
+      type: 'event',
+      event: 'post_published',
+      condition: 'first',
+    },
+  },
+  {
+    slug: 'first_take',
+    name: 'First Take',
+    description: 'Created your first quick take.',
+    hint: 'Share a quick reaction to something you consumed.',
+    tier: 'common',
+    category: 'milestone',
+    sortOrder: 4,
+    detectionRule: {
+      type: 'event',
+      event: 'quick_take_created',
+      condition: 'first',
+    },
+  },
+  {
+    slug: 'browser_bound',
+    name: 'Browser Bound',
+    description: 'Captured your first claim through the web extension.',
+    hint: 'Install the browser extension and capture content from the web.',
+    tier: 'common',
+    category: 'milestone',
+    sortOrder: 5,
+    detectionRule: {
+      type: 'event',
+      event: 'source_created',
+      condition: { surface: 'chrome_extension', first: true },
+    },
+  },
+  {
+    slug: 'ten_deep',
+    name: 'Ten Deep',
+    description: 'Reached 10 claims in your map.',
+    hint: 'Keep engaging with content to build your map.',
+    tier: 'common',
+    category: 'habit',
+    sortOrder: 6,
+    detectionRule: {
+      type: 'threshold',
+      metric: 'distinctClaimsWithPosition',
+      value: 10,
+    },
+  },
+  {
+    slug: 'hundred_strong',
+    name: 'Hundred Strong',
+    description: 'Reached 100 claims in your map.',
+    hint: 'Your map grows with every claim you engage with.',
+    tier: 'common',
+    category: 'habit',
+    sortOrder: 7,
+    detectionRule: {
+      type: 'threshold',
+      metric: 'distinctClaimsWithPosition',
+      value: 100,
+    },
+  },
+  {
+    slug: 'week_one',
+    name: 'Week One',
+    description: 'Engaged for 7 consecutive days.',
+    hint: 'Return each day to keep your streak alive.',
+    tier: 'common',
+    category: 'habit',
+    sortOrder: 8,
+    detectionRule: {
+      type: 'streak',
+      metric: 'consecutiveDays',
+      value: 7,
+    },
+  },
+  {
+    slug: 'reader',
+    name: 'Reader',
+    description: 'Subscribed to another user for the first time.',
+    hint: 'Find someone whose thinking interests you and follow them.',
+    tier: 'common',
+    category: 'milestone',
+    sortOrder: 9,
+    detectionRule: {
+      type: 'event',
+      event: 'subscription_created',
+      condition: 'first',
+    },
+  },
+  {
+    slug: 'read',
+    name: 'Read',
+    description: 'Gained your first subscriber.',
+    hint: 'Publish content that resonates with others.',
+    tier: 'common',
+    category: 'milestone',
+    sortOrder: 10,
+    detectionRule: {
+      type: 'event',
+      event: 'subscriber_gained',
+      condition: 'first',
+    },
+  },
+
+  // ============================================
+  // RARE TIER - Archetype Cards from Map Patterns
+  // ============================================
+  {
+    slug: 'the_synthesizer',
+    name: 'The Synthesizer',
+    description: 'Consistently connects ideas across distant domains.',
+    hint: 'Build bridges between separate areas of your map.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 101,
+    detectionRule: {
+      type: 'pattern',
+      pattern: 'cross_cluster_synthesis',
+      minMapSize: 50,
+      windowDays: 90,
+      threshold: 0.15,
+    },
+  },
+  {
+    slug: 'the_specialist',
+    name: 'The Specialist',
+    description: 'Developed deep expertise in a single domain.',
+    hint: 'Go deep in one area before broadening.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 102,
+    detectionRule: {
+      type: 'pattern',
+      pattern: 'single_cluster_depth',
+      minClusterDepth: 30,
+      maxOtherClusterDepth: 10,
+      minMapSize: 50,
+    },
+  },
+  {
+    slug: 'the_generalist',
+    name: 'The Generalist',
+    description: 'Cultivated broad knowledge across many domains.',
+    hint: 'Explore widely across different topics.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 103,
+    detectionRule: {
+      type: 'pattern',
+      pattern: 'even_distribution',
+      minClusters: 5,
+      maxGiniCoefficient: 0.3,
+      minMapSize: 50,
+    },
+  },
+  {
+    slug: 'the_contrarian',
+    name: 'The Contrarian',
+    description: 'Frequently disagrees where others agree.',
+    hint: 'Follow your own judgment, even when it diverges from consensus.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 104,
+    detectionRule: {
+      type: 'metric_threshold',
+      metric: 'disputeRate90d',
+      operator: 'gt',
+      value: 0.25,
+      comparedTo: 'platformAverage',
+      multiplier: 1.5,
+      minMapSize: 50,
+      windowDays: 90,
+    },
+  },
+  {
+    slug: 'the_steel_manner',
+    name: 'The Steel-Manner',
+    description: 'Articulates opposing views fairly after engaging with them.',
+    hint: 'Dispute a claim, then write a post that presents that view charitably.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 105,
+    detectionRule: {
+      type: 'pattern',
+      pattern: 'dispute_then_articulate',
+      minInstances: 3,
+      windowDays: 90,
+      minMapSize: 30,
+    },
+  },
+  {
+    slug: 'the_revisionist',
+    name: 'The Revisionist',
+    description: 'Regularly updates beliefs as understanding evolves.',
+    hint: 'Change your mind when the evidence warrants it.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 106,
+    detectionRule: {
+      type: 'metric_threshold',
+      metric: 'revisionRate90d',
+      operator: 'gt',
+      value: 0.10,
+      minMapSize: 30,
+      windowDays: 90,
+    },
+  },
+  {
+    slug: 'the_anchor',
+    name: 'The Anchor',
+    description: 'Created claims that others frequently reference.',
+    hint: 'Share ideas that resonate across the community.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 107,
+    detectionRule: {
+      type: 'cross_user',
+      metric: 'inboundLinkCount',
+      threshold: 10,
+    },
+  },
+  {
+    slug: 'the_early_reader',
+    name: 'The Early Reader',
+    description: 'Discovered a creator before they gained wide recognition.',
+    hint: 'Subscribe to promising voices early.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 108,
+    detectionRule: {
+      type: 'cross_user',
+      pattern: 'early_subscription',
+      subscribedWhenBelow: 10,
+      targetNowAbove: 100,
+    },
+  },
+  {
+    slug: 'the_cartographer',
+    name: 'The Cartographer',
+    description: 'Surfaced a claim that later spread through the platform.',
+    hint: 'Be the first to articulate ideas that catch on.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 109,
+    detectionRule: {
+      type: 'cross_user',
+      pattern: 'claim_provenance',
+      minSpread: 10,
+      windowDays: 30,
+    },
+  },
+  {
+    slug: 'the_questioner',
+    name: 'The Questioner',
+    description: 'Approaches claims with nuance rather than binary judgment.',
+    hint: 'Use "complicated" when claims deserve more than simple agreement or disagreement.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 110,
+    detectionRule: {
+      type: 'metric_threshold',
+      metric: 'qualifiedReactionRate',
+      operator: 'gt',
+      value: 0.30,
+      minMapSize: 30,
+      windowDays: 90,
+    },
+  },
+  {
+    slug: 'the_inheritor',
+    name: 'The Inheritor',
+    description: 'Published work that builds clearly on ideas from followed creators.',
+    hint: 'Let the thinking of those you follow influence your published work.',
+    tier: 'rare',
+    category: 'archetype',
+    sortOrder: 111,
+    detectionRule: {
+      type: 'cross_user',
+      pattern: 'intellectual_inheritance',
+      minInstances: 3,
+      similarityThreshold: 0.75,
+      windowDays: 30,
+    },
+  },
+
+  // ============================================
+  // LEGENDARY TIER - Deferred (Coming Soon)
+  // ============================================
+  // Legendary cards will be added post-launch
+];
+
 async function main() {
   console.log('🌱 Starting seed...');
 
@@ -965,7 +1312,46 @@ async function main() {
     console.log(`  (skipped ${skippedCount} existing posts)`);
   }
 
-  console.log('🎉 Seed complete!');
+  // ============================================
+  // Seed Card Catalog
+  // ============================================
+  console.log('\n📇 Seeding card catalog...');
+
+  let cardsCreated = 0;
+  let cardsSkipped = 0;
+
+  for (const card of SEED_CARDS) {
+    const existing = await db.card.findUnique({
+      where: { slug: card.slug },
+    });
+
+    if (existing) {
+      cardsSkipped++;
+      continue;
+    }
+
+    await db.card.create({
+      data: {
+        slug: card.slug,
+        name: card.name,
+        description: card.description,
+        hint: card.hint,
+        tier: card.tier,
+        category: card.category,
+        sortOrder: card.sortOrder,
+        detectionRule: card.detectionRule ? JSON.parse(JSON.stringify(card.detectionRule)) : undefined,
+      },
+    });
+
+    cardsCreated++;
+  }
+
+  console.log(`✓ Created ${cardsCreated} cards`);
+  if (cardsSkipped > 0) {
+    console.log(`  (skipped ${cardsSkipped} existing cards)`);
+  }
+
+  console.log('\n🎉 Seed complete!');
 }
 
 main()

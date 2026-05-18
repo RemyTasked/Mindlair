@@ -4,9 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // extensions = [vector] // Requires pgvector; re-enable when available
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 // ============================================
@@ -30,11 +30,9 @@ model User {
   beliefs           Belief[]
   digests           Digest[]
   nudges            Nudge[]
-  connectedSources  ConnectedSource[]
   sessions          Session[]
   apiKeys           ApiKey[]
   pushSubscriptions PushSubscription[]
-  rssFeeds          RssFeed[]
 
   // Publishing Layer
   posts             Post[]
@@ -50,6 +48,11 @@ model User {
 
   // Annotations
   annotations       Annotation[]
+
+  // Card System
+  cardAwards        CardAward[]
+  weeklyRecaps      WeeklyRecap[]
+  userMetrics       UserMetrics?
 
   @@map("users")
 }
@@ -142,39 +145,6 @@ model UserSettings {
   @@map("user_settings")
 }
 
-model ConnectedSource {
-  id           String    @id @default(cuid())
-  userId       String
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider     String // readwise, instapaper
-  accessToken  String?
-  refreshToken String?
-  expiresAt    DateTime?
-  lastSyncAt   DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  @@unique([userId, provider])
-  @@map("connected_sources")
-}
-
-model RssFeed {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  url        String
-  title      String?
-  siteUrl    String?
-  lastItemAt DateTime?
-  lastSyncAt DateTime?
-  errorCount Int       @default(0)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  @@unique([userId, url])
-  @@map("rss_feeds")
-}
-
 // ============================================
 // Core Data Model
 // ============================================
@@ -225,13 +195,31 @@ model Claim {
   modelVersion    String
   extractedAt     DateTime @default(now())
 
+  // Embedding for cross-user similarity (Phase 2)
+  embeddingJson Json?
+
+  // Version tracking for revisions
+  version    Int     @default(1)
+  previousId String?
+  previous   Claim?  @relation("ClaimHistory", fields: [previousId], references: [id])
+  revisions  Claim[] @relation("ClaimHistory")
+  changeType String? // edit, qualification, retraction, reversal
+
+  // Cluster assignment (updated by nightly job)
+  clusterId String?
+
   positions  Position[]
   claimChain ClaimChain?
 
   // Concepts this claim relates to
   claimConcepts ClaimConcept[]
 
+  // Cross-user similarity edges
+  similaritiesAsA ClaimSimilarity[] @relation("SimilarityClaimA")
+  similaritiesAsB ClaimSimilarity[] @relation("SimilarityClaimB")
+
   @@index([sourceId])
+  @@index([clusterId])
   @@map("claims")
 }
 
@@ -272,6 +260,10 @@ model Concept {
   // Canonical aliases that should resolve to this concept
   aliases String[] @default([])
 
+  // Cluster metadata (from Louvain detection)
+  clusterId    String?
+  clusterDepth Int     @default(0) // claims in cluster
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -283,6 +275,7 @@ model Concept {
   tensionsAsA Tension[] @relation("TensionBeliefA")
   tensionsAsB Tension[] @relation("TensionBeliefB")
 
+  @@index([clusterId])
   @@map("concepts")
 }
 
@@ -643,4 +636,146 @@ model AnalyticsEvent {
   @@index([userId, timestamp])
   @@index([type, timestamp])
   @@map("analytics_events")
+}
+
+// ============================================
+// Card System
+// ============================================
+
+model Card {
+  id          String  @id @default(cuid())
+  slug        String  @unique // e.g., "first_reaction", "the_synthesizer"
+  name        String           // Display name
+  description String           // Short description for catalog
+  hint        String           // Locked card hint text
+  tier        String           // common, rare, legendary
+  category    String?          // milestone, habit, archetype
+  iconUrl     String?
+
+  // Detection config (JSON rule definition)
+  detectionRule Json?
+
+  // Ordering for catalog display
+  sortOrder Int @default(0)
+
+  createdAt DateTime    @default(now())
+  awards    CardAward[]
+
+  @@map("cards")
+}
+
+model CardAward {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId String
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  // Evidence that triggered the award
+  evidence Json // { claimIds, conceptIds, metrics, pattern }
+
+  // Whether the pattern is still active (for archetype cards)
+  isActive Boolean @default(true)
+
+  // Sharing
+  isShared Boolean @default(false)
+
+  // Recap batching
+  recapId String?
+  recap   WeeklyRecap? @relation(fields: [recapId], references: [id])
+
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, cardId])
+  @@index([userId, awardedAt])
+  @@index([recapId])
+  @@map("card_awards")
+}
+
+model WeeklyRecap {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime
+
+  // Aggregated stats for the week
+  stats Json // { claimsAdded, positionsTaken, ... }
+
+  // Delivery status
+  deliveredAt DateTime?
+  viewedAt    DateTime?
+
+  createdAt DateTime    @default(now())
+  awards    CardAward[]
+
+  @@unique([userId, weekStart])
+  @@index([userId, weekStart])
+  @@map("weekly_recaps")
+}
+
+// ============================================
+// User Metrics (Rolling Window Aggregates)
+// ============================================
+
+model UserMetrics {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Rolling 90-day windows (updated nightly)
+  disputeRate90d        Float @default(0)
+  revisionRate90d       Float @default(0)
+  qualifiedReactionRate Float @default(0)
+  synthesisRate90d      Float @default(0)
+
+  // Counts
+  totalClaims     Int @default(0)
+  totalPositions  Int @default(0)
+  clusterCount    Int @default(0)
+  maxClusterDepth Int @default(0)
+
+  // Cross-user (aggregate only)
+  inboundLinkCount Int @default(0) // The Anchor
+
+  // Daily activity streak tracking
+  lastActivityDate DateTime?
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
+
+  lastComputedAt DateTime @default(now())
+
+  @@map("user_metrics")
+}
+
+// ============================================
+// Cross-User Similarity
+// ============================================
+
+model ClaimSimilarity {
+  id         String   @id @default(cuid())
+  claimAId   String
+  claimA     Claim    @relation("SimilarityClaimA", fields: [claimAId], references: [id], onDelete: Cascade)
+  claimBId   String
+  claimB     Claim    @relation("SimilarityClaimB", fields: [claimBId], references: [id], onDelete: Cascade)
+  similarity Float    // cosine similarity score
+  detectedAt DateTime @default(now())
+
+  @@unique([claimAId, claimBId])
+  @@index([claimAId])
+  @@index([claimBId])
+  @@map("claim_similarities")
+}
+
+// ============================================
+// User Growth Snapshots (Early Reader detection)
+// ============================================
+
+model UserGrowthSnapshot {
+  id              String   @id @default(cuid())
+  userId          String
+  subscriberCount Int
+  snapshotAt      DateTime @default(now())
+
+  @@index([userId, snapshotAt])
+  @@map("user_growth_snapshots")
 }

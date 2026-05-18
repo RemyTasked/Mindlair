@@ -23,12 +23,7 @@ export type Surface =
   | 'safari_extension'
   | 'ios_share'
   | 'android_share'
-  | 'web_app'
-  | 'readwise_import'
-  | 'instapaper_import'
-  | 'google_takeout_youtube'
-  | 'google_takeout_chrome'
-  | 'spotify_import';
+  | 'web_app';
 
 export type Stance = 'agree' | 'disagree' | 'complicated' | 'skip';
 

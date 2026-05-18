@@ -407,3 +407,38 @@ export async function screenComment(body: string): Promise<CommentScreeningResul
     return { passes: true, flags: [], confidence: 0.5 };
   }
 }
+
+/**
+ * Generate embedding for a claim and return it.
+ * Used for cross-user similarity detection in the card system.
+ */
+export async function generateClaimEmbedding(claimText: string): Promise<number[]> {
+  return generateEmbedding(claimText);
+}
+
+/**
+ * Find similar claims to a given embedding using cosine similarity.
+ * Used for cross-user card detection (Cartographer, Inheritor).
+ */
+export async function findSimilarClaims(
+  embedding: number[],
+  candidates: Array<{ id: string; text: string; embedding: number[] }>,
+  threshold = 0.85
+): Promise<Array<{ id: string; text: string; similarity: number }>> {
+  if (!embedding.length) return [];
+
+  const similar: Array<{ id: string; text: string; similarity: number }> = [];
+
+  for (const candidate of candidates) {
+    if (!candidate.embedding?.length) continue;
+
+    const similarity = cosineSimilarity(embedding, candidate.embedding);
+    if (similarity >= threshold) {
+      similar.push({ id: candidate.id, text: candidate.text, similarity });
+    }
+  }
+
+  return similar.sort((a, b) => b.similarity - a.similarity);
+}
+
+export { cosineSimilarity };

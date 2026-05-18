@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { updateSettingsSchema } from '@/lib/validations';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
+import { validateDisplayNameInput } from '@/lib/display-name-policy';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,21 +26,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const connectedSources = await db.connectedSource.findMany({
-      where: { userId },
-    });
-
-    const connectedMap = {
-      readwise: connectedSources.some(s => s.provider === 'readwise'),
-      instapaper: connectedSources.some(s => s.provider === 'instapaper'),
-    };
-
     const userProfile = await db.user.findUnique({
       where: { id: userId },
-      select: { timezone: true },
+      select: { timezone: true, name: true },
     });
 
     return NextResponse.json({
+      displayName: userProfile?.name ?? null,
       digestWindows: {
         morning: {
           enabled: settings.morningDigestEnabled,
@@ -57,7 +50,6 @@ export async function GET(request: NextRequest) {
         email: settings.emailEnabled,
       },
       timezone: userProfile?.timezone || 'America/New_York',
-      connectedSources: connectedMap,
     });
   } catch (error) {
     console.error('Get settings error:', error);
@@ -89,6 +81,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const data = validation.data;
+
     const userId = user.id;
 
     const updateData: Record<string, unknown> = {};
@@ -114,16 +107,32 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    await db.userSettings.upsert({
-      where: { userId },
-      update: updateData,
-      create: { userId, ...updateData },
-    });
+    if (Object.keys(updateData).length > 0) {
+      await db.userSettings.upsert({
+        where: { userId },
+        update: updateData,
+        create: { userId, ...updateData },
+      });
+    }
 
     if (data.timezone) {
       await db.user.update({
         where: { id: userId },
         data: { timezone: data.timezone },
+      });
+    }
+
+    if (data.displayName !== undefined) {
+      const nameCheck = validateDisplayNameInput(data.displayName);
+      if (!nameCheck.ok) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: nameCheck.message },
+          { status: 400 }
+        );
+      }
+      await db.user.update({
+        where: { id: userId },
+        data: { name: nameCheck.normalized },
       });
     }
 

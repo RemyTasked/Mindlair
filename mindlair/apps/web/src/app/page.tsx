@@ -342,22 +342,22 @@ export default function HomePage() {
             fontSize: "clamp(1.6rem, 3vw, 2rem)",
             fontWeight: 700, marginBottom: 12,
           }}>
-            Start with history, not from scratch
+            Capture starts the moment you install
           </h2>
           <p style={{
             color: "#c4bfb4", fontSize: 15, lineHeight: 1.7,
             maxWidth: 520, margin: "0 auto 28px",
           }}>
-            Import from Readwise, Instapaper, or browser history. Your map begins with everything
-            you&apos;ve already read — so the first session already feels like years of insight.
+            Install the browser extension and watch your map grow as you browse. No manual input
+            needed — Mindlair silently tracks articles, videos, and podcasts in the background.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            {["Readwise", "Instapaper", "Spotify", "Google Takeout"].map(source => (
-              <span key={source} style={{
+            {["Chrome", "Firefox", "Safari", "Edge"].map(browser => (
+              <span key={browser} style={{
                 fontSize: 12, color: "#7a7469",
                 border: "1px solid #2a2825", borderRadius: 6,
                 padding: "6px 14px",
-              }}>{source}</span>
+              }}>{browser}</span>
             ))}
           </div>
         </div>
@@ -431,7 +431,7 @@ export default function HomePage() {
             Start mapping today
           </h2>
           <p style={{ color: "#c4bfb4", fontSize: 15, marginBottom: 32 }}>
-            Free to start. Import your reading history to see your map instantly.
+            Free to start. Install the browser extension and watch your map grow.
           </p>
           <Link href="/login">
             <Button size="xl" variant="gradient">

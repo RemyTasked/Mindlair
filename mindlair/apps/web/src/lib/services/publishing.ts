@@ -4,6 +4,7 @@ import { linkClaimToConcepts, updateBeliefGraph } from './belief-graph';
 import { screenPostContent } from './moderation';
 import { findSimilarPosts, extractConceptsFromHeadline, resolveConceptBatch } from './concept-resolver';
 import { buildExtractionTextForPublish } from '@/lib/posts/referenced-post';
+import { hasPublicDisplayName } from '@/lib/display-name-policy';
 
 interface PublishResult {
   success: boolean;
@@ -36,6 +37,18 @@ export async function publishPost(postId: string, userId: string): Promise<Publi
     return { success: false, error: 'Only draft posts can be published' };
   }
 
+  const authorProfile = await db.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
+  });
+  if (!authorProfile || !hasPublicDisplayName(authorProfile.name)) {
+    return {
+      success: false,
+      error:
+        'Set a display name in Settings (at least 2 characters, not “Anonymous”) before publishing.',
+    };
+  }
+
   // 1. AI pre-screening
   const screeningResult = await screenPostContent(post.headlineClaim, post.body);
   if (!screeningResult.passed) {
@@ -54,19 +67,13 @@ export async function publishPost(postId: string, userId: string): Promise<Publi
     };
   }
 
-  // 2. Get user info for author field
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { name: true, email: true },
-  });
-
-  // 3. Create Source record (links to claim extraction pipeline)
+  // 2. Create Source record (links to claim extraction pipeline)
   const source = await db.source.create({
     data: {
       userId,
       url: `/post/${postId}`,
       title: post.headlineClaim,
-      author: user?.name || user?.email || 'Anonymous',
+      author: authorProfile.name.trim(),
       contentType: 'article',
       surface: 'mindlair_publish',
       consumedAt: new Date(),

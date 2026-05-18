@@ -246,10 +246,6 @@ export interface UserSettings {
     email: boolean;
   };
   timezone: string;
-  connectedSources: {
-    readwise: boolean;
-    instapaper: boolean;
-  };
 }
 
 export interface UpdateSettingsRequest {

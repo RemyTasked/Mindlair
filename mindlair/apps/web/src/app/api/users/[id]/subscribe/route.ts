@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
+import { checkCommonCardTriggers, type AwardedCard } from '@/lib/services/card-detection';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -87,9 +88,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     });
 
+    // Check for card awards
+    const cardAwards: AwardedCard[] = [];
+
+    // Check if subscriber earned "reader" card
+    const readerAwards = await checkCommonCardTriggers({
+      type: 'subscription_created',
+      userId: user.id,
+      payload: { subscribedToId: targetUserId },
+    });
+    cardAwards.push(...readerAwards);
+
+    // Check if target user earned "read" card
+    const readAwards = await checkCommonCardTriggers({
+      type: 'subscriber_gained',
+      userId: targetUserId,
+      payload: { subscriberId: user.id },
+    });
+    // Note: readAwards are for the target user, not returned in this response
+
     return NextResponse.json({
       success: true,
       subscribed: true,
+      cardAwards: cardAwards.length > 0 ? cardAwards : undefined,
     });
   } catch (error) {
     console.error('Subscribe error:', error);

@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
-  BookOpen,
-  FileText,
-  Music,
   Monitor,
   Smartphone,
   Globe,
@@ -12,7 +9,6 @@ import {
   Check,
   ChevronRight,
   ArrowRight,
-  RefreshCw,
   Loader2,
   X,
   Info,
@@ -22,9 +18,6 @@ import {
   Brain,
   TrendingUp,
   Layers,
-  Upload,
-  FolderArchive,
-  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -40,21 +33,8 @@ const C = {
   rose: "#e06070",
 };
 
-const STEPS = ["welcome", "connect", "capture", "done"] as const;
+const STEPS = ["welcome", "capture", "done"] as const;
 type Step = (typeof STEPS)[number];
-
-interface Integration {
-  provider: string;
-  connected: boolean;
-  lastSyncAt: string | null;
-  connectedAt: string | null;
-  sourceCount: number;
-}
-
-interface IntegrationsData {
-  integrations: Integration[];
-  googleTakeoutLastImportAt: string | null;
-}
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
 
@@ -67,178 +47,20 @@ interface OnboardingOverlayProps {
 
 export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   const [step, setStep] = useState<Step>("welcome");
-  const [data, setData] = useState<IntegrationsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [platform, setPlatform] = useState<PlatformType>("other");
-  const [syncing, setSyncing] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
-  const [takeoutUploading, setTakeoutUploading] = useState(false);
-  const [takeoutError, setTakeoutError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await fetch("/api/integrations");
-      if (res.ok) {
-        const json = await res.json();
-        setData({
-          integrations: json.integrations ?? [],
-          googleTakeoutLastImportAt: json.googleTakeoutLastImportAt ?? null,
-        });
-      }
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    fetchData();
-
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes("iphone") || ua.includes("ipad")) setPlatform("ios");
     else if (ua.includes("android")) setPlatform("android");
     else if (ua.includes("mac")) setPlatform("mac");
     else if (ua.includes("win")) setPlatform("windows");
     else if (ua.includes("linux")) setPlatform("linux");
-  }, [fetchData]);
+  }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("spotify") === "connected") {
-      fetchData();
-      window.history.replaceState({}, "", "/map");
-    }
-  }, [fetchData]);
-
-  const getIntegration = (provider: string) =>
-    data?.integrations.find((i) => i.provider === provider);
-
-  const totalConnected = data?.integrations.filter((i) => i.connected).length || 0;
-
-  const googleTakeoutLastImportAt = data?.googleTakeoutLastImportAt ?? null;
-  const hasAtLeastOneSource = totalConnected > 0 || !!googleTakeoutLastImportAt;
   const isDesktop = platform === "mac" || platform === "windows" || platform === "linux";
   const isMobile = platform === "ios" || platform === "android";
-
-  const connectReadwise = async () => {
-    const token = prompt("Enter your Readwise Access Token\n(from readwise.io/access_token):");
-    if (!token) return;
-    try {
-      const res = await fetch("/api/integrations/readwise", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      if (res.ok) {
-        await fetchData();
-        syncIntegration("readwise");
-      } else {
-        const err = await res.json();
-        alert(err.message || "Failed to connect Readwise");
-      }
-    } catch {
-      alert("Failed to connect Readwise");
-    }
-  };
-
-  const connectInstapaper = async () => {
-    const email = prompt("Enter your Instapaper email:");
-    if (!email) return;
-    const password = prompt("Enter your Instapaper password:");
-    if (!password) return;
-    try {
-      const res = await fetch("/api/integrations/instapaper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (res.ok) {
-        await fetchData();
-        syncIntegration("instapaper");
-      } else {
-        const err = await res.json();
-        alert(err.message || "Failed to connect Instapaper");
-      }
-    } catch {
-      alert("Failed to connect Instapaper");
-    }
-  };
-
-  const [spotifyError, setSpotifyError] = useState("");
-  const [spotifyLoading, setSpotifyLoading] = useState(false);
-
-  const connectSpotify = async () => {
-    setSpotifyError("");
-    setSpotifyLoading(true);
-    try {
-      const res = await fetch("/api/integrations/spotify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ returnTo: "/map" }),
-      });
-      if (res.ok) {
-        const { authUrl } = await res.json();
-        window.location.href = authUrl;
-      } else {
-        const err = await res.json().catch(() => ({ message: "Unknown error" }));
-        setSpotifyError(err.message || "Failed to connect Spotify. Please try again.");
-        setSpotifyLoading(false);
-      }
-    } catch (e) {
-      setSpotifyError("Failed to connect Spotify. Please try again.");
-      setSpotifyLoading(false);
-    }
-  };
-
-  const handleTakeoutUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setTakeoutUploading(true);
-    setTakeoutError(null);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/integrations/google-takeout", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setTakeoutError(data.message || `Upload failed`);
-        return;
-      }
-
-      await res.json();
-      await fetchData();
-    } catch (err) {
-      console.error("Takeout upload error:", err);
-      setTakeoutError("Failed to process file. Make sure it's a valid Google Takeout export.");
-    } finally {
-      setTakeoutUploading(false);
-      event.target.value = "";
-    }
-  };
-
-  const syncIntegration = async (provider: string) => {
-    setSyncing(provider);
-    try {
-      const res = await fetch(`/api/integrations/${provider}/sync`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        await fetchData();
-      }
-    } catch {
-      // silent
-    } finally {
-      setSyncing(null);
-    }
-  };
 
   const completeOnboarding = async () => {
     setCompleting(true);
@@ -251,25 +73,6 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
   };
 
   const stepIndex = STEPS.indexOf(step);
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(15, 14, 12, 0.95)",
-          backdropFilter: "blur(8px)",
-          zIndex: 60,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: C.accent }} />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -324,19 +127,16 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
             style={{ color: C.text, letterSpacing: "-0.03em" }}
           >
             {step === "welcome" && "Welcome to Mindlair"}
-            {step === "connect" && "Connect your sources"}
             {step === "capture" && (isMobile ? "Add to Home Screen" : "Install capture tools")}
             {step === "done" && "You're ready!"}
           </h1>
           <p className="text-sm" style={{ color: C.muted, maxWidth: 400, margin: "0 auto" }}>
             {step === "welcome" &&
               "Map your intellectual journey. See how your thinking evolves over time."}
-            {step === "connect" &&
-              "Link at least one service to seed your map with your reading history. The more you connect, the richer your map becomes."}
             {step === "capture" &&
               (isMobile
                 ? "Add Mindlair to your home screen for quick sharing and push notifications."
-                : "Install the desktop app or browser extension to capture what you read.")}
+                : "Install the browser extension to passively capture what you read.")}
             {step === "done" &&
               "Your map is ready to grow. Everything you consume will be captured automatically."}
           </p>
@@ -354,27 +154,6 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
             />
           ))}
         </div>
-
-        {/* Encouragement message */}
-        {step === "connect" && !hasAtLeastOneSource && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "12px 16px",
-              background: `${C.surface}`,
-              borderRadius: 10,
-              marginBottom: 16,
-              border: `1px solid ${C.border}`,
-            }}
-          >
-            <Sparkles className="w-4 h-4" style={{ color: C.accent, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: C.textSoft }}>
-              Connect sources for a richer map experience (optional)
-            </span>
-          </div>
-        )}
 
         {/* Step content */}
         <div className="space-y-3">
@@ -421,180 +200,12 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                   Get the most out of Mindlair:
                 </p>
                 <ul style={{ margin: 0, padding: "0 0 0 18px", fontSize: 13, color: C.muted, lineHeight: 1.8 }}>
-                  <li>Connect more reading sources for a richer starting map</li>
                   <li>Install the browser extension for passive capture</li>
+                  <li>Browse the web normally — we track what matters</li>
                   <li>Check back weekly to see your map evolve</li>
                 </ul>
               </div>
             </div>
-          )}
-
-          {step === "connect" && (
-            <>
-              <IntegrationRow
-                name="Readwise"
-                description="Articles, highlights & podcasts"
-                icon={<BookOpen className="w-5 h-5" style={{ color: "#f0c040" }} />}
-                connected={!!getIntegration("readwise")?.connected}
-                lastSyncAt={getIntegration("readwise")?.lastSyncAt ?? null}
-                syncing={syncing === "readwise"}
-                onConnect={connectReadwise}
-                onSync={() => syncIntegration("readwise")}
-                provider="readwise"
-                fetchData={fetchData}
-                syncIntegration={syncIntegration}
-                externalLoading={false}
-                externalError=""
-              />
-              <IntegrationRow
-                name="Instapaper"
-                description="Your reading list"
-                icon={<FileText className="w-5 h-5" style={{ color: C.textSoft }} />}
-                connected={!!getIntegration("instapaper")?.connected}
-                lastSyncAt={getIntegration("instapaper")?.lastSyncAt ?? null}
-                syncing={syncing === "instapaper"}
-                onConnect={connectInstapaper}
-                onSync={() => syncIntegration("instapaper")}
-                provider="instapaper"
-                fetchData={fetchData}
-                syncIntegration={syncIntegration}
-                externalLoading={false}
-                externalError=""
-              />
-              <IntegrationRow
-                name="Spotify"
-                description="Podcast episodes you've listened to"
-                icon={<Music className="w-5 h-5" style={{ color: "#1DB954" }} />}
-                connected={!!getIntegration("spotify")?.connected}
-                lastSyncAt={getIntegration("spotify")?.lastSyncAt ?? null}
-                syncing={syncing === "spotify"}
-                onConnect={connectSpotify}
-                onSync={() => syncIntegration("spotify")}
-                provider="spotify"
-                fetchData={fetchData}
-                syncIntegration={syncIntegration}
-                externalLoading={spotifyLoading}
-                externalError={spotifyError}
-              />
-
-              {/* Google Takeout Import */}
-              <div
-                style={{
-                  background: C.surface,
-                  borderRadius: 12,
-                  border: `1px solid ${C.border}`,
-                  padding: 16,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 10,
-                      background: `${C.border}`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FolderArchive className="w-5 h-5" style={{ color: "#4285F4" }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                      <div>
-                        <h4 style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-                          Google Takeout
-                        </h4>
-                        <p style={{ fontSize: 12, color: C.muted }}>
-                          Import YouTube watch history & Chrome data
-                        </p>
-                      </div>
-                      <div>
-                        <input
-                          type="file"
-                          id="takeout-upload-onboarding"
-                          className="hidden"
-                          accept=".zip,.html,.json"
-                          onChange={handleTakeoutUpload}
-                          disabled={takeoutUploading}
-                          style={{ display: "none" }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => document.getElementById('takeout-upload-onboarding')?.click()}
-                          disabled={takeoutUploading}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "8px 14px",
-                            borderRadius: 8,
-                            background: takeoutUploading ? C.border : C.accent,
-                            color: takeoutUploading ? C.muted : "#fff",
-                            fontSize: 13,
-                            fontWeight: 500,
-                            cursor: takeoutUploading ? "not-allowed" : "pointer",
-                            opacity: takeoutUploading ? 0.7 : 1,
-                            border: "none",
-                          }}
-                        >
-                          {takeoutUploading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Importing...
-                            </>
-                          ) : (
-                            <>
-                              <Upload className="w-4 h-4" />
-                              Upload
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 12, padding: 12, background: C.border, borderRadius: 8, fontSize: 11 }}>
-                      <p style={{ fontWeight: 600, color: C.textSoft, marginBottom: 6 }}>How to export:</p>
-                      <ol style={{ margin: 0, paddingLeft: 16, color: C.muted, lineHeight: 1.6 }}>
-                        <li>Go to <a href="https://takeout.google.com" target="_blank" rel="noopener noreferrer" style={{ color: "#4285F4" }}>takeout.google.com</a></li>
-                        <li>Click &quot;Deselect all&quot; first</li>
-                        <li>Select: <span style={{ color: C.textSoft }}>YouTube → YouTube and YouTube Music</span> and/or <span style={{ color: C.textSoft }}>Chrome → BrowserHistory</span></li>
-                        <li>Choose &quot;.zip&quot; format, then download and upload here</li>
-                      </ol>
-                    </div>
-                    <p style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
-                      Last successful import:{" "}
-                      {googleTakeoutLastImportAt
-                        ? new Date(googleTakeoutLastImportAt).toLocaleString()
-                        : "—"}
-                    </p>
-                    {takeoutError && (
-                      <div
-                        style={{
-                          marginTop: 10,
-                          padding: "8px 12px",
-                          background: `${C.rose}15`,
-                          borderRadius: 6,
-                          border: `1px solid ${C.rose}30`,
-                        }}
-                      >
-                        <p style={{ fontSize: 12, color: C.rose }}>{takeoutError}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {hasAtLeastOneSource && (
-                <div
-                  className="rounded-lg p-3 text-center text-sm font-medium"
-                  style={{ background: `${C.accent}12`, color: C.accent }}
-                >
-                  <Check className="w-4 h-4 inline mr-1" />
-                  Connected services or Takeout data will show up on your map
-                </div>
-              )}
-            </>
           )}
 
           {step === "capture" && (
@@ -787,35 +398,20 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 <Check className="w-8 h-8" style={{ color: C.accent }} />
               </div>
 
-              {hasAtLeastOneSource ? (
-                <div className="space-y-3 mb-8">
-                  {totalConnected > 0 && (
-                    <SummaryRow label="Services connected" value={totalConnected} />
-                  )}
-                  {googleTakeoutLastImportAt && (
-                    <SummaryRow
-                      label="Last Takeout import"
-                      value={new Date(googleTakeoutLastImportAt).toLocaleString()}
-                    />
-                  )}
-                </div>
-              ) : (
-                <div
-                  style={{
-                    padding: "16px",
-                    background: C.surface,
-                    borderRadius: 12,
-                    border: `1px solid ${C.border}`,
-                    marginBottom: 24,
-                  }}
-                >
-                  <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.6 }}>
-                    Your map is empty for now. Visit{" "}
-                    <strong style={{ color: C.accent }}>Settings</strong> anytime to connect
-                    your reading sources and watch your belief map grow.
-                  </p>
-                </div>
-              )}
+              <div
+                style={{
+                  padding: "16px",
+                  background: C.surface,
+                  borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  marginBottom: 24,
+                }}
+              >
+                <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.6 }}>
+                  Your map will grow as you browse. Make sure you have the browser
+                  extension installed so Mindlair can passively capture what you read.
+                </p>
+              </div>
 
               <Button
                 size="lg"
@@ -833,7 +429,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    {hasAtLeastOneSource ? "Explore your map" : "Continue to map"}
+                    Explore your map
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </>
                 )}
@@ -868,306 +464,12 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 fontWeight: 600,
               }}
             >
-              {step === "welcome" ? "Get Started" : step === "connect" && !hasAtLeastOneSource ? "Skip for now" : stepIndex === STEPS.length - 2 ? "Finish setup" : "Continue"}
+              {step === "welcome" ? "Get Started" : "Finish setup"}
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function IntegrationRow({
-  name,
-  description,
-  icon,
-  connected,
-  lastSyncAt,
-  syncing,
-  onConnect,
-  onSync,
-  provider,
-  fetchData,
-  syncIntegration,
-  externalLoading,
-  externalError,
-}: {
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  connected: boolean;
-  lastSyncAt: string | null;
-  syncing: boolean;
-  onConnect: () => void;
-  onSync: () => void;
-  provider: string;
-  fetchData: () => Promise<void>;
-  syncIntegration: (provider: string) => Promise<void>;
-  externalLoading?: boolean;
-  externalError?: string;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [connecting, setConnecting] = useState(false);
-  const [readwiseToken, setReadwiseToken] = useState("");
-  const [instapaperEmail, setInstapaperEmail] = useState("");
-  const [instapaperPassword, setInstapaperPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const isLoading = connecting || externalLoading;
-  const displayError = error || externalError;
-
-  const handleReadwiseConnect = async () => {
-    if (!readwiseToken.trim()) {
-      setError("Please enter your access token");
-      return;
-    }
-    setConnecting(true);
-    setError("");
-    try {
-      const res = await fetch("/api/integrations/readwise", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: readwiseToken.trim() }),
-      });
-      if (res.ok) {
-        await fetchData();
-        await syncIntegration("readwise");
-        setExpanded(false);
-        setReadwiseToken("");
-      } else {
-        const err = await res.json();
-        setError(err.message || "Failed to connect");
-      }
-    } catch {
-      setError("Failed to connect");
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  const handleInstapaperConnect = async () => {
-    if (!instapaperEmail.trim() || !instapaperPassword) {
-      setError("Please enter email and password");
-      return;
-    }
-    setConnecting(true);
-    setError("");
-    try {
-      const res = await fetch("/api/integrations/instapaper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: instapaperEmail.trim(), password: instapaperPassword }),
-      });
-      if (res.ok) {
-        await fetchData();
-        await syncIntegration("instapaper");
-        setExpanded(false);
-        setInstapaperEmail("");
-        setInstapaperPassword("");
-      } else {
-        const err = await res.json();
-        setError(err.message || "Failed to connect");
-      }
-    } catch {
-      setError("Failed to connect");
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  return (
-    <div
-      className="rounded-xl overflow-hidden"
-      style={{
-        border: `1px solid ${connected ? `${C.accent}40` : C.border}`,
-        background: C.surface,
-      }}
-    >
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ background: `${C.border}80` }}
-          >
-            {icon}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-medium text-sm" style={{ color: C.text }}>
-                {name}
-              </p>
-              {connected && <Check className="w-3.5 h-3.5" style={{ color: C.accent }} />}
-            </div>
-            <p className="text-xs" style={{ color: C.muted }}>
-              {description}
-            </p>
-            {connected && (
-              <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                Last successful sync:{" "}
-                {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : "Never synced"}
-              </p>
-            )}
-          </div>
-        </div>
-        {connected ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onSync}
-            disabled={syncing}
-            style={{ borderColor: C.border, color: C.textSoft }}
-          >
-            {syncing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Sync
-              </>
-            )}
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isLoading}
-            onClick={() => {
-              if (provider === "spotify") {
-                onConnect();
-              } else {
-                setExpanded(!expanded);
-                setError("");
-              }
-            }}
-            style={{ borderColor: C.border, color: C.textSoft }}
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : expanded ? (
-              "Cancel"
-            ) : (
-              "Connect"
-            )}
-          </Button>
-        )}
-      </div>
-
-      {/* Show error for Spotify */}
-      {displayError && provider === "spotify" && (
-        <div style={{ padding: "0 16px 12px 16px" }}>
-          <p style={{ fontSize: 12, color: C.rose }}>{displayError}</p>
-        </div>
-      )}
-
-      {/* Expandable form for non-OAuth integrations */}
-      {expanded && !connected && provider !== "spotify" && (
-        <div
-          style={{
-            padding: "0 16px 16px 16px",
-            borderTop: `1px solid ${C.border}`,
-          }}
-        >
-          {provider === "readwise" && (
-            <div className="pt-4 space-y-3">
-              <div>
-                <label style={{ fontSize: 12, color: C.muted, display: "block", marginBottom: 6 }}>
-                  Access Token from{" "}
-                  <a
-                    href="https://readwise.io/access_token"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: C.accent, textDecoration: "underline" }}
-                  >
-                    readwise.io/access_token
-                  </a>
-                </label>
-                <input
-                  type="text"
-                  value={readwiseToken}
-                  onChange={(e) => setReadwiseToken(e.target.value)}
-                  placeholder="Enter your access token"
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                    border: `1px solid ${C.border}`,
-                    background: C.bg,
-                    color: C.text,
-                    fontSize: 14,
-                    outline: "none",
-                  }}
-                />
-              </div>
-              {error && <p style={{ fontSize: 12, color: C.rose }}>{error}</p>}
-              <Button
-                size="sm"
-                onClick={handleReadwiseConnect}
-                disabled={connecting}
-                style={{ background: C.accent, color: C.bg, fontWeight: 600 }}
-              >
-                {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Connect Readwise"}
-              </Button>
-            </div>
-          )}
-
-          {provider === "instapaper" && (
-            <div className="pt-4 space-y-3">
-              <div>
-                <label style={{ fontSize: 12, color: C.muted, display: "block", marginBottom: 6 }}>
-                  Instapaper Email
-                </label>
-                <input
-                  type="email"
-                  value={instapaperEmail}
-                  onChange={(e) => setInstapaperEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                    border: `1px solid ${C.border}`,
-                    background: C.bg,
-                    color: C.text,
-                    fontSize: 14,
-                    outline: "none",
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, color: C.muted, display: "block", marginBottom: 6 }}>
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={instapaperPassword}
-                  onChange={(e) => setInstapaperPassword(e.target.value)}
-                  placeholder="••••••••"
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                    border: `1px solid ${C.border}`,
-                    background: C.bg,
-                    color: C.text,
-                    fontSize: 14,
-                    outline: "none",
-                  }}
-                />
-              </div>
-              {error && <p style={{ fontSize: 12, color: C.rose }}>{error}</p>}
-              <Button
-                size="sm"
-                onClick={handleInstapaperConnect}
-                disabled={connecting}
-                style={{ background: C.accent, color: C.bg, fontWeight: 600 }}
-              >
-                {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Connect Instapaper"}
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -1425,22 +727,6 @@ function ExtensionLink({ browser }: { browser: string }) {
         </div>
       )}
     </>
-  );
-}
-
-function SummaryRow({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div
-      className="flex items-center justify-between px-4 py-3 rounded-lg"
-      style={{ background: C.surface, border: `1px solid ${C.border}` }}
-    >
-      <span className="text-sm" style={{ color: C.textSoft }}>
-        {label}
-      </span>
-      <span className="text-sm font-semibold" style={{ color: C.accent }}>
-        {value}
-      </span>
-    </div>
   );
 }
 

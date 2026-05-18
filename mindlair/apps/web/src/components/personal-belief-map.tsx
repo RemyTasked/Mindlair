@@ -732,7 +732,7 @@ export default function PersonalBeliefMap({
                     fontSize: 14,
                   }}
                 >
-                  Connect sources
+                  Install extension
                 </a>
               </div>
             </div>

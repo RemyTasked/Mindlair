@@ -10,10 +10,6 @@ export const surfaceSchema = z.enum([
   'web_app',
   'desktop_app',
   'safari_icloud',
-  'readwise_import',
-  'instapaper_import',
-  'rss_feed',
-  'spotify_import',
   'share_target',
 ]);
 
@@ -93,6 +89,8 @@ export const updateSettingsSchema = z.object({
     email: z.boolean().optional(),
   }).optional(),
   timezone: z.string().optional(),
+  /** Public label; validated in API with validateDisplayNameInput (min 2, reserved words, no @). */
+  displayName: z.string().max(60, 'Display name must be at most 60 characters').optional(),
 });
 
 // Comment validation helpers

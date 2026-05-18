@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
+import { hasPublicDisplayName } from '@/lib/display-name-policy';
 import { createCommentSchema } from '@/lib/validations';
 import { screenComment } from '@/lib/services/ai';
 import { updateBeliefGraphFromComment } from '@/lib/services/belief-graph';
@@ -201,6 +202,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         { code: 'UNAUTHORIZED', message: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    if (!hasPublicDisplayName(user.name)) {
+      return NextResponse.json(
+        {
+          code: 'DISPLAY_NAME_REQUIRED',
+          message:
+            'Set a display name in Settings (at least 2 characters, not “Anonymous”) before commenting.',
+        },
+        { status: 403 }
       );
     }
 

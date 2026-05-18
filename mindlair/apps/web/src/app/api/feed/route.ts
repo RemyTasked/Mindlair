@@ -42,6 +42,11 @@ export async function GET(request: NextRequest) {
 
     const engagedConceptIds = userBeliefs.map(b => b.conceptId);
 
+    const editorialUser = await db.user.findUnique({
+      where: { email: EDITORIAL_EMAIL },
+      select: { id: true },
+    });
+
     // Get users this person is subscribed to
     const subscriptions = await db.subscription.findMany({
       where: { subscriberId: user.id },
@@ -76,7 +81,7 @@ export async function GET(request: NextRequest) {
       where: baseWhere,
       include: {
         author: {
-          select: { id: true, name: true, avatarUrl: true, email: true },
+          select: { id: true, name: true, avatarUrl: true },
         },
         referencedPost: { select: referencedPostSelect },
         source: {
@@ -187,7 +192,7 @@ export async function GET(request: NextRequest) {
         where: editorialWhere,
         include: {
           author: {
-            select: { id: true, name: true, avatarUrl: true, email: true },
+            select: { id: true, name: true, avatarUrl: true },
           },
           referencedPost: { select: referencedPostSelect },
           source: {
@@ -290,7 +295,7 @@ export async function GET(request: NextRequest) {
           contentType: post.source.contentType,
         } : null,
         isSubscribed: subscribedIds.includes(post.authorId),
-        isEditorial: post.author.email === EDITORIAL_EMAIL,
+        isEditorial: !!(editorialUser && post.authorId === editorialUser.id),
         totalReactions: post._count.reactions,
         userReaction: userReactionMap.get(post.id) || null,
         reactionCounts: userReactionMap.has(post.id) ? post.reactionCounts : null,

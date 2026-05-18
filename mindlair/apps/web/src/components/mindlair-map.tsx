@@ -478,7 +478,7 @@ function MindlairMapDemo() {
               fontWeight: 500,
             }}
           >
-            Connect sources to build your own
+            Install extension to build your own
           </a>
         </div>
         <a href="/fingerprint" style={{

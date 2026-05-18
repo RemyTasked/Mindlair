@@ -572,7 +572,7 @@ function SwipeableNudgeCard({
 
 function EmptyState() {
   const tips = [
-    { icon: BookOpen, title: "Read articles", desc: "Import content from Readwise, Instapaper, or Google Takeout" },
+    { icon: BookOpen, title: "Read articles", desc: "Browse the web with the Mindlair extension installed" },
     { icon: Target, title: "React to claims", desc: "Tell us what you agree or disagree with in your digest" },
     { icon: Sparkles, title: "Stay curious", desc: "Nudges appear when we spot one-sided patterns" },
   ];
@@ -648,7 +648,7 @@ function EmptyState() {
         <Link href="/settings">
           <Button style={{ background: C.accent, color: C.bg }}>
             <Settings className="w-4 h-4 mr-2" />
-            Connect sources
+            Get extension
           </Button>
         </Link>
         <Link href="/inbox">

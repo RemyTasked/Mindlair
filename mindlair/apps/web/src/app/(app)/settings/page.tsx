@@ -8,20 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Bell, 
   Clock, 
-  Link2, 
   RefreshCw, 
-  ExternalLink,
-  BookOpen,
-  FileText,
-  Music,
   Key,
   Copy,
   Trash2,
   Plus,
   LogOut,
   Play,
-  Upload,
-  FolderArchive,
   Download,
   Monitor,
   Globe,
@@ -54,6 +47,7 @@ interface DigestWindow {
 }
 
 interface UserSettings {
+  displayName: string | null;
   digestWindows: {
     morning: DigestWindow;
     evening: DigestWindow;
@@ -62,19 +56,7 @@ interface UserSettings {
     push: boolean;
     email: boolean;
   };
-  connectedSources: {
-    readwise: boolean;
-    instapaper: boolean;
-  };
   timezone: string;
-}
-
-interface Integration {
-  provider: string;
-  connected: boolean;
-  lastSyncAt: string | null;
-  connectedAt: string | null;
-  sourceCount: number;
 }
 
 interface ApiKeyInfo {
@@ -94,7 +76,6 @@ interface UserSession {
 export default function SettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeyInfo[]>([]);
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
   const [newKeyName, setNewKeyName] = useState("");
@@ -103,24 +84,24 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
   const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
-  const [takeoutUploading, setTakeoutUploading] = useState(false);
-  const [takeoutError, setTakeoutError] = useState<string | null>(null);
-  const [googleTakeoutLastImportAt, setGoogleTakeoutLastImportAt] = useState<string | null>(null);
   const [deviceInfo, setDeviceInfo] = useState<{ platform: PlatformType; isMobile: boolean } | null>(null);
+  const [displayNameDraft, setDisplayNameDraft] = useState("");
+  const [displayNameSaving, setDisplayNameSaving] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
 
   useEffect(() => {
     setDeviceInfo(detectDevice());
   }, []);
 
-  const fetchSettings = useCallback(async () => {
-    setIsLoading(true);
+  const fetchSettings = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
-      const [settingsRes, integrationsRes, apiKeysRes, sessionRes] = await Promise.all([
+      const [settingsRes, apiKeysRes, sessionRes] = await Promise.all([
         fetch("/api/settings"),
-        fetch("/api/integrations"),
         fetch("/api/auth/api-keys"),
         fetch("/api/auth/session"),
       ]);
@@ -134,13 +115,8 @@ export default function SettingsPage() {
       
       const settingsData = await settingsRes.json();
       setSettings(settingsData);
-      
-      if (integrationsRes.ok) {
-        const integrationsData = await integrationsRes.json();
-        setIntegrations(integrationsData.integrations || []);
-        setGoogleTakeoutLastImportAt(
-          integrationsData.googleTakeoutLastImportAt ?? null,
-        );
+      if (typeof settingsData.displayName === "string" || settingsData.displayName === null) {
+        setDisplayNameDraft(settingsData.displayName ?? "");
       }
       
       if (apiKeysRes.ok) {
@@ -157,7 +133,9 @@ export default function SettingsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setIsLoading(false);
+      if (!opts?.silent) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -178,6 +156,28 @@ export default function SettingsPage() {
       console.error("Failed to update settings:", err);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const saveDisplayName = async () => {
+    setDisplayNameSaving(true);
+    setDisplayNameError(null);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayName: displayNameDraft }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDisplayNameError(data.message || "Could not save display name");
+        return;
+      }
+      await fetchSettings({ silent: true });
+    } catch {
+      setDisplayNameError("Network error. Try again.");
+    } finally {
+      setDisplayNameSaving(false);
     }
   };
 
@@ -257,135 +257,6 @@ export default function SettingsPage() {
     }
   };
 
-  const connectReadwise = async () => {
-    const token = prompt("Enter your Readwise Access Token (from readwise.io/access_token):");
-    if (!token) return;
-
-    try {
-      const response = await fetch("/api/integrations/readwise", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-
-      if (response.ok) {
-        fetchSettings();
-      } else {
-        const error = await response.json();
-        alert(error.message || "Failed to connect Readwise");
-      }
-    } catch (err) {
-      alert("Failed to connect Readwise");
-    }
-  };
-
-  const connectInstapaper = async () => {
-    const email = prompt("Enter your Instapaper email:");
-    if (!email) return;
-    const password = prompt("Enter your Instapaper password:");
-    if (!password) return;
-
-    try {
-      const response = await fetch("/api/integrations/instapaper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        fetchSettings();
-      } else {
-        const error = await response.json();
-        alert(error.message || "Failed to connect Instapaper");
-      }
-    } catch (err) {
-      alert("Failed to connect Instapaper");
-    }
-  };
-
-  const connectSpotify = async () => {
-    try {
-      const response = await fetch("/api/integrations/spotify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ returnTo: "/settings" }),
-      });
-
-      if (response.ok) {
-        const { authUrl } = await response.json();
-        window.location.href = authUrl;
-      } else {
-        const error = await response.json();
-        alert(error.message || "Failed to connect Spotify");
-      }
-    } catch (err) {
-      alert("Failed to connect Spotify");
-    }
-  };
-
-  const handleTakeoutUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setTakeoutUploading(true);
-    setTakeoutError(null);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/integrations/google-takeout", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        setTakeoutError(data.message || `Upload failed (${response.status})`);
-        return;
-      }
-
-      await fetchSettings();
-    } catch (err) {
-      console.error("Takeout upload error:", err);
-      setTakeoutError("Failed to process file. Make sure it's a valid Google Takeout export.");
-    } finally {
-      setTakeoutUploading(false);
-      event.target.value = "";
-    }
-  };
-
-  const syncIntegration = async (provider: string) => {
-    setSyncingProvider(provider);
-    try {
-      const response = await fetch(`/api/integrations/${provider}/sync`, {
-        method: "POST",
-      });
-
-      if (response.ok) {
-        await fetchSettings();
-      } else {
-        const error = await response.json();
-        alert(error.message || `Failed to sync ${provider}`);
-      }
-    } catch (err) {
-      alert(`Failed to sync ${provider}. Please check your connection and try again.`);
-    } finally {
-      setSyncingProvider(null);
-    }
-  };
-
-  const disconnectIntegration = async (provider: string) => {
-    if (!confirm(`Are you sure you want to disconnect ${provider}?`)) return;
-
-    try {
-      await fetch(`/api/integrations/${provider}`, { method: "DELETE" });
-      fetchSettings();
-    } catch (err) {
-      alert(`Failed to disconnect ${provider}`);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -399,14 +270,11 @@ export default function SettingsPage() {
       <Card className="text-center py-8">
         <CardContent>
           <p className="text-red-500 mb-4">{error || "Failed to load settings"}</p>
-          <Button onClick={fetchSettings}>Try again</Button>
+          <Button onClick={() => fetchSettings()}>Try again</Button>
         </CardContent>
       </Card>
     );
   }
-
-  const getIntegration = (provider: string) => 
-    integrations.find(i => i.provider === provider);
 
   return (
     <div>
@@ -432,10 +300,40 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="display-name" className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                Display name
+              </label>
+              <p className="text-sm text-zinc-500">
+                How you appear on posts, comments, and your profile. Your sign-in email is never shown to other
+                users. At least 2 characters; you cannot use the word &quot;Anonymous&quot; or an email-style name
+                (no @).
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  id="display-name"
+                  type="text"
+                  minLength={2}
+                  maxLength={60}
+                  value={displayNameDraft}
+                  onChange={(e) => setDisplayNameDraft(e.target.value)}
+                  placeholder="e.g. Alex Chen"
+                  className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                />
+                <Button type="button" variant="outline" onClick={saveDisplayName} disabled={displayNameSaving}>
+                  {displayNameSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Save name"}
+                </Button>
+              </div>
+              {displayNameError && <p className="text-sm text-red-500">{displayNameError}</p>}
+              <p className="text-xs text-zinc-500">
+                Required before you can publish posts or leave comments. Changing your name updates how past content
+                shows as well.
+              </p>
+            </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Re-run setup</p>
-                <p className="text-sm text-zinc-500">Go through onboarding again to connect integrations</p>
+                <p className="text-sm text-zinc-500">Go through onboarding again</p>
               </div>
               <Button variant="outline" onClick={rerunOnboarding} disabled={isResettingOnboarding}>
                 {isResettingOnboarding ? (
@@ -465,117 +363,6 @@ export default function SettingsPage() {
               <Button variant="outline" onClick={() => handleLogout(true)}>
                 Sign out all
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Connected Sources */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Link2 className="w-5 h-5" />
-              Connected Sources
-            </CardTitle>
-            <CardDescription>
-              Import your reading history to seed your belief map.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <IntegrationItem
-              name="Readwise"
-              description="Sync highlights and saved articles"
-              icon={<BookOpen className="w-5 h-5 text-yellow-500" />}
-              integration={getIntegration("readwise")}
-              isSyncing={syncingProvider === "readwise"}
-              onConnect={connectReadwise}
-              onSync={() => syncIntegration("readwise")}
-              onDisconnect={() => disconnectIntegration("readwise")}
-            />
-            <IntegrationItem
-              name="Instapaper"
-              description="Sync your reading list"
-              icon={<FileText className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />}
-              integration={getIntegration("instapaper")}
-              isSyncing={syncingProvider === "instapaper"}
-              onConnect={connectInstapaper}
-              onSync={() => syncIntegration("instapaper")}
-              onDisconnect={() => disconnectIntegration("instapaper")}
-            />
-            <IntegrationItem
-              name="Spotify"
-              description="Import podcasts from what you are playing, saved episodes, and any episode history Spotify returns. Disconnect and reconnect once if sync was failing."
-              icon={<Music className="w-5 h-5 text-green-500" />}
-              integration={getIntegration("spotify")}
-              isSyncing={syncingProvider === "spotify"}
-              onConnect={connectSpotify}
-              onSync={() => syncIntegration("spotify")}
-              onDisconnect={() => disconnectIntegration("spotify")}
-            />
-
-            {/* Google Takeout Import */}
-            <div className="pt-4 border-t border-zinc-800">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
-                  <FolderArchive className="w-5 h-5 text-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-sm">Google Takeout</h4>
-                      <p className="text-xs text-zinc-500">Import YouTube watch history & Chrome browsing data</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="file"
-                        id="takeout-upload"
-                        className="hidden"
-                        accept=".zip,.html,.json"
-                        onChange={handleTakeoutUpload}
-                        disabled={takeoutUploading}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={takeoutUploading}
-                        onClick={() => document.getElementById('takeout-upload')?.click()}
-                      >
-                        {takeoutUploading ? (
-                          <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4 mr-1" />
-                        )}
-                        {takeoutUploading ? "Importing..." : "Upload"}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="mt-3 p-3 bg-zinc-800/50 rounded-lg text-xs space-y-2">
-                    <p className="font-medium text-zinc-300">How to export:</p>
-                    <ol className="list-decimal list-inside space-y-1 text-zinc-500">
-                      <li>Go to <a href="https://takeout.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">takeout.google.com</a></li>
-                      <li>Click &quot;Deselect all&quot; first</li>
-                      <li>Select only: <span className="text-zinc-300">YouTube → YouTube and YouTube Music</span> and/or <span className="text-zinc-300">Chrome → BrowserHistory</span></li>
-                      <li>Choose &quot;Export once&quot; and &quot;.zip&quot; format</li>
-                      <li>Wait for email, download ZIP, then upload here</li>
-                    </ol>
-                    <p className="text-zinc-600 pt-1">
-                      Supported: full Takeout ZIP, or <code className="text-zinc-500">watch-history.html</code>,{" "}
-                      <code className="text-zinc-500">BrowserHistory.json</code> /{" "}
-                      <code className="text-zinc-500">History.json</code> (Chrome export)
-                    </p>
-                    <p className="text-xs text-zinc-500 mt-2">
-                      Last successful import:{" "}
-                      {googleTakeoutLastImportAt
-                        ? new Date(googleTakeoutLastImportAt).toLocaleString()
-                        : "—"}
-                    </p>
-                  </div>
-                  {takeoutError && (
-                    <div className="mt-2 p-2 bg-red-900/30 border border-red-800 rounded text-xs text-red-300">
-                      {takeoutError}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -1009,76 +796,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
-}
-
-function IntegrationItem({
-  name,
-  description,
-  icon,
-  integration,
-  isSyncing,
-  onConnect,
-  onSync,
-  onDisconnect,
-}: {
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  integration?: Integration;
-  isSyncing: boolean;
-  onConnect: () => void;
-  onSync: () => void;
-  onDisconnect: () => void;
-}) {
-  const isConnected = integration?.connected;
-
-  return (
-    <div className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-          {icon}
-        </div>
-        <div>
-          <p className="font-medium">{name}</p>
-          <p className="text-sm text-zinc-500">{description}</p>
-          {isConnected && (
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Last successful sync:{" "}
-              {integration?.lastSyncAt
-                ? new Date(integration.lastSyncAt).toLocaleString()
-                : "Never synced"}
-            </p>
-          )}
-        </div>
-      </div>
-      {isConnected ? (
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onSync}
-            disabled={isSyncing}
-          >
-            {isSyncing ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Sync
-              </>
-            )}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onDisconnect}>
-            Disconnect
-          </Button>
-        </div>
-      ) : (
-        <Button variant="outline" size="sm" onClick={onConnect}>
-          Connect
-        </Button>
-      )}
     </div>
   );
 }

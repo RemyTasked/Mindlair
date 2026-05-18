@@ -4,6 +4,7 @@ import db from '@/lib/db';
 import { getDomainFromUrl, calculateEngagementScore } from '@/lib/utils';
 import { getAuthFromRequest } from '@/lib/auth';
 import { isContentExplicit } from '@/lib/services/content-filter';
+import { checkCommonCardTriggers, type AwardedCard } from '@/lib/services/card-detection';
 
 export async function POST(request: NextRequest) {
   try {
@@ -115,12 +116,24 @@ export async function POST(request: NextRequest) {
     // Queue claim extraction (in production, this would be a job queue)
     // For now, we'll return immediately and handle extraction async
     
+    // Check for card awards (only for new sources)
+    const cardAwards: AwardedCard[] = [];
+    if (!isRevisit) {
+      const sourceAwards = await checkCommonCardTriggers({
+        type: 'source_created',
+        userId,
+        payload: { sourceId: source.id, surface: data.surface },
+      });
+      cardAwards.push(...sourceAwards);
+    }
+
     return NextResponse.json({
       sourceId: source.id,
       status: isRevisit ? 'updated' : 'queued',
       isRevisit,
       visitCount: source.visitCount,
       engagementScore,
+      cardAwards: cardAwards.length > 0 ? cardAwards : undefined,
     });
   } catch (error) {
     console.error('Ingest error:', error);
