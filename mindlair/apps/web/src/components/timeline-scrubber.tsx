@@ -57,8 +57,12 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredConcept, setHoveredConcept] = useState<string | null>(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2 | 3>(2); // 1=slow, 2=normal, 3=fast
   const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ startX: number; startIndex: number } | null>(null);
+  
+  const SPEED_MS = { 1: 2500, 2: 1500, 3: 800 };
 
   const currentSnapshot = snapshots[currentIndex];
   const previousSnapshot = currentIndex > 0 ? snapshots[currentIndex - 1] : null;
@@ -106,14 +110,14 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
           }
           return prev + 1;
         });
-      }, 800);
+      }, SPEED_MS[playbackSpeed]);
     }
     return () => {
       if (playIntervalRef.current) {
         clearInterval(playIntervalRef.current);
       }
     };
-  }, [isPlaying, snapshots.length]);
+  }, [isPlaying, snapshots.length, playbackSpeed]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -128,12 +132,35 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentIndex, isPlaying]);
 
-  const handleSliderInteraction = (clientX: number) => {
+  const handleSliderClick = (clientX: number) => {
     if (!sliderRef.current) return;
     const rect = sliderRef.current.getBoundingClientRect();
     const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
     const percent = x / rect.width;
     goToIndex(Math.round(percent * (snapshots.length - 1)));
+  };
+
+  const handleDragStart = (clientX: number) => {
+    if (!sliderRef.current) return;
+    dragStartRef.current = { startX: clientX, startIndex: currentIndex };
+    setIsDragging(true);
+  };
+
+  const handleDragMove = (clientX: number) => {
+    if (!sliderRef.current || !dragStartRef.current) return;
+    const rect = sliderRef.current.getBoundingClientRect();
+    const deltaX = clientX - dragStartRef.current.startX;
+    const pixelsPerSnapshot = rect.width / Math.max(1, snapshots.length - 1);
+    const snapshotDelta = Math.round(deltaX / pixelsPerSnapshot);
+    const newIndex = Math.max(0, Math.min(snapshots.length - 1, dragStartRef.current.startIndex + snapshotDelta));
+    if (newIndex !== currentIndex) {
+      setCurrentIndex(newIndex);
+    }
+  };
+
+  const handleDragEnd = () => {
+    dragStartRef.current = null;
+    setIsDragging(false);
   };
 
   const formatDate = (dateStr: string) => {
@@ -387,9 +414,9 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
             <ChevronLeft className="w-5 h-5" />
           </Button>
 
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={togglePlay}
             className="shrink-0 h-9 w-9"
             style={{ color: C.text }}
@@ -401,30 +428,45 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
             )}
           </Button>
 
+          {/* Speed control */}
+          <button
+            onClick={() => setPlaybackSpeed(prev => prev === 3 ? 1 : (prev + 1) as 1 | 2 | 3)}
+            className="shrink-0 h-9 px-2 rounded-md text-xs font-medium transition-colors"
+            style={{ 
+              background: C.surfaceAlt, 
+              color: C.textSoft,
+              border: `1px solid ${C.border}`,
+            }}
+            title="Change playback speed"
+          >
+            {playbackSpeed === 1 ? "0.5x" : playbackSpeed === 2 ? "1x" : "2x"}
+          </button>
+
           <div className="flex-1 space-y-2">
             {/* Scrubber track */}
             <div
               ref={sliderRef}
               className="relative h-2 rounded-full cursor-pointer group"
               style={{ background: C.border }}
-              onClick={(e) => handleSliderInteraction(e.clientX)}
+              onClick={(e) => {
+                if (!isDragging) handleSliderClick(e.clientX);
+              }}
               onMouseDown={(e) => {
-                setIsDragging(true);
-                handleSliderInteraction(e.clientX);
+                e.preventDefault();
+                handleDragStart(e.clientX);
               }}
               onMouseMove={(e) => {
-                if (isDragging) handleSliderInteraction(e.clientX);
+                if (isDragging) handleDragMove(e.clientX);
               }}
-              onMouseUp={() => setIsDragging(false)}
-              onMouseLeave={() => setIsDragging(false)}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
               onTouchStart={(e) => {
-                setIsDragging(true);
-                handleSliderInteraction(e.touches[0].clientX);
+                handleDragStart(e.touches[0].clientX);
               }}
               onTouchMove={(e) => {
-                if (isDragging) handleSliderInteraction(e.touches[0].clientX);
+                if (isDragging) handleDragMove(e.touches[0].clientX);
               }}
-              onTouchEnd={() => setIsDragging(false)}
+              onTouchEnd={handleDragEnd}
             >
               {/* Activity indicator dots */}
               {snapshots.map((snap, i) => {
@@ -496,7 +538,7 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
 
         {/* Keyboard hint */}
         <p className="text-center text-xs mt-3" style={{ color: C.textMuted }}>
-          ← → to step · Space to play · Click or drag the timeline
+          ← → to step · Space to play/pause · Drag to scrub through time
         </p>
       </div>
 

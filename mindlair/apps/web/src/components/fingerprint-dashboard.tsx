@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import * as htmlToImage from "html-to-image";
 import MindlairYearWrapped from "@/components/mindlair-year-wrapped";
+import CardCollection from "@/components/card-collection";
 import {
   FINGERPRINT_MIN_COHORT_N,
   isMinorityInCohort,
@@ -526,7 +527,10 @@ export default function FingerprintDashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get("tab");
-  const topTab: "fingerprint" | "wrapped" = tabParam === "wrapped" ? "wrapped" : "fingerprint";
+  const topTab: "fingerprint" | "wrapped" | "cards" = 
+    tabParam === "wrapped" ? "wrapped" : 
+    tabParam === "cards" ? "cards" : 
+    "fingerprint";
 
   const [data, setData] = useState<FingerprintPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -559,9 +563,10 @@ export default function FingerprintDashboard() {
   }, []);
 
   const setTopTab = useCallback(
-    (t: "fingerprint" | "wrapped") => {
+    (t: "fingerprint" | "wrapped" | "cards") => {
       const params = new URLSearchParams(searchParams.toString());
       if (t === "wrapped") params.set("tab", "wrapped");
+      else if (t === "cards") params.set("tab", "cards");
       else params.delete("tab");
       router.push(`/fingerprint${params.toString() ? `?${params}` : ""}`);
     },
@@ -645,7 +650,7 @@ export default function FingerprintDashboard() {
             borderRadius: 12,
             padding: 3,
             gap: 2,
-            maxWidth: 400,
+            maxWidth: 500,
             marginBottom: 24,
           }}
         >
@@ -653,6 +658,7 @@ export default function FingerprintDashboard() {
             [
               ["fingerprint", "Fingerprint"],
               ["wrapped", "Year in review"],
+              ["cards", "Cards"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -680,6 +686,61 @@ export default function FingerprintDashboard() {
     );
   }
 
+  if (topTab === "cards") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          margin: "-32px -16px",
+          padding: "32px 16px 48px",
+          background: "#0a0a0a",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            background: "#262626",
+            borderRadius: 12,
+            padding: 3,
+            gap: 2,
+            maxWidth: 500,
+            width: "100%",
+            marginBottom: 24,
+          }}
+        >
+          {(
+            [
+              ["fingerprint", "Fingerprint"],
+              ["wrapped", "Year in review"],
+              ["cards", "Cards"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTopTab(id)}
+              style={{
+                flex: 1,
+                padding: "9px 4px",
+                background: id === "cards" ? "#d4915a" : "transparent",
+                border: "none",
+                borderRadius: 9,
+                color: id === "cards" ? "#0a0a0a" : "#a3a3a3",
+                fontSize: 11,
+                fontWeight: id === "cards" ? 600 : 400,
+                cursor: "pointer",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <CardCollection />
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -700,7 +761,7 @@ export default function FingerprintDashboard() {
           borderRadius: 12,
           padding: 3,
           gap: 2,
-          maxWidth: 400,
+          maxWidth: 500,
           width: "100%",
           marginBottom: 24,
         }}
@@ -709,6 +770,7 @@ export default function FingerprintDashboard() {
           [
             ["fingerprint", "Fingerprint"],
             ["wrapped", "Year in review"],
+            ["cards", "Cards"],
           ] as const
         ).map(([id, label]) => (
           <button
