@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Play, Pause, Sparkles } from "lucide-react";
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Play, 
+  Pause, 
+  Sparkles,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Clock,
+} from "lucide-react";
 
 interface ConceptState {
   conceptId: string;
@@ -25,29 +33,37 @@ interface TimelineScrubberProps {
 }
 
 const C = {
-  bg: "#0f0e0c",
-  surface: "#1a1916",
-  border: "#2a2825",
-  text: "#e8e4dc",
-  muted: "#7a7469",
+  bg: "#0a0a0a",
+  surface: "#141414",
+  surfaceAlt: "#1a1a1a",
+  border: "#262626",
+  text: "#f5f5f5",
+  textSoft: "#a3a3a3",
+  textMuted: "#737373",
   accent: "#d4915a",
-  positive: { bg: "#d4915a", text: "#0f0e0c" },
-  negative: { bg: "#e57373", text: "#0f0e0c" },
-  mixed: { bg: "#a3c47a", text: "#0f0e0c" },
-  neutral: { bg: "#4a4640", text: "#e8e4dc" },
+  accentSoft: "rgba(212, 145, 90, 0.15)",
+  positive: "#22c55e",
+  positiveSoft: "rgba(34, 197, 94, 0.15)",
+  negative: "#ef4444",
+  negativeSoft: "rgba(239, 68, 68, 0.15)",
+  mixed: "#a855f7",
+  mixedSoft: "rgba(168, 85, 247, 0.15)",
+  blue: "#3b82f6",
+  blueSoft: "rgba(59, 130, 246, 0.15)",
 };
 
 export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps) {
   const [currentIndex, setCurrentIndex] = useState(snapshots.length - 1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [hoveredConcept, setHoveredConcept] = useState<string | null>(null);
   const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const currentSnapshot = snapshots[currentIndex];
   const previousSnapshot = currentIndex > 0 ? snapshots[currentIndex - 1] : null;
+  const firstSnapshot = snapshots[0];
 
-  // Calculate max count for sizing
   const maxCount = useMemo(() => {
     let max = 1;
     snapshots.forEach(s => {
@@ -58,9 +74,9 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
     return max;
   }, [snapshots]);
 
-  const goToIndex = (index: number) => {
+  const goToIndex = useCallback((index: number) => {
     setCurrentIndex(Math.max(0, Math.min(snapshots.length - 1, index)));
-  };
+  }, [snapshots.length]);
 
   const handlePrevious = () => goToIndex(currentIndex - 1);
   const handleNext = () => goToIndex(currentIndex + 1);
@@ -73,6 +89,9 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
         playIntervalRef.current = null;
       }
     } else {
+      if (currentIndex >= snapshots.length - 1) {
+        setCurrentIndex(0);
+      }
       setIsPlaying(true);
     }
   };
@@ -87,7 +106,7 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
           }
           return prev + 1;
         });
-      }, 1200);
+      }, 800);
     }
     return () => {
       if (playIntervalRef.current) {
@@ -95,6 +114,19 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
       }
     };
   }, [isPlaying, snapshots.length]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") handlePrevious();
+      else if (e.key === "ArrowRight") handleNext();
+      else if (e.key === " ") {
+        e.preventDefault();
+        togglePlay();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentIndex, isPlaying]);
 
   const handleSliderInteraction = (clientX: number) => {
     if (!sliderRef.current) return;
@@ -109,6 +141,16 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
+      year: interval === "month" ? "numeric" : undefined,
+    });
+  };
+
+  const formatDateFull = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
       year: "numeric",
     });
   };
@@ -117,125 +159,212 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
     ? (currentIndex / (snapshots.length - 1)) * 100 
     : 100;
 
+  // Categorize concepts by their trajectory
+  const categorizedConcepts = useMemo(() => {
+    if (!currentSnapshot) return { active: [], rising: [], steady: [], fading: [] };
+
+    const previousMap = new Map(
+      previousSnapshot?.conceptStates.map(c => [c.conceptId, c]) || []
+    );
+    const firstMap = new Map(
+      firstSnapshot?.conceptStates.map(c => [c.conceptId, c]) || []
+    );
+
+    const active: (ConceptState & { trend: string; delta: number })[] = [];
+    const rising: (ConceptState & { trend: string; delta: number })[] = [];
+    const steady: (ConceptState & { trend: string; delta: number })[] = [];
+    const fading: (ConceptState & { trend: string; delta: number })[] = [];
+
+    for (const concept of currentSnapshot.conceptStates) {
+      const prev = previousMap.get(concept.conceptId);
+      const first = firstMap.get(concept.conceptId);
+      const isNew = !prev;
+      const delta = prev ? concept.positionCount - prev.positionCount : concept.positionCount;
+      const totalGrowth = first ? concept.positionCount - first.positionCount : concept.positionCount;
+
+      const enrichedConcept = { ...concept, trend: "steady", delta };
+
+      if (isNew) {
+        enrichedConcept.trend = "new";
+        rising.push(enrichedConcept);
+      } else if (delta > 0) {
+        enrichedConcept.trend = "rising";
+        rising.push(enrichedConcept);
+      } else if (totalGrowth > 2 && concept.positionCount >= 3) {
+        enrichedConcept.trend = "active";
+        active.push(enrichedConcept);
+      } else if (concept.positionCount >= 2) {
+        enrichedConcept.trend = "steady";
+        steady.push(enrichedConcept);
+      } else {
+        enrichedConcept.trend = "fading";
+        fading.push(enrichedConcept);
+      }
+    }
+
+    // Sort each category by position count
+    const sortByCount = (a: ConceptState, b: ConceptState) => b.positionCount - a.positionCount;
+    active.sort(sortByCount);
+    rising.sort(sortByCount);
+    steady.sort(sortByCount);
+    fading.sort(sortByCount);
+
+    return { active, rising, steady, fading };
+  }, [currentSnapshot, previousSnapshot, firstSnapshot]);
+
+  // Get concept history across all snapshots for tooltip
+  const getConceptHistory = useCallback((conceptId: string) => {
+    const history: { date: string; count: number; direction: string }[] = [];
+    for (const snap of snapshots) {
+      const concept = snap.conceptStates.find(c => c.conceptId === conceptId);
+      if (concept) {
+        history.push({
+          date: snap.date,
+          count: concept.positionCount,
+          direction: concept.direction,
+        });
+      }
+    }
+    return history;
+  }, [snapshots]);
+
   if (snapshots.length === 0) {
     return (
       <div 
         className="text-center py-16 rounded-2xl"
         style={{ background: C.surface, border: `1px solid ${C.border}` }}
       >
-        <Sparkles className="w-12 h-12 mx-auto mb-4" style={{ color: C.muted }} />
-        <p style={{ color: C.muted }}>
+        <Sparkles className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMuted }} />
+        <p style={{ color: C.textMuted }}>
           Not enough data yet. Keep reading and reacting to see your thinking evolve.
         </p>
       </div>
     );
   }
 
-  // Sort concepts by count for better visual flow
-  const sortedConcepts = currentSnapshot?.conceptStates
-    .slice()
-    .sort((a, b) => b.positionCount - a.positionCount) || [];
+  const totalConcepts = currentSnapshot?.conceptStates.length || 0;
+  const totalPositions = currentSnapshot?.conceptStates.reduce((sum, c) => sum + c.positionCount, 0) || 0;
 
   return (
-    <div className="space-y-6">
-      {/* Flowing Concept River */}
+    <div className="space-y-4">
+      {/* Main Timeline View */}
       <div 
-        className="relative overflow-hidden rounded-2xl"
-        style={{ 
-          background: `linear-gradient(135deg, ${C.surface} 0%, ${C.bg} 100%)`,
-          border: `1px solid ${C.border}`,
-          minHeight: 320,
-        }}
+        className="rounded-2xl overflow-hidden"
+        style={{ background: C.surface, border: `1px solid ${C.border}` }}
       >
-        {/* Ambient background particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full opacity-10"
-              style={{
-                background: C.accent,
-                width: 100 + i * 50,
-                height: 100 + i * 50,
-              }}
-              animate={{
-                x: [0, 30, 0],
-                y: [0, -20, 0],
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 8 + i * 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.5,
-              }}
-              initial={{
-                left: `${10 + i * 15}%`,
-                top: `${20 + (i % 3) * 25}%`,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Date header */}
-        <div className="relative z-10 p-6 pb-2">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between"
-          >
+        {/* Header with date and stats */}
+        <div className="p-5 border-b" style={{ borderColor: C.border }}>
+          <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-2xl font-bold" style={{ color: C.text }}>
-                {currentSnapshot && formatDate(currentSnapshot.date)}
-              </h2>
-              <p className="text-sm" style={{ color: C.muted }}>
-                {sortedConcepts.length} concepts in your mind
+              <motion.h2 
+                key={currentIndex}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-xl font-semibold"
+                style={{ color: C.text }}
+              >
+                {formatDateFull(currentSnapshot?.date || "")}
+              </motion.h2>
+              <p className="text-sm mt-1" style={{ color: C.textMuted }}>
+                {totalConcepts} topics · {totalPositions} positions taken
               </p>
             </div>
-            {isPlaying && (
-              <motion.div
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="flex items-center gap-2 px-3 py-1 rounded-full"
-                style={{ background: `${C.accent}30`, color: C.accent }}
-              >
-                <span className="w-2 h-2 rounded-full bg-current" />
-                <span className="text-xs font-medium">Flowing</span>
-              </motion.div>
-            )}
-          </motion.div>
+            <div className="flex items-center gap-2">
+              {isPlaying && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
+                  style={{ background: C.accentSoft, color: C.accent }}
+                >
+                  <motion.span
+                    animate={{ opacity: [1, 0.4, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="w-1.5 h-1.5 rounded-full bg-current"
+                  />
+                  Playing
+                </motion.div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Concept Flow Area */}
-        <div className="relative z-10 px-6 pb-6 min-h-[200px]">
-          <LayoutGroup>
-            <motion.div 
-              className="flex flex-wrap gap-3 justify-center items-center"
-              layout
-            >
-              <AnimatePresence mode="popLayout">
-                {sortedConcepts.map((concept, index) => (
-                  <FlowingConcept
-                    key={concept.conceptId}
-                    concept={concept}
-                    maxCount={maxCount}
-                    index={index}
-                    previousConcept={previousSnapshot?.conceptStates.find(
-                      c => c.conceptId === concept.conceptId
-                    )}
-                    isNew={!previousSnapshot?.conceptStates.find(
-                      c => c.conceptId === concept.conceptId
-                    )}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          </LayoutGroup>
+        {/* Concept River - organized in lanes */}
+        <div className="p-5 space-y-5">
+          {/* Rising / New concepts */}
+          {categorizedConcepts.rising.length > 0 && (
+            <ConceptLane
+              title="Rising"
+              icon={<TrendingUp size={14} />}
+              concepts={categorizedConcepts.rising}
+              maxCount={maxCount}
+              accentColor={C.positive}
+              accentSoft={C.positiveSoft}
+              hoveredConcept={hoveredConcept}
+              setHoveredConcept={setHoveredConcept}
+              getConceptHistory={getConceptHistory}
+              currentIndex={currentIndex}
+              snapshots={snapshots}
+            />
+          )}
 
-          {sortedConcepts.length === 0 && (
-            <div className="flex items-center justify-center h-[200px]">
-              <p style={{ color: C.muted }}>No concepts at this point in time</p>
+          {/* Active / Engaged concepts */}
+          {categorizedConcepts.active.length > 0 && (
+            <ConceptLane
+              title="Active"
+              icon={<Sparkles size={14} />}
+              concepts={categorizedConcepts.active}
+              maxCount={maxCount}
+              accentColor={C.accent}
+              accentSoft={C.accentSoft}
+              hoveredConcept={hoveredConcept}
+              setHoveredConcept={setHoveredConcept}
+              getConceptHistory={getConceptHistory}
+              currentIndex={currentIndex}
+              snapshots={snapshots}
+            />
+          )}
+
+          {/* Steady concepts */}
+          {categorizedConcepts.steady.length > 0 && (
+            <ConceptLane
+              title="Steady"
+              icon={<Minus size={14} />}
+              concepts={categorizedConcepts.steady}
+              maxCount={maxCount}
+              accentColor={C.textSoft}
+              accentSoft={C.surfaceAlt}
+              hoveredConcept={hoveredConcept}
+              setHoveredConcept={setHoveredConcept}
+              getConceptHistory={getConceptHistory}
+              currentIndex={currentIndex}
+              snapshots={snapshots}
+              dimmed
+            />
+          )}
+
+          {/* Fading concepts */}
+          {categorizedConcepts.fading.length > 0 && (
+            <ConceptLane
+              title="Fading"
+              icon={<TrendingDown size={14} />}
+              concepts={categorizedConcepts.fading}
+              maxCount={maxCount}
+              accentColor={C.textMuted}
+              accentSoft={C.surfaceAlt}
+              hoveredConcept={hoveredConcept}
+              setHoveredConcept={setHoveredConcept}
+              getConceptHistory={getConceptHistory}
+              currentIndex={currentIndex}
+              snapshots={snapshots}
+              dimmed
+            />
+          )}
+
+          {totalConcepts === 0 && (
+            <div className="text-center py-12" style={{ color: C.textMuted }}>
+              <Clock size={32} className="mx-auto mb-3 opacity-50" />
+              <p>No concepts at this point in time</p>
             </div>
           )}
         </div>
@@ -252,8 +381,8 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
             size="icon"
             onClick={handlePrevious}
             disabled={currentIndex === 0}
-            className="shrink-0"
-            style={{ color: currentIndex === 0 ? C.muted : C.text }}
+            className="shrink-0 h-9 w-9"
+            style={{ color: currentIndex === 0 ? C.textMuted : C.text }}
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -262,13 +391,13 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
             variant="ghost" 
             size="icon" 
             onClick={togglePlay}
-            className="shrink-0"
+            className="shrink-0 h-9 w-9"
             style={{ color: C.text }}
           >
             {isPlaying ? (
-              <Pause className="w-5 h-5" />
+              <Pause className="w-4 h-4" />
             ) : (
-              <Play className="w-5 h-5" />
+              <Play className="w-4 h-4 ml-0.5" />
             )}
           </Button>
 
@@ -276,7 +405,7 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
             {/* Scrubber track */}
             <div
               ref={sliderRef}
-              className="relative h-3 rounded-full cursor-pointer"
+              className="relative h-2 rounded-full cursor-pointer group"
               style={{ background: C.border }}
               onClick={(e) => handleSliderInteraction(e.clientX)}
               onMouseDown={(e) => {
@@ -297,48 +426,58 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
               }}
               onTouchEnd={() => setIsDragging(false)}
             >
-              {/* Timeline markers */}
-              {snapshots.map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute top-1/2 -translate-y-1/2 w-1 h-1 rounded-full"
-                  style={{ 
-                    left: `${(i / (snapshots.length - 1)) * 100}%`,
-                    background: i <= currentIndex ? C.accent : C.muted,
-                    opacity: 0.5,
-                  }}
-                />
-              ))}
+              {/* Activity indicator dots */}
+              {snapshots.map((snap, i) => {
+                const activity = snap.conceptStates.length;
+                const maxActivity = Math.max(...snapshots.map(s => s.conceptStates.length));
+                const opacity = 0.2 + (activity / maxActivity) * 0.6;
+                return (
+                  <div
+                    key={i}
+                    className="absolute top-1/2 -translate-y-1/2 rounded-full transition-all"
+                    style={{ 
+                      left: `${(i / Math.max(1, snapshots.length - 1)) * 100}%`,
+                      width: i === currentIndex ? 6 : 3,
+                      height: i === currentIndex ? 6 : 3,
+                      background: i <= currentIndex ? C.accent : C.textMuted,
+                      opacity: i === currentIndex ? 1 : opacity,
+                      transform: `translate(-50%, -50%)`,
+                    }}
+                  />
+                );
+              })}
               
               {/* Progress fill */}
               <motion.div
                 className="absolute top-0 left-0 h-full rounded-full"
-                style={{ 
-                  background: `linear-gradient(90deg, ${C.accent}, #e8a87c)`,
-                }}
+                style={{ background: C.accent }}
                 initial={false}
                 animate={{ width: `${progress}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                transition={{ type: "spring", stiffness: 400, damping: 35 }}
               />
               
               {/* Scrubber handle */}
               <motion.div
-                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full shadow-lg cursor-grab active:cursor-grabbing"
+                className="absolute top-1/2 w-4 h-4 rounded-full shadow-lg cursor-grab active:cursor-grabbing"
                 style={{ 
                   background: C.text,
-                  border: `3px solid ${C.accent}`,
+                  border: `2px solid ${C.accent}`,
+                  transform: "translateY(-50%)",
                 }}
                 initial={false}
-                animate={{ left: `calc(${progress}% - 10px)` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                animate={{ left: `calc(${progress}% - 8px)` }}
+                transition={{ type: "spring", stiffness: 400, damping: 35 }}
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.95 }}
               />
             </div>
 
             {/* Date labels */}
-            <div className="flex justify-between text-xs" style={{ color: C.muted }}>
+            <div className="flex justify-between text-xs" style={{ color: C.textMuted }}>
               <span>{formatDate(snapshots[0].date)}</span>
+              <span className="font-medium" style={{ color: C.textSoft }}>
+                {currentIndex + 1} of {snapshots.length}
+              </span>
               <span>{formatDate(snapshots[snapshots.length - 1].date)}</span>
             </div>
           </div>
@@ -348,251 +487,341 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
             size="icon"
             onClick={handleNext}
             disabled={currentIndex === snapshots.length - 1}
-            className="shrink-0"
-            style={{ color: currentIndex === snapshots.length - 1 ? C.muted : C.text }}
+            className="shrink-0 h-9 w-9"
+            style={{ color: currentIndex === snapshots.length - 1 ? C.textMuted : C.text }}
           >
             <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
+
+        {/* Keyboard hint */}
+        <p className="text-center text-xs mt-3" style={{ color: C.textMuted }}>
+          ← → to step · Space to play · Click or drag the timeline
+        </p>
       </div>
 
-      {/* Evolution insights */}
-      <EvolutionInsights snapshots={snapshots} currentIndex={currentIndex} />
+      {/* Summary Card */}
+      <SummaryCard 
+        snapshots={snapshots} 
+        currentIndex={currentIndex}
+        categorizedConcepts={categorizedConcepts}
+      />
     </div>
   );
 }
 
-function FlowingConcept({
+function ConceptLane({
+  title,
+  icon,
+  concepts,
+  maxCount,
+  accentColor,
+  accentSoft,
+  hoveredConcept,
+  setHoveredConcept,
+  getConceptHistory,
+  currentIndex,
+  snapshots,
+  dimmed = false,
+  maxVisible = 12,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  concepts: (ConceptState & { trend: string; delta: number })[];
+  maxCount: number;
+  accentColor: string;
+  accentSoft: string;
+  hoveredConcept: string | null;
+  setHoveredConcept: (id: string | null) => void;
+  getConceptHistory: (id: string) => { date: string; count: number; direction: string }[];
+  currentIndex: number;
+  snapshots: Snapshot[];
+  dimmed?: boolean;
+  maxVisible?: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const visibleConcepts = expanded ? concepts : concepts.slice(0, maxVisible);
+  const hasMore = concepts.length > maxVisible;
+
+  return (
+    <div className={dimmed ? "opacity-60" : ""}>
+      <div className="flex items-center gap-2 mb-2">
+        <span style={{ color: accentColor }}>{icon}</span>
+        <span className="text-xs font-medium uppercase tracking-wide" style={{ color: accentColor }}>
+          {title}
+        </span>
+        <span className="text-xs" style={{ color: C.textMuted }}>
+          ({concepts.length})
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <AnimatePresence mode="popLayout">
+          {visibleConcepts.map((concept) => (
+            <ConceptChip
+              key={concept.conceptId}
+              concept={concept}
+              maxCount={maxCount}
+              accentColor={accentColor}
+              accentSoft={accentSoft}
+              isHovered={hoveredConcept === concept.conceptId}
+              onHover={() => setHoveredConcept(concept.conceptId)}
+              onLeave={() => setHoveredConcept(null)}
+              history={getConceptHistory(concept.conceptId)}
+              currentIndex={currentIndex}
+              totalSnapshots={snapshots.length}
+            />
+          ))}
+        </AnimatePresence>
+        {hasMore && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setExpanded(!expanded)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+            style={{ 
+              background: C.surfaceAlt, 
+              color: C.textSoft,
+              border: `1px solid ${C.border}`,
+            }}
+          >
+            {expanded ? "Show less" : `+${concepts.length - maxVisible} more`}
+          </motion.button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ConceptChip({
   concept,
   maxCount,
-  index,
-  previousConcept,
-  isNew,
+  accentColor,
+  accentSoft,
+  isHovered,
+  onHover,
+  onLeave,
+  history,
+  currentIndex,
+  totalSnapshots,
 }: {
-  concept: ConceptState;
+  concept: ConceptState & { trend: string; delta: number };
   maxCount: number;
-  index: number;
-  previousConcept?: ConceptState;
-  isNew: boolean;
+  accentColor: string;
+  accentSoft: string;
+  isHovered: boolean;
+  onHover: () => void;
+  onLeave: () => void;
+  history: { date: string; count: number; direction: string }[];
+  currentIndex: number;
+  totalSnapshots: number;
 }) {
-  // Size based on engagement (positionCount)
-  const sizeScale = 0.7 + (concept.positionCount / maxCount) * 0.6;
-  const basePadding = 12;
-  const padding = basePadding * sizeScale;
+  const sizeScale = 0.85 + (concept.positionCount / maxCount) * 0.3;
   
-  // Color based on direction
-  const colors = {
-    positive: { bg: C.positive.bg, text: C.positive.text, glow: C.accent },
-    negative: { bg: C.negative.bg, text: C.negative.text, glow: "#e57373" },
-    mixed: { bg: C.mixed.bg, text: C.mixed.text, glow: "#a3c47a" },
-  }[concept.direction] || { bg: C.neutral.bg, text: C.neutral.text, glow: C.muted };
+  const directionIcon = {
+    positive: "↑",
+    negative: "↓",
+    mixed: "↕",
+  }[concept.direction] || "";
 
-  // Detect if direction changed
-  const directionChanged = previousConcept && previousConcept.direction !== concept.direction;
-  const countIncreased = previousConcept && concept.positionCount > previousConcept.positionCount;
+  const directionColor = {
+    positive: C.positive,
+    negative: C.negative,
+    mixed: C.mixed,
+  }[concept.direction] || C.textMuted;
 
   return (
     <motion.div
       layout
-      layoutId={concept.conceptId}
-      initial={isNew ? { scale: 0, opacity: 0 } : false}
-      animate={{ 
-        scale: 1, 
-        opacity: 1,
-      }}
-      exit={{ scale: 0, opacity: 0 }}
-      transition={{
-        layout: { type: "spring", stiffness: 200, damping: 25 },
-        scale: { type: "spring", stiffness: 400, damping: 25 },
-        opacity: { duration: 0.2 },
-      }}
-      whileHover={{ scale: sizeScale * 1.1, zIndex: 10 }}
-      className="relative cursor-pointer"
-      style={{ zIndex: 5 - index }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      className="relative"
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
     >
-      {/* Glow effect for new or changed concepts */}
-      {(isNew || directionChanged) && (
-        <motion.div
-          className="absolute inset-0 rounded-full blur-md"
-          style={{ background: colors.glow }}
-          initial={{ opacity: 0.8, scale: 1.5 }}
-          animate={{ opacity: 0, scale: 2 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-        />
-      )}
-      
-      {/* Pulse effect for growing concepts */}
-      {countIncreased && (
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          style={{ border: `2px solid ${colors.glow}` }}
-          initial={{ opacity: 1, scale: 1 }}
-          animate={{ opacity: 0, scale: 1.5 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        />
-      )}
-
       <motion.div
-        className="relative rounded-full font-medium flex items-center gap-2"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-default select-none"
         style={{
-          background: colors.bg,
-          color: colors.text,
-          padding: `${padding * 0.6}px ${padding * 1.2}px`,
-          fontSize: 12 + sizeScale * 4,
-          boxShadow: `0 4px 20px ${colors.glow}30`,
+          background: isHovered ? accentSoft : C.surfaceAlt,
+          border: `1px solid ${isHovered ? accentColor : C.border}`,
+          fontSize: 12 + sizeScale * 2,
         }}
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
-        <span>{concept.label}</span>
-        <motion.span 
-          className="opacity-70 text-xs"
-          key={concept.positionCount}
-          initial={{ scale: 1.5 }}
-          animate={{ scale: 1 }}
+        <span style={{ color: C.text }}>{concept.label}</span>
+        <span 
+          className="text-xs font-medium px-1.5 py-0.5 rounded"
+          style={{ 
+            background: `${directionColor}20`,
+            color: directionColor,
+          }}
         >
           {concept.positionCount}
-        </motion.span>
-        
-        {/* Direction indicator */}
-        {concept.direction === "positive" && (
-          <span className="opacity-60">↑</span>
+          {directionIcon && <span className="ml-0.5">{directionIcon}</span>}
+        </span>
+        {concept.delta > 0 && concept.trend !== "new" && (
+          <span className="text-xs" style={{ color: C.positive }}>
+            +{concept.delta}
+          </span>
         )}
-        {concept.direction === "negative" && (
-          <span className="opacity-60">↓</span>
-        )}
-        {concept.direction === "mixed" && (
-          <span className="opacity-60">↕</span>
+        {concept.trend === "new" && (
+          <span 
+            className="text-xs px-1 rounded"
+            style={{ background: `${C.positive}20`, color: C.positive }}
+          >
+            new
+          </span>
         )}
       </motion.div>
+
+      {/* Tooltip with history sparkline */}
+      <AnimatePresence>
+        {isHovered && history.length > 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className="absolute z-50 left-0 top-full mt-2 p-3 rounded-lg shadow-xl min-w-[200px]"
+            style={{ 
+              background: C.surface, 
+              border: `1px solid ${C.border}`,
+            }}
+          >
+            <p className="text-sm font-medium mb-2" style={{ color: C.text }}>
+              {concept.label}
+            </p>
+            <div className="flex items-end gap-0.5 h-8 mb-2">
+              {history.map((h, i) => {
+                const maxH = Math.max(...history.map(x => x.count));
+                const height = (h.count / maxH) * 100;
+                const isCurrent = i === history.length - 1;
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-t transition-all"
+                    style={{
+                      height: `${height}%`,
+                      background: isCurrent ? accentColor : C.border,
+                      minHeight: 2,
+                    }}
+                  />
+                );
+              })}
+            </div>
+            <p className="text-xs" style={{ color: C.textMuted }}>
+              {history.length} snapshots · Started with {history[0]?.count || 0} positions
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
-function EvolutionInsights({
+function SummaryCard({
   snapshots,
   currentIndex,
+  categorizedConcepts,
 }: {
   snapshots: Snapshot[];
   currentIndex: number;
-}) {
-  const insights = useMemo(() => {
-    if (currentIndex === 0 || snapshots.length < 2) return [];
-
-    const current = snapshots[currentIndex];
-    const previous = snapshots[currentIndex - 1];
-
-    const currentConcepts = new Map(
-      current.conceptStates.map((c) => [c.conceptId, c])
-    );
-    const previousConcepts = new Map(
-      previous.conceptStates.map((c) => [c.conceptId, c])
-    );
-
-    const results: Array<{
-      type: "new" | "changed" | "strengthened" | "faded";
-      label: string;
-      detail: string;
-      icon: string;
-    }> = [];
-
-    // Find new concepts
-    currentConcepts.forEach((concept, id) => {
-      if (!previousConcepts.has(id)) {
-        results.push({
-          type: "new",
-          label: concept.label,
-          detail: `Emerged with ${concept.direction} stance`,
-          icon: "✦",
-        });
-      } else {
-        const prev = previousConcepts.get(id)!;
-        if (prev.direction !== concept.direction) {
-          results.push({
-            type: "changed",
-            label: concept.label,
-            detail: `Shifted from ${prev.direction} to ${concept.direction}`,
-            icon: "↺",
-          });
-        } else if (concept.positionCount > prev.positionCount + 2) {
-          results.push({
-            type: "strengthened",
-            label: concept.label,
-            detail: `Deepened (${prev.positionCount} → ${concept.positionCount})`,
-            icon: "↑",
-          });
-        }
-      }
-    });
-
-    // Find concepts that faded
-    previousConcepts.forEach((prev, id) => {
-      if (!currentConcepts.has(id)) {
-        results.push({
-          type: "faded",
-          label: prev.label,
-          detail: "Faded from active thinking",
-          icon: "↓",
-        });
-      }
-    });
-
-    return results.slice(0, 4);
-  }, [snapshots, currentIndex]);
-
-  if (insights.length === 0) return null;
-
-  const typeColors = {
-    new: { bg: `${C.accent}20`, border: C.accent, text: C.accent },
-    changed: { bg: "#a3c47a20", border: "#a3c47a", text: "#a3c47a" },
-    strengthened: { bg: "#4a9eff20", border: "#4a9eff", text: "#4a9eff" },
-    faded: { bg: `${C.muted}20`, border: C.muted, text: C.muted },
+  categorizedConcepts: {
+    active: (ConceptState & { trend: string; delta: number })[];
+    rising: (ConceptState & { trend: string; delta: number })[];
+    steady: (ConceptState & { trend: string; delta: number })[];
+    fading: (ConceptState & { trend: string; delta: number })[];
   };
+}) {
+  const current = snapshots[currentIndex];
+  const first = snapshots[0];
+  
+  if (!current || !first) return null;
+
+  const currentTotal = current.conceptStates.length;
+  const firstTotal = first.conceptStates.length;
+  const growth = currentTotal - firstTotal;
+
+  const totalPositionsNow = current.conceptStates.reduce((sum, c) => sum + c.positionCount, 0);
+  const totalPositionsThen = first.conceptStates.reduce((sum, c) => sum + c.positionCount, 0);
+  const positionsGrowth = totalPositionsNow - totalPositionsThen;
+
+  // Find most engaged concept
+  const topConcept = current.conceptStates.reduce(
+    (best, c) => c.positionCount > (best?.positionCount || 0) ? c : best,
+    null as ConceptState | null
+  );
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div 
       className="rounded-xl p-4"
       style={{ background: C.surface, border: `1px solid ${C.border}` }}
     >
-      <h3 className="text-sm font-medium mb-3" style={{ color: C.muted }}>
-        What shifted
+      <h3 className="text-sm font-medium mb-3" style={{ color: C.textSoft }}>
+        Your Thinking at a Glance
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <AnimatePresence mode="popLayout">
-          {insights.map((insight, i) => {
-            const colors = typeColors[insight.type];
-            return (
-              <motion.div
-                key={`${insight.label}-${insight.type}`}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-3 p-3 rounded-lg"
-                style={{ 
-                  background: colors.bg,
-                  border: `1px solid ${colors.border}30`,
-                }}
-              >
-                <span 
-                  className="text-lg"
-                  style={{ color: colors.text }}
-                >
-                  {insight.icon}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm truncate" style={{ color: C.text }}>
-                    {insight.label}
-                  </p>
-                  <p className="text-xs truncate" style={{ color: C.muted }}>
-                    {insight.detail}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatBox
+          label="Topics"
+          value={currentTotal}
+          delta={currentIndex > 0 ? growth : undefined}
+        />
+        <StatBox
+          label="Positions"
+          value={totalPositionsNow}
+          delta={currentIndex > 0 ? positionsGrowth : undefined}
+        />
+        <StatBox
+          label="Rising Now"
+          value={categorizedConcepts.rising.length}
+          color={C.positive}
+        />
+        <StatBox
+          label="Top Topic"
+          value={topConcept?.label || "—"}
+          isText
+        />
       </div>
-    </motion.div>
+    </div>
+  );
+}
+
+function StatBox({
+  label,
+  value,
+  delta,
+  color,
+  isText,
+}: {
+  label: string;
+  value: number | string;
+  delta?: number;
+  color?: string;
+  isText?: boolean;
+}) {
+  return (
+    <div 
+      className="p-3 rounded-lg"
+      style={{ background: C.surfaceAlt }}
+    >
+      <p className="text-xs mb-1" style={{ color: C.textMuted }}>{label}</p>
+      <div className="flex items-baseline gap-1">
+        <span 
+          className={isText ? "text-sm font-medium truncate" : "text-lg font-semibold"}
+          style={{ color: color || C.text }}
+        >
+          {value}
+        </span>
+        {delta !== undefined && delta !== 0 && (
+          <span 
+            className="text-xs"
+            style={{ color: delta > 0 ? C.positive : C.negative }}
+          >
+            {delta > 0 ? "+" : ""}{delta}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

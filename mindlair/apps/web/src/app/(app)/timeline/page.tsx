@@ -3,8 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { TimelineScrubber } from "@/components/timeline-scrubber";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Calendar, Loader2 } from "lucide-react";
+
+const C = {
+  bg: "#0a0a0a",
+  surface: "#141414",
+  border: "#262626",
+  text: "#f5f5f5",
+  textSoft: "#a3a3a3",
+  textMuted: "#737373",
+  accent: "#d4915a",
+};
 
 export default function TimelinePage() {
   const [timelineData, setTimelineData] = useState<{
@@ -49,53 +58,106 @@ export default function TimelinePage() {
   }, [fetchTimeline]);
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-            Timeline
-          </h1>
-          <p className="text-zinc-500">
-            Watch your thinking evolve. Drag to travel through time.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-            {(["day", "week", "month"] as const).map((i) => (
-              <button
-                key={i}
-                onClick={() => setInterval(i)}
-                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  interval === i
-                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                    : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                }`}
-              >
-                {i.charAt(0).toUpperCase() + i.slice(1)}
-              </button>
-            ))}
+    <div className="min-h-screen" style={{ background: C.bg }}>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
+          <div>
+            <h1 
+              className="text-2xl sm:text-3xl font-bold mb-2"
+              style={{ color: C.text }}
+            >
+              Your Thinking Over Time
+            </h1>
+            <p style={{ color: C.textMuted }}>
+              Watch how your interests and stances have evolved
+            </p>
           </div>
-          <Button variant="outline" onClick={fetchTimeline} disabled={isLoading}>
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Interval selector */}
+            <div 
+              className="flex rounded-lg overflow-hidden"
+              style={{ background: C.surface, border: `1px solid ${C.border}` }}
+            >
+              {(["day", "week", "month"] as const).map((i) => (
+                <button
+                  key={i}
+                  onClick={() => setInterval(i)}
+                  className="px-3 py-1.5 text-sm font-medium transition-all"
+                  style={{ 
+                    background: interval === i ? C.accent : "transparent",
+                    color: interval === i ? C.bg : C.textSoft,
+                  }}
+                >
+                  {i.charAt(0).toUpperCase() + i.slice(1)}
+                </button>
+              ))}
+            </div>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => fetchTimeline()} 
+              disabled={isLoading}
+              className="h-9 w-9"
+              style={{ 
+                background: C.surface, 
+                borderColor: C.border,
+                color: C.textSoft,
+              }}
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {error ? (
-        <div className="text-center py-12">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={fetchTimeline}>Try again</Button>
-        </div>
-      ) : isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <RefreshCw className="w-6 h-6 animate-spin text-zinc-400" />
-        </div>
-      ) : timelineData ? (
-        <TimelineScrubber
-          snapshots={timelineData.snapshots}
-          interval={timelineData.interval}
-        />
-      ) : null}
+        {/* Content */}
+        {error ? (
+          <div 
+            className="text-center py-16 rounded-2xl"
+            style={{ background: C.surface, border: `1px solid ${C.border}` }}
+          >
+            <p className="text-red-400 mb-4">{error}</p>
+            <Button 
+              onClick={() => fetchTimeline()}
+              style={{ background: C.accent, color: C.bg }}
+            >
+              Try again
+            </Button>
+          </div>
+        ) : isLoading ? (
+          <div 
+            className="flex flex-col items-center justify-center min-h-[400px] rounded-2xl"
+            style={{ background: C.surface, border: `1px solid ${C.border}` }}
+          >
+            <Loader2 
+              className="w-8 h-8 animate-spin mb-4" 
+              style={{ color: C.accent }} 
+            />
+            <p style={{ color: C.textMuted }}>Loading your timeline...</p>
+          </div>
+        ) : timelineData && timelineData.snapshots.length > 0 ? (
+          <TimelineScrubber
+            snapshots={timelineData.snapshots}
+            interval={timelineData.interval}
+          />
+        ) : (
+          <div 
+            className="text-center py-16 rounded-2xl"
+            style={{ background: C.surface, border: `1px solid ${C.border}` }}
+          >
+            <Calendar 
+              className="w-12 h-12 mx-auto mb-4" 
+              style={{ color: C.textMuted }} 
+            />
+            <p className="text-lg font-medium mb-2" style={{ color: C.text }}>
+              No timeline data yet
+            </p>
+            <p style={{ color: C.textMuted }}>
+              Start reading and reacting to content to build your timeline
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
