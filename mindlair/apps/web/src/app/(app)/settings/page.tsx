@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { PushNotifications } from "@/components/push-notifications";
 import { APP_VERSION, GITHUB_REPO } from "@/lib/app-config";
+import { validateDisplayNameInput } from "@/lib/display-name-policy";
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
 
@@ -86,8 +87,19 @@ export default function SettingsPage() {
   const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState<{ platform: PlatformType; isMobile: boolean } | null>(null);
   const [displayNameDraft, setDisplayNameDraft] = useState("");
+  const [displayNameSaved, setDisplayNameSaved] = useState("");
   const [displayNameSaving, setDisplayNameSaving] = useState(false);
   const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+
+  const trimmedDisplayName = displayNameDraft.trim();
+  const displayNameValidation = validateDisplayNameInput(displayNameDraft);
+  const displayNameIsValid = displayNameValidation.ok;
+  const displayNameIsDirty = trimmedDisplayName !== displayNameSaved.trim();
+  const displayNameLiveError =
+    displayNameError ||
+    (!displayNameIsValid && displayNameDraft.length > 0
+      ? displayNameValidation.message
+      : null);
 
   useEffect(() => {
     setDeviceInfo(detectDevice());
@@ -115,7 +127,9 @@ export default function SettingsPage() {
       const settingsData = await settingsRes.json();
       setSettings(settingsData);
       if (typeof settingsData.displayName === "string" || settingsData.displayName === null) {
-        setDisplayNameDraft(settingsData.displayName ?? "");
+        const incoming = settingsData.displayName ?? "";
+        setDisplayNameDraft(incoming);
+        setDisplayNameSaved(incoming);
       }
       
       if (apiKeysRes.ok) {
@@ -159,19 +173,26 @@ export default function SettingsPage() {
   };
 
   const saveDisplayName = async () => {
+    const check = validateDisplayNameInput(displayNameDraft);
+    if (!check.ok) {
+      setDisplayNameError(check.message);
+      return;
+    }
     setDisplayNameSaving(true);
     setDisplayNameError(null);
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName: displayNameDraft }),
+        body: JSON.stringify({ displayName: check.normalized }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setDisplayNameError(data.message || "Could not save display name");
         return;
       }
+      setDisplayNameSaved(check.normalized);
+      setDisplayNameDraft(check.normalized);
       await fetchSettings({ silent: true });
     } catch {
       setDisplayNameError("Network error. Try again.");
@@ -305,8 +326,7 @@ export default function SettingsPage() {
               </label>
               <p className="text-sm text-zinc-500">
                 How you appear on posts, comments, and your profile. Your sign-in email is never shown to other
-                users. At least 2 characters; you cannot use the word &quot;Anonymous&quot; or an email-style name
-                (no @).
+                users. At least 2 characters; you cannot use the word &quot;Anonymous&quot; or include an @ symbol.
               </p>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <input
@@ -315,18 +335,32 @@ export default function SettingsPage() {
                   minLength={2}
                   maxLength={60}
                   value={displayNameDraft}
-                  onChange={(e) => setDisplayNameDraft(e.target.value)}
+                  onChange={(e) => {
+                    setDisplayNameDraft(e.target.value);
+                    if (displayNameError) setDisplayNameError(null);
+                  }}
                   placeholder="e.g. Alex Chen"
+                  aria-invalid={!!displayNameLiveError}
+                  aria-describedby={displayNameLiveError ? "display-name-error" : undefined}
                   className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
                 />
-                <Button type="button" variant="outline" onClick={saveDisplayName} disabled={displayNameSaving}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={saveDisplayName}
+                  disabled={displayNameSaving || !displayNameIsValid || !displayNameIsDirty}
+                >
                   {displayNameSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Save name"}
                 </Button>
               </div>
-              {displayNameError && <p className="text-sm text-red-500">{displayNameError}</p>}
+              {displayNameLiveError && (
+                <p id="display-name-error" className="text-sm text-red-500">
+                  {displayNameLiveError}
+                </p>
+              )}
               <p className="text-xs text-zinc-500">
                 Required before you can publish posts or leave comments. Changing your name updates how past content
-                shows as well.
+                shows as well. Names don&apos;t need to be unique — two people can share the same display name.
               </p>
             </div>
             <div className="flex items-center justify-between">

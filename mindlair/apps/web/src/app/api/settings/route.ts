@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { updateSettingsSchema } from '@/lib/validations';
 import db from '@/lib/db';
 import { getAuthFromRequest } from '@/lib/auth';
-import { validateDisplayNameInput } from '@/lib/display-name-policy';
 
 export async function GET(request: NextRequest) {
   try {
@@ -123,16 +122,18 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (data.displayName !== undefined) {
-      const nameCheck = validateDisplayNameInput(data.displayName);
-      if (!nameCheck.ok) {
-        return NextResponse.json(
-          { code: 'VALIDATION_ERROR', message: nameCheck.message },
-          { status: 400 }
-        );
-      }
+      const normalized = data.displayName.trim();
       await db.user.update({
         where: { id: userId },
-        data: { name: nameCheck.normalized },
+        data: { name: normalized },
+      });
+
+      // Backfill the denormalized author byline on past self-published sources
+      // so the UI promise ("Changing your name updates how past content shows
+      // as well") actually holds for the feed/genealogy byline.
+      await db.source.updateMany({
+        where: { userId, surface: 'mindlair_publish' },
+        data: { author: normalized },
       });
     }
 

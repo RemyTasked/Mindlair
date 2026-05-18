@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { AnnotationData } from './annotation-composer';
+import { formatPublicName } from '@/lib/display-name-policy';
 
 const C = {
   bg: "#0f0e0c",
@@ -439,11 +440,11 @@ export function AnnotationSidebar({
                               style={{ width: '100%', height: '100%', borderRadius: '50%' }}
                             />
                           ) : (
-                            (comment.author.name || 'A')[0].toUpperCase()
+                            formatPublicName(comment.author.name)[0].toUpperCase()
                           )}
                         </div>
                         <span style={{ color: C.text, fontSize: 13, fontWeight: 500 }}>
-                          {comment.author.name || 'Anonymous'}
+                          {formatPublicName(comment.author.name)}
                         </span>
                         <span
                           style={{

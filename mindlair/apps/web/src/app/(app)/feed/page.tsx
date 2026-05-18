@@ -34,6 +34,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { formatPublicName } from "@/lib/display-name-policy";
 
 const C = {
   bg: "#0f0e0c",
@@ -607,7 +608,7 @@ export default function FeedPage() {
                     </div>
                     <div>
                       <div style={{ color: C.text, fontSize: 14, fontWeight: 500 }}>
-                        {post.author.name || "Anonymous"}
+                        {formatPublicName(post.author.name)}
                         {post.isSubscribed && (
                           <span style={{ 
                             color: C.accent, 

@@ -25,6 +25,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RichEditor, getWordCount } from "@/components/rich-editor";
+import { formatPublicName } from "@/lib/display-name-policy";
 
 
 const C = {
@@ -504,7 +505,7 @@ function PublishPageContent() {
                 {refPreview.headlineClaim}
               </Link>
               <div style={{ color: C.textSoft, fontSize: 13, marginTop: 6 }}>
-                {refPreview.author?.name || "Anonymous"}
+                {formatPublicName(refPreview.author?.name)}
               </div>
             </div>
             <button

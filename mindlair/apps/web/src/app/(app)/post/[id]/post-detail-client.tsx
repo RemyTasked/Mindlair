@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatPublicName } from "@/lib/display-name-policy";
 
 const C = {
   bg: "#0f0e0c",
@@ -283,7 +284,7 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
               {post.referencedPost.headlineClaim}
             </Link>
             <div style={{ color: C.textSoft, fontSize: 13, marginTop: 6 }}>
-              {post.referencedPost.author?.name || "Anonymous"}
+              {formatPublicName(post.referencedPost.author?.name)}
             </div>
           </div>
         )}
@@ -401,7 +402,7 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
               </div>
               <div>
                 <div style={{ color: C.text, fontWeight: 500, fontSize: isNarrow ? 14 : 16 }}>
-                  {post.author.name || "Anonymous"}
+                  {formatPublicName(post.author.name)}
                 </div>
                 {post.publishedAt && (
                 <div style={{ 

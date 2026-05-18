@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { formatPublicName } from "@/lib/display-name-policy";
 
 const C = {
   bg: "#0f0e0c",
@@ -271,7 +272,7 @@ export default function ProfilePage() {
                 fontWeight: 600,
                 marginBottom: 4,
               }}>
-                {profile.user.name || "Anonymous"}
+                {formatPublicName(profile.user.name)}
               </h1>
               
               <div style={{ 

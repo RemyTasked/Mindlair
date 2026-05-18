@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import db from "@/lib/db";
 import { isCuid } from "@/lib/utils/slug";
 import { PostDetailClient } from "./post-detail-client";
+import { formatPublicName } from "@/lib/display-name-policy";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -52,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = post.seoTitle || post.headlineClaim;
   const description = post.seoDescription || truncateText(post.body, 155);
-  const authorName = post.author?.name || "Anonymous";
+  const authorName = formatPublicName(post.author?.name);
 
   return {
     title: `${title} | Mindlair`,

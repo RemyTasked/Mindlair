@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { CommentData } from "./comment-section";
+import { formatPublicName } from "@/lib/display-name-policy";
 
 const C = {
   bg: "#0f0e0c",
@@ -136,7 +137,7 @@ export function CommentItem({
                   textDecoration: "none",
                 }}
               >
-                {comment.author.name || "Anonymous"}
+                {formatPublicName(comment.author.name)}
               </Link>
               <span
                 style={{

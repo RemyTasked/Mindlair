@@ -564,7 +564,7 @@ function FeedTab() {
                 <div className="post-author">
                   <div className="avatar"></div>
                   <div>
-                    <span className="author-name">{post.author?.name || "Anonymous"}</span>
+                    <span className="author-name">{post.author?.name?.trim() || "Mindlair user"}</span>
                     <span className="post-date">
                       {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
                     </span>

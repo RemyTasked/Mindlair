@@ -99,7 +99,7 @@ export function FeedScreen({ navigation }: Props) {
         <View style={styles.authorInfo}>
           <View style={styles.avatar} />
           <View>
-            <Text style={styles.authorName}>{item.author?.name || "Anonymous"}</Text>
+            <Text style={styles.authorName}>{item.author?.name?.trim() || "Mindlair user"}</Text>
             <Text style={styles.postDate}>
               {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
             </Text>

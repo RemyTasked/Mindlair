@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validateDisplayNameInput } from '@/lib/display-name-policy';
 
 export const surfaceSchema = z.enum([
   'chrome_extension',
@@ -89,8 +90,24 @@ export const updateSettingsSchema = z.object({
     email: z.boolean().optional(),
   }).optional(),
   timezone: z.string().optional(),
-  /** Public label; validated in API with validateDisplayNameInput (min 2, reserved words, no @). */
-  displayName: z.string().max(60, 'Display name must be at most 60 characters').optional(),
+  /**
+   * Public label. Validated against the shared display-name policy so the
+   * Zod schema and runtime policy stay in lockstep (single source of truth
+   * lives in `lib/display-name-policy.ts`).
+   */
+  displayName: z
+    .string()
+    .optional()
+    .superRefine((value, ctx) => {
+      if (value === undefined) return;
+      const result = validateDisplayNameInput(value);
+      if (!result.ok) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: result.message,
+        });
+      }
+    }),
 });
 
 // Comment validation helpers
