@@ -50,7 +50,7 @@ export interface ContentAnalysis {
 
 function buildExtractionPrompt(existingConcepts: string[]): string {
   const conceptGuidance = existingConcepts.length > 0
-    ? `\n\nIMPORTANT — The user already has these concept clusters in their map:\n${existingConcepts.map(c => `  - ${c}`).join('\n')}\n\nWhen listing concepts for a claim, REUSE labels from this list whenever the topic matches or is closely related. Only create a new concept label if the topic genuinely doesn't fit any existing cluster. Use broad, stable labels (e.g. "monetary policy" not "Fed rate hike September 2024").`
+    ? `\n\nIMPORTANT — The user already has these concept clusters in their map:\n${existingConcepts.map(c => `  - ${c}`).join('\n')}\n\nWhen listing concepts for a claim, REUSE labels from this list whenever the topic matches or is closely related. Only create a new concept label if the topic genuinely doesn't fit any existing cluster.`
     : '';
 
   return `You are an expert at analyzing content and extracting core claims.
@@ -61,10 +61,35 @@ Given the content below, extract the 1-3 most important claims being made. For e
 3. Rate your confidence 0-1 that this is the core claim
 4. List 1-3 substantive concepts/topics this claim relates to${conceptGuidance}
 
-Concept rules (critical):
-- Never output function words, vague intensifiers, or filler as concepts (e.g. "just", "only", "really", "very", "things", "something").
-- Prefer broad, stable topic labels (e.g. "housing policy" not "September rent tweet").
-- When the user's existing concept list applies, reuse those labels whenever the topic matches; do not invent near-duplicates.
+═══════════════════════════════════════════════════════════════════
+CONCEPT QUALITY RULES (CRITICAL — follow strictly):
+═══════════════════════════════════════════════════════════════════
+
+A VALID concept is a domain, field, or topic that:
+✓ Could be the subject of academic study, policy debate, or thoughtful essay
+✓ People can meaningfully agree or disagree about
+✓ Represents a coherent area of knowledge or discourse
+
+Examples of GOOD concepts:
+- "artificial intelligence", "climate policy", "monetary policy"
+- "nutrition", "urbanism", "philosophy", "journalism"
+- "parenting", "remote work", "cryptocurrency"
+- "free speech", "healthcare reform", "immigration"
+
+NEVER output these types of labels as concepts:
+✗ UI actions: scrolling, clicking, browsing, loading, updating, checking
+✗ Tech elements: inbox, notifications, settings, dashboard, app, website
+✗ Vague words: thing, stuff, something, way, approach, most, change
+✗ Generic process words: process, system, method, approach, solution
+✗ Function words: just, only, really, very, much, many, some
+
+If the content is about a specific product/app feature, extract the UNDERLYING TOPIC:
+- "Twitter's new inbox feature" → "social media" (not "inbox")
+- "How to optimize your email workflow" → "productivity" (not "email" or "workflow")
+- "Best practices for scrolling UX" → "user experience design" (not "scrolling")
+
+Use broad, stable topic labels (e.g. "housing policy" not "September rent tweet").
+═══════════════════════════════════════════════════════════════════
 
 Focus on claims that:
 - Represent the author's main argument or thesis

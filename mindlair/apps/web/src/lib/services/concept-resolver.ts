@@ -129,12 +129,94 @@ const SHORT_TOPIC_ALLOWLIST = new Set([
   'eu', 'uk', 'us', 'un', 'nfl', 'nba', 'mlb', 'ufc', 'mma',
 ]);
 
-/** Whole-string junk (normalized) — never link as a concept. */
-const CONCEPT_JUNK_LABELS = new Set([
-  'just', 'only', 'really', 'very', 'most', 'more', 'some', 'like', 'well', 'even',
-  'still', 'thing', 'things', 'stuff', 'something', 'anything', 'nothing', 'everything',
-  'someone', 'anyone', 'everyone', 'nobody', 'maybe', 'perhaps', 'unknown', 'general',
+// ── Smart Concept Quality Detection ─────────────────────────────
+// Instead of relying on blocklists, we use pattern-based detection
+
+/**
+ * Checks if a word is likely a transient action verb (gerund form).
+ * Actions like "scrolling", "clicking", "browsing" are not topics.
+ * But domain gerunds like "investing", "parenting", "engineering" ARE valid topics.
+ */
+const VALID_DOMAIN_GERUNDS = new Set([
+  'investing', 'parenting', 'engineering', 'programming', 'writing', 'reading',
+  'teaching', 'learning', 'marketing', 'advertising', 'publishing', 'filmmaking',
+  'manufacturing', 'farming', 'fishing', 'hunting', 'cooking', 'brewing',
+  'nursing', 'counseling', 'consulting', 'accounting', 'banking', 'trading',
+  'gaming', 'streaming', 'podcasting', 'blogging', 'vlogging', 'journaling',
 ]);
+
+function isTransientActionGerund(word: string): boolean {
+  if (!word.endsWith('ing') || word.length < 6) return false;
+  if (VALID_DOMAIN_GERUNDS.has(word)) return false;
+  
+  // Common UI/interaction action patterns
+  const actionPatterns = [
+    /^(click|scroll|swip|tap|drag|drop|hover|zoom|pinch|typ|brows|search|filter|sort|load|fetch|render|submit|send|receiv|upload|download|install|uninstall|subscrib|unsubscrib|login|logout|signin|signout|signup|register|delet|remov|add|creat|updat|edit|modif|sav|cancel|clos|open|expand|collaps|toggl|check|uncheck|select|deselect|highlight|copy|past|cut|undo|redo|refresh|reload)/i,
+  ];
+  
+  return actionPatterns.some(p => p.test(word));
+}
+
+/**
+ * Checks if a word is a generic tech/UI term that doesn't represent a topic.
+ */
+function isGenericTechTerm(word: string): boolean {
+  const techPatterns = [
+    // UI elements
+    /^(button|menu|modal|popup|dialog|tooltip|sidebar|navbar|header|footer|icon|avatar|badge|tag|chip|card|panel|tab|accordion|carousel|slider|toggle|checkbox|radio|dropdown|input|textarea|form|table|grid|list|item|row|column|cell|widget|component|element|container|wrapper|layout|view|screen|page|window|pane)s?$/i,
+    // Generic tech actions/states
+    /^(inbox|outbox|notification|alert|message|email|spam|draft|archive|folder|file|document|attachment|link|url|api|endpoint|request|response|error|warning|success|loading|pending|processing|complete|failed|timeout|cache|cookie|session|token|auth|permission|setting|config|preference|option|feature|functionality|update|version|release|patch|bug|issue|ticket|task|todo|reminder|calendar|schedule|event|meeting|call|chat|comment|reply|post|feed|stream|timeline|profile|account|user|admin|dashboard|analytics|metric|stat|report|log|history|activity|action|status|state|mode|theme|style|format|template|placeholder|default|custom|basic|advanced|premium|pro|lite|free|trial)s?$/i,
+  ];
+  
+  return techPatterns.some(p => p.test(word));
+}
+
+/**
+ * Checks if a word is too abstract/vague to be a meaningful topic.
+ * These are words that could apply to anything and don't represent a domain.
+ */
+function isVagueAbstraction(word: string): boolean {
+  const vaguePatterns = [
+    /^(thing|stuff|something|anything|nothing|everything|someone|anyone|everyone|nobody)s?$/i,
+    /^(way|method|approach|strategy|tactic|technique|process|procedure|system|framework|model|pattern|practice|principle|concept|idea|notion|theory|hypothesis|assumption|belief|opinion|view|perspective|angle|aspect|factor|element|component|part|piece|portion|section|segment|area|zone|region|space|place|point|spot|location|position|level|layer|tier|stage|phase|step|degree|extent|amount|quantity|number|rate|ratio|percentage|proportion|fraction|share|portion)s?$/i,
+    /^(type|kind|sort|category|class|group|set|collection|series|sequence|range|variety|selection|assortment|mix|combination|blend|fusion|hybrid|variation|version|edition|iteration|instance|example|case|scenario|situation|circumstance|condition|context|environment|setting|background|foundation|basis|ground|root|source|origin|cause|reason|purpose|goal|objective|aim|target|end|result|outcome|effect|impact|consequence|implication)s?$/i,
+    /^(change|shift|move|transition|transformation|evolution|development|progress|growth|increase|decrease|rise|fall|improvement|enhancement|optimization|modification|adjustment|alteration|revision|correction|fix|solution|resolution|answer|response|reaction|feedback|input|output|data|information|content|material|resource|asset|tool|instrument|device|mechanism|means|medium|channel|platform|service|product|offering|delivery|experience|journey|path|route|direction|trend|pattern|behavior|habit|routine|lifestyle|culture|community|society|world|reality|truth|fact|detail|specifics|particulars|nuance|subtlety|complexity|simplicity|clarity|quality|value|worth|benefit|advantage|disadvantage|risk|challenge|problem|issue|concern|question|answer|topic|subject|matter|theme|focus|emphasis|priority|importance|significance|relevance|meaning|sense|understanding|knowledge|insight|wisdom|intelligence|skill|ability|capability|capacity|potential|power|strength|weakness|limitation|constraint|restriction|barrier|obstacle|hurdle|difficulty|struggle|effort|work|labor|task|job|role|function|responsibility|duty|obligation|commitment|promise|guarantee|assurance|confidence|trust|faith|hope|expectation|anticipation|prediction|forecast|projection|estimate|guess|assumption|presumption|speculation|theory|hypothesis|premise|argument|claim|assertion|statement|declaration|announcement|message|communication|conversation|discussion|debate|dialogue|exchange|interaction|engagement|involvement|participation|contribution|support|help|assistance|aid|guidance|advice|recommendation|suggestion|tip|hint|clue|sign|signal|indicator|marker|symbol|representation|expression|manifestation|demonstration|illustration|example|instance|case|sample|specimen|model|prototype|template|blueprint|plan|design|scheme|strategy|approach|method|technique|procedure|process|system|framework|structure|organization|arrangement|configuration|setup|format|layout|style|manner|fashion|mode|way|means|mechanism|instrument|tool|device|apparatus|equipment|machinery|technology|innovation|invention|discovery|breakthrough|advancement|progress|development|evolution|transformation|revolution|change|shift|transition|movement|trend|pattern|cycle|rhythm|flow|stream|current|wave|surge|spike|peak|plateau|decline|drop|fall|crash|collapse|crisis|emergency|disaster|catastrophe|tragedy|loss|damage|harm|hurt|injury|pain|suffering|hardship|difficulty|challenge|struggle|conflict|tension|friction|dispute|disagreement|controversy|scandal|outrage|backlash|criticism|complaint|concern|worry|anxiety|fear|panic|stress|pressure|burden|load|weight|responsibility|obligation|duty|commitment|promise|expectation|demand|requirement|need|necessity|essential|must|should|could|would|might|may|can|will|shall)s?$/i,
+  ];
+  
+  return vaguePatterns.some(p => p.test(word));
+}
+
+/**
+ * Master function to check if a concept label is substantive enough.
+ * A good concept should:
+ * 1. Represent a domain, field, or topic people can have stances on
+ * 2. Be specific enough to be debatable but broad enough to cluster related ideas
+ * 3. Not be a UI action, generic tech term, or vague abstraction
+ */
+function isSubstantiveConcept(label: string): boolean {
+  const norm = label.toLowerCase().trim();
+  
+  // Multi-word phrases get more lenient treatment
+  if (/\s/.test(norm)) {
+    const words = norm.split(/\s+/);
+    // At least one word should pass quality checks
+    const hasSubstantiveWord = words.some(w => 
+      w.length >= 4 && 
+      !STOP_WORDS.has(w) && 
+      !isTransientActionGerund(w) &&
+      !isGenericTechTerm(w) &&
+      !isVagueAbstraction(w)
+    );
+    return hasSubstantiveWord;
+  }
+  
+  // Single words need to pass all quality checks
+  if (isTransientActionGerund(norm)) return false;
+  if (isGenericTechTerm(norm)) return false;
+  if (isVagueAbstraction(norm)) return false;
+  
+  return true;
+}
 
 // ── Normalize ──────────────────────────────────────────────────
 export function normalizeConceptLabel(label: string): string {
@@ -146,7 +228,12 @@ function normalize(label: string): string {
 }
 
 /**
- * Filters concept strings before DB resolution — trims, dedupes, drops filler tokens.
+ * Filters concept strings before DB resolution using smart quality detection.
+ * Uses pattern-based analysis to filter out:
+ * - Transient action verbs (scrolling, clicking)
+ * - Generic tech/UI terms (inbox, button, notification)
+ * - Vague abstractions (thing, stuff, something)
+ * - Stop words and function words
  */
 export function sanitizeConceptLabels(labels: string[]): string[] {
   const seen = new Set<string>();
@@ -158,19 +245,27 @@ export function sanitizeConceptLabels(labels: string[]): string[] {
 
     const norm = normalizeConceptLabel(trimmed);
     if (norm.length < 2) continue;
-    if (CONCEPT_JUNK_LABELS.has(norm)) continue;
 
     const key = norm;
     if (seen.has(key)) continue;
 
     const hasSpace = /\s/.test(norm);
     if (!hasSpace) {
+      // Single word checks
       if (norm.length < MIN_SINGLE_TOKEN_LEN && !SHORT_TOPIC_ALLOWLIST.has(norm)) continue;
       if (STOP_WORDS.has(norm)) continue;
+      // Smart quality check
+      if (!isSubstantiveConcept(norm)) continue;
     } else {
+      // Multi-word phrase checks
       const parts = norm.split(/\s+/).filter(Boolean);
-      const substantive = parts.filter(p => p.length >= MIN_SINGLE_TOKEN_LEN && !STOP_WORDS.has(p));
+      const substantive = parts.filter(p => 
+        p.length >= MIN_SINGLE_TOKEN_LEN && 
+        !STOP_WORDS.has(p)
+      );
       if (substantive.length === 0) continue;
+      // Smart quality check on the full phrase
+      if (!isSubstantiveConcept(norm)) continue;
     }
 
     seen.add(key);
@@ -178,6 +273,66 @@ export function sanitizeConceptLabels(labels: string[]): string[] {
   }
 
   return out;
+}
+
+/**
+ * Evaluates concept quality and returns a score and reason.
+ * Useful for debugging and understanding why concepts are filtered.
+ */
+export function evaluateConceptQuality(label: string): { 
+  isValid: boolean; 
+  score: number; 
+  reason: string;
+} {
+  const norm = normalizeConceptLabel(label);
+  
+  if (norm.length < 2) {
+    return { isValid: false, score: 0, reason: 'too_short' };
+  }
+  
+  if (STOP_WORDS.has(norm)) {
+    return { isValid: false, score: 0, reason: 'stop_word' };
+  }
+  
+  const hasSpace = /\s/.test(norm);
+  if (!hasSpace && norm.length < MIN_SINGLE_TOKEN_LEN && !SHORT_TOPIC_ALLOWLIST.has(norm)) {
+    return { isValid: false, score: 0.1, reason: 'single_word_too_short' };
+  }
+  
+  if (isTransientActionGerund(norm)) {
+    return { isValid: false, score: 0.2, reason: 'transient_action' };
+  }
+  
+  if (isGenericTechTerm(norm)) {
+    return { isValid: false, score: 0.2, reason: 'generic_tech_term' };
+  }
+  
+  if (isVagueAbstraction(norm)) {
+    return { isValid: false, score: 0.3, reason: 'vague_abstraction' };
+  }
+  
+  // Check if it's in our alias map (known good topic)
+  if (ALIAS_MAP[norm]) {
+    return { isValid: true, score: 1.0, reason: 'known_alias' };
+  }
+  
+  // Multi-word phrases with substantive content
+  if (hasSpace) {
+    const parts = norm.split(/\s+/);
+    const substantiveCount = parts.filter(p => 
+      p.length >= 4 && !STOP_WORDS.has(p)
+    ).length;
+    if (substantiveCount >= 2) {
+      return { isValid: true, score: 0.9, reason: 'multi_word_substantive' };
+    }
+    if (substantiveCount === 1) {
+      return { isValid: true, score: 0.7, reason: 'single_substantive_word_in_phrase' };
+    }
+    return { isValid: false, score: 0.3, reason: 'no_substantive_words' };
+  }
+  
+  // Single substantive word
+  return { isValid: true, score: 0.6, reason: 'single_substantive_word' };
 }
 
 function tokenize(label: string): string[] {
