@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBeliefTimeline } from '@/lib/services/belief-graph';
+import { evaluateConceptQuality } from '@/lib/services/concept-resolver';
 import { getAuthFromRequest } from '@/lib/auth';
 
 type IntervalType = 'day' | 'week' | 'month';
@@ -50,8 +51,14 @@ export async function GET(request: NextRequest) {
       timeline = timeline.filter(entry => entry.conceptId === conceptId);
     }
 
+    // Filter out low-quality concepts at display time
+    const qualityFilteredTimeline = timeline.filter(entry => {
+      const quality = evaluateConceptQuality(entry.label);
+      return quality.isValid;
+    });
+
     // Build snapshots grouped by interval
-    const snapshots = buildSnapshots(timeline, interval);
+    const snapshots = buildSnapshots(qualityFilteredTimeline, interval);
 
     return NextResponse.json({
       snapshots,
