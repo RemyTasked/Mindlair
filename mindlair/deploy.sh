@@ -1,22 +1,23 @@
 #!/bin/sh
 # Mindlair production deploy entrypoint.
 #
-# Handles several scenarios that can occur on Railway when a service has been
-# through multiple schema-management strategies (db push, manual SQL, prior
-# apps using the same DB, etc.):
+# Handles all the migration-state messes that can happen on Railway when a
+# service has been through multiple schema-management strategies (db push,
+# manual SQL, prior apps using the same DB, etc.). Specifically:
 #
-#   1. Fresh DB with no migration state: runs all migrations from scratch.
-#   2. Existing DB already at the schema (P3005 — production was previously
-#      synced via `prisma db push`): baselines the existing migration
-#      directories as "already applied" so only new migrations actually run.
-#   3. DB has stale FAILED migration rows from a previous app/state (P3009):
-#      marks them as rolled-back so `migrate deploy` can move on.
-#   4. Subsequent deploys: just runs `prisma migrate deploy` and any pending
-#      migration files get applied.
+#   P3005  – schema is not empty, no migration history → baseline historical
+#            migrations as already applied.
+#   P3009  – stale FAILED migration rows in _prisma_migrations:
+#              • if the failed name IS one of *our* migrations (in BASELINE_MIGRATIONS),
+#                its schema is already present in prod → mark APPLIED.
+#              • otherwise → mark ROLLED-BACK (leftover from a previous app).
+#   P3018  – a migration aborted mid-apply (typically because the schema
+#            already exists from a prior db push). For our migrations, mark
+#            the failing one APPLIED and retry; for genuinely new migrations,
+#            bail out so the human can investigate.
 #
 # The migrate-deploy step is retried in a loop (up to MAX_ATTEMPTS) so that
-# chained errors (e.g. P3009 → P3005 after cleanup) can be resolved
-# automatically.
+# chained errors (e.g. P3009 → P3005 → P3018) can be resolved automatically.
 #
 # After migrations: runs the (non-fatal) seed + thumbnail backfill, then
 # hands control to the Next.js app.
@@ -25,10 +26,12 @@ set -e
 
 cd apps/web
 
-# Migration directories in chronological order. New migrations should be added
-# to this list to ensure deterministic baseline behavior. Anything in
-# prisma/migrations/ that is NOT listed here will be treated as "new" (i.e.
-# `migrate deploy` will try to run it) on the very next deploy.
+# Historical migrations (in chronological order). Each of these represents
+# schema that is *already* present in the production database because prod
+# was previously kept in sync via `prisma db push`. They must therefore be
+# marked APPLIED when recovering migration state — never re-run.
+#
+# New migrations should NOT be added to this list; they should run normally.
 BASELINE_MIGRATIONS="
 20260407120000_post_referenced_post
 20260407143000_rename_follow_to_subscription
@@ -39,13 +42,21 @@ BASELINE_MIGRATIONS="
 20260518000001_enable_pgvector
 "
 
-# Known stale migration names from previous app incarnations that may have
-# left FAILED rows in _prisma_migrations on the production DB. These will be
-# proactively marked as rolled-back if encountered. Any *other* failed
-# migration found in the P3009 error output will also be handled dynamically.
+# Migration names from previous app incarnations that may have left FAILED
+# rows in _prisma_migrations on the production DB. These have NO files in
+# prisma/migrations/, so they must be marked rolled-back to be forgotten.
 KNOWN_STALE_MIGRATIONS="
 20250104000000_add_simplified_notifications
 "
+
+is_baseline_migration() {
+  for m in $BASELINE_MIGRATIONS; do
+    if [ "$m" = "$1" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
 
 run_migrate_deploy() {
   # Capture both stdout and stderr to the log without using PIPESTATUS
@@ -58,42 +69,91 @@ run_migrate_deploy() {
   return 1
 }
 
-resolve_failed_migrations() {
-  # Parse failed migration names out of P3009 output. The error message looks
-  # like: "The `20250104000000_xyz` migration started at ... failed".
+# Mark a single migration appropriately given its identity.
+resolve_one() {
+  name="$1"
+  if is_baseline_migration "$name"; then
+    echo "[deploy]   → $name is one of our migrations; marking APPLIED (schema already present from db push era)"
+    npx prisma migrate resolve --applied "$name" \
+      || echo "[deploy]     (could not mark $name applied — may already be applied)"
+  else
+    echo "[deploy]   → $name is not in our migrations folder; marking ROLLED-BACK (stale from previous app)"
+    npx prisma migrate resolve --rolled-back "$name" \
+      || echo "[deploy]     (could not mark $name rolled-back — may already be in that state)"
+  fi
+}
+
+handle_p3009() {
+  # Parse all migration names mentioned in P3009 output. The error message
+  # format is: "The `<name>` migration started at ... failed".
   parsed=$(grep -oE 'The `[0-9A-Za-z_]+` migration' /tmp/migrate.log \
     | sed -E 's/^The `([^`]+)` migration$/\1/' \
     | sort -u)
 
-  # Combine parsed names with the hardcoded known-stale list (dedup).
-  combined=$(printf '%s\n%s\n' "$parsed" "$KNOWN_STALE_MIGRATIONS" \
-    | tr ' ' '\n' \
-    | sed '/^$/d' \
-    | sort -u)
-
-  if [ -z "$combined" ]; then
-    echo "[deploy]   (no failed migration names could be parsed)"
+  if [ -z "$parsed" ]; then
+    echo "[deploy]   (could not parse any failed migration name from P3009 output)"
     return 1
   fi
 
-  for m in $combined; do
-    echo "[deploy]   → marking stale failed migration as rolled-back: $m"
-    npx prisma migrate resolve --rolled-back "$m" \
-      || echo "[deploy]     (already resolved or not present: $m)"
+  for m in $parsed; do
+    resolve_one "$m"
   done
+
+  # Defensively also clear any known-stale rows (some may exist in failed
+  # state but not surface in this particular error message).
+  for m in $KNOWN_STALE_MIGRATIONS; do
+    case " $parsed " in
+      *" $m "*) ;;  # already handled above
+      *)
+        npx prisma migrate resolve --rolled-back "$m" > /dev/null 2>&1 || true
+        ;;
+    esac
+  done
+
   return 0
 }
 
-baseline_existing_migrations() {
-  echo "[deploy] Baselining historical migrations as already applied..."
-  for migration in $BASELINE_MIGRATIONS; do
-    echo "[deploy]   → resolving $migration (applied)"
-    npx prisma migrate resolve --applied "$migration" \
-      || echo "[deploy]     (already recorded or unreachable: $migration)"
+handle_p3018() {
+  # P3018: a migration failed mid-apply. The error includes:
+  #   "Migration name: <name>"
+  failed=$(grep -oE 'Migration name: [0-9A-Za-z_]+' /tmp/migrate.log \
+    | sed -E 's/^Migration name: //' \
+    | sort -u \
+    | head -1)
+
+  if [ -z "$failed" ]; then
+    echo "[deploy]   (could not parse Migration name from P3018 output)"
+    return 1
+  fi
+
+  echo "[deploy]   migration that failed mid-apply: $failed"
+
+  if is_baseline_migration "$failed"; then
+    echo "[deploy]   → $failed is one of our historical migrations; marking APPLIED"
+    npx prisma migrate resolve --applied "$failed" \
+      || echo "[deploy]     (could not mark $failed applied — may already be applied)"
+    return 0
+  fi
+
+  # A migration that's NOT in our baseline list failed mid-apply. That
+  # usually means a brand-new migration has a real bug — don't silently
+  # paper over it.
+  echo "[deploy] FATAL: a non-baseline migration ($failed) failed mid-apply."
+  echo "[deploy] This likely indicates a real problem in the migration SQL."
+  cat /tmp/migrate.log
+  return 1
+}
+
+handle_p3005() {
+  echo "[deploy] P3005 detected — baselining all historical migrations as applied..."
+  for m in $BASELINE_MIGRATIONS; do
+    echo "[deploy]   → resolving $m (applied)"
+    npx prisma migrate resolve --applied "$m" \
+      || echo "[deploy]     (already recorded or unreachable: $m)"
   done
 }
 
-MAX_ATTEMPTS=5
+MAX_ATTEMPTS=10
 attempt=1
 while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
   echo "[deploy] migrate deploy attempt $attempt/$MAX_ATTEMPTS..."
@@ -103,15 +163,18 @@ while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
   fi
 
   if grep -qE "P3009|failed migrations in the target database" /tmp/migrate.log; then
-    echo "[deploy] P3009 detected — stale failed migration rows in _prisma_migrations."
-    if ! resolve_failed_migrations; then
-      echo "[deploy] Could not resolve failed migrations automatically. Bailing out."
+    echo "[deploy] P3009 detected — failed migration rows in _prisma_migrations."
+    if ! handle_p3009; then
       cat /tmp/migrate.log
       exit 1
     fi
+  elif grep -qE "P3018|A migration failed to apply" /tmp/migrate.log; then
+    echo "[deploy] P3018 detected — a migration aborted mid-apply."
+    if ! handle_p3018; then
+      exit 1
+    fi
   elif grep -qE "P3005|database schema is not empty" /tmp/migrate.log; then
-    echo "[deploy] P3005 detected — production DB pre-dates Prisma migration tracking."
-    baseline_existing_migrations
+    handle_p3005
   else
     echo "[deploy] migrate deploy failed for a non-recoverable reason:"
     cat /tmp/migrate.log
