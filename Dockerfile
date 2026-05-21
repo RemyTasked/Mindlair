@@ -25,5 +25,9 @@ RUN npm run build:web
 ENV PORT=3000
 EXPOSE 3000
 
-# db push applies schema; db seed creates posts; migrate-thumbnails updates existing posts with thumbnails
-CMD ["sh", "-c", "cd apps/web && npx prisma db push --skip-generate --accept-data-loss && npx prisma db seed && npx tsx prisma/migrate-thumbnails.ts && npm run start"]
+# Ensure deploy entrypoint is executable
+RUN chmod +x ./deploy.sh
+
+# Production deploy: runs prisma migrate deploy (with first-run baselining),
+# seeds, backfills thumbnails, then starts the Next.js server. See ./deploy.sh.
+CMD ["sh", "./deploy.sh"]
