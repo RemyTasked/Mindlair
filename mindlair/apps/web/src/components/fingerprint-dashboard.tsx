@@ -12,7 +12,13 @@ import {
   type FingerprintPayload,
 } from "@/lib/fingerprint-types";
 
+// The inner ProfileCard is a self-contained designed artifact (intended for PNG
+// export) and uses its own paper/ink palette. The wrapping dashboard converges
+// on the app's warm-dark palette so it reads as part of Mindlair, not a foreign
+// page. The exported `C` object below is used by both the ProfileCard
+// (paper/ink) and the wrapping UI - keep both palettes here, separated.
 const C = {
+  // ProfileCard (inner artifact) palette
   ink: "#16161A",
   ink2: "#242428",
   paper: "#FAFAF7",
@@ -26,6 +32,21 @@ const C = {
   blue: "#2E5FA3",
   purple: "#6B4FA3",
   red: "#C0392B",
+};
+
+// Wrapping dashboard palette (matches rest of Mindlair app shell).
+const W = {
+  bg: "#0f0e0c",
+  surface: "#1a1916",
+  surfaceAlt: "#211f1c",
+  border: "#2a2825",
+  text: "#e8e4dc",
+  textSoft: "#c4bfb4",
+  muted: "#7a7469",
+  accent: "#d4915a",
+  green: "#a3c47a",
+  rose: "#e57373",
+  blue: "#4a9eff",
 };
 
 const CONTENT_COLORS: Record<string, string> = {
@@ -626,7 +647,7 @@ export default function FingerprintDashboard() {
 
   if (loading) {
     return (
-      <div style={{ padding: 48, textAlign: "center", color: C.muted }}>
+      <div style={{ padding: 48, textAlign: "center", color: W.muted }}>
         Loading your fingerprint…
       </div>
     );
@@ -634,53 +655,64 @@ export default function FingerprintDashboard() {
 
   if (error || !data) {
     return (
-      <div style={{ padding: 48, textAlign: "center", color: C.red }}>
+      <div style={{ padding: 48, textAlign: "center", color: W.rose }}>
         {error || "Something went wrong."}
       </div>
     );
   }
 
+  const tabStrip = (
+    <div
+      style={{
+        display: "flex",
+        background: W.surfaceAlt,
+        border: `1px solid ${W.border}`,
+        borderRadius: 12,
+        padding: 3,
+        gap: 2,
+        maxWidth: 500,
+        width: "100%",
+        marginBottom: 24,
+      }}
+    >
+      {(
+        [
+          ["fingerprint", "Fingerprint"],
+          ["wrapped", "Year in review"],
+          ["cards", "Cards"],
+        ] as const
+      ).map(([id, label]) => {
+        const active = topTab === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTopTab(id)}
+            style={{
+              flex: 1,
+              padding: "9px 4px",
+              background: active ? W.accent : "transparent",
+              border: "none",
+              borderRadius: 9,
+              color: active ? "#fff" : W.muted,
+              fontSize: 12,
+              fontWeight: active ? 600 : 500,
+              cursor: "pointer",
+              transition: "background 0.15s, color 0.15s",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   if (topTab === "wrapped") {
     return (
-      <div>
-        <div
-          style={{
-            display: "flex",
-            background: C.rule,
-            borderRadius: 12,
-            padding: 3,
-            gap: 2,
-            maxWidth: 500,
-            marginBottom: 24,
-          }}
-        >
-          {(
-            [
-              ["fingerprint", "Fingerprint"],
-              ["wrapped", "Year in review"],
-              ["cards", "Cards"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTopTab(id)}
-              style={{
-                flex: 1,
-                padding: "9px 4px",
-                background: id === "wrapped" ? C.ink : "transparent",
-                border: "none",
-                borderRadius: 9,
-                color: id === "wrapped" ? "#FAFAF7" : C.muted,
-                fontSize: 11,
-                fontWeight: id === "wrapped" ? 600 : 400,
-                cursor: "pointer",
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div style={{ padding: "0 16px" }}>
+        {tabStrip}
         <MindlairYearWrapped />
       </div>
     );
@@ -688,54 +720,8 @@ export default function FingerprintDashboard() {
 
   if (topTab === "cards") {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          margin: "-32px -16px",
-          padding: "32px 16px 48px",
-          background: "#0a0a0a",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            background: "#262626",
-            borderRadius: 12,
-            padding: 3,
-            gap: 2,
-            maxWidth: 500,
-            width: "100%",
-            marginBottom: 24,
-          }}
-        >
-          {(
-            [
-              ["fingerprint", "Fingerprint"],
-              ["wrapped", "Year in review"],
-              ["cards", "Cards"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTopTab(id)}
-              style={{
-                flex: 1,
-                padding: "9px 4px",
-                background: id === "cards" ? "#d4915a" : "transparent",
-                border: "none",
-                borderRadius: 9,
-                color: id === "cards" ? "#0a0a0a" : "#a3a3a3",
-                fontSize: 11,
-                fontWeight: id === "cards" ? 600 : 400,
-                cursor: "pointer",
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div style={{ padding: "0 16px" }}>
+        {tabStrip}
         <CardCollection />
       </div>
     );
@@ -744,69 +730,27 @@ export default function FingerprintDashboard() {
   return (
     <div
       style={{
-        minHeight: "100vh",
-        margin: "-32px -16px",
-        padding: "32px 16px 48px",
-        background: "#EEEEED",
-        fontFamily: "system-ui, -apple-system, sans-serif",
+        padding: "0 16px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          background: C.rule,
-          borderRadius: 12,
-          padding: 3,
-          gap: 2,
-          maxWidth: 500,
-          width: "100%",
-          marginBottom: 24,
-        }}
-      >
-        {(
-          [
-            ["fingerprint", "Fingerprint"],
-            ["wrapped", "Year in review"],
-            ["cards", "Cards"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setTopTab(id)}
-            style={{
-              flex: 1,
-              padding: "9px 4px",
-              background: id === "fingerprint" ? C.ink : "transparent",
-              border: "none",
-              borderRadius: 9,
-              color: id === "fingerprint" ? "#FAFAF7" : C.muted,
-              fontSize: 11,
-              fontWeight: id === "fingerprint" ? 600 : 400,
-              cursor: "pointer",
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {tabStrip}
 
       <div style={{ marginBottom: 28, textAlign: "center" }}>
         <div
           style={{
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: 700,
-            color: C.ink,
+            color: W.text,
             letterSpacing: "-0.02em",
-            marginBottom: 6,
+            marginBottom: 8,
           }}
         >
           Intellectual Fingerprint
         </div>
-        <div style={{ fontSize: 13, color: C.muted, maxWidth: 500, margin: "0 auto", lineHeight: 1.55 }}>
+        <div style={{ fontSize: 14, color: W.muted, maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>
           What you consume across reading, podcasts, and video — and how your stances compare to anonymous
           Mindlair cohorts when enough people have engaged. No fabricated public polling.
         </div>
@@ -830,15 +774,15 @@ export default function FingerprintDashboard() {
               disabled={downloading}
               style={{
                 flex: 1,
-                padding: "11px 4px",
-                background: C.ink,
+                padding: "10px 4px",
+                background: W.accent,
                 border: "none",
                 borderRadius: 10,
-                color: "#FAFAF7",
-                fontSize: 11,
-                fontWeight: 500,
+                color: "#fff",
+                fontSize: 12,
+                fontWeight: 600,
                 cursor: downloading ? "wait" : "pointer",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                opacity: downloading ? 0.7 : 1,
               }}
             >
               {downloading ? "…" : "⬇ PNG"}
@@ -848,15 +792,14 @@ export default function FingerprintDashboard() {
               onClick={copyPageLink}
               style={{
                 flex: 1,
-                padding: "11px 4px",
-                background: C.ink,
-                border: "none",
+                padding: "10px 4px",
+                background: W.surface,
+                border: `1px solid ${W.border}`,
                 borderRadius: 10,
-                color: "#FAFAF7",
-                fontSize: 11,
+                color: W.textSoft,
+                fontSize: 12,
                 fontWeight: 500,
                 cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
               }}
             >
               {copied ? "Copied" : "🔗 Link"}
@@ -866,102 +809,139 @@ export default function FingerprintDashboard() {
               onClick={webShare}
               style={{
                 flex: 1,
-                padding: "11px 4px",
-                background: C.ink,
-                border: "none",
+                padding: "10px 4px",
+                background: W.surface,
+                border: `1px solid ${W.border}`,
                 borderRadius: 10,
-                color: "#FAFAF7",
-                fontSize: 11,
+                color: W.textSoft,
+                fontSize: 12,
                 fontWeight: 500,
                 cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
               }}
             >
               Share
             </button>
           </div>
-          <div style={{ fontSize: 11, color: C.muted, textAlign: "center", maxWidth: 360, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: W.muted, textAlign: "center", maxWidth: 360, lineHeight: 1.6 }}>
             Cohort stats are anonymous aggregates with a minimum sample size. Toggle sections in Privacy before
             exporting or sharing your card.
           </div>
         </div>
 
         <div style={{ width: 360, maxWidth: "100%", display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ display: "flex", background: C.rule, borderRadius: 12, padding: 3, gap: 2 }}>
+          <div
+            style={{
+              display: "flex",
+              background: W.surfaceAlt,
+              border: `1px solid ${W.border}`,
+              borderRadius: 12,
+              padding: 3,
+              gap: 2,
+            }}
+          >
             {(
               [
                 ["about", "About"],
                 ["land", "Where you land"],
                 ["privacy", "Privacy"],
               ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setInnerTab(id)}
-                style={{
-                  flex: 1,
-                  padding: "9px 4px",
-                  background: innerTab === id ? C.ink : "transparent",
-                  border: "none",
-                  borderRadius: 9,
-                  color: innerTab === id ? "#FAFAF7" : C.muted,
-                  fontSize: 10,
-                  fontWeight: innerTab === id ? 600 : 400,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {label}
-              </button>
-            ))}
+            ).map(([id, label]) => {
+              const active = innerTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setInnerTab(id)}
+                  style={{
+                    flex: 1,
+                    padding: "9px 4px",
+                    background: active ? W.accent : "transparent",
+                    border: "none",
+                    borderRadius: 9,
+                    color: active ? "#fff" : W.muted,
+                    fontSize: 11,
+                    fontWeight: active ? 600 : 500,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    transition: "background 0.15s, color 0.15s",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
           {innerTab === "about" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ background: "#fff", borderRadius: 12, padding: 18, border: `1px solid ${C.rule}` }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.ink, marginBottom: 8 }}>What You Consume</div>
-                <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.75, margin: "0 0 14px" }}>
+              <div
+                style={{
+                  background: W.surface,
+                  borderRadius: 12,
+                  padding: 18,
+                  border: `1px solid ${W.border}`,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: W.text, marginBottom: 8 }}>What You Consume</div>
+                <p style={{ fontSize: 12, color: W.muted, lineHeight: 1.75, margin: "0 0 14px" }}>
                   Podcasts, articles, and video are treated as equal inputs to your map. The format matters less than
                   the topic. Content you save through Mindlair feeds the same concept clusters.
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {data.consumption.length === 0 ? (
-                    <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>No saved sources yet.</p>
+                    <p style={{ fontSize: 12, color: W.muted, margin: 0 }}>No saved sources yet.</p>
                   ) : (
-                  data.consumption.map(c => (
-                    <div key={c.label}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                          <span style={{ fontSize: 14 }}>{consumptionEmoji(c.iconKey)}</span>
-                          <span style={{ fontSize: 12, color: C.body }}>{c.label}</span>
+                    data.consumption.map(c => (
+                      <div key={c.label}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                            <span style={{ fontSize: 14 }}>{consumptionEmoji(c.iconKey)}</span>
+                            <span style={{ fontSize: 12, color: W.textSoft }}>{c.label}</span>
+                          </div>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: W.accent }}>{c.count} saved</span>
                         </div>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: CONTENT_COLORS[c.contentType] || C.accent }}>
-                          {c.count} saved
-                        </span>
+                        <div style={{ height: 5, background: W.surfaceAlt, borderRadius: 5, overflow: "hidden" }}>
+                          <div
+                            style={{
+                              width: `${Math.min(100, Math.max(0, (c.count / Math.max(1, ...data.consumption.map(x => x.count))) * 100))}%`,
+                              height: "100%",
+                              background: W.accent,
+                              borderRadius: 5,
+                              opacity: 0.85,
+                            }}
+                          />
+                        </div>
                       </div>
-                      <LightBar
-                        value={(c.count / Math.max(1, ...data.consumption.map(x => x.count))) * 100}
-                        color={CONTENT_COLORS[c.contentType] || C.accent}
-                        height={5}
-                      />
-                    </div>
-                  ))
+                    ))
                   )}
                 </div>
               </div>
-              <div style={{ background: "#EEF5F0", borderRadius: 12, padding: 18, border: "1px solid #C8E6D6" }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.accent, marginBottom: 6 }}>
+              <div
+                style={{
+                  background: `${W.accent}10`,
+                  borderRadius: 12,
+                  padding: 18,
+                  border: `1px solid ${W.accent}30`,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: W.accent, marginBottom: 6 }}>
                   Topic format icons
                 </div>
-                <p style={{ fontSize: 12, color: C.body, lineHeight: 1.7, margin: 0 }}>
+                <p style={{ fontSize: 12, color: W.textSoft, lineHeight: 1.7, margin: 0 }}>
                   Icons next to each topic show which content types you have consumed on that subject. Multiple icons
                   mean multi-format engagement.
                 </p>
               </div>
-              <div style={{ background: "#fff", borderRadius: 12, padding: 18, border: `1px solid ${C.rule}` }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.ink, marginBottom: 8 }}>What shifts mean</div>
-                <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.75, margin: 0 }}>
+              <div
+                style={{
+                  background: W.surface,
+                  borderRadius: 12,
+                  padding: 18,
+                  border: `1px solid ${W.border}`,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: W.text, marginBottom: 8 }}>What shifts mean</div>
+                <p style={{ fontSize: 12, color: W.muted, lineHeight: 1.75, margin: 0 }}>
                   A shift appears when you record a new stance on a claim that replaces a previous one. The card
                   summarizes movement on that topic without exposing full source chains in the export.
                 </p>
@@ -971,37 +951,45 @@ export default function FingerprintDashboard() {
 
           {innerTab === "land" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ background: "#fff", borderRadius: 12, padding: 18, border: `1px solid ${C.rule}` }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.ink, marginBottom: 8 }}>How this works</div>
-                <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.75, margin: "0 0 14px" }}>
+              <div
+                style={{
+                  background: W.surface,
+                  borderRadius: 12,
+                  padding: 18,
+                  border: `1px solid ${W.border}`,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: W.text, marginBottom: 8 }}>How this works</div>
+                <p style={{ fontSize: 12, color: W.muted, lineHeight: 1.75, margin: "0 0 14px" }}>
                   For topics you have engaged with, we compare your stance to other Mindlair users using anonymous
                   aggregates only. We require at least {FINGERPRINT_MIN_COHORT_N} people before showing a percentage,
                   to reduce small-sample leakage.
                 </p>
-                <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.75, margin: 0 }}>
+                <p style={{ fontSize: 12, color: W.muted, lineHeight: 1.75, margin: 0 }}>
                   We do not show US or general-public polling on this card until we can cite real sources. Claim-level
-                  percentages reflect “agree” vs other non-skip reactions; topic-level fallback reflects how many users
+                  percentages reflect &ldquo;agree&rdquo; vs other non-skip reactions; topic-level fallback reflects how many users
                   lean affirmative on the topic in their belief map.
                 </p>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {data.comparisons.map(p => {
                   const minority = isMinorityInCohort(p);
+                  const flagColor = minority ? W.accent : W.green;
                   return (
                     <div
                       key={`${p.conceptId}-${p.claimId ?? "b"}`}
                       style={{
-                        background: "#fff",
+                        background: W.surface,
                         borderRadius: 10,
                         padding: 16,
-                        border: `1px solid ${minority ? "#F5E6D0" : "#C8E6D6"}`,
-                        borderLeft: `4px solid ${minority ? C.amber : C.accent}`,
+                        border: `1px solid ${W.border}`,
+                        borderLeft: `4px solid ${flagColor}`,
                       }}
                     >
                       <div
                         style={{
                           fontSize: 12,
-                          color: C.ink,
+                          color: W.text,
                           fontWeight: 500,
                           marginBottom: 10,
                           lineHeight: 1.5,
@@ -1010,19 +998,31 @@ export default function FingerprintDashboard() {
                         {p.topicLabel}
                       </div>
                       {p.insufficientData ? (
-                        <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+                        <p style={{ fontSize: 11, color: W.muted, margin: 0 }}>
                           Not enough Mindlair users (n&lt;{FINGERPRINT_MIN_COHORT_N}) for a cohort bar.
                         </p>
                       ) : (
                         <div>
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                            <span style={{ fontSize: 10, color: C.muted }}>Mindlair users</span>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: C.accent }}>
-                              {p.source === "claim" ? `${p.pctMindlairAgree}% agree` : `${p.pctMindlairAgree}% affirmative`}
+                            <span style={{ fontSize: 10, color: W.muted }}>Mindlair users</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: W.accent }}>
+                              {p.source === "claim"
+                                ? `${p.pctMindlairAgree}% agree`
+                                : `${p.pctMindlairAgree}% affirmative`}
                             </span>
                           </div>
-                          <LightBar value={p.pctMindlairAgree ?? 0} color={C.accent} height={5} />
-                          <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>n={p.sampleSize}</div>
+                          <div style={{ height: 5, background: W.surfaceAlt, borderRadius: 5, overflow: "hidden" }}>
+                            <div
+                              style={{
+                                width: `${Math.min(100, Math.max(0, p.pctMindlairAgree ?? 0))}%`,
+                                height: "100%",
+                                background: W.accent,
+                                borderRadius: 5,
+                                opacity: 0.85,
+                              }}
+                            />
+                          </div>
+                          <div style={{ fontSize: 10, color: W.muted, marginTop: 6 }}>n={p.sampleSize}</div>
                         </div>
                       )}
                       <div
@@ -1030,7 +1030,7 @@ export default function FingerprintDashboard() {
                           marginTop: 8,
                           fontSize: 10,
                           fontWeight: 600,
-                          color: minority ? C.amber : C.accent,
+                          color: flagColor,
                           display: "flex",
                           alignItems: "center",
                           gap: 5,
@@ -1040,17 +1040,24 @@ export default function FingerprintDashboard() {
                         {minority === true && "Minority vs Mindlair cohort"}
                         {minority === false && "Majority vs Mindlair cohort"}
                         {minority === null && "Your stance"}
-                        <span style={{ fontWeight: 400, color: C.muted }}>· {p.userStanceSummary}</span>
+                        <span style={{ fontWeight: 400, color: W.muted }}>· {p.userStanceSummary}</span>
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div style={{ background: "#EEF2FB", borderRadius: 12, padding: 16, border: "1px solid #B8CCE8" }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.blue, marginBottom: 6 }}>
+              <div
+                style={{
+                  background: `${W.blue}10`,
+                  borderRadius: 12,
+                  padding: 16,
+                  border: `1px solid ${W.blue}30`,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: W.blue, marginBottom: 6 }}>
                   Why minority views matter
                 </div>
-                <p style={{ fontSize: 12, color: C.body, lineHeight: 1.7, margin: 0 }}>
+                <p style={{ fontSize: 12, color: W.textSoft, lineHeight: 1.7, margin: 0 }}>
                   Being in the minority on some topics and the majority on others resists simple categorisation — that
                   nuance is the point.
                 </p>
@@ -1060,11 +1067,18 @@ export default function FingerprintDashboard() {
 
           {innerTab === "privacy" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ background: "#fff", borderRadius: 12, padding: 18, border: `1px solid ${C.rule}` }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.ink, marginBottom: 4 }}>
+              <div
+                style={{
+                  background: W.surface,
+                  borderRadius: 12,
+                  padding: 18,
+                  border: `1px solid ${W.border}`,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: W.text, marginBottom: 4 }}>
                   Control what appears on the card
                 </div>
-                <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.7, margin: "0 0 16px" }}>
+                <p style={{ fontSize: 12, color: W.muted, lineHeight: 1.7, margin: "0 0 16px" }}>
                   Toggle sections off before downloading PNG. The card updates immediately.
                 </p>
                 {(
@@ -1074,61 +1088,71 @@ export default function FingerprintDashboard() {
                     { key: "questions" as const, label: "Still Thinking About", icon: "?" },
                     { key: "shifts" as const, label: "Where Thinking Moved", icon: "↝" },
                   ] as const
-                ).map(item => (
-                  <div
-                    key={item.key}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "10px 14px",
-                      marginBottom: 6,
-                      background: privacy[item.key] ? C.soft : "#FCEEED",
-                      borderRadius: 8,
-                      border: `1px solid ${privacy[item.key] ? C.rule : "#F0B8B4"}`,
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ color: C.muted, fontSize: 13 }}>{item.icon}</span>
-                      <span style={{ fontSize: 12, color: C.ink }}>{item.label}</span>
-                    </div>
-                    <button
-                      type="button"
-                      aria-pressed={privacy[item.key]}
-                      onClick={() => togglePrivacy(item.key)}
+                ).map(item => {
+                  const enabled = privacy[item.key];
+                  return (
+                    <div
+                      key={item.key}
                       style={{
-                        width: 36,
-                        height: 20,
-                        borderRadius: 10,
-                        background: privacy[item.key] ? C.accent : "#D0D0CC",
-                        border: "none",
-                        cursor: "pointer",
-                        position: "relative",
-                        transition: "background 0.2s",
-                        flexShrink: 0,
-                        padding: 0,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "10px 14px",
+                        marginBottom: 6,
+                        background: enabled ? W.surfaceAlt : `${W.rose}10`,
+                        borderRadius: 8,
+                        border: `1px solid ${enabled ? W.border : `${W.rose}30`}`,
                       }}
                     >
-                      <span
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ color: W.muted, fontSize: 13 }}>{item.icon}</span>
+                        <span style={{ fontSize: 12, color: W.text }}>{item.label}</span>
+                      </div>
+                      <button
+                        type="button"
+                        aria-pressed={enabled}
+                        onClick={() => togglePrivacy(item.key)}
                         style={{
-                          position: "absolute",
-                          left: privacy[item.key] ? 18 : 2,
-                          top: 2,
-                          width: 16,
-                          height: 16,
-                          borderRadius: "50%",
-                          background: "#fff",
-                          transition: "left 0.2s",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                          display: "block",
+                          width: 36,
+                          height: 20,
+                          borderRadius: 10,
+                          background: enabled ? W.accent : W.border,
+                          border: "none",
+                          cursor: "pointer",
+                          position: "relative",
+                          transition: "background 0.2s",
+                          flexShrink: 0,
+                          padding: 0,
                         }}
-                      />
-                    </button>
-                  </div>
-                ))}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            left: enabled ? 18 : 2,
+                            top: 2,
+                            width: 16,
+                            height: 16,
+                            borderRadius: "50%",
+                            background: "#fff",
+                            transition: "left 0.2s",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+                            display: "block",
+                          }}
+                        />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-              <div style={{ background: "#EEF5F0", borderRadius: 12, padding: 16, border: "1px solid #C8E6D6" }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.accent, marginBottom: 8 }}>
+              <div
+                style={{
+                  background: `${W.accent}10`,
+                  borderRadius: 12,
+                  padding: 16,
+                  border: `1px solid ${W.accent}30`,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: W.accent, marginBottom: 8 }}>
                   Always use care when sharing
                 </div>
                 {[
@@ -1137,8 +1161,8 @@ export default function FingerprintDashboard() {
                   "No US general-public benchmark is shown on this card in v1",
                 ].map(item => (
                   <div key={item} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
-                    <span style={{ color: C.accent, fontSize: 11 }}>🔒</span>
-                    <span style={{ fontSize: 12, color: C.body }}>{item}</span>
+                    <span style={{ color: W.accent, fontSize: 11 }}>🔒</span>
+                    <span style={{ fontSize: 12, color: W.textSoft }}>{item}</span>
                   </div>
                 ))}
               </div>

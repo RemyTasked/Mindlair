@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const purpose = formData.get('purpose') as string | null; // 'thumbnail' | 'inline'
 
     if (!file) {
       return NextResponse.json(
@@ -53,19 +54,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Upload to Cloudinary
+    // Upload to Cloudinary with different transformations based on purpose
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+
+    const isInline = purpose === 'inline';
+    const folder = isInline 
+      ? `mindlair/posts/${user.id}/inline` 
+      : `mindlair/posts/${user.id}`;
+
+    const transformation = isInline
+      ? [
+          { quality: 'auto', fetch_format: 'auto' },
+          { width: 1600, crop: 'limit' }, // Keep native aspect ratio for inline images
+        ]
+      : [
+          { quality: 'auto', fetch_format: 'auto' },
+          { width: 1200, height: 675, crop: 'limit' }, // 16:9 max size for thumbnails
+        ];
 
     const result = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: `mindlair/posts/${user.id}`,
+          folder,
           resource_type: 'image',
-          transformation: [
-            { quality: 'auto', fetch_format: 'auto' },
-            { width: 1200, height: 675, crop: 'limit' }, // 16:9 max size for thumbnails
-          ],
+          transformation,
         },
         (error, result) => {
           if (error) {

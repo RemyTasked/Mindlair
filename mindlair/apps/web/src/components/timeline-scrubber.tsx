@@ -33,23 +33,23 @@ interface TimelineScrubberProps {
 }
 
 const C = {
-  bg: "#0a0a0a",
-  surface: "#141414",
-  surfaceAlt: "#1a1a1a",
-  border: "#262626",
-  text: "#f5f5f5",
-  textSoft: "#a3a3a3",
-  textMuted: "#737373",
+  bg: "#0f0e0c",
+  surface: "#1a1916",
+  surfaceAlt: "#211f1c",
+  border: "#2a2825",
+  text: "#e8e4dc",
+  textSoft: "#c4bfb4",
+  textMuted: "#7a7469",
   accent: "#d4915a",
   accentSoft: "rgba(212, 145, 90, 0.15)",
-  positive: "#22c55e",
-  positiveSoft: "rgba(34, 197, 94, 0.15)",
-  negative: "#ef4444",
-  negativeSoft: "rgba(239, 68, 68, 0.15)",
-  mixed: "#a855f7",
-  mixedSoft: "rgba(168, 85, 247, 0.15)",
-  blue: "#3b82f6",
-  blueSoft: "rgba(59, 130, 246, 0.15)",
+  positive: "#a3c47a",
+  positiveSoft: "rgba(163, 196, 122, 0.15)",
+  negative: "#e57373",
+  negativeSoft: "rgba(229, 115, 115, 0.15)",
+  mixed: "#b89cd6",
+  mixedSoft: "rgba(184, 156, 214, 0.15)",
+  blue: "#4a9eff",
+  blueSoft: "rgba(74, 158, 255, 0.15)",
 };
 
 export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps) {
@@ -57,12 +57,17 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredConcept, setHoveredConcept] = useState<string | null>(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2 | 3>(2); // 1=slow, 2=normal, 3=fast
-  const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // 1 = Slow, 2 = Normal, 3 = Fast. Labels show as ms-per-snapshot for transparency.
+  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2 | 3>(1);
+  const rafRef = useRef<number | null>(null);
+  const lastTickRef = useRef<number>(0);
+  const playingRef = useRef(false);
   const sliderRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef<{ startX: number; startIndex: number } | null>(null);
-  
-  const SPEED_MS = { 1: 2500, 2: 1500, 3: 800 };
+  const dragStartRef = useRef<{ startX: number; startIndex: number; activated: boolean } | null>(null);
+
+  // ms per snapshot - longer = more time to read each step
+  const SPEED_MS: Record<1 | 2 | 3, number> = { 1: 3200, 2: 2000, 3: 1100 };
+  const SPEED_LABEL: Record<1 | 2 | 3, string> = { 1: "Slow", 2: "Normal", 3: "Fast" };
 
   const currentSnapshot = snapshots[currentIndex];
   const previousSnapshot = currentIndex > 0 ? snapshots[currentIndex - 1] : null;
@@ -82,55 +87,77 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
     setCurrentIndex(Math.max(0, Math.min(snapshots.length - 1, index)));
   }, [snapshots.length]);
 
-  const handlePrevious = () => goToIndex(currentIndex - 1);
-  const handleNext = () => goToIndex(currentIndex + 1);
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex(prev => Math.max(0, prev - 1));
+  }, []);
+  const handleNext = useCallback(() => {
+    setCurrentIndex(prev => Math.min(snapshots.length - 1, prev + 1));
+  }, [snapshots.length]);
 
-  const togglePlay = () => {
-    if (isPlaying) {
-      setIsPlaying(false);
-      if (playIntervalRef.current) {
-        clearInterval(playIntervalRef.current);
-        playIntervalRef.current = null;
+  const togglePlay = useCallback(() => {
+    setIsPlaying(prev => {
+      const next = !prev;
+      if (next) {
+        setCurrentIndex(idx => (idx >= snapshots.length - 1 ? 0 : idx));
       }
-    } else {
-      if (currentIndex >= snapshots.length - 1) {
-        setCurrentIndex(0);
-      }
-      setIsPlaying(true);
-    }
-  };
+      return next;
+    });
+  }, [snapshots.length]);
 
   useEffect(() => {
-    if (isPlaying) {
-      playIntervalRef.current = setInterval(() => {
-        setCurrentIndex((prev) => {
+    playingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // rAF-driven playback. Holds 60% of each interval, advances on the back 40% -
+  // gives the eye room to breathe between snapshots while keeping motion present.
+  useEffect(() => {
+    if (!isPlaying) {
+      lastTickRef.current = 0;
+      return;
+    }
+    const tick = (ts: number) => {
+      if (!playingRef.current) return;
+      if (!lastTickRef.current) lastTickRef.current = ts;
+      const dt = ts - lastTickRef.current;
+      if (dt >= SPEED_MS[playbackSpeed]) {
+        lastTickRef.current = ts;
+        setCurrentIndex(prev => {
           if (prev >= snapshots.length - 1) {
             setIsPlaying(false);
             return prev;
           }
           return prev + 1;
         });
-      }, SPEED_MS[playbackSpeed]);
-    }
-    return () => {
-      if (playIntervalRef.current) {
-        clearInterval(playIntervalRef.current);
       }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
     };
   }, [isPlaying, snapshots.length, playbackSpeed]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") handlePrevious();
-      else if (e.key === "ArrowRight") handleNext();
-      else if (e.key === " ") {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        handlePrevious();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleNext();
+      } else if (e.key === " ") {
         e.preventDefault();
         togglePlay();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, isPlaying]);
+  }, [handlePrevious, handleNext, togglePlay]);
+
+  const DRAG_THRESHOLD = 4; // px before a press becomes a drag
 
   const handleSliderClick = (clientX: number) => {
     if (!sliderRef.current) return;
@@ -140,25 +167,36 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
     goToIndex(Math.round(percent * (snapshots.length - 1)));
   };
 
-  const handleDragStart = (clientX: number) => {
+  const handlePressStart = (clientX: number) => {
     if (!sliderRef.current) return;
-    dragStartRef.current = { startX: clientX, startIndex: currentIndex };
-    setIsDragging(true);
+    dragStartRef.current = { startX: clientX, startIndex: currentIndex, activated: false };
   };
 
-  const handleDragMove = (clientX: number) => {
+  const handlePressMove = (clientX: number) => {
     if (!sliderRef.current || !dragStartRef.current) return;
-    const rect = sliderRef.current.getBoundingClientRect();
     const deltaX = clientX - dragStartRef.current.startX;
+    if (!dragStartRef.current.activated) {
+      if (Math.abs(deltaX) < DRAG_THRESHOLD) return;
+      dragStartRef.current.activated = true;
+      setIsDragging(true);
+    }
+    const rect = sliderRef.current.getBoundingClientRect();
     const pixelsPerSnapshot = rect.width / Math.max(1, snapshots.length - 1);
     const snapshotDelta = Math.round(deltaX / pixelsPerSnapshot);
-    const newIndex = Math.max(0, Math.min(snapshots.length - 1, dragStartRef.current.startIndex + snapshotDelta));
+    const newIndex = Math.max(
+      0,
+      Math.min(snapshots.length - 1, dragStartRef.current.startIndex + snapshotDelta)
+    );
     if (newIndex !== currentIndex) {
       setCurrentIndex(newIndex);
     }
   };
 
-  const handleDragEnd = () => {
+  const handlePressEnd = (clientX?: number) => {
+    if (dragStartRef.current && !dragStartRef.current.activated && clientX !== undefined) {
+      // press without enough movement = click
+      handleSliderClick(clientX);
+    }
     dragStartRef.current = null;
     setIsDragging(false);
   };
@@ -283,10 +321,11 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
         <div className="p-5 border-b" style={{ borderColor: C.border }}>
           <div className="flex items-start justify-between">
             <div>
-              <motion.h2 
+              <motion.h2
                 key={currentIndex}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
                 className="text-xl font-semibold"
                 style={{ color: C.text }}
               >
@@ -430,16 +469,16 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
 
           {/* Speed control */}
           <button
-            onClick={() => setPlaybackSpeed(prev => prev === 3 ? 1 : (prev + 1) as 1 | 2 | 3)}
-            className="shrink-0 h-9 px-2 rounded-md text-xs font-medium transition-colors"
-            style={{ 
-              background: C.surfaceAlt, 
+            onClick={() => setPlaybackSpeed(prev => (prev === 3 ? 1 : ((prev + 1) as 1 | 2 | 3)))}
+            className="shrink-0 h-9 px-3 rounded-md text-xs font-medium transition-colors"
+            style={{
+              background: C.surfaceAlt,
               color: C.textSoft,
               border: `1px solid ${C.border}`,
             }}
-            title="Change playback speed"
+            title={`Playback speed: ${SPEED_LABEL[playbackSpeed]} (${(SPEED_MS[playbackSpeed] / 1000).toFixed(1)}s per step)`}
           >
-            {playbackSpeed === 1 ? "0.5x" : playbackSpeed === 2 ? "1x" : "2x"}
+            {SPEED_LABEL[playbackSpeed]}
           </button>
 
           <div className="flex-1 space-y-2">
@@ -447,26 +486,27 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
             <div
               ref={sliderRef}
               className="relative h-2 rounded-full cursor-pointer group"
-              style={{ background: C.border }}
-              onClick={(e) => {
-                if (!isDragging) handleSliderClick(e.clientX);
-              }}
+              style={{ background: C.border, touchAction: "none" }}
               onMouseDown={(e) => {
                 e.preventDefault();
-                handleDragStart(e.clientX);
+                handlePressStart(e.clientX);
               }}
               onMouseMove={(e) => {
-                if (isDragging) handleDragMove(e.clientX);
+                handlePressMove(e.clientX);
               }}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
+              onMouseUp={(e) => handlePressEnd(e.clientX)}
+              onMouseLeave={() => handlePressEnd()}
               onTouchStart={(e) => {
-                handleDragStart(e.touches[0].clientX);
+                handlePressStart(e.touches[0].clientX);
               }}
               onTouchMove={(e) => {
-                if (isDragging) handleDragMove(e.touches[0].clientX);
+                e.preventDefault();
+                handlePressMove(e.touches[0].clientX);
               }}
-              onTouchEnd={handleDragEnd}
+              onTouchEnd={(e) => {
+                const t = e.changedTouches[0];
+                handlePressEnd(t?.clientX);
+              }}
             >
               {/* Activity indicator dots */}
               {snapshots.map((snap, i) => {
@@ -476,41 +516,39 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
                 return (
                   <div
                     key={i}
-                    className="absolute top-1/2 -translate-y-1/2 rounded-full transition-all"
-                    style={{ 
+                    className="absolute top-1/2 -translate-y-1/2 rounded-full transition-all pointer-events-none"
+                    style={{
                       left: `${(i / Math.max(1, snapshots.length - 1)) * 100}%`,
                       width: i === currentIndex ? 6 : 3,
                       height: i === currentIndex ? 6 : 3,
                       background: i <= currentIndex ? C.accent : C.textMuted,
                       opacity: i === currentIndex ? 1 : opacity,
-                      transform: `translate(-50%, -50%)`,
+                      transform: "translate(-50%, -50%)",
                     }}
                   />
                 );
               })}
-              
-              {/* Progress fill */}
-              <motion.div
-                className="absolute top-0 left-0 h-full rounded-full"
-                style={{ background: C.accent }}
-                initial={false}
-                animate={{ width: `${progress}%` }}
-                transition={{ type: "spring", stiffness: 400, damping: 35 }}
+
+              {/* Progress fill - no animation when dragging or playing, gentle ease otherwise */}
+              <div
+                className="absolute top-0 left-0 h-full rounded-full pointer-events-none"
+                style={{
+                  background: C.accent,
+                  width: `${progress}%`,
+                  transition: isDragging || isPlaying ? "none" : "width 0.2s ease-out",
+                }}
               />
-              
+
               {/* Scrubber handle */}
-              <motion.div
-                className="absolute top-1/2 w-4 h-4 rounded-full shadow-lg cursor-grab active:cursor-grabbing"
-                style={{ 
+              <div
+                className="absolute top-1/2 w-4 h-4 rounded-full shadow-lg pointer-events-none"
+                style={{
                   background: C.text,
                   border: `2px solid ${C.accent}`,
+                  left: `calc(${progress}% - 8px)`,
                   transform: "translateY(-50%)",
+                  transition: isDragging || isPlaying ? "none" : "left 0.2s ease-out",
                 }}
-                initial={false}
-                animate={{ left: `calc(${progress}% - 8px)` }}
-                transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.95 }}
               />
             </div>
 
@@ -538,7 +576,7 @@ export function TimelineScrubber({ snapshots, interval }: TimelineScrubberProps)
 
         {/* Keyboard hint */}
         <p className="text-center text-xs mt-3" style={{ color: C.textMuted }}>
-          ← → to step · Space to play/pause · Drag to scrub through time
+          ← → step · Space play / pause · Click or drag to scrub
         </p>
       </div>
 
@@ -674,10 +712,10 @@ function ConceptChip({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.8 }}
+      initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      exit={{ opacity: 0, scale: 0.92 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className="relative"
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
@@ -689,8 +727,8 @@ function ConceptChip({
           border: `1px solid ${isHovered ? accentColor : C.border}`,
           fontSize: 12 + sizeScale * 2,
         }}
-        whileHover={{ scale: 1.05 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        whileHover={{ scale: 1.04 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
       >
         <span style={{ color: C.text }}>{concept.label}</span>
         <span 

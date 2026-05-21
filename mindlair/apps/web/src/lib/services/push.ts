@@ -25,7 +25,8 @@ export type NotificationType =
   | 'daily_digest'
   | 'tension_alert'
   | 'position_shift'
-  | 'new_concept';
+  | 'new_concept'
+  | 'new_post';
 
 export async function sendPushNotification(
   userId: string,
@@ -177,6 +178,29 @@ export async function sendPositionShiftNotification(
       url: `/timeline?concept=${encodeURIComponent(shift.concept)}`,
       concept: shift.concept,
     },
+  });
+}
+
+export async function sendNewPostNotification(
+  userId: string,
+  post: {
+    authorName: string;
+    title: string;
+    postUrl: string;
+  }
+): Promise<void> {
+  await sendPushNotification(userId, {
+    title: `New post from ${post.authorName}`,
+    body: post.title,
+    tag: 'new-post',
+    data: {
+      type: 'new_post',
+      url: post.postUrl,
+    },
+    actions: [
+      { action: 'view', title: 'Read' },
+      { action: 'dismiss', title: 'Later' },
+    ],
   });
 }
 

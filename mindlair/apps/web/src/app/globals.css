@@ -60,3 +60,8 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #3a3835;
 }
+
+/* Hide mobile bottom nav when a sheet is open */
+body[data-sheet-open="true"] nav.lg\:hidden.fixed.bottom-0 {
+  display: none;
+}

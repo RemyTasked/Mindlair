@@ -18,8 +18,10 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
     "@prisma/client": "^6.0.0",
+    "@tiptap/extension-image": "^3.23.6",
     "@tiptap/extension-link": "^3.22.3",
     "@tiptap/extension-placeholder": "^3.22.3",
+    "@tiptap/extension-youtube": "^3.23.6",
     "@tiptap/pm": "^3.22.3",
     "@tiptap/react": "^3.22.3",
     "@tiptap/starter-kit": "^3.22.3",

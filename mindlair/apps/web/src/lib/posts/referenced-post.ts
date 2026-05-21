@@ -3,6 +3,7 @@ import db from '@/lib/db';
 /** Prisma select fragment for API responses */
 export const referencedPostSelect = {
   id: true,
+  title: true,
   headlineClaim: true,
   publishedAt: true,
   author: { select: { id: true, name: true, avatarUrl: true } },
@@ -10,6 +11,7 @@ export const referencedPostSelect = {
 
 export type ReferencedPostSummary = {
   id: string;
+  title: string;
   headlineClaim: string;
   publishedAt: string | null;
   author: { id: string; name: string | null; avatarUrl: string | null };
@@ -17,6 +19,7 @@ export type ReferencedPostSummary = {
 
 type ReferencedRow = {
   id: string;
+  title: string;
   headlineClaim: string;
   publishedAt: Date | null;
   author: { id: string; name: string | null; avatarUrl: string | null };
@@ -28,6 +31,7 @@ export function serializeReferencedPost(
   if (!post) return null;
   return {
     id: post.id,
+    title: post.title,
     headlineClaim: post.headlineClaim,
     publishedAt: post.publishedAt?.toISOString() ?? null,
     author: post.author,

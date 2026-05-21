@@ -467,3 +467,137 @@ export async function findSimilarClaims(
 }
 
 export { cosineSimilarity };
+
+// ============================================
+// Headline Claim Generation
+// ============================================
+
+export interface HeadlineClaimResult {
+  claim: string;
+  confidence: number;
+  rationale: string;
+}
+
+const HEADLINE_CLAIM_PROMPT = `You are an expert at identifying the core falsifiable claim in written arguments.
+
+Given a post's title, body, and the author's declared stance, extract the single most important falsifiable claim that represents the author's main argument.
+
+Guidelines:
+1. The claim should be a clear, standalone statement that someone could agree or disagree with
+2. It should be falsifiable - specific enough that evidence could support or refute it
+3. Match the tone to the author's stance:
+   - "arguing": confident, direct assertion
+   - "exploring": tentative, question-like framing
+   - "steelmanning": present the strongest version of a position the author may not hold
+4. Keep it between 10-280 characters
+5. Avoid clickbait, sensationalism, or vague generalizations
+
+Respond in JSON format:
+{
+  "claim": "The falsifiable claim (10-280 chars)",
+  "confidence": 0.0-1.0,
+  "rationale": "Brief explanation of why this captures the core argument"
+}`;
+
+export async function generateHeadlineClaim(opts: {
+  title: string;
+  body: string;
+  authorStance: 'arguing' | 'exploring' | 'steelmanning';
+  existingClaim?: string;
+}): Promise<HeadlineClaimResult> {
+  const { title, body, authorStance, existingClaim } = opts;
+
+  const existingClaimNote = existingClaim
+    ? `\n\nThe user previously edited the claim to: "${existingClaim}"\nIf this edited claim is good, preserve it or refine it slightly. Only generate a completely different claim if the body has changed significantly.`
+    : '';
+
+  try {
+    const result = await claudeJSON<HeadlineClaimResult>({
+      system: HEADLINE_CLAIM_PROMPT,
+      user: `Title: ${title}\n\nAuthor's Stance: ${authorStance}\n\nPost Body:\n${body.slice(0, 6000)}${existingClaimNote}`,
+      model: FAST_MODEL,
+      temperature: 0.4,
+      maxTokens: 400,
+    });
+
+    let claim = result.claim || '';
+    if (claim.length < 10) {
+      claim = title.length >= 10 ? title : `[Draft] ${title}`;
+    }
+    if (claim.length > 280) {
+      claim = claim.slice(0, 277) + '...';
+    }
+
+    return {
+      claim,
+      confidence: result.confidence ?? 0.7,
+      rationale: result.rationale || 'Generated from post content',
+    };
+  } catch (error) {
+    console.error('Headline claim generation error:', error);
+    return {
+      claim: title.length >= 10 && title.length <= 280 ? title : `[Draft] ${title}`.slice(0, 280),
+      confidence: 0.3,
+      rationale: 'Fallback: using title as claim',
+    };
+  }
+}
+
+// ============================================
+// Topic Tag Suggestion (for composer)
+// ============================================
+
+export interface TopicTagSuggestion {
+  tags: string[];
+  confidence: number;
+}
+
+const TOPIC_TAG_PROMPT = `You are an expert at categorizing written content into substantive topic areas.
+
+Given a post title and body, suggest 3-5 topic tags that best describe what this post is about.
+
+Guidelines for good topic tags:
+- Use broad, stable topic labels (e.g., "housing policy" not "rent prices in September")
+- Prefer topics that could be the subject of academic study, policy debate, or thoughtful essay
+- Avoid UI/tech jargon, vague words, or overly specific proper nouns
+- Use lowercase, 2-40 characters per tag
+
+Examples of good tags: "artificial intelligence", "climate policy", "remote work", "parenting", "nutrition"
+
+Respond in JSON format:
+{
+  "tags": ["tag1", "tag2", "tag3"],
+  "confidence": 0.0-1.0
+}`;
+
+export async function suggestTopicTagsFromContent(opts: {
+  title: string;
+  body: string;
+}): Promise<TopicTagSuggestion> {
+  const { title, body } = opts;
+
+  try {
+    const result = await claudeJSON<TopicTagSuggestion>({
+      system: TOPIC_TAG_PROMPT,
+      user: `Title: ${title}\n\nBody:\n${body.slice(0, 4000)}`,
+      model: FAST_MODEL,
+      temperature: 0.3,
+      maxTokens: 300,
+    });
+
+    const tags = (result.tags || [])
+      .filter((t): t is string => typeof t === 'string' && t.length >= 2 && t.length <= 40)
+      .slice(0, 5);
+
+    return {
+      tags,
+      confidence: result.confidence ?? 0.7,
+    };
+  } catch (error) {
+    console.error('Topic tag suggestion error:', error);
+    return {
+      tags: [],
+      confidence: 0,
+    };
+  }
+}

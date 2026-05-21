@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint, FileText } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationBanner } from "@/components/push-notifications";
+import { ToastContainer } from "@/components/ui/toast";
+import { ToastProvider, useToastState, useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/hooks/use-session";
 
@@ -14,7 +16,7 @@ const C = {
   text: "#e8e4dc", muted: "#7a7469", accent: "#d4915a",
 };
 
-export default function AppLayout({
+function AppLayoutInner({
   children,
 }: {
   children: React.ReactNode;
@@ -24,7 +26,8 @@ export default function AppLayout({
   const isMap = pathname === "/map";
   const isFeed = pathname === "/feed";
   
-  const { isLoading, isAuthenticated, error } = useSession();
+  const { isLoading, isAuthenticated } = useSession();
+  const { toasts, dismiss } = useToast();
 
   // Redirect to login if not authenticated (after loading completes)
   useEffect(() => {
@@ -130,9 +133,24 @@ export default function AppLayout({
         </div>
       </nav>
 
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <PWAInstallPrompt />
       <PushNotificationBanner />
     </div>
+  );
+}
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const toastState = useToastState();
+
+  return (
+    <ToastProvider value={toastState}>
+      <AppLayoutInner>{children}</AppLayoutInner>
+    </ToastProvider>
   );
 }
 

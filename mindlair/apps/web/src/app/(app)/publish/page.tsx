@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Sheet } from "@/components/ui/sheet";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { 
   Send, 
   Save, 
@@ -21,6 +23,15 @@ import {
   Link as LinkIcon,
   Search,
   Quote,
+  Sparkles,
+  X,
+  Settings,
+  Globe,
+  Lock,
+  Plus,
+  RefreshCw,
+  AlertTriangle,
+  ExternalLink,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -42,6 +53,7 @@ const C = {
 };
 
 type AuthorStance = "arguing" | "exploring" | "steelmanning";
+type Visibility = "public" | "unlisted";
 
 const stanceInfo = {
   arguing: {
@@ -67,6 +79,7 @@ const stanceInfo = {
 function PublishPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
@@ -76,6 +89,7 @@ function PublishPageContent() {
   const [refPreview, setRefPreview] = useState<{
     id: string;
     headlineClaim: string;
+    title?: string;
     author: { id: string; name: string | null; avatarUrl: string | null };
   } | null>(null);
   const [annotationPreview, setAnnotationPreview] = useState<{
@@ -84,9 +98,19 @@ function PublishPageContent() {
   } | null>(null);
   const [refLoadError, setRefLoadError] = useState<string | null>(null);
 
+  const [title, setTitle] = useState("");
   const [headlineClaim, setHeadlineClaim] = useState("");
+  const [claimRationale, setClaimRationale] = useState("");
+  const [isGeneratingClaim, setIsGeneratingClaim] = useState(false);
+  const [claimEdited, setClaimEdited] = useState(false);
   const [body, setBody] = useState("");
   const [authorStance, setAuthorStance] = useState<AuthorStance>("arguing");
+  const [visibility, setVisibility] = useState<Visibility>("public");
+  const [topicTags, setTopicTags] = useState<string[]>([]);
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
+  const [newTagInput, setNewTagInput] = useState("");
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,11 +120,28 @@ function PublishPageContent() {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [isLoadingPost, setIsLoadingPost] = useState(false);
-  const [showSeoSettings, setShowSeoSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [slug, setSlug] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
+  
+  // Preflight state
+  const [showPreflightModal, setShowPreflightModal] = useState(false);
+  const [preflightConflicts, setPreflightConflicts] = useState<Array<{
+    pastPostId: string;
+    pastTitle: string;
+    pastClaim: string;
+    pastPublishedAt: string;
+    type: "direct_contradiction" | "implicit_tension";
+    explanation: string;
+    confidence: number;
+  }>>([]);
+  const [isRunningPreflight, setIsRunningPreflight] = useState(false);
+  const [preflightChecked, setPreflightChecked] = useState(false);
+  
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const claimDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const tagDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!editId) return;
@@ -132,13 +173,20 @@ function PublishPageContent() {
           }
           
           setDraftId(post.id);
+          setTitle(post.title || "");
           setHeadlineClaim(post.headlineClaim || "");
           setBody(post.body || "");
           setAuthorStance(post.authorStance || "arguing");
+          setVisibility(post.visibility || "public");
+          setTopicTags(post.topicTags || []);
           setThumbnailUrl(post.thumbnailUrl || null);
           setSlug(post.slug || "");
           setSeoTitle(post.seoTitle || "");
           setSeoDescription(post.seoDescription || "");
+          
+          if (post.headlineClaim) {
+            setClaimEdited(true);
+          }
           
           if (post.referencedPostId) {
             setReferencedPostId(post.referencedPostId);
@@ -195,6 +243,7 @@ function PublishPageContent() {
           setRefPreview({
             id: data.post.id,
             headlineClaim: data.post.headlineClaim,
+            title: data.post.title,
             author: data.post.author,
           });
           
@@ -247,6 +296,97 @@ function PublishPageContent() {
     }
   };
 
+  const generateClaim = useCallback(async () => {
+    if (!title.trim() || getWordCount(body) < 50) return;
+    
+    setIsGeneratingClaim(true);
+    try {
+      const res = await fetch("/api/posts/suggest-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          body,
+          authorStance,
+          currentClaim: claimEdited ? headlineClaim : undefined,
+        }),
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.claim) {
+        setHeadlineClaim(data.claim);
+        setClaimRationale(data.rationale || "");
+        setClaimEdited(false);
+      }
+    } catch (err) {
+      console.error("Failed to generate claim:", err);
+    } finally {
+      setIsGeneratingClaim(false);
+    }
+  }, [title, body, authorStance, headlineClaim, claimEdited]);
+
+  const fetchTagSuggestions = useCallback(async () => {
+    if (!title.trim() || body.trim().length < 100) return;
+    
+    setIsLoadingTags(true);
+    try {
+      const res = await fetch("/api/posts/suggest-tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          body,
+        }),
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.tags) {
+        setSuggestedTags(data.tags.filter((t: string) => !topicTags.includes(t)));
+      }
+    } catch (err) {
+      console.error("Failed to fetch tag suggestions:", err);
+    } finally {
+      setIsLoadingTags(false);
+    }
+  }, [title, body, topicTags]);
+
+  useEffect(() => {
+    if (claimDebounceRef.current) {
+      clearTimeout(claimDebounceRef.current);
+    }
+    
+    const wordCount = getWordCount(body);
+    if (title.trim().length >= 3 && wordCount >= 50 && !claimEdited && !headlineClaim) {
+      claimDebounceRef.current = setTimeout(() => {
+        generateClaim();
+      }, 1500);
+    }
+    
+    return () => {
+      if (claimDebounceRef.current) {
+        clearTimeout(claimDebounceRef.current);
+      }
+    };
+  }, [title, body, authorStance, claimEdited, headlineClaim, generateClaim]);
+
+  useEffect(() => {
+    if (tagDebounceRef.current) {
+      clearTimeout(tagDebounceRef.current);
+    }
+    
+    if (title.trim().length >= 3 && body.trim().length >= 100) {
+      tagDebounceRef.current = setTimeout(() => {
+        fetchTagSuggestions();
+      }, 2000);
+    }
+    
+    return () => {
+      if (tagDebounceRef.current) {
+        clearTimeout(tagDebounceRef.current);
+      }
+    };
+  }, [title, body, fetchTagSuggestions]);
+
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -284,29 +424,53 @@ function PublishPageContent() {
     setThumbnailUrl(null);
   };
 
+  const addTag = (tag: string) => {
+    const normalizedTag = tag.trim().toLowerCase();
+    if (normalizedTag.length >= 2 && normalizedTag.length <= 40 && topicTags.length < 5 && !topicTags.includes(normalizedTag)) {
+      setTopicTags([...topicTags, normalizedTag]);
+      setSuggestedTags(suggestedTags.filter(t => t !== normalizedTag));
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setTopicTags(topicTags.filter(t => t !== tag));
+  };
+
+  const handleNewTagSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTagInput.trim()) {
+      addTag(newTagInput);
+      setNewTagInput("");
+    }
+  };
+
   const wordCount = getWordCount(body);
-  const charCount = headlineClaim.length;
+  const titleCharCount = title.length;
+  const claimCharCount = headlineClaim.length;
   
-  const isValidClaim = charCount >= 10 && charCount <= 280;
+  const isValidTitle = titleCharCount >= 3 && titleCharCount <= 120;
+  const isValidClaim = claimCharCount >= 10 && claimCharCount <= 280;
   const isValidBody = wordCount >= 100 && wordCount <= 2000;
-  const canPublish = isValidClaim && isValidBody && !isSubmitting && !isPublishing && !isLoadingPost;
+  const canPublish = isValidTitle && isValidClaim && isValidBody && !isSubmitting && !isPublishing && !isLoadingPost;
 
   const saveDraft = async () => {
-    if (!headlineClaim.trim()) return;
+    if (!title.trim() || !headlineClaim.trim()) return;
     
     setIsSubmitting(true);
     setError(null);
     
     try {
       if (draftId) {
-        // Update existing draft
         const response = await fetch(`/api/posts/${draftId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            title,
             headlineClaim,
             postBody: body,
             authorStance,
+            visibility,
+            topicTags,
             referencedPostId,
             referencedAnnotationId,
             thumbnailUrl,
@@ -321,14 +485,16 @@ function PublishPageContent() {
           throw new Error(data.message || "Failed to save draft");
         }
       } else {
-        // Create new draft
         const response = await fetch("/api/posts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            title,
             headlineClaim,
             postBody: body,
             authorStance,
+            visibility,
+            topicTags,
             ...(referencedPostId ? { referencedPostId } : {}),
             ...(referencedAnnotationId ? { referencedAnnotationId } : {}),
             ...(thumbnailUrl ? { thumbnailUrl } : {}),
@@ -355,23 +521,53 @@ function PublishPageContent() {
     }
   };
 
-  const publish = async () => {
-    if (!canPublish) return;
-    
+  const runPreflight = async (postId: string): Promise<boolean> => {
+    setIsRunningPreflight(true);
+    try {
+      const res = await fetch(`/api/posts/${postId}/preflight`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidateClaim: headlineClaim }),
+      });
+      
+      if (!res.ok) {
+        console.error("Preflight check failed");
+        return true;
+      }
+      
+      const data = await res.json();
+      if (data.conflicts && data.conflicts.length > 0) {
+        setPreflightConflicts(data.conflicts);
+        setShowPreflightModal(true);
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error("Preflight error:", err);
+      return true;
+    } finally {
+      setIsRunningPreflight(false);
+    }
+  };
+
+  const performPublish = async () => {
     setIsPublishing(true);
     setError(null);
     
     try {
-      // Save draft first if needed
       let postId = draftId;
       if (!postId) {
         const response = await fetch("/api/posts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            title,
             headlineClaim,
             postBody: body,
             authorStance,
+            visibility,
+            topicTags,
             ...(referencedPostId ? { referencedPostId } : {}),
             ...(referencedAnnotationId ? { referencedAnnotationId } : {}),
             ...(thumbnailUrl ? { thumbnailUrl } : {}),
@@ -391,7 +587,6 @@ function PublishPageContent() {
         setDraftId(postId);
       }
       
-      // Publish the post
       const publishResponse = await fetch(`/api/posts/${postId}/publish`, {
         method: "POST",
       });
@@ -401,7 +596,6 @@ function PublishPageContent() {
         throw new Error(data.message || "Failed to publish post");
       }
       
-      // Redirect to feed on success
       router.push("/feed");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to publish");
@@ -410,16 +604,307 @@ function PublishPageContent() {
     }
   };
 
-  // Auto-save draft after inactivity
+  const publish = async () => {
+    if (!canPublish) return;
+    
+    setIsPublishing(true);
+    setError(null);
+    
+    try {
+      let postId = draftId;
+      if (!postId) {
+        const response = await fetch("/api/posts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            headlineClaim,
+            postBody: body,
+            authorStance,
+            visibility,
+            topicTags,
+            ...(referencedPostId ? { referencedPostId } : {}),
+            ...(referencedAnnotationId ? { referencedAnnotationId } : {}),
+            ...(thumbnailUrl ? { thumbnailUrl } : {}),
+            ...(slug ? { slug } : {}),
+            ...(seoTitle ? { seoTitle } : {}),
+            ...(seoDescription ? { seoDescription } : {}),
+          }),
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || "Failed to create post");
+        }
+        
+        const data = await response.json();
+        postId = data.post.id;
+        setDraftId(postId);
+      }
+      
+      if (!preflightChecked) {
+        const canProceed = await runPreflight(postId);
+        if (!canProceed) {
+          setIsPublishing(false);
+          return;
+        }
+        setPreflightChecked(true);
+      }
+      
+      await performPublish();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to publish");
+      setIsPublishing(false);
+    }
+  };
+
+  const handlePreflightContinue = () => {
+    setShowPreflightModal(false);
+    setPreflightChecked(true);
+    performPublish();
+  };
+
+  const handlePreflightCancel = () => {
+    setShowPreflightModal(false);
+    setPreflightConflicts([]);
+    setPreflightChecked(false);
+  };
+
   useEffect(() => {
-    if (isLoadingPost || !headlineClaim.trim() || getWordCount(body) < 20) return;
+    if (isLoadingPost || !title.trim() || !headlineClaim.trim() || getWordCount(body) < 20) return;
     
     const timer = setTimeout(() => {
       saveDraft();
     }, 5000);
     
     return () => clearTimeout(timer);
-  }, [headlineClaim, body, authorStance, referencedPostId, referencedAnnotationId, thumbnailUrl, isLoadingPost]);
+  }, [title, headlineClaim, body, authorStance, visibility, topicTags, referencedPostId, referencedAnnotationId, thumbnailUrl, isLoadingPost]);
+
+  const renderSettings = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Visibility */}
+      <div>
+        <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500, display: "block", marginBottom: 12 }}>
+          Visibility
+        </label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setVisibility("public")}
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              padding: "12px 16px",
+              background: visibility === "public" ? `${C.green}20` : C.surface,
+              border: `1px solid ${visibility === "public" ? C.green : C.border}`,
+              borderRadius: 10,
+              color: visibility === "public" ? C.text : C.textSoft,
+              cursor: "pointer",
+              fontSize: 14,
+            }}
+          >
+            <Globe size={16} />
+            Public
+          </button>
+          <button
+            onClick={() => setVisibility("unlisted")}
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              padding: "12px 16px",
+              background: visibility === "unlisted" ? `${C.accent}20` : C.surface,
+              border: `1px solid ${visibility === "unlisted" ? C.accent : C.border}`,
+              borderRadius: 10,
+              color: visibility === "unlisted" ? C.text : C.textSoft,
+              cursor: "pointer",
+              fontSize: 14,
+            }}
+          >
+            <Lock size={16} />
+            Unlisted
+          </button>
+        </div>
+        <p style={{ color: C.muted, fontSize: 12, marginTop: 8 }}>
+          {visibility === "public" 
+            ? "Visible in feed and search" 
+            : "Only accessible via direct link"}
+        </p>
+      </div>
+
+      {/* Thumbnail */}
+      <div>
+        <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500, display: "block", marginBottom: 8 }}>
+          Thumbnail
+        </label>
+        
+        <input
+          ref={thumbnailInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleThumbnailUpload}
+          style={{ display: "none" }}
+        />
+
+        {thumbnailUrl ? (
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              borderRadius: 12,
+              overflow: "hidden",
+              border: `1px solid ${C.border}`,
+            }}
+          >
+            <img
+              src={thumbnailUrl}
+              alt="Post thumbnail"
+              style={{
+                width: "100%",
+                height: "auto",
+                aspectRatio: "16/9",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+            <button
+              onClick={removeThumbnail}
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                background: "rgba(0,0,0,0.7)",
+                border: "none",
+                borderRadius: 8,
+                padding: 8,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Trash2 size={16} style={{ color: C.rose }} />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => thumbnailInputRef.current?.click()}
+            disabled={isUploadingThumbnail}
+            style={{
+              width: "100%",
+              aspectRatio: "16/9",
+              background: C.bg,
+              border: `2px dashed ${C.border}`,
+              borderRadius: 12,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              cursor: isUploadingThumbnail ? "not-allowed" : "pointer",
+            }}
+          >
+            {isUploadingThumbnail ? (
+              <Loader2 size={24} className="animate-spin" style={{ color: C.accent }} />
+            ) : (
+              <>
+                <ImagePlus size={24} style={{ color: C.muted }} />
+                <span style={{ color: C.textSoft, fontSize: 13 }}>Add thumbnail</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* URL Slug */}
+      <div>
+        <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500, display: "block", marginBottom: 8 }}>
+          Custom URL
+        </label>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <LinkIcon size={14} style={{ color: C.muted, flexShrink: 0 }} />
+          <input
+            type="text"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+            placeholder="my-custom-url"
+            style={{
+              flex: 1,
+              background: C.bg,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              padding: "10px 12px",
+              color: C.text,
+              fontSize: 14,
+              outline: "none",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* SEO Title */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500 }}>
+            SEO Title
+          </label>
+          <span style={{ color: seoTitle.length > 60 ? C.rose : C.muted, fontSize: 11 }}>
+            {seoTitle.length}/70
+          </span>
+        </div>
+        <input
+          type="text"
+          value={seoTitle}
+          onChange={(e) => setSeoTitle(e.target.value.slice(0, 70))}
+          placeholder={title || "Defaults to your title"}
+          style={{
+            width: "100%",
+            background: C.bg,
+            border: `1px solid ${C.border}`,
+            borderRadius: 8,
+            padding: "10px 12px",
+            color: C.text,
+            fontSize: 14,
+            outline: "none",
+          }}
+        />
+      </div>
+
+      {/* SEO Description */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500 }}>
+            Meta Description
+          </label>
+          <span style={{ color: seoDescription.length > 155 ? C.rose : C.muted, fontSize: 11 }}>
+            {seoDescription.length}/160
+          </span>
+        </div>
+        <textarea
+          value={seoDescription}
+          onChange={(e) => setSeoDescription(e.target.value.slice(0, 160))}
+          placeholder="Brief description for search results..."
+          rows={2}
+          style={{
+            width: "100%",
+            background: C.bg,
+            border: `1px solid ${C.border}`,
+            borderRadius: 8,
+            padding: "10px 12px",
+            color: C.text,
+            fontSize: 14,
+            lineHeight: 1.5,
+            resize: "none",
+            outline: "none",
+          }}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, padding: "24px 16px 100px" }}>
@@ -502,7 +987,7 @@ function PublishPageContent() {
                 href={`/post/${refPreview.id}`}
                 style={{ color: C.accent, fontSize: 15, fontWeight: 500, textDecoration: "underline", textUnderlineOffset: 3 }}
               >
-                {refPreview.headlineClaim}
+                {refPreview.title || refPreview.headlineClaim}
               </Link>
               <div style={{ color: C.textSoft, fontSize: 13, marginTop: 6 }}>
                 {formatPublicName(refPreview.author?.name)}
@@ -552,9 +1037,9 @@ function PublishPageContent() {
                     fontStyle: "italic",
                   }}
                 >
-                  "{annotationPreview.selectedText.length > 200
+                  &quot;{annotationPreview.selectedText.length > 200
                     ? annotationPreview.selectedText.slice(0, 200) + "..."
-                    : annotationPreview.selectedText}"
+                    : annotationPreview.selectedText}&quot;
                 </p>
               </div>
             </div>
@@ -576,96 +1061,6 @@ function PublishPageContent() {
             {refLoadError}
           </div>
         )}
-
-        {/* Thumbnail Upload */}
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500, display: "block", marginBottom: 8 }}>
-            Thumbnail (optional)
-          </label>
-          
-          <input
-            ref={thumbnailInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={handleThumbnailUpload}
-            style={{ display: "none" }}
-          />
-
-          {thumbnailUrl ? (
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                maxWidth: 400,
-                borderRadius: 12,
-                overflow: "hidden",
-                border: `1px solid ${C.border}`,
-              }}
-            >
-              <img
-                src={thumbnailUrl}
-                alt="Post thumbnail"
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  aspectRatio: "16/9",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
-              <button
-                onClick={removeThumbnail}
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  background: "rgba(0,0,0,0.7)",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: 8,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Trash2 size={16} style={{ color: C.rose }} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => thumbnailInputRef.current?.click()}
-              disabled={isUploadingThumbnail}
-              style={{
-                width: "100%",
-                maxWidth: 400,
-                aspectRatio: "16/9",
-                background: C.surface,
-                border: `2px dashed ${C.border}`,
-                borderRadius: 12,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 12,
-                cursor: isUploadingThumbnail ? "not-allowed" : "pointer",
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={(e) => !isUploadingThumbnail && (e.currentTarget.style.borderColor = C.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
-            >
-              {isUploadingThumbnail ? (
-                <Loader2 size={24} className="animate-spin" style={{ color: C.accent }} />
-              ) : (
-                <>
-                  <ImagePlus size={32} style={{ color: C.muted }} />
-                  <span style={{ color: C.textSoft, fontSize: 14 }}>Click to upload thumbnail</span>
-                  <span style={{ color: C.muted, fontSize: 12 }}>JPEG, PNG, WebP, GIF (max 2MB)</span>
-                </>
-              )}
-            </button>
-          )}
-        </div>
 
         {/* Error Banner */}
         <AnimatePresence>
@@ -788,7 +1183,7 @@ function PublishPageContent() {
           </div>
         </div>
 
-        {/* Headline Claim Input */}
+        {/* Title Input (Primary) */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ 
             display: "flex", 
@@ -797,20 +1192,20 @@ function PublishPageContent() {
             marginBottom: 8,
           }}>
             <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500 }}>
-              Headline Claim
+              Title
             </label>
             <span style={{ 
-              color: isValidClaim ? C.muted : C.rose, 
+              color: isValidTitle ? C.muted : C.rose, 
               fontSize: 12 
             }}>
-              {charCount}/280
+              {titleCharCount}/120
             </span>
           </div>
           
-          <textarea
-            value={headlineClaim}
-            onChange={(e) => setHeadlineClaim(e.target.value)}
-            placeholder="State a specific, falsifiable position — not a topic."
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="What's your post about?"
             style={{
               width: "100%",
               background: C.surface,
@@ -818,19 +1213,11 @@ function PublishPageContent() {
               borderRadius: 12,
               padding: 16,
               color: C.text,
-              fontSize: 18,
-              fontWeight: 500,
-              lineHeight: 1.4,
-              resize: "none",
-              minHeight: 80,
+              fontSize: 20,
+              fontWeight: 600,
               outline: "none",
             }}
           />
-          
-          <p style={{ color: C.muted, fontSize: 12, marginTop: 8 }}>
-            Example: &quot;Remote work permanently reduced urban commercial real estate value&quot; 
-            — not &quot;Remote work is interesting&quot;
-          </p>
         </div>
 
         {/* Body Editor */}
@@ -859,152 +1246,242 @@ function PublishPageContent() {
           />
         </div>
 
-        {/* SEO Settings (Collapsible) */}
+        {/* AI Claim Panel */}
         <div style={{ marginBottom: 24 }}>
-          <button
-            onClick={() => setShowSeoSettings(!showSeoSettings)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              width: "100%",
-              padding: "12px 16px",
-              background: C.surface,
-              border: `1px solid ${C.border}`,
-              borderRadius: showSeoSettings ? "12px 12px 0 0" : 12,
-              cursor: "pointer",
-              color: C.textSoft,
-              fontSize: 14,
-              fontWeight: 500,
-              textAlign: "left",
-            }}
-          >
-            <Search size={16} />
-            SEO & URL Settings
-            <ChevronDown
-              size={16}
-              style={{
-                marginLeft: "auto",
-                transform: showSeoSettings ? "rotate(180deg)" : "none",
-                transition: "transform 0.2s",
-              }}
-            />
-          </button>
-
-          <AnimatePresence>
-            {showSeoSettings && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center",
+            marginBottom: 8,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Sparkles size={16} style={{ color: C.accent }} />
+              <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500 }}>
+                Core Claim
+              </label>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ 
+                color: isValidClaim ? C.muted : C.rose, 
+                fontSize: 12 
+              }}>
+                {claimCharCount}/280
+              </span>
+              <button
+                onClick={generateClaim}
+                disabled={isGeneratingClaim || !title.trim() || wordCount < 50}
                 style={{
-                  background: C.surface,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 12px",
+                  background: "transparent",
                   border: `1px solid ${C.border}`,
-                  borderTop: "none",
-                  borderRadius: "0 0 12px 12px",
-                  padding: 16,
-                  overflow: "hidden",
+                  borderRadius: 8,
+                  color: C.textSoft,
+                  fontSize: 12,
+                  cursor: isGeneratingClaim || !title.trim() || wordCount < 50 ? "not-allowed" : "pointer",
+                  opacity: isGeneratingClaim || !title.trim() || wordCount < 50 ? 0.5 : 1,
                 }}
               >
-                {/* URL Slug */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500, display: "block", marginBottom: 8 }}>
-                    Custom URL Slug
-                  </label>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <LinkIcon size={14} style={{ color: C.muted, flexShrink: 0 }} />
-                    <input
-                      type="text"
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                      placeholder="my-custom-url"
-                      style={{
-                        flex: 1,
-                        background: C.bg,
-                        border: `1px solid ${C.border}`,
-                        borderRadius: 8,
-                        padding: "10px 12px",
-                        color: C.text,
-                        fontSize: 14,
-                        outline: "none",
-                      }}
-                    />
-                  </div>
-                  <p style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>
-                    {slug 
-                      ? `mindlair.app/post/${slug}`
-                      : "Leave blank to use post ID as URL"
-                    }
-                  </p>
-                </div>
-
-                {/* SEO Title */}
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500 }}>
-                      SEO Title (optional)
-                    </label>
-                    <span style={{ color: seoTitle.length > 60 ? C.rose : C.muted, fontSize: 11 }}>
-                      {seoTitle.length}/70
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    value={seoTitle}
-                    onChange={(e) => setSeoTitle(e.target.value.slice(0, 70))}
-                    placeholder={headlineClaim || "Defaults to your headline"}
-                    style={{
-                      width: "100%",
-                      background: C.bg,
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                      color: C.text,
-                      fontSize: 14,
-                      outline: "none",
-                    }}
-                  />
-                  <p style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>
-                    Custom title for search engines and social sharing
-                  </p>
-                </div>
-
-                {/* SEO Description */}
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <label style={{ color: C.textSoft, fontSize: 13, fontWeight: 500 }}>
-                      Meta Description (optional)
-                    </label>
-                    <span style={{ color: seoDescription.length > 155 ? C.rose : C.muted, fontSize: 11 }}>
-                      {seoDescription.length}/160
-                    </span>
-                  </div>
-                  <textarea
-                    value={seoDescription}
-                    onChange={(e) => setSeoDescription(e.target.value.slice(0, 160))}
-                    placeholder="Brief description for search results..."
-                    rows={2}
-                    style={{
-                      width: "100%",
-                      background: C.bg,
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                      color: C.text,
-                      fontSize: 14,
-                      lineHeight: 1.5,
-                      resize: "none",
-                      outline: "none",
-                    }}
-                  />
-                  <p style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>
-                    Shown in Google search results and social media previews
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {isGeneratingClaim ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <RefreshCw size={14} />
+                )}
+                {headlineClaim ? "Regenerate" : "Generate"}
+              </button>
+            </div>
+          </div>
+          
+          <textarea
+            value={headlineClaim}
+            onChange={(e) => {
+              setHeadlineClaim(e.target.value);
+              setClaimEdited(true);
+            }}
+            placeholder="AI will suggest a falsifiable claim based on your title and argument..."
+            style={{
+              width: "100%",
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 12,
+              padding: 16,
+              color: C.text,
+              fontSize: 16,
+              lineHeight: 1.5,
+              resize: "none",
+              minHeight: 80,
+              outline: "none",
+            }}
+          />
+          
+          {claimRationale && (
+            <p style={{ color: C.muted, fontSize: 12, marginTop: 8, fontStyle: "italic" }}>
+              {claimRationale}
+            </p>
+          )}
+          
+          {!headlineClaim && wordCount < 50 && (
+            <p style={{ color: C.muted, fontSize: 12, marginTop: 8 }}>
+              Write at least 50 words in your argument to enable AI claim suggestion
+            </p>
+          )}
         </div>
+
+        {/* Topic Tags */}
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500, display: "block", marginBottom: 12 }}>
+            Topics
+          </label>
+          
+          {/* Selected tags */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+            {topicTags.map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 12px",
+                  background: `${C.accent}20`,
+                  border: `1px solid ${C.accent}40`,
+                  borderRadius: 20,
+                  color: C.text,
+                  fontSize: 13,
+                }}
+              >
+                {tag}
+                <button
+                  onClick={() => removeTag(tag)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <X size={14} style={{ color: C.muted }} />
+                </button>
+              </span>
+            ))}
+            
+            {topicTags.length < 5 && (
+              <form onSubmit={handleNewTagSubmit} style={{ display: "inline-flex" }}>
+                <input
+                  type="text"
+                  value={newTagInput}
+                  onChange={(e) => setNewTagInput(e.target.value.toLowerCase().replace(/[^a-z0-9\s-]/g, ""))}
+                  placeholder="Add tag..."
+                  style={{
+                    width: 100,
+                    padding: "6px 12px",
+                    background: "transparent",
+                    border: `1px dashed ${C.border}`,
+                    borderRadius: 20,
+                    color: C.text,
+                    fontSize: 13,
+                    outline: "none",
+                  }}
+                />
+              </form>
+            )}
+          </div>
+          
+          {/* Suggested tags */}
+          {(suggestedTags.length > 0 || isLoadingTags) && (
+            <div>
+              <span style={{ color: C.muted, fontSize: 12, marginRight: 8 }}>
+                {isLoadingTags ? "Suggesting..." : "Suggestions:"}
+              </span>
+              {isLoadingTags ? (
+                <Loader2 size={12} className="animate-spin" style={{ color: C.muted, display: "inline" }} />
+              ) : (
+                suggestedTags.slice(0, 5).map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => addTag(tag)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "4px 10px",
+                      background: "transparent",
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 16,
+                      color: C.textSoft,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      marginRight: 6,
+                      marginTop: 4,
+                    }}
+                  >
+                    <Plus size={12} />
+                    {tag}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Settings (Desktop: Inline, Mobile: Sheet) */}
+        {!isMobile && (
+          <div style={{ marginBottom: 24 }}>
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                padding: "12px 16px",
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: showSettings ? "12px 12px 0 0" : 12,
+                cursor: "pointer",
+                color: C.textSoft,
+                fontSize: 14,
+                fontWeight: 500,
+                textAlign: "left",
+              }}
+            >
+              <Settings size={16} />
+              Post Settings
+              <ChevronDown
+                size={16}
+                style={{
+                  marginLeft: "auto",
+                  transform: showSettings ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
+              />
+            </button>
+
+            <AnimatePresence>
+              {showSettings && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  style={{
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    borderTop: "none",
+                    borderRadius: "0 0 12px 12px",
+                    padding: 20,
+                    overflow: "hidden",
+                  }}
+                >
+                  {renderSettings()}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Actions */}
         <div style={{ 
@@ -1013,7 +1490,7 @@ function PublishPageContent() {
           justifyContent: "space-between",
           alignItems: "center",
         }}>
-          <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {lastSaved && (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <CheckCircle size={14} style={{ color: C.green }} />
@@ -1022,13 +1499,34 @@ function PublishPageContent() {
                 </span>
               </div>
             )}
+            
+            {isMobile && (
+              <button
+                onClick={() => setShowSettings(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 12px",
+                  background: "transparent",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  color: C.textSoft,
+                  fontSize: 13,
+                  cursor: "pointer",
+                }}
+              >
+                <Settings size={16} />
+                Settings
+              </button>
+            )}
           </div>
           
           <div style={{ display: "flex", gap: 12 }}>
             <Button
               variant="outline"
               onClick={saveDraft}
-              disabled={isSubmitting || !headlineClaim.trim()}
+              disabled={isSubmitting || !title.trim() || !headlineClaim.trim()}
               style={{
                 background: "transparent",
                 border: `1px solid ${C.border}`,
@@ -1080,6 +1578,219 @@ function PublishPageContent() {
           </>
         )}
       </motion.div>
+
+      {/* Mobile Settings Sheet */}
+      {isMobile && (
+        <Sheet
+          open={showSettings}
+          onClose={() => setShowSettings(false)}
+          variant="bottom"
+          snapPoints={[0.85]}
+          header={
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Settings size={18} style={{ color: C.accent }} />
+              <span style={{ color: C.text, fontSize: 16, fontWeight: 600 }}>Post Settings</span>
+            </div>
+          }
+        >
+          {renderSettings()}
+        </Sheet>
+      )}
+
+      {/* Preflight Contradiction Modal */}
+      <AnimatePresence>
+        {showPreflightModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.7)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1003,
+              padding: 16,
+            }}
+            onClick={handlePreflightCancel}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              style={{
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: 16,
+                padding: 24,
+                maxWidth: 560,
+                width: "100%",
+                maxHeight: "80vh",
+                overflow: "auto",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <div style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  background: `${C.accent}20`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <AlertTriangle size={20} style={{ color: C.accent }} />
+                </div>
+                <div>
+                  <h3 style={{ color: C.text, fontSize: 18, fontWeight: 600, margin: 0 }}>
+                    Potential Conflicts Found
+                  </h3>
+                  <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>
+                    This claim may conflict with your past positions
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                {preflightConflicts.map((conflict, index) => (
+                  <div
+                    key={conflict.pastPostId}
+                    style={{
+                      background: C.bg,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: index < preflightConflicts.length - 1 ? 12 : 0,
+                    }}
+                  >
+                    <div style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "space-between",
+                      marginBottom: 8,
+                    }}>
+                      <span style={{
+                        padding: "3px 8px",
+                        background: conflict.type === "direct_contradiction" ? `${C.rose}20` : `${C.accent}20`,
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: conflict.type === "direct_contradiction" ? C.rose : C.accent,
+                        textTransform: "uppercase",
+                      }}>
+                        {conflict.type === "direct_contradiction" ? "Contradiction" : "Tension"}
+                      </span>
+                      <span style={{ color: C.muted, fontSize: 12 }}>
+                        {new Date(conflict.pastPublishedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    
+                    <Link
+                      href={`/post/${conflict.pastPostId}`}
+                      target="_blank"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        color: C.accent,
+                        fontSize: 14,
+                        fontWeight: 500,
+                        textDecoration: "underline",
+                        textUnderlineOffset: 2,
+                        marginBottom: 8,
+                      }}
+                    >
+                      {conflict.pastTitle}
+                      <ExternalLink size={12} />
+                    </Link>
+                    
+                    <p style={{ 
+                      color: C.textSoft, 
+                      fontSize: 13, 
+                      lineHeight: 1.5,
+                      margin: 0,
+                      fontStyle: "italic",
+                    }}>
+                      &ldquo;{conflict.pastClaim}&rdquo;
+                    </p>
+                    
+                    <p style={{ 
+                      color: C.muted, 
+                      fontSize: 12, 
+                      lineHeight: 1.5,
+                      marginTop: 8,
+                      marginBottom: 0,
+                    }}>
+                      {conflict.explanation}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{
+                background: `${C.accent}10`,
+                border: `1px solid ${C.accent}25`,
+                borderRadius: 10,
+                padding: 14,
+                marginBottom: 20,
+              }}>
+                <p style={{ color: C.textSoft, fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+                  <strong style={{ color: C.accent }}>It&apos;s okay to change your mind.</strong>{" "}
+                  If your thinking has evolved, publish anyway. Your belief map tracks how your views develop over time.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+                <button
+                  onClick={handlePreflightCancel}
+                  style={{
+                    padding: "10px 20px",
+                    background: "transparent",
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 10,
+                    color: C.textSoft,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  Revise Claim
+                </button>
+                <button
+                  onClick={handlePreflightContinue}
+                  disabled={isPublishing}
+                  style={{
+                    padding: "10px 20px",
+                    background: C.accent,
+                    border: "none",
+                    borderRadius: 10,
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: isPublishing ? "not-allowed" : "pointer",
+                    opacity: isPublishing ? 0.7 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  {isPublishing ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    "Publish Anyway"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

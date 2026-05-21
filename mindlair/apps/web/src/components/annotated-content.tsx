@@ -6,11 +6,18 @@ import { useTextSelection, TextSelection } from '@/hooks/use-text-selection';
 import { AnnotationToolbar } from './annotation-toolbar';
 import { AnnotationComposer, AnnotationData } from './annotation-composer';
 import { AnnotationSidebar } from './annotation-sidebar';
+import { Sheet } from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { useToast } from '@/hooks/use-toast';
 
 const C = {
   accent: "#d4915a",
   highlightBg: "rgba(212, 145, 90, 0.15)",
   highlightBorder: "rgba(212, 145, 90, 0.4)",
+  muted: "#7a7469",
+  text: "#e8e4dc",
+  surface: "#1a1916",
+  border: "#2a2825",
 };
 
 interface AnnotatedContentProps {
@@ -21,6 +28,12 @@ interface AnnotatedContentProps {
   hasReacted: boolean;
   className?: string;
   style?: React.CSSProperties;
+  highlightsHidden?: boolean;
+}
+
+interface GroupedAnnotations {
+  paragraph: Element;
+  annotations: AnnotationData[];
 }
 
 function findTextPosition(
@@ -91,6 +104,21 @@ function findTextPosition(
   };
 }
 
+function getContainingParagraph(node: Node): Element | null {
+  let current: Node | null = node;
+  while (current) {
+    if (current.nodeType === Node.ELEMENT_NODE) {
+      const el = current as Element;
+      const tagName = el.tagName.toLowerCase();
+      if (['p', 'div', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
+        return el;
+      }
+    }
+    current = current.parentNode;
+  }
+  return null;
+}
+
 export function AnnotatedContent({
   postId,
   html,
@@ -99,16 +127,21 @@ export function AnnotatedContent({
   hasReacted,
   className,
   style,
+  highlightsHidden = false,
 }: AnnotatedContentProps) {
   const router = useRouter();
   const contentRef = useRef<HTMLDivElement>(null);
   const { selection, clearSelection } = useTextSelection(contentRef);
+  const isNarrow = useMediaQuery('(max-width: 640px)');
+  const { toast } = useToast();
 
   const [annotations, setAnnotations] = useState<AnnotationData[]>(initialAnnotations);
   const [showComposer, setShowComposer] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<TextSelection | null>(null);
   const [selectedAnnotation, setSelectedAnnotation] = useState<AnnotationData | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showMorePicker, setShowMorePicker] = useState(false);
+  const [moreAnnotations, setMoreAnnotations] = useState<AnnotationData[]>([]);
 
   useEffect(() => {
     setAnnotations(initialAnnotations);
@@ -127,6 +160,14 @@ export function AnnotatedContent({
       }
     });
 
+    contentRef.current.querySelectorAll('[data-more-chip]').forEach((el) => {
+      el.remove();
+    });
+
+    if (highlightsHidden) return;
+
+    const annotationParagraphs = new Map<Element, AnnotationData[]>();
+
     for (const annotation of annotations) {
       const position = findTextPosition(
         contentRef.current,
@@ -138,6 +179,33 @@ export function AnnotatedContent({
 
       if (!position) continue;
 
+      const paragraph = getContainingParagraph(position.startNode);
+      if (paragraph) {
+        const existing = annotationParagraphs.get(paragraph) || [];
+        existing.push(annotation);
+        annotationParagraphs.set(paragraph, existing);
+      }
+    }
+
+    for (const annotation of annotations) {
+      const position = findTextPosition(
+        contentRef.current!,
+        annotation.selectedText,
+        annotation.contextBefore,
+        annotation.contextAfter,
+        annotation.startOffset
+      );
+
+      if (!position) continue;
+
+      const paragraph = getContainingParagraph(position.startNode);
+      const groupAnnotations = paragraph ? annotationParagraphs.get(paragraph) : null;
+      const isFirst = groupAnnotations ? groupAnnotations[0].id === annotation.id : true;
+      const shouldShowMoreChip = isNarrow && groupAnnotations && groupAnnotations.length >= 3 && isFirst;
+      const shouldHide = isNarrow && groupAnnotations && groupAnnotations.length >= 3 && !isFirst;
+
+      if (shouldHide) continue;
+
       try {
         const range = document.createRange();
         range.setStart(position.startNode, position.startOffset);
@@ -148,7 +216,7 @@ export function AnnotatedContent({
         mark.style.cssText = `
           background: ${C.highlightBg};
           border-bottom: 2px solid ${C.highlightBorder};
-          padding: 2px 0;
+          padding: ${isNarrow ? '0 1px' : '2px 0'};
           cursor: pointer;
           border-radius: 2px;
           transition: background 0.15s;
@@ -188,27 +256,56 @@ export function AnnotatedContent({
         `;
         badge.textContent = String(annotation.commentCount || 1);
         mark.appendChild(badge);
+
+        if (shouldShowMoreChip && groupAnnotations) {
+          const moreCount = groupAnnotations.length - 1;
+          const chip = document.createElement('span');
+          chip.setAttribute('data-more-chip', 'true');
+          chip.style.cssText = `
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: ${C.surface};
+            border: 1px solid ${C.border};
+            color: ${C.muted};
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+            cursor: pointer;
+          `;
+          chip.textContent = `+${moreCount} more`;
+          chip.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setMoreAnnotations(groupAnnotations.slice(1));
+            setShowMorePicker(true);
+          });
+          mark.insertAdjacentElement('afterend', chip);
+        }
       } catch (err) {
         console.warn('Failed to highlight annotation:', annotation.id, err);
       }
     }
-  }, [annotations, html]);
+  }, [annotations, html, highlightsHidden, isNarrow]);
 
   const handleAnnotate = useCallback(() => {
     if (!selection) return;
     if (!hasReacted) {
-      alert('Please react to the post first to add annotations');
+      toast.info('Please react to the post first to add annotations');
       return;
     }
     setPendingSelection(selection);
     setShowComposer(true);
     clearSelection();
-  }, [selection, hasReacted, clearSelection]);
+  }, [selection, hasReacted, clearSelection, toast]);
 
   const handleWriteResponse = useCallback(() => {
     if (!selection) return;
     if (!hasReacted) {
-      alert('Please react to the post first to write a response');
+      toast.info('Please react to the post first to write a response');
       return;
     }
     setPendingSelection(selection);
@@ -222,7 +319,7 @@ export function AnnotatedContent({
     });
 
     router.push(`/publish?${params.toString()}`);
-  }, [selection, hasReacted, clearSelection, postId, router]);
+  }, [selection, hasReacted, clearSelection, postId, router, toast]);
 
   const handleAnnotationCreated = (newAnnotation: AnnotationData) => {
     const updated = [...annotations, newAnnotation];
@@ -243,6 +340,7 @@ export function AnnotatedContent({
         ref={contentRef}
         className={className}
         style={style}
+        data-highlights={highlightsHidden ? 'off' : 'on'}
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
@@ -288,6 +386,86 @@ export function AnnotatedContent({
           }}
         />
       )}
+
+      {/* More annotations picker sheet */}
+      <Sheet
+        open={showMorePicker}
+        onClose={() => setShowMorePicker(false)}
+        variant="bottom"
+        snapPoints={[0.4]}
+        header={
+          <h3 style={{ color: C.text, fontSize: 16, fontWeight: 600, margin: 0 }}>
+            More annotations
+          </h3>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {moreAnnotations.map((ann) => (
+            <button
+              key={ann.id}
+              onClick={() => {
+                setShowMorePicker(false);
+                setSelectedAnnotation(ann);
+                setShowSidebar(true);
+              }}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                padding: 12,
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                cursor: 'pointer',
+              }}
+            >
+              <p
+                style={{
+                  color: C.text,
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  margin: 0,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                &quot;{ann.selectedText}&quot;
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginTop: 8,
+                  color: C.muted,
+                  fontSize: 12,
+                }}
+              >
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: C.accent,
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    minWidth: 16,
+                    height: 16,
+                    borderRadius: 8,
+                    padding: '0 4px',
+                  }}
+                >
+                  {ann.commentCount || 1}
+                </span>
+                <span>{ann.commentCount === 1 ? 'comment' : 'comments'}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </Sheet>
     </>
   );
 }

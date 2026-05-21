@@ -59,9 +59,11 @@ interface FeedSource {
 
 interface FeedPost {
   id: string;
+  title: string;
   headlineClaim: string;
   body: string;
   authorStance: string;
+  visibility: string;
   publishedAt: string;
   topicTags: string[];
   thumbnailUrl: string | null;
@@ -72,6 +74,7 @@ interface FeedPost {
   };
   referencedPost?: {
     id: string;
+    title?: string;
     headlineClaim: string;
     author: { id: string; name: string | null; avatarUrl: string | null };
   } | null;
@@ -649,9 +652,9 @@ export default function FeedPage() {
                       onClick={persistFeedContextForPost}
                       style={{ color: C.accent, fontSize: 12, fontWeight: 500, textDecoration: "underline", textUnderlineOffset: 2 }}
                     >
-                      {post.referencedPost.headlineClaim.length > 72
-                        ? `${post.referencedPost.headlineClaim.slice(0, 72)}…`
-                        : post.referencedPost.headlineClaim}
+                      {(post.referencedPost.title || post.referencedPost.headlineClaim).length > 72
+                        ? `${(post.referencedPost.title || post.referencedPost.headlineClaim).slice(0, 72)}…`
+                        : (post.referencedPost.title || post.referencedPost.headlineClaim)}
                     </Link>
                   </div>
                 )}
@@ -686,7 +689,7 @@ export default function FeedPage() {
                   </Link>
                 )}
 
-                {/* Headline + excerpt — tap through to full post */}
+                {/* Title + claim + excerpt — tap through to full post */}
                 <Link
                   href={`/post/${post.id}`}
                   onClick={persistFeedContextForPost}
@@ -698,7 +701,7 @@ export default function FeedPage() {
                       fontSize: 18,
                       fontWeight: 600,
                       lineHeight: 1.4,
-                      marginBottom: 8,
+                      marginBottom: 6,
                       textDecoration: "underline",
                       textDecorationColor: `${C.accent}55`,
                       textUnderlineOffset: 4,
@@ -706,8 +709,21 @@ export default function FeedPage() {
                       ...previewClamp,
                     }}
                   >
-                    {post.headlineClaim}
+                    {post.title}
                   </h2>
+                  <p
+                    style={{
+                      color: C.muted,
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                      marginBottom: 8,
+                      fontStyle: "italic",
+                      WebkitLineClamp: 2,
+                      ...previewClamp,
+                    }}
+                  >
+                    This post argues: {post.headlineClaim}
+                  </p>
                   <p
                     style={{
                       color: C.textSoft,

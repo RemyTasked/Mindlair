@@ -20,10 +20,13 @@ import {
   AlertTriangle,
   Calendar,
   Highlighter,
+  BarChart2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatPublicName } from "@/lib/display-name-policy";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { RevisionHistory } from "@/components/revision-history";
 
 const C = {
   bg: "#0f0e0c",
@@ -40,10 +43,13 @@ const C = {
 
 interface PostDetail {
   id: string;
+  title: string;
   headlineClaim: string;
   body: string;
   authorStance: string;
   status?: string;
+  visibility?: string;
+  currentVersion?: number;
   publishedAt?: string | null;
   topicTags: string[];
   thumbnailUrl?: string | null;
@@ -57,6 +63,7 @@ interface PostDetail {
   };
   referencedPost: {
     id: string;
+    title?: string;
     headlineClaim: string;
     publishedAt: string | null;
     author: { id: string; name: string | null; avatarUrl: string | null };
@@ -65,6 +72,7 @@ interface PostDetail {
   userReaction: string | null;
   reactionCounts: Record<string, number> | null;
   commentsEnabled?: boolean;
+  isAuthor?: boolean;
 }
 
 const stanceInfo = {
@@ -101,16 +109,23 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
   const [isLoading, setIsLoading] = useState(!initialPost && !initialError);
   const [error, setError] = useState<string | null>(initialError || null);
   const [isReacting, setIsReacting] = useState(false);
-  const [isNarrow, setIsNarrow] = useState(false);
+  const isNarrow = useMediaQuery("(max-width: 640px)");
   const [annotations, setAnnotations] = useState<AnnotationData[]>([]);
+  const [highlightsHidden, setHighlightsHidden] = useState(false);
+  const [showRevisionHistory, setShowRevisionHistory] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 640px)");
-    const sync = () => setIsNarrow(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+    const stored = localStorage.getItem('mindlair:highlights-hidden');
+    if (stored === 'true') {
+      setHighlightsHidden(true);
+    }
   }, []);
+
+  const toggleHighlights = () => {
+    const newValue = !highlightsHidden;
+    setHighlightsHidden(newValue);
+    localStorage.setItem('mindlair:highlights-hidden', String(newValue));
+  };
 
   const fetchAnnotations = useCallback(async () => {
     if (!post?.id) return;
@@ -281,7 +296,7 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
                 textUnderlineOffset: 3,
               }}
             >
-              {post.referencedPost.headlineClaim}
+              {post.referencedPost.title || post.referencedPost.headlineClaim}
             </Link>
             <div style={{ color: C.textSoft, fontSize: 13, marginTop: 6 }}>
               {formatPublicName(post.referencedPost.author?.name)}
@@ -328,16 +343,27 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
             marginBottom: isNarrow ? 16 : 24,
           }}
         >
-          {/* Headline Claim */}
+          {/* Title */}
           <h1 style={{
             color: C.text,
             fontSize: isNarrow ? 22 : 28,
             fontWeight: 600,
             lineHeight: 1.3,
-            marginBottom: isNarrow ? 16 : 24,
+            marginBottom: isNarrow ? 8 : 12,
           }}>
-            {post.headlineClaim}
+            {post.title}
           </h1>
+          
+          {/* Headline Claim */}
+          <p style={{
+            color: C.textSoft,
+            fontSize: isNarrow ? 14 : 16,
+            lineHeight: 1.5,
+            marginBottom: isNarrow ? 16 : 24,
+            fontStyle: "italic",
+          }}>
+            This post argues: {post.headlineClaim}
+          </p>
 
           {/* Thumbnail */}
           {post.thumbnailUrl && (
@@ -411,17 +437,64 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
                   gap: 6, 
                   color: C.muted,
                   fontSize: isNarrow ? 12 : 13,
+                  flexWrap: "wrap",
                 }}>
-                  <Calendar size={12} />
-                  {new Date(post.publishedAt).toLocaleDateString('en-US', { 
-                    month: 'long', 
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Calendar size={12} />
+                    {new Date(post.publishedAt).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  {(post.currentVersion ?? 1) > 1 && (
+                    <>
+                      <span style={{ color: C.border }}>·</span>
+                      <button
+                        onClick={() => setShowRevisionHistory(true)}
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          color: C.accent,
+                          fontSize: "inherit",
+                          padding: 0,
+                          textDecoration: "underline",
+                          textUnderlineOffset: 2,
+                        }}
+                      >
+                        Edited — view changes
+                      </button>
+                    </>
+                  )}
                 </div>
                 )}
               </div>
             </Link>
+            
+            {/* Author-only insights link */}
+            {post.isAuthor && post.status === "published" && (
+              <Link
+                href={`/post/${post.id}/insights`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginLeft: "auto",
+                  padding: "8px 12px",
+                  background: `${C.accent}15`,
+                  border: `1px solid ${C.accent}30`,
+                  borderRadius: 8,
+                  color: C.accent,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  textDecoration: "none",
+                }}
+              >
+                <BarChart2 size={16} />
+                Insights
+              </Link>
+            )}
           </div>
 
           {/* Body */}
@@ -431,6 +504,7 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
             annotations={annotations}
             onAnnotationsChange={setAnnotations}
             hasReacted={!!post.userReaction && post.userReaction !== "skip"}
+            highlightsHidden={highlightsHidden}
             className="post-body-prose"
             style={{
               color: C.text,
@@ -439,24 +513,48 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
             }}
           />
           
-          {/* Annotation hint */}
+          {/* Annotation controls */}
           {post.userReaction && post.userReaction !== "skip" && (
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
+                justifyContent: "space-between",
+                gap: 12,
                 marginTop: 16,
                 padding: "10px 14px",
                 background: `${C.accent}10`,
                 border: `1px solid ${C.accent}25`,
                 borderRadius: 8,
-                color: C.textSoft,
-                fontSize: 13,
+                flexWrap: "wrap",
               }}
             >
-              <Highlighter size={16} style={{ color: C.accent }} />
-              <span>Select text to add annotations or write a response</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: C.textSoft, fontSize: 13 }}>
+                <Highlighter size={16} style={{ color: C.accent }} />
+                <span>Select text to add annotations or write a response</span>
+              </div>
+              {annotations.length > 0 && (
+                <button
+                  onClick={toggleHighlights}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 10px",
+                    background: highlightsHidden ? C.accent : "transparent",
+                    border: `1px solid ${highlightsHidden ? C.accent : C.border}`,
+                    borderRadius: 6,
+                    color: highlightsHidden ? "#fff" : C.textSoft,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <Eye size={14} />
+                  {highlightsHidden ? "Show highlights" : "Hide highlights"}
+                </button>
+              )}
             </div>
           )}
           <style jsx global>{`
@@ -710,6 +808,14 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
           </div>
         )}
       </div>
+
+      {/* Revision History Modal/Sheet */}
+      <RevisionHistory
+        postId={post.id}
+        open={showRevisionHistory}
+        onClose={() => setShowRevisionHistory(false)}
+        variant={isNarrow ? "bottom" : "side"}
+      />
     </div>
   );
 }

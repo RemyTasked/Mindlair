@@ -96,10 +96,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({
       post: {
         id: post.id,
+        title: post.title,
         headlineClaim: post.headlineClaim,
         body: post.body,
         authorStance: post.authorStance,
         status: post.status,
+        visibility: post.visibility,
+        currentVersion: post.currentVersion,
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
         thumbnailUrl: post.thumbnailUrl,
@@ -113,6 +116,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         referencedPostId: post.referencedPostId,
         referencedPost: serializeReferencedPost(post.referencedPost),
         commentsEnabled: post.commentsEnabled,
+        isAuthor: user?.id === post.authorId,
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
       },
@@ -155,16 +159,40 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Only allow editing drafts
-    if (post.status !== 'draft') {
-      return NextResponse.json(
-        { code: 'VALIDATION_ERROR', message: 'Published posts cannot be edited' },
-        { status: 400 }
-      );
-    }
-
     const body = await request.json();
     const updates: Parameters<typeof db.post.update>[0]['data'] = {};
+
+    const isPublished = post.status === 'published';
+    
+    // For published posts, require changeType
+    if (isPublished) {
+      const validChangeTypes = ['edit', 'qualification', 'retraction', 'reversal'];
+      if (!body.changeType || !validChangeTypes.includes(body.changeType)) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'changeType is required for editing published posts (edit, qualification, retraction, reversal)' },
+          { status: 400 }
+        );
+      }
+      
+      const changeNote = body.changeNote || null;
+      if (changeNote && changeNote.length > 500) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'changeNote must be 500 characters or less' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Handle title updates
+    if (body.title !== undefined) {
+      if (body.title.length < 3 || body.title.length > 120) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Title must be 3-120 characters' },
+          { status: 400 }
+        );
+      }
+      updates.title = body.title.trim();
+    }
 
     if (body.headlineClaim !== undefined) {
       if (body.headlineClaim.length < 10 || body.headlineClaim.length > 280) {
@@ -174,6 +202,26 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         );
       }
       updates.headlineClaim = body.headlineClaim.trim();
+    }
+
+    // Handle visibility updates
+    if (body.visibility !== undefined) {
+      if (!['public', 'unlisted'].includes(body.visibility)) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Visibility must be "public" or "unlisted"' },
+          { status: 400 }
+        );
+      }
+      updates.visibility = body.visibility;
+    }
+
+    // Handle topic tags updates
+    if (body.topicTags !== undefined) {
+      if (Array.isArray(body.topicTags)) {
+        updates.topicTags = body.topicTags
+          .filter((t: unknown): t is string => typeof t === 'string' && t.length >= 2 && t.length <= 40)
+          .slice(0, 5);
+      }
     }
 
     if (body.postBody !== undefined) {
@@ -287,6 +335,25 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         : String(body.seoDescription).trim().slice(0, 160);
     }
 
+    // For published posts, create a revision before updating
+    if (isPublished) {
+      await db.postRevision.create({
+        data: {
+          postId: post.id,
+          version: post.currentVersion,
+          title: post.title,
+          headlineClaim: post.headlineClaim,
+          body: post.body,
+          authorStance: post.authorStance,
+          topicTags: post.topicTags,
+          changeType: body.changeType,
+          changeNote: body.changeNote || null,
+        },
+      });
+      
+      updates.currentVersion = post.currentVersion + 1;
+    }
+
     const updated = await db.post.update({
       where: { id },
       data: updates,
@@ -297,13 +364,33 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       include: { referencedPost: { select: referencedPostSelect } },
     });
 
+    // Log analytics event for post edit
+    if (isPublished) {
+      await db.analyticsEvent.create({
+        data: {
+          userId: user.id,
+          type: 'post_edited',
+          surface: 'web',
+          payload: {
+            postId: id,
+            changeType: body.changeType,
+            newVersion: updated.currentVersion,
+          },
+        },
+      });
+    }
+
     return NextResponse.json({
       post: {
         id: updated.id,
+        title: updated.title,
         headlineClaim: updated.headlineClaim,
         body: updated.body,
         authorStance: updated.authorStance,
         status: updated.status,
+        visibility: updated.visibility,
+        currentVersion: updated.currentVersion,
+        topicTags: updated.topicTags,
         thumbnailUrl: updated.thumbnailUrl,
         slug: updated.slug,
         seoTitle: updated.seoTitle,

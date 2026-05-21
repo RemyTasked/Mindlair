@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Calendar, Loader2 } from "lucide-react";
 
 const C = {
-  bg: "#0a0a0a",
-  surface: "#141414",
-  border: "#262626",
-  text: "#f5f5f5",
-  textSoft: "#a3a3a3",
-  textMuted: "#737373",
+  bg: "#0f0e0c",
+  surface: "#1a1916",
+  border: "#2a2825",
+  text: "#e8e4dc",
+  textSoft: "#c4bfb4",
+  textMuted: "#7a7469",
   accent: "#d4915a",
 };
 

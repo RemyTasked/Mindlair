@@ -8,6 +8,7 @@ import { sanitizeConceptLabels } from '@/lib/services/concept-resolver';
 import { screenPostContent } from '@/lib/services/moderation';
 import { buildExtractionTextForPublish } from '@/lib/posts/referenced-post';
 import { checkCommonCardTriggers, type AwardedCard } from '@/lib/services/card-detection';
+import { notifySubscribersOfNewPost } from '@/lib/services/post-fanout';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       where: { id },
       include: {
         referencedPost: {
-          select: { headlineClaim: true, topicTags: true },
+          select: { headlineClaim: true, topicTags: true, authorId: true },
         },
       },
     });
@@ -223,6 +224,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     });
 
+    // Auto-resolve referenced annotation if this is a follow-up by the original post's author
+    if (
+      post.referencedAnnotationId &&
+      post.referencedPost?.authorId === user.id
+    ) {
+      await db.annotation.update({
+        where: { id: post.referencedAnnotationId },
+        data: { isResolved: true },
+      }).catch((err) => {
+        console.error('Failed to auto-resolve annotation:', err);
+      });
+    }
+
     // Check for card awards
     const cardAwards: AwardedCard[] = [];
     const publishAwards = await checkCommonCardTriggers({
@@ -231,6 +245,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       payload: { postId: id },
     });
     cardAwards.push(...publishAwards);
+
+    // Fire-and-forget: notify subscribers of new post
+    notifySubscribersOfNewPost(id).catch((err) => {
+      console.error('Failed to notify subscribers:', err);
+    });
 
     return NextResponse.json({
       success: true,

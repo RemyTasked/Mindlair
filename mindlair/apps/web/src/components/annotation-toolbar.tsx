@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquarePlus, PenLine } from 'lucide-react';
 import { TextSelection } from '@/hooks/use-text-selection';
+import { useVisualViewport } from '@/hooks/use-visual-viewport';
 
 const C = {
   bg: "#0f0e0c",
@@ -29,6 +30,7 @@ export function AnnotationToolbar({
 }: AnnotationToolbarProps) {
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const { keyboardOffset, viewportHeight } = useVisualViewport();
 
   useEffect(() => {
     if (!selection?.rect || !containerRef.current) {
@@ -50,13 +52,21 @@ export function AnnotationToolbar({
       top = selection.rect.bottom + 12;
     }
 
+    // If keyboard is open, ensure toolbar is above the keyboard
+    if (keyboardOffset > 0) {
+      const maxTop = viewportHeight - toolbarHeight - 16;
+      if (top > maxTop) {
+        top = Math.max(60, maxTop);
+      }
+    }
+
     // On very small screens, center horizontally
     if (window.innerWidth < 400) {
       left = (window.innerWidth - toolbarWidth) / 2;
     }
 
     setPosition({ top, left });
-  }, [selection, containerRef]);
+  }, [selection, containerRef, keyboardOffset, viewportHeight]);
 
   if (!selection || !position) return null;
 

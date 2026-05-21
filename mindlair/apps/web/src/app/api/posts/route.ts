@@ -57,13 +57,35 @@ export async function GET(request: NextRequest) {
     const results = hasMore ? posts.slice(0, -1) : posts;
     const nextCursor = hasMore ? results[results.length - 1]?.id : null;
 
+    const publishedPostIds = results
+      .filter((p) => p.status === 'published')
+      .map((p) => p.id);
+
+    let unresolvedCounts: Record<string, number> = {};
+    if (publishedPostIds.length > 0 && authorId === user.id) {
+      const counts = await db.annotation.groupBy({
+        by: ['postId'],
+        where: {
+          postId: { in: publishedPostIds },
+          isResolved: false,
+        },
+        _count: true,
+      });
+      unresolvedCounts = counts.reduce((acc, c) => {
+        acc[c.postId] = c._count;
+        return acc;
+      }, {} as Record<string, number>);
+    }
+
     return NextResponse.json({
       posts: results.map(post => ({
         id: post.id,
+        title: post.title,
         headlineClaim: post.headlineClaim,
         body: post.body,
         authorStance: post.authorStance,
         status: post.status,
+        visibility: post.visibility,
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
         thumbnailUrl: post.thumbnailUrl,
@@ -72,6 +94,7 @@ export async function GET(request: NextRequest) {
         seoDescription: post.seoDescription,
         author: post.author,
         reactionCount: post._count.reactions,
+        unresolvedAnnotationCount: unresolvedCounts[post.id] ?? 0,
         referencedPost: serializeReferencedPost(post.referencedPost),
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
@@ -100,9 +123,12 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { 
+      title,
       headlineClaim, 
       postBody, 
       authorStance, 
+      visibility: rawVisibility,
+      topicTags: rawTopicTags,
       referencedPostId: rawRef,
       referencedAnnotationId: rawAnnotationRef,
       thumbnailUrl,
@@ -153,6 +179,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate title (required, 3-120 chars)
+    if (!title || typeof title !== 'string') {
+      return NextResponse.json(
+        { code: 'VALIDATION_ERROR', message: 'Title is required' },
+        { status: 400 }
+      );
+    }
+
+    if (title.length < 3 || title.length > 120) {
+      return NextResponse.json(
+        { code: 'VALIDATION_ERROR', message: 'Title must be 3-120 characters' },
+        { status: 400 }
+      );
+    }
+
+    // Validate headline claim (required, 10-280 chars)
     if (!headlineClaim || typeof headlineClaim !== 'string') {
       return NextResponse.json(
         { code: 'VALIDATION_ERROR', message: 'Headline claim is required' },
@@ -165,6 +207,17 @@ export async function POST(request: NextRequest) {
         { code: 'VALIDATION_ERROR', message: 'Headline claim must be 10-280 characters' },
         { status: 400 }
       );
+    }
+
+    // Validate visibility (public or unlisted)
+    const visibility = rawVisibility === 'unlisted' ? 'unlisted' : 'public';
+
+    // Validate topic tags (0-5 items, each 2-40 chars)
+    let topicTags: string[] = [];
+    if (rawTopicTags && Array.isArray(rawTopicTags)) {
+      topicTags = rawTopicTags
+        .filter((t): t is string => typeof t === 'string' && t.length >= 2 && t.length <= 40)
+        .slice(0, 5);
     }
 
     if (!postBody || typeof postBody !== 'string') {
@@ -242,10 +295,13 @@ export async function POST(request: NextRequest) {
     const post = await db.post.create({
       data: {
         authorId: user.id,
+        title: title.trim(),
         headlineClaim: headlineClaim.trim(),
         body: postBody.trim(),
         authorStance,
         status: 'draft',
+        visibility,
+        topicTags,
         ...(referencedPostId !== null ? { referencedPostId } : {}),
         ...(referencedAnnotationId !== null ? { referencedAnnotationId } : {}),
         ...(thumbnailUrl && typeof thumbnailUrl === 'string' ? { thumbnailUrl } : {}),
@@ -272,10 +328,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       post: {
         id: post.id,
+        title: post.title,
         headlineClaim: post.headlineClaim,
         body: post.body,
         authorStance: post.authorStance,
         status: post.status,
+        visibility: post.visibility,
+        topicTags: post.topicTags,
         referencedPostId: post.referencedPostId,
         referencedAnnotationId: post.referencedAnnotationId,
         thumbnailUrl: post.thumbnailUrl,

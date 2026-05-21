@@ -4,7 +4,9 @@ import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useState, useCallback, useEffect } from "react";
+import Image from "@tiptap/extension-image";
+import Youtube from "@tiptap/extension-youtube";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   Bold,
   Italic,
@@ -15,6 +17,9 @@ import {
   Quote,
   Code,
   X,
+  ImagePlus,
+  Youtube as YoutubeIcon,
+  Loader2,
 } from "lucide-react";
 
 const C = {
@@ -183,8 +188,121 @@ function LinkModal({
   );
 }
 
-function Toolbar({ editor }: { editor: Editor | null }) {
+function YouTubeModal({
+  isOpen,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (url: string) => void;
+}) {
+  const [url, setUrl] = useState("");
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 100,
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: C.surface,
+          border: `1px solid ${C.border}`,
+          borderRadius: 12,
+          padding: 24,
+          width: "100%",
+          maxWidth: 400,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h3 style={{ color: C.text, fontSize: 16, fontWeight: 600, margin: 0 }}>Embed YouTube Video</h3>
+          <button
+            onClick={onClose}
+            style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4 }}
+          >
+            <X size={18} style={{ color: C.muted }} />
+          </button>
+        </div>
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://www.youtube.com/watch?v=..."
+          autoFocus
+          style={{
+            width: "100%",
+            background: C.bg,
+            border: `1px solid ${C.border}`,
+            borderRadius: 8,
+            padding: "10px 12px",
+            color: C.text,
+            fontSize: 14,
+            outline: "none",
+            marginBottom: 16,
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && url) {
+              onSubmit(url);
+              setUrl("");
+            }
+          }}
+        />
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button
+            onClick={onClose}
+            style={{
+              background: "transparent",
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              padding: "8px 16px",
+              color: C.textSoft,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              if (url) {
+                onSubmit(url);
+                setUrl("");
+              }
+            }}
+            disabled={!url}
+            style={{
+              background: C.accent,
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 16px",
+              color: "#fff",
+              fontSize: 14,
+              cursor: url ? "pointer" : "not-allowed",
+              opacity: url ? 1 : 0.5,
+            }}
+          >
+            Embed
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Toolbar({ editor, onImageUpload }: { editor: Editor | null; onImageUpload: () => void }) {
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showYouTubeModal, setShowYouTubeModal] = useState(false);
 
   const setLink = useCallback((url: string) => {
     if (!editor) return;
@@ -195,6 +313,12 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
     }
     setShowLinkModal(false);
+  }, [editor]);
+
+  const embedYouTube = useCallback((url: string) => {
+    if (!editor) return;
+    editor.chain().focus().setYoutubeVideo({ src: url }).run();
+    setShowYouTubeModal(false);
   }, [editor]);
 
   if (!editor) return null;
@@ -281,6 +405,22 @@ function Toolbar({ editor }: { editor: Editor | null }) {
         >
           <Code size={16} />
         </ToolbarButton>
+
+        <div style={{ width: 1, background: C.border, margin: "0 4px" }} />
+
+        <ToolbarButton
+          onClick={onImageUpload}
+          title="Insert Image"
+        >
+          <ImagePlus size={16} />
+        </ToolbarButton>
+
+        <ToolbarButton
+          onClick={() => setShowYouTubeModal(true)}
+          title="Embed YouTube Video"
+        >
+          <YoutubeIcon size={16} />
+        </ToolbarButton>
       </div>
 
       <LinkModal
@@ -289,11 +429,22 @@ function Toolbar({ editor }: { editor: Editor | null }) {
         onSubmit={setLink}
         initialUrl={currentLink}
       />
+
+      <YouTubeModal
+        isOpen={showYouTubeModal}
+        onClose={() => setShowYouTubeModal(false)}
+        onSubmit={embedYouTube}
+      />
     </>
   );
 }
 
+const YOUTUBE_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
 export function RichEditor({ content, onChange, placeholder }: RichEditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -309,6 +460,21 @@ export function RichEditor({ content, onChange, placeholder }: RichEditorProps) 
       }),
       Placeholder.configure({
         placeholder: placeholder || "Write your argument...",
+      }),
+      Image.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: {
+          style: `max-width: 100%; height: auto; border-radius: 8px; margin: 1em 0;`,
+        },
+      }),
+      Youtube.configure({
+        controls: true,
+        modestBranding: true,
+        nocookie: true,
+        HTMLAttributes: {
+          style: `width: 100%; aspect-ratio: 16/9; border-radius: 8px; margin: 1em 0;`,
+        },
       }),
     ],
     content,
@@ -326,6 +492,18 @@ export function RichEditor({ content, onChange, placeholder }: RichEditorProps) 
           line-height: 1.7;
         `,
       },
+      handlePaste: (view, event) => {
+        const text = event.clipboardData?.getData("text/plain");
+        if (text && YOUTUBE_REGEX.test(text)) {
+          event.preventDefault();
+          const editorInstance = view.state.doc ? editor : null;
+          if (editorInstance) {
+            editorInstance.chain().focus().setYoutubeVideo({ src: text }).run();
+          }
+          return true;
+        }
+        return false;
+      },
     },
   });
 
@@ -335,15 +513,90 @@ export function RichEditor({ content, onChange, placeholder }: RichEditorProps) 
     }
   }, [content, editor]);
 
+  const handleImageUpload = useCallback(async (file: File) => {
+    if (!editor) return;
+    
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("purpose", "inline");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to upload image");
+      }
+
+      const data = await response.json();
+      editor.chain().focus().setImage({ src: data.url }).run();
+    } catch (err) {
+      console.error("Image upload error:", err);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [editor]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, [handleImageUpload]);
+
+  const triggerImageUpload = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   return (
     <div
       style={{
         background: C.surface,
         border: `1px solid ${C.border}`,
         borderRadius: 12,
+        position: "relative",
       }}
     >
-      <Toolbar editor={editor} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={handleFileSelect}
+        style={{ display: "none" }}
+      />
+      
+      <Toolbar editor={editor} onImageUpload={triggerImageUpload} />
+      
+      {isUploading && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 12,
+            zIndex: 10,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: C.text }}>
+            <Loader2 size={24} className="animate-spin" />
+            <span>Uploading image...</span>
+          </div>
+        </div>
+      )}
+      
       <EditorContent editor={editor} />
       <style jsx global>{`
         .tiptap {
@@ -404,6 +657,19 @@ export function RichEditor({ content, onChange, placeholder }: RichEditorProps) 
           float: left;
           height: 0;
           pointer-events: none;
+        }
+        .tiptap img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          margin: 1em 0;
+        }
+        .tiptap iframe {
+          width: 100%;
+          aspect-ratio: 16/9;
+          border-radius: 8px;
+          margin: 1em 0;
+          border: none;
         }
       `}</style>
     </div>

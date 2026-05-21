@@ -88,6 +88,7 @@ export const updateSettingsSchema = z.object({
   notifications: z.object({
     push: z.boolean().optional(),
     email: z.boolean().optional(),
+    newPost: z.boolean().optional(),
   }).optional(),
   timezone: z.string().optional(),
   /**

@@ -55,6 +55,7 @@ interface UserSettings {
   notifications: {
     push: boolean;
     email: boolean;
+    newPost: boolean;
   };
   timezone: string;
 }
@@ -693,6 +694,20 @@ export default function SettingsPage() {
                 onToggle={(enabled) =>
                   updateSettings({
                     notifications: { ...settings.notifications, email: enabled },
+                  })
+                }
+              />
+            </div>
+
+            {/* New Post Notifications Toggle */}
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
+              <NotificationToggle
+                label="New post notifications"
+                description="Get notified when authors you follow publish new posts"
+                enabled={settings.notifications.newPost}
+                onToggle={(enabled) =>
+                  updateSettings({
+                    notifications: { ...settings.notifications, newPost: enabled },
                   })
                 }
               />

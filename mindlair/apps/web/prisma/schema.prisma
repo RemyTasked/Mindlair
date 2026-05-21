@@ -139,6 +139,9 @@ model UserSettings {
   commentDigestInterval Int       @default(240) // minutes (4 hours default)
   lastCommentDigestAt   DateTime?
 
+  // Subscriber notifications
+  notifyOnNewPost Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -438,12 +441,17 @@ model Post {
   authorId      String
   author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
-  headlineClaim String   // The falsifiable claim (required)
-  body          String   @db.Text // 500-1500 words
+  title         String   // Short editorial title (3-120 chars)
+  headlineClaim String   // The falsifiable claim (AI-generated, user-editable, 10-280 chars)
+  body          String   @db.Text // 100-2000 words
   authorStance  AuthorStance // arguing, exploring, steelmanning
 
   status        PostStatus @default(draft)
+  visibility    String     @default("public") // public, unlisted
   publishedAt   DateTime?
+
+  // Revision tracking
+  currentVersion Int @default(1)
 
   // Links to claim extraction pipeline
   sourceId      String?  @unique
@@ -457,7 +465,7 @@ model Post {
 
   // SEO & Custom URL
   slug           String?  @unique  // Custom URL slug (auto-generated from headline if not set)
-  seoTitle       String?           // Custom SEO title (defaults to headlineClaim)
+  seoTitle       String?           // Custom SEO title (defaults to title)
   seoDescription String?           // Custom meta description (defaults to truncated body)
 
   // Moderation
@@ -476,6 +484,9 @@ model Post {
   // Annotations on this post
   annotations Annotation[]
 
+  // Revision history
+  revisions PostRevision[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -488,6 +499,7 @@ model Post {
   @@index([authorId])
   @@index([publishedAt])
   @@index([status])
+  @@index([visibility])
   @@index([referencedPostId])
   @@index([referencedAnnotationId])
   @@index([slug])
@@ -508,6 +520,25 @@ model PostReaction {
   @@index([postId])
   @@index([userId])
   @@map("post_reactions")
+}
+
+model PostRevision {
+  id            String       @id @default(cuid())
+  postId        String
+  post          Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  version       Int
+  title         String
+  headlineClaim String
+  body          String       @db.Text
+  authorStance  AuthorStance
+  topicTags     String[]
+  changeType    String       // edit, qualification, retraction, reversal
+  changeNote    String?      @db.VarChar(500)
+  editedAt      DateTime     @default(now())
+
+  @@unique([postId, version])
+  @@index([postId])
+  @@map("post_revisions")
 }
 
 model Subscription {

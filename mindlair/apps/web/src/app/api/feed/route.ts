@@ -65,9 +65,10 @@ export async function GET(request: NextRequest) {
       ...blocks.map(b => b.blockedId),
     ].filter(id => id !== user.id);
 
-    // Build base query
+    // Build base query (exclude unlisted posts from feed - they're link-only)
     const baseWhere: any = {
       status: 'published' as const,
+      visibility: 'public',
       authorId: { notIn: [...blockedIds, user.id] }, // Exclude blocked users and self
     };
 
@@ -276,9 +277,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       posts: results.map(post => ({
         id: post.id,
+        title: post.title,
         headlineClaim: post.headlineClaim,
         body: post.body.slice(0, 500) + (post.body.length > 500 ? '...' : ''),
         authorStance: post.authorStance,
+        visibility: post.visibility,
         publishedAt: post.publishedAt?.toISOString(),
         topicTags: post.topicTags,
         thumbnailUrl: post.thumbnailUrl,

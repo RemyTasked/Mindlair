@@ -17,6 +17,7 @@ import {
   Lightbulb,
   MoreHorizontal,
   X,
+  BarChart2,
 } from "lucide-react";
 
 const C = {
@@ -43,6 +44,7 @@ interface Post {
   topicTags: string[];
   thumbnailUrl: string | null;
   reactionCount: number;
+  unresolvedAnnotationCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -265,13 +267,32 @@ function PostCard({
             </Link>
           )}
           
-          <div style={{ display: "flex", alignItems: "center", gap: 12, color: C.muted, fontSize: 13 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, color: C.muted, fontSize: 13, flexWrap: "wrap" }}>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <Calendar size={12} />
               {dateStr}
             </span>
             {!isDraft && post.reactionCount > 0 && (
               <span>{post.reactionCount} reaction{post.reactionCount !== 1 ? "s" : ""}</span>
+            )}
+            {!isDraft && (post.unresolvedAnnotationCount ?? 0) > 0 && (
+              <Link
+                href={`/post/${post.id}#annotations`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "2px 8px",
+                  background: `${C.accent}20`,
+                  borderRadius: 6,
+                  color: C.accent,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  textDecoration: "none",
+                }}
+              >
+                {post.unresolvedAnnotationCount} unaddressed
+              </Link>
             )}
           </div>
         </div>
@@ -313,7 +334,7 @@ function PostCard({
                   boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
                 }}
               >
-                {isDraft && (
+                {isDraft ? (
                   <>
                     <button
                       onClick={() => { setShowMenu(false); onEdit(); }}
@@ -358,6 +379,26 @@ function PostCard({
                       </button>
                     )}
                   </>
+                ) : (
+                  <Link
+                    href={`/post/${post.id}/insights`}
+                    onClick={() => setShowMenu(false)}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "10px 12px",
+                      background: "transparent",
+                      borderRadius: 6,
+                      color: C.accent,
+                      fontSize: 14,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <BarChart2 size={16} />
+                    Insights
+                  </Link>
                 )}
                 <button
                   onClick={() => { setShowMenu(false); onDelete(); }}

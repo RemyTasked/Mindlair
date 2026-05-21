@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const title = post.seoTitle || post.headlineClaim;
+  const title = post.seoTitle || post.title || post.headlineClaim;
   const description = post.seoDescription || truncateText(post.body, 155);
   const authorName = formatPublicName(post.author?.name);
 

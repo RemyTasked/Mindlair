@@ -1,11 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { DigestSession } from "@/components/digest-session";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Inbox, Clock, Sparkles, RefreshCw } from "lucide-react";
+import { Inbox, Clock, Sparkles, RefreshCw, Loader2 } from "lucide-react";
+
+const C = {
+  bg: "#0f0e0c",
+  surface: "#1a1916",
+  border: "#2a2825",
+  text: "#e8e4dc",
+  textSoft: "#c4bfb4",
+  muted: "#7a7469",
+  accent: "#d4915a",
+  green: "#a3c47a",
+  rose: "#e57373",
+};
 
 interface DigestClaim {
   id: string;
@@ -130,20 +140,49 @@ export default function InboxPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="w-6 h-6 animate-spin text-zinc-400" />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: 400,
+        }}
+      >
+        <Loader2 size={28} className="animate-spin" style={{ color: C.accent }} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="max-w-md mx-auto">
-        <CardContent className="pt-6 text-center">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={fetchDigest}>Try again</Button>
-        </CardContent>
-      </Card>
+      <div style={{ maxWidth: 480, margin: "48px auto", padding: "0 16px" }}>
+        <div
+          style={{
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 14,
+            padding: 24,
+            textAlign: "center",
+          }}
+        >
+          <p style={{ color: C.rose, marginBottom: 16, fontSize: 14 }}>{error}</p>
+          <button
+            onClick={fetchDigest}
+            style={{
+              padding: "10px 18px",
+              background: C.accent,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -174,70 +213,211 @@ export default function InboxPage() {
   const hasItems = digestItems.length > 0;
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+    <div style={{ padding: "0 16px" }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        style={{ marginBottom: 32 }}
+      >
+        <h1
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: C.text,
+            marginBottom: 8,
+            letterSpacing: "-0.02em",
+          }}
+        >
           Inbox
         </h1>
-        <p className="text-zinc-500">
+        <p style={{ color: C.muted, fontSize: 15 }}>
           React to content you&apos;ve consumed to build your belief map.
         </p>
-      </div>
+      </motion.div>
 
       {hasItems ? (
-        <Card className="max-w-lg mx-auto">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 flex items-center justify-center">
-              <Inbox className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          style={{
+            maxWidth: 520,
+            margin: "0 auto",
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 16,
+            padding: 28,
+          }}
+        >
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                margin: "0 auto 16px",
+                borderRadius: "50%",
+                background: `${C.accent}15`,
+                border: `1px solid ${C.accent}30`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Inbox size={28} style={{ color: C.accent }} />
             </div>
-            <CardTitle className="text-2xl">
-              {digestItems.length} claims to react to
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Badge variant="secondary">
-                <Clock className="w-3 h-3 mr-1" />
-                ~{Math.ceil(digestItems.length * 0.4)} min
-              </Badge>
-              <Badge variant="secondary">
-                <Sparkles className="w-3 h-3 mr-1" />
-                From {claims.length} sources
-              </Badge>
+            <h2
+              style={{
+                fontSize: 22,
+                fontWeight: 600,
+                color: C.text,
+                margin: 0,
+              }}
+            >
+              {digestItems.length} {digestItems.length === 1 ? "claim" : "claims"} to react to
+            </h2>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                justifyContent: "center",
+              }}
+            >
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5px 10px",
+                  background: C.bg,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 999,
+                  color: C.textSoft,
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              >
+                <Clock size={12} />~{Math.ceil(digestItems.length * 0.4)} min
+              </div>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5px 10px",
+                  background: C.bg,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 999,
+                  color: C.textSoft,
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              >
+                <Sparkles size={12} />
+                From {claims.length} {claims.length === 1 ? "source" : "sources"}
+              </div>
             </div>
-            
-            <p className="text-sm text-zinc-500 text-center">
+
+            <p
+              style={{
+                fontSize: 13,
+                color: C.muted,
+                textAlign: "center",
+                margin: 0,
+              }}
+            >
               Swipe or tap to react. Your map updates in real time.
             </p>
-            
-            <Button
-              size="lg"
-              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+
+            <button
               onClick={handleStartSession}
+              style={{
+                width: "100%",
+                padding: "12px 20px",
+                background: C.accent,
+                border: "none",
+                borderRadius: 10,
+                color: "#fff",
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
               Start session
-            </Button>
-          </CardContent>
-        </Card>
+            </button>
+          </div>
+        </motion.div>
       ) : (
-        <Card className="max-w-lg mx-auto">
-          <CardContent className="pt-8 pb-8 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-              <Inbox className="w-8 h-8 text-zinc-400" />
-            </div>
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
-              All caught up
-            </h2>
-            <p className="text-zinc-500 mb-4">
-              No new claims to react to. Keep reading and your next digest will be
-              ready soon.
-            </p>
-            <Button variant="outline" onClick={fetchDigest}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Check again
-            </Button>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          style={{
+            maxWidth: 520,
+            margin: "0 auto",
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 16,
+            padding: "40px 28px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              margin: "0 auto 16px",
+              borderRadius: "50%",
+              background: C.bg,
+              border: `1px solid ${C.border}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Inbox size={28} style={{ color: C.muted }} />
+          </div>
+          <h2
+            style={{
+              fontSize: 20,
+              fontWeight: 600,
+              color: C.text,
+              marginBottom: 8,
+            }}
+          >
+            All caught up
+          </h2>
+          <p style={{ color: C.muted, fontSize: 14, marginBottom: 20 }}>
+            No new claims to react to. Keep reading and your next digest will be
+            ready soon.
+          </p>
+          <button
+            onClick={fetchDigest}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "9px 16px",
+              background: "transparent",
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              color: C.textSoft,
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            <RefreshCw size={14} />
+            Check again
+          </button>
+        </motion.div>
       )}
     </div>
   );

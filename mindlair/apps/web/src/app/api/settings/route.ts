@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
       notifications: {
         push: settings.pushEnabled,
         email: settings.emailEnabled,
+        newPost: settings.notifyOnNewPost,
       },
       timezone: userProfile?.timezone || 'America/New_York',
     });
@@ -103,6 +104,9 @@ export async function PATCH(request: NextRequest) {
       }
       if (data.notifications.email !== undefined) {
         updateData.emailEnabled = data.notifications.email;
+      }
+      if (data.notifications.newPost !== undefined) {
+        updateData.notifyOnNewPost = data.notifications.newPost;
       }
     }
 
