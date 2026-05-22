@@ -20,6 +20,7 @@ const PUBLIC_API_PATHS = [
   '/api/auth/verify',
   '/api/auth/session',
   '/api/push/vapid-key',
+  '/api/auth/site-password',
 ];
 
 const PROTECTED_APP_PATHS = [
