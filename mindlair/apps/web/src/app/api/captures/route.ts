@@ -11,6 +11,8 @@ const createCaptureSchema = z.object({
   rawAudioUrl: z.string().url().optional(),
   rawAudioMs: z.number().int().positive().optional(),
   parentCaptureId: z.string().optional(),
+  /** Wait for extraction before responding (Quick Thought in-session flow). */
+  sync: z.boolean().optional(),
   source: z
     .object({
       url: z.string().url().optional(),
@@ -41,8 +43,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { modality, rawText, rawAudioUrl, rawAudioMs, parentCaptureId, source } =
-      parsed.data;
+    const {
+      modality,
+      rawText,
+      rawAudioUrl,
+      rawAudioMs,
+      parentCaptureId,
+      source,
+      sync,
+    } = parsed.data;
 
     let sourceId: string | undefined;
 
@@ -88,13 +97,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (hasContent && modality !== 'voice') {
+    if (hasContent) {
+      if (sync) {
+        await processCapture(capture.id);
+        const updated = await db.capture.findUnique({
+          where: { id: capture.id },
+        });
+        return NextResponse.json({
+          captureId: capture.id,
+          status: updated?.status ?? capture.status,
+          rawText: updated?.rawText ?? capture.rawText,
+          candidateClaims: updated?.candidateClaims ?? null,
+          errorReason: updated?.errorReason ?? null,
+        });
+      }
       processCapture(capture.id).catch((err) => {
         console.error('Background capture processing failed:', err);
-      });
-    } else if (hasContent && modality === 'voice') {
-      processCapture(capture.id).catch((err) => {
-        console.error('Background voice capture processing failed:', err);
       });
     }
 

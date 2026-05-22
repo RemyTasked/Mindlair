@@ -58,14 +58,12 @@ type Step =
   | "select_mode"
   | "text_input"
   | "recording"
-  | "uploading"
-  | "transcribing"
-  | "transcript_preview"
-  | "extracting"
   | "review"
   | "need_more_thought"
   | "success"
   | "error";
+
+type InputModality = "typed" | "voice";
 
 interface QuickThoughtModalProps {
   open: boolean;
@@ -103,6 +101,48 @@ function mapCandidatesToDecisions(claims: CandidateClaim[]): ClaimDecision[] {
   }));
 }
 
+function decisionsFromClaims(
+  claims: CandidateClaim[],
+  fallbackText: string
+): ClaimDecision[] {
+  const valid = claims.filter(
+    (c) =>
+      c.text?.trim() &&
+      c.text.length >= 5 &&
+      !c.text.startsWith("[Pending review]")
+  );
+  if (valid.length > 0) return mapCandidatesToDecisions(valid);
+  const t = fallbackText.trim();
+  if (t.length >= 3) return [buildDraftDecision(t)];
+  return [];
+}
+
+interface CaptureSyncPayload {
+  status?: string;
+  rawText?: string | null;
+  candidateClaims?: unknown;
+  errorReason?: string | null;
+}
+
+function decisionsFromCapturePayload(
+  data: CaptureSyncPayload,
+  fallbackText: string
+): ClaimDecision[] {
+  if (data.status === "failed") {
+    throw new Error(data.errorReason || "Processing failed");
+  }
+  const claims = (data.candidateClaims as CandidateClaim[]) || [];
+  const text = data.rawText?.trim() || fallbackText.trim();
+  if (data.status === "awaiting_confirmation") {
+    return decisionsFromClaims(claims, text);
+  }
+  if (data.status === "awaiting_reaction" && text) {
+    return decisionsFromClaims([], text);
+  }
+  if (text.length >= 3) return [buildDraftDecision(text)];
+  return [];
+}
+
 export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModalProps) {
   const [step, setStep] = useState<Step>("select_mode");
   const [error, setError] = useState<string | null>(null);
@@ -115,9 +155,10 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
   const [flippingIndex, setFlippingIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editableTranscript, setEditableTranscript] = useState("");
+  const [inputModality, setInputModality] = useState<InputModality | null>(null);
+  const [isSyncingCapture, setIsSyncingCapture] = useState(false);
 
   const voice = useVoiceCapture();
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
   const pendingVoiceRef = useRef<{
     blob: Blob;
     mimeType: string;
@@ -136,12 +177,10 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
     setFlippingIndex(null);
     setIsSubmitting(false);
     setEditableTranscript("");
+    setInputModality(null);
+    setIsSyncingCapture(false);
     pendingVoiceRef.current = null;
     voice.reset();
-    if (pollRef.current) {
-      clearTimeout(pollRef.current);
-      pollRef.current = null;
-    }
   }, [voice]);
 
   const handleClose = useCallback(() => {
@@ -156,89 +195,48 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
     }
   }, [open, resetAll]);
 
-  useEffect(() => {
-    return () => {
-      if (pollRef.current) clearTimeout(pollRef.current);
-    };
-  }, []);
-
-  const pollCapture = useCallback(async (id: string) => {
-    let attempts = 0;
-    const maxAttempts = 90;
-
-    const tick = async () => {
+  const createCaptureSync = useCallback(
+    async (body: Record<string, unknown>, fallbackText: string) => {
+      setIsSyncingCapture(true);
+      setError(null);
       try {
-        const res = await fetch(`/api/captures/${id}`);
-        if (!res.ok) throw new Error("Failed to fetch capture");
+        const res = await fetch("/api/captures", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...body, sync: true }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.message || "Failed to save capture");
+        }
         const data = await res.json();
-
-        if (data.rawText) {
-          setTranscript(data.rawText);
-        }
-
-        if (data.status === "awaiting_confirmation") {
-          const claims = (data.candidateClaims as CandidateClaim[]) || [];
-          if (claims.length > 0) {
-            setDecisions(mapCandidatesToDecisions(claims));
-          } else if (data.rawText?.trim()) {
-            setDecisions([buildDraftDecision(data.rawText)]);
-          }
-          setStep("review");
+        setCaptureId(data.captureId);
+        if (data.rawText) setTranscript(data.rawText);
+        const next = decisionsFromCapturePayload(data, fallbackText);
+        if (next.length === 0) {
+          setStep("need_more_thought");
           return;
         }
-
-        if (data.status === "awaiting_reaction") {
-          const fallback = data.rawText?.trim() || editableTranscript.trim();
-          if (fallback) {
-            setDecisions([buildDraftDecision(fallback)]);
-            setStep("review");
-          } else {
-            setStep("need_more_thought");
-          }
-          return;
-        }
-
-        if (data.status === "failed") {
-          throw new Error(data.errorReason || "Processing failed");
-        }
-
-        attempts++;
-        if (attempts < maxAttempts) {
-          pollRef.current = setTimeout(tick, 1000);
-        } else {
-          throw new Error("Processing timed out");
-        }
-      } catch (err) {
-        console.error("Poll error:", err);
-        setError(err instanceof Error ? err.message : "Something went wrong");
-        setStep("error");
+        setDecisions(next);
+        setStep("review");
+      } finally {
+        setIsSyncingCapture(false);
       }
-    };
-
-    tick();
-  }, [editableTranscript]);
+    },
+    []
+  );
 
   const handleSubmitText = async () => {
     const trimmed = thoughtText.trim();
     if (!trimmed) return;
+    setInputModality("typed");
+    setTranscript(trimmed);
     setError(null);
-    setStep("extracting");
     try {
-      const res = await fetch("/api/captures", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          modality: "typed",
-          rawText: trimmed,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to submit");
-      }
-      const data = await res.json();
-      setCaptureId(data.captureId);
-      pollCapture(data.captureId);
+      await createCaptureSync(
+        { modality: "typed", rawText: trimmed },
+        trimmed
+      );
     } catch (err) {
       console.error("Submit text error:", err);
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -248,9 +246,44 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
 
   const handleStartRecording = async () => {
     setError(null);
+    setInputModality("voice");
     setStep("recording");
     await voice.startRecording();
   };
+
+  const finalizeVoiceCapture = useCallback(
+    async (trimmed: string, pending: NonNullable<typeof pendingVoiceRef.current>) => {
+      try {
+        const ext = pending.mimeType.split("/")[1] || "webm";
+        const fd = new FormData();
+        fd.append("file", pending.blob, `quick-thought.${ext}`);
+        fd.append("purpose", "voice_capture");
+
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
+        if (!uploadRes.ok) {
+          const data = await uploadRes.json();
+          throw new Error(data.message || "Upload failed");
+        }
+        const upload = await uploadRes.json();
+
+        await createCaptureSync(
+          {
+            modality: "voice",
+            rawAudioUrl: upload.url,
+            rawAudioMs: upload.durationMs || pending.durationMs,
+            rawText: trimmed,
+          },
+          trimmed
+        );
+        pendingVoiceRef.current = null;
+      } catch (err) {
+        console.error("Voice finalize error:", err);
+        setError(err instanceof Error ? err.message : "Something went wrong");
+        setStep("error");
+      }
+    },
+    [createCaptureSync]
+  );
 
   const handleStopRecording = async () => {
     const recording = await voice.stopRecording();
@@ -261,66 +294,34 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
 
     pendingVoiceRef.current = recording;
     const heard = recording.transcript.trim();
+    if (heard.length < 3) {
+      setStep("need_more_thought");
+      return;
+    }
+
     setTranscript(heard);
     setEditableTranscript(heard);
     setError(null);
-    setStep("transcript_preview");
+    setInputModality("voice");
+    setDecisions(decisionsFromClaims([], heard));
+    setStep("review");
+    void finalizeVoiceCapture(heard, recording);
   };
 
-  const handleSubmitVoiceTranscript = async () => {
+  const handleTranscriptEditDone = async () => {
+    if (isSyncingCapture) return;
     const trimmed = editableTranscript.trim();
     if (trimmed.length < 3) {
       setError("Add a few words so we can extract your claim.");
       return;
     }
-
     const pending = pendingVoiceRef.current;
-    if (!pending) {
-      setError("Recording missing — try recording again.");
-      return;
-    }
+    if (!pending) return;
 
-    setError(null);
     setTranscript(trimmed);
-    setStep("uploading");
-
-    try {
-      const ext = pending.mimeType.split("/")[1] || "webm";
-      const fd = new FormData();
-      fd.append("file", pending.blob, `quick-thought.${ext}`);
-      fd.append("purpose", "voice_capture");
-
-      const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!uploadRes.ok) {
-        const data = await uploadRes.json();
-        throw new Error(data.message || "Upload failed");
-      }
-      const upload = await uploadRes.json();
-
-      setStep("extracting");
-      const captureRes = await fetch("/api/captures", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          modality: "voice",
-          rawAudioUrl: upload.url,
-          rawAudioMs: upload.durationMs || pending.durationMs,
-          rawText: trimmed,
-        }),
-      });
-      if (!captureRes.ok) {
-        const data = await captureRes.json();
-        throw new Error(data.message || "Failed to create capture");
-      }
-      const capture = await captureRes.json();
-      setCaptureId(capture.captureId);
-      pendingVoiceRef.current = null;
-      pollCapture(capture.captureId);
-    } catch (err) {
-      console.error("Voice upload error:", err);
-      setError(err instanceof Error ? err.message : "Something went wrong");
-      setStep("error");
-    }
+    setDecisions(decisionsFromClaims([], trimmed));
+    setError(null);
+    void finalizeVoiceCapture(trimmed, pending);
   };
 
   const handleCommit = async () => {
@@ -406,7 +407,7 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
   };
 
   const handleFlip = async (index: number) => {
-    if (!captureId) return;
+    if (!captureId || isSyncingCapture) return;
     setFlippingIndex(index);
     try {
       const res = await fetch(`/api/captures/${captureId}/flip-claim`, {
@@ -447,7 +448,7 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
         className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4"
         style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
         onClick={(e) => {
-          if (e.target === e.currentTarget && step !== "recording" && step !== "uploading") {
+          if (e.target === e.currentTarget && step !== "recording") {
             handleClose();
           }
         }}
@@ -538,7 +539,10 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                     icon={<Type size={26} />}
                     label="Type it"
                     description="Write a quick note"
-                    onClick={() => setStep("text_input")}
+                    onClick={() => {
+                      setInputModality("typed");
+                      setStep("text_input");
+                    }}
                   />
                   <ModeCard
                     icon={<Mic size={26} />}
@@ -593,9 +597,16 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                 >
                   <PrimaryButton
                     onClick={handleSubmitText}
-                    disabled={!thoughtText.trim()}
+                    disabled={!thoughtText.trim() || isSyncingCapture}
                   >
-                    Extract claim
+                    {isSyncingCapture ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Extracting claim…
+                      </>
+                    ) : (
+                      "Review claim"
+                    )}
                   </PrimaryButton>
                 </div>
               </div>
@@ -661,8 +672,30 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                 ) : (
                   <p style={{ color: C.muted, fontSize: 12, marginBottom: 16 }}>
                     Speech-to-text unavailable in this browser — you can type
-                    your words on the next screen.
+                    your words after you stop.
                   </p>
+                )}
+                {(isExtractingPreview || livePreviewClaim) && (
+                  <div
+                    style={{
+                      marginBottom: 16,
+                      padding: "8px 12px",
+                      background: C.bg,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: C.textSoft,
+                      maxWidth: 320,
+                      marginLeft: "auto",
+                      marginRight: "auto",
+                    }}
+                  >
+                    {isExtractingPreview && !livePreviewClaim ? (
+                      <span style={{ color: C.muted }}>Shaping claim…</span>
+                    ) : (
+                      livePreviewClaim
+                    )}
+                  </div>
                 )}
                 <button
                   onClick={handleStopRecording}
@@ -691,106 +724,72 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
               </div>
             )}
 
-            {(step === "uploading" || step === "extracting") && (
-              <ProcessingState
-                label={
-                  step === "uploading"
-                    ? "Uploading audio..."
-                    : "Extracting your claim..."
-                }
-              />
-            )}
-
-            {step === "transcript_preview" && (
-              <div style={{ padding: "20px" }}>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: C.muted,
-                    textTransform: "uppercase",
-                    letterSpacing: 0.5,
-                    marginBottom: 8,
-                  }}
-                >
-                  Your words — edit if needed
-                </div>
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: C.textSoft,
-                    lineHeight: 1.5,
-                    marginTop: 0,
-                    marginBottom: 12,
-                  }}
-                >
-                  We transcribe in your browser (no OpenAI key needed). Fix any
-                  mistakes, then extract your claim.
-                </p>
-                <textarea
-                  value={editableTranscript}
-                  onChange={(e) => setEditableTranscript(e.target.value)}
-                  placeholder="Type or paste what you said..."
-                  autoFocus
-                  rows={5}
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    background: C.bg,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 10,
-                    padding: "12px 14px",
-                    color: C.text,
-                    fontSize: 15,
-                    fontFamily: "inherit",
-                    resize: "vertical",
-                    outline: "none",
-                    minHeight: 120,
-                    marginBottom: 16,
-                  }}
-                />
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 10,
-                  }}
-                >
-                  <SecondaryButton
-                    onClick={() => {
-                      pendingVoiceRef.current = null;
-                      setStep("select_mode");
-                    }}
-                  >
-                    Back
-                  </SecondaryButton>
-                  <PrimaryButton
-                    onClick={handleSubmitVoiceTranscript}
-                    disabled={editableTranscript.trim().length < 3}
-                  >
-                    Extract claim
-                  </PrimaryButton>
-                </div>
-                {error && (
-                  <div
-                    style={{
-                      marginTop: 12,
-                      color: C.danger,
-                      fontSize: 13,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    <AlertCircle size={14} />
-                    {error}
-                  </div>
-                )}
-              </div>
-            )}
-
             {step === "review" && (
               <div style={{ padding: "20px" }}>
-                {transcript && (
+                {isSyncingCapture && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 14,
+                      padding: "10px 12px",
+                      background: `${C.accent}12`,
+                      border: `1px solid ${C.accent}35`,
+                      borderRadius: 8,
+                      fontSize: 13,
+                      color: C.textSoft,
+                    }}
+                  >
+                    <Loader2 size={14} className="animate-spin" color={C.accent} />
+                    Extracting your claim…
+                  </div>
+                )}
+
+                {inputModality === "voice" && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: C.muted,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                        marginBottom: 8,
+                      }}
+                    >
+                      Your words — edit if needed
+                    </div>
+                    <textarea
+                      value={editableTranscript}
+                      onChange={(e) => setEditableTranscript(e.target.value)}
+                      onBlur={() => {
+                        if (
+                          editableTranscript.trim() !== transcript.trim() &&
+                          editableTranscript.trim().length >= 3
+                        ) {
+                          void handleTranscriptEditDone();
+                        }
+                      }}
+                      placeholder="What you said…"
+                      rows={3}
+                      style={{
+                        width: "100%",
+                        boxSizing: "border-box",
+                        background: C.bg,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 10,
+                        padding: "10px 12px",
+                        color: C.text,
+                        fontSize: 14,
+                        fontFamily: "inherit",
+                        resize: "vertical",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                )}
+
+                {inputModality === "typed" && transcript && (
                   <details
                     style={{
                       marginBottom: 16,
@@ -809,7 +808,7 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                         letterSpacing: 0.5,
                       }}
                     >
-                      Original transcript
+                      Original note
                     </summary>
                     <div
                       style={{
@@ -1050,7 +1049,9 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                   )}
                   <PrimaryButton
                     onClick={handleCommit}
-                    disabled={activeClaims.length === 0 || isSubmitting}
+                    disabled={
+                      activeClaims.length === 0 || isSubmitting || isSyncingCapture
+                    }
                   >
                     {isSubmitting ? (
                       <Loader2 size={14} className="animate-spin" />

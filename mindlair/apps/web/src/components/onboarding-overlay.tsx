@@ -85,14 +85,19 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
     <div
       style={{
         position: "fixed",
-        inset: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: isMobile
+          ? "calc(72px + env(safe-area-inset-bottom, 0px))"
+          : 0,
         zIndex: 45,
         pointerEvents: "none",
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "flex-start" : "center",
         justifyContent: "center",
         padding: isMobile
-          ? "16px 16px calc(88px + env(safe-area-inset-bottom, 0px)) 16px"
+          ? "12px 16px 12px 16px"
           : "16px 16px 16px calc(256px + 16px)",
         overflowY: "auto",
       }}
@@ -100,7 +105,12 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
       <div
         style={{
           position: "fixed",
-          inset: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: isMobile
+            ? "calc(72px + env(safe-area-inset-bottom, 0px))"
+            : 0,
           background: "rgba(15, 14, 12, 0.92)",
           backdropFilter: "blur(12px)",
           pointerEvents: "none",
@@ -116,7 +126,10 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
           border: `1px solid ${C.border}`,
           maxWidth: 560,
           width: "100%",
-          maxHeight: isMobile ? "calc(90vh - 100px)" : "90vh",
+          maxHeight: isMobile
+            ? "calc(100dvh - 120px - env(safe-area-inset-bottom, 0px))"
+            : "90vh",
+          marginTop: isMobile ? 8 : 0,
           overflowY: "auto",
           padding: "32px 28px",
           boxShadow: "0 24px 80px rgba(0,0,0,0,0.5)",

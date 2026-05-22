@@ -145,14 +145,8 @@ export async function extractClaims(
     };
   } catch (error) {
     console.error('Claude extraction error:', error);
-    
     return {
-      claims: [{
-        text: `[Pending review] ${content.title}`,
-        type: 'opinion',
-        confidence: 0,
-        concepts: [],
-      }],
+      claims: [],
       primaryTopic: 'unknown',
       sentiment: 'neutral',
     };
@@ -944,14 +938,8 @@ export async function extractClaimsFromSpokenText(
     };
   } catch (error) {
     console.error('Spoken extraction error:', error);
-    
     return {
-      claims: [{
-        text: `[Pending review] ${content.title}`,
-        type: 'opinion',
-        confidence: 0,
-        concepts: [],
-      }],
+      claims: [],
       primaryTopic: 'unknown',
       sentiment: 'neutral',
     };

@@ -120,7 +120,7 @@ function AppLayoutInner({
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50" style={{
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[100]" style={{
         background: `${C.surface}f0`, backdropFilter: "blur(12px)",
         borderTop: `1px solid ${C.border}`,
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
