@@ -18,7 +18,11 @@ import {
   Brain,
   TrendingUp,
   Layers,
+  Share2,
+  Mic,
+  BookmarkPlus,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { APP_VERSION, GITHUB_REPO } from "@/lib/app-config";
 
@@ -32,9 +36,11 @@ const C = {
   accent: "#d4915a",
   amber: "#d4915a",
   rose: "#e06070",
+  green: "#a3c47a",
+  blue: "#6b9fc4",
 };
 
-const STEPS = ["welcome", "capture", "done"] as const;
+const STEPS = ["welcome", "captureAnywhere", "install", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
@@ -114,29 +120,29 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
               margin: "0 auto 16px",
             }}
           >
-            {step === "welcome" ? (
-              <Brain className="w-6 h-6" style={{ color: C.accent }} />
-            ) : (
-              <Sparkles className="w-6 h-6" style={{ color: C.accent }} />
-            )}
+            {step === "welcome" && <Brain className="w-6 h-6" style={{ color: C.accent }} />}
+            {step === "captureAnywhere" && <Share2 className="w-6 h-6" style={{ color: C.accent }} />}
+            {step === "install" && <Download className="w-6 h-6" style={{ color: C.accent }} />}
+            {step === "done" && <Sparkles className="w-6 h-6" style={{ color: C.accent }} />}
           </div>
           <h1
             className="text-2xl font-bold mb-2"
             style={{ color: C.text, letterSpacing: "-0.03em" }}
           >
             {step === "welcome" && "Welcome to Mindlair"}
-            {step === "capture" && (isMobile ? "Add to Home Screen" : "Install capture tools")}
+            {step === "captureAnywhere" && "Capture anywhere"}
+            {step === "install" && "Optional: ambient capture"}
             {step === "done" && "You're ready!"}
           </h1>
           <p className="text-sm" style={{ color: C.muted, maxWidth: 400, margin: "0 auto" }}>
             {step === "welcome" &&
               "Map your intellectual journey. See how your thinking evolves over time."}
-            {step === "capture" &&
-              (isMobile
-                ? "Add Mindlair to your home screen for quick sharing and push notifications."
-                : "Install the browser extension to passively capture what you read.")}
+            {step === "captureAnywhere" &&
+              "Three low-friction surfaces feed the same pipeline. Use whichever fits the moment."}
+            {step === "install" &&
+              "Want Mindlair to also read what you don't intentionally share? Install one or both of these."}
             {step === "done" &&
-              "Your map is ready to grow. Everything you consume will be captured automatically."}
+              "Your map starts now. Share, speak, or save for later — every input feeds the same pipeline."}
           </p>
         </div>
 
@@ -169,13 +175,13 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 <div className="space-y-4">
                   <WelcomeFeature
                     icon={<Layers className="w-5 h-5" />}
-                    title="Capture what you consume"
-                    description="Articles, podcasts, videos — Mindlair automatically tracks everything you read, watch, and listen to."
+                    title="Capture every thought worth keeping"
+                    description="Share, speak, save for later, or let it run silently — whatever fits the moment lands on your map."
                   />
                   <WelcomeFeature
                     icon={<Brain className="w-5 h-5" />}
                     title="Build your belief map"
-                    description="See your interests as an interactive map. Watch clusters form around topics you care about."
+                    description="See your positions as an interactive map. Watch clusters form around topics you care about."
                   />
                   <WelcomeFeature
                     icon={<TrendingUp className="w-5 h-5" />}
@@ -198,15 +204,58 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                   Get the most out of Mindlair:
                 </p>
                 <ul style={{ margin: 0, padding: "0 0 0 18px", fontSize: 13, color: C.muted, lineHeight: 1.8 }}>
-                  <li>Install the browser extension for passive capture</li>
-                  <li>Browse the web normally — we track what matters</li>
+                  <li>Share articles with a quick reaction — claims land instantly</li>
+                  <li>Tap the mic to capture a thought on the go</li>
                   <li>Check back weekly to see your map evolve</li>
                 </ul>
               </div>
             </div>
           )}
 
-          {step === "capture" && (
+          {step === "captureAnywhere" && (
+            <div className="space-y-3">
+              <ModalityCard
+                icon={<Share2 className="w-5 h-5" />}
+                title="Share sheet"
+                description="Hit Share from any app, drop a quick reaction — your claims land on the map. No reaction? It saves to React-later."
+                color={C.green}
+              />
+              <ModalityCard
+                icon={<Mic className="w-5 h-5" />}
+                title="Voice note"
+                description={
+                  isMobile
+                    ? "Tap the mic to record up to 30 seconds. Whisper transcribes, spoken-mode extraction cleans up filler. Add to Shortcuts for one-tap access from your lock screen."
+                    : "Tap the mic to record up to 30 seconds. Whisper transcribes, spoken-mode extraction cleans up filler."
+                }
+                color={C.blue}
+              />
+              <ModalityCard
+                icon={<BookmarkPlus className="w-5 h-5" />}
+                title="React later"
+                description="Items saved without a reaction queue up in your inbox. Type whenever you have a moment — same extraction, same confirmation."
+                color={C.amber}
+              >
+                <Link
+                  href="/inbox/react-later"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontSize: 12,
+                    color: C.accent,
+                    marginTop: 8,
+                    textDecoration: "none",
+                  }}
+                >
+                  Open React-later
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </ModalityCard>
+            </div>
+          )}
+
+          {step === "install" && (
             <>
               {isMobile ? (
                 <>
@@ -215,7 +264,6 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                     icon={<Home className="w-5 h-5" style={{ color: C.accent }} />}
                     title="Add to Home Screen"
                     description="Get quick access to Mindlair, push notifications for your daily digest, and offline support."
-                    recommended
                   >
                     <div className="mt-3 space-y-2">
                       {platform === "ios" ? (
@@ -406,8 +454,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 }}
               >
                 <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.6 }}>
-                  Your map will grow as you browse. Make sure you have the browser
-                  extension installed so Mindlair can passively capture what you read.
+                  Your map starts now. Share, speak, or save for later — every input
+                  feeds the same pipeline.
                 </p>
               </div>
 
@@ -462,7 +510,9 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 fontWeight: 600,
               }}
             >
-              {step === "welcome" ? "Get Started" : "Finish setup"}
+              {step === "welcome" && "Get Started"}
+              {step === "captureAnywhere" && "Continue"}
+              {step === "install" && "Finish setup"}
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
@@ -761,6 +811,48 @@ function WelcomeFeature({
         <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
           {description}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function ModalityCard({
+  icon,
+  title,
+  description,
+  color,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{
+        border: `1px solid ${color}30`,
+        background: `${color}08`,
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: `${color}20`, color }}
+        >
+          {icon}
+        </div>
+        <div className="flex-1">
+          <p className="font-medium" style={{ color: C.text }}>
+            {title}
+          </p>
+          <p className="text-sm mt-1" style={{ color: C.muted, lineHeight: 1.5 }}>
+            {description}
+          </p>
+          {children}
+        </div>
       </div>
     </div>
   );
