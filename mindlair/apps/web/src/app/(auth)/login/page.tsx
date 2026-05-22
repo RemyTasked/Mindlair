@@ -86,7 +86,7 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <Link href="/" style={{ textDecoration: "none" }}>
             <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.04em", color: C.text }}>
-              Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>layer</span>
+              Mind<span style={{ color: C.accent, fontStyle: "italic", fontWeight: 500 }}>lair</span>
             </h1>
           </Link>
           <p style={{ fontSize: 14, color: C.muted, marginTop: 6 }}>Map your thinking, not just your time</p>
