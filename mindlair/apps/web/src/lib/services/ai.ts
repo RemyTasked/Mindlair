@@ -603,13 +603,17 @@ export async function suggestTopicTagsFromContent(opts: {
 }
 
 // ============================================
-// Audio Transcription (OpenAI Whisper)
+// Audio Transcription
 // ============================================
+// Optional OpenAI Whisper. Anthropic does not accept audio — voice captures
+// should include rawText from browser speech recognition on the client.
 
 export async function transcribeAudio(audioUrl: string): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    console.error('OPENAI_API_KEY not set — transcription skipped');
+    console.log(
+      '[transcribe] OPENAI_API_KEY not set — using client transcript on capture when provided'
+    );
     return '';
   }
 
@@ -921,12 +925,7 @@ export async function extractClaimsFromSpokenText(
 
     // Permissive retry: short transcripts with opinion-bearing language that
     // returned zero claims often need a second, less-conservative pass.
-    if (
-      claims.length === 0 &&
-      content.text &&
-      content.text.length <= 600 &&
-      looksLikeOpinion(content.text)
-    ) {
+    if (claims.length === 0 && content.text && content.text.trim().length >= 8) {
       try {
         console.log('[spoken-extract] empty result on opinion-like short transcript — running permissive retry');
         const retry = await permissiveSpokenExtraction(content, existingConcepts);

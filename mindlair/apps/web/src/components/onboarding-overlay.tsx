@@ -86,27 +86,40 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(15, 14, 12, 0.92)",
-        backdropFilter: "blur(12px)",
-        zIndex: 60,
+        zIndex: 45,
+        pointerEvents: "none",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: isMobile ? "16px 16px 100px 16px" : 16,
+        padding: isMobile
+          ? "16px 16px calc(88px + env(safe-area-inset-bottom, 0px)) 16px"
+          : "16px 16px 16px calc(256px + 16px)",
         overflowY: "auto",
       }}
     >
       <div
         style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(15, 14, 12, 0.92)",
+          backdropFilter: "blur(12px)",
+          pointerEvents: "none",
+        }}
+        aria-hidden
+      />
+      <div
+        style={{
+          position: "relative",
+          pointerEvents: "auto",
           background: C.bg,
           borderRadius: 20,
           border: `1px solid ${C.border}`,
           maxWidth: 560,
           width: "100%",
-          maxHeight: isMobile ? "calc(90vh - 80px)" : "90vh",
+          maxHeight: isMobile ? "calc(90vh - 100px)" : "90vh",
           overflowY: "auto",
           padding: "32px 28px",
-          boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
+          boxShadow: "0 24px 80px rgba(0,0,0,0,0.5)",
         }}
       >
         {/* Header */}
@@ -232,8 +245,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 title="Voice note"
                 description={
                   isMobile
-                    ? "Tap the mic to record up to 30 seconds. Whisper transcribes, spoken-mode extraction cleans up filler. Add to Shortcuts for one-tap access from your lock screen."
-                    : "Tap the mic to record up to 30 seconds. Whisper transcribes, spoken-mode extraction cleans up filler."
+                    ? "Tap the mic to record up to 30 seconds. Your browser transcribes as you speak; you can edit the text before we extract your claim. Add to Shortcuts for one-tap access from your lock screen."
+                    : "Tap the mic to record up to 30 seconds. Your browser transcribes as you speak; you can edit the text before we extract your claim."
                 }
                 color={C.blue}
               />

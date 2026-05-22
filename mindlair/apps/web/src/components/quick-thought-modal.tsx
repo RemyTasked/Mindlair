@@ -73,36 +73,34 @@ interface QuickThoughtModalProps {
   onSuccess?: () => void;
 }
 
-const STANCE_LABELS: Record<Stance, string> = {
-  agree: "Agree",
-  complicated: "It's complicated",
-  disagree: "Disagree",
-};
-
-const STANCE_COLORS: Record<Stance, string> = {
-  agree: C.success,
-  complicated: C.accent,
-  disagree: C.danger,
-};
-
-function aiStanceToUser(aiStance?: string): Stance {
-  switch (aiStance) {
-    case "endorse":
-    case "changed_my_mind":
-      return "agree";
-    case "dispute":
-      return "disagree";
-    case "complicated":
-      return "complicated";
-    default:
-      return "agree";
-  }
-}
-
 function formatDuration(seconds: number) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+function buildDraftDecision(text: string): ClaimDecision {
+  const t = text.trim();
+  return {
+    text: t,
+    originalText: t,
+    stance: "agree",
+    dropped: false,
+    edited: false,
+    flipped: false,
+  };
+}
+
+function mapCandidatesToDecisions(claims: CandidateClaim[]): ClaimDecision[] {
+  return claims.map((c) => ({
+    text: c.text,
+    originalText: c.text,
+    stance: "agree" as Stance,
+    dropped: false,
+    edited: false,
+    flipped: false,
+    matchedClaimId: c.matchedClaimId,
+  }));
 }
 
 export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModalProps) {
@@ -116,12 +114,15 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
   const [editText, setEditText] = useState("");
   const [flippingIndex, setFlippingIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
-  const [manualClaim, setManualClaim] = useState("");
-  const [manualStance, setManualStance] = useState<Stance>("agree");
+  const [editableTranscript, setEditableTranscript] = useState("");
 
   const voice = useVoiceCapture();
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingVoiceRef = useRef<{
+    blob: Blob;
+    mimeType: string;
+    durationMs: number;
+  } | null>(null);
 
   const resetAll = useCallback(() => {
     setStep("select_mode");
@@ -134,9 +135,8 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
     setEditText("");
     setFlippingIndex(null);
     setIsSubmitting(false);
-    setManualMode(false);
-    setManualClaim("");
-    setManualStance("agree");
+    setEditableTranscript("");
+    pendingVoiceRef.current = null;
     voice.reset();
     if (pollRef.current) {
       clearTimeout(pollRef.current);
@@ -162,67 +162,61 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
     };
   }, []);
 
-  const pollCapture = useCallback(
-    async (id: string, opts: { wantTranscript?: boolean } = {}) => {
-      let attempts = 0;
-      const maxAttempts = 90;
+  const pollCapture = useCallback(async (id: string) => {
+    let attempts = 0;
+    const maxAttempts = 90;
 
-      const tick = async () => {
-        try {
-          const res = await fetch(`/api/captures/${id}`);
-          if (!res.ok) throw new Error("Failed to fetch capture");
-          const data = await res.json();
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/captures/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch capture");
+        const data = await res.json();
 
-          if (data.rawText && opts.wantTranscript && !transcript) {
-            setTranscript(data.rawText);
-            setStep("transcript_preview");
-            opts.wantTranscript = false;
-          }
-
-          if (data.status === "awaiting_confirmation") {
-            const claims = (data.candidateClaims as CandidateClaim[]) || [];
-            setDecisions(
-              claims.map((c) => ({
-                text: c.text,
-                originalText: c.text,
-                stance: aiStanceToUser(c.aiStance),
-                dropped: false,
-                edited: false,
-                flipped: false,
-                matchedClaimId: c.matchedClaimId,
-              }))
-            );
-            setStep("review");
-            return;
-          }
-
-          if (data.status === "awaiting_reaction") {
-            if (data.rawText && !transcript) setTranscript(data.rawText);
-            setStep("need_more_thought");
-            return;
-          }
-
-          if (data.status === "failed") {
-            throw new Error(data.errorReason || "Processing failed");
-          }
-
-          attempts++;
-          if (attempts < maxAttempts) {
-            pollRef.current = setTimeout(tick, 1000);
-          } else {
-            throw new Error("Processing timed out");
-          }
-        } catch (err) {
-          console.error("Poll error:", err);
-          setError(err instanceof Error ? err.message : "Something went wrong");
-          setStep("error");
+        if (data.rawText) {
+          setTranscript(data.rawText);
         }
-      };
 
-      tick();
-    },
-    [transcript]
-  );
+        if (data.status === "awaiting_confirmation") {
+          const claims = (data.candidateClaims as CandidateClaim[]) || [];
+          if (claims.length > 0) {
+            setDecisions(mapCandidatesToDecisions(claims));
+          } else if (data.rawText?.trim()) {
+            setDecisions([buildDraftDecision(data.rawText)]);
+          }
+          setStep("review");
+          return;
+        }
+
+        if (data.status === "awaiting_reaction") {
+          const fallback = data.rawText?.trim() || editableTranscript.trim();
+          if (fallback) {
+            setDecisions([buildDraftDecision(fallback)]);
+            setStep("review");
+          } else {
+            setStep("need_more_thought");
+          }
+          return;
+        }
+
+        if (data.status === "failed") {
+          throw new Error(data.errorReason || "Processing failed");
+        }
+
+        attempts++;
+        if (attempts < maxAttempts) {
+          pollRef.current = setTimeout(tick, 1000);
+        } else {
+          throw new Error("Processing timed out");
+        }
+      } catch (err) {
+        console.error("Poll error:", err);
+        setError(err instanceof Error ? err.message : "Something went wrong");
+        setStep("error");
+      }
+    };
+
+    tick();
+  }, [editableTranscript]);
 
   const handleSubmitText = async () => {
     const trimmed = thoughtText.trim();
@@ -259,37 +253,59 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
   };
 
   const handleStopRecording = async () => {
-    setStep("uploading");
     const recording = await voice.stopRecording();
     if (!recording) {
       setStep("select_mode");
       return;
     }
 
+    pendingVoiceRef.current = recording;
+    const heard = recording.transcript.trim();
+    setTranscript(heard);
+    setEditableTranscript(heard);
+    setError(null);
+    setStep("transcript_preview");
+  };
+
+  const handleSubmitVoiceTranscript = async () => {
+    const trimmed = editableTranscript.trim();
+    if (trimmed.length < 3) {
+      setError("Add a few words so we can extract your claim.");
+      return;
+    }
+
+    const pending = pendingVoiceRef.current;
+    if (!pending) {
+      setError("Recording missing — try recording again.");
+      return;
+    }
+
+    setError(null);
+    setTranscript(trimmed);
+    setStep("uploading");
+
     try {
-      const ext = recording.mimeType.split("/")[1] || "webm";
+      const ext = pending.mimeType.split("/")[1] || "webm";
       const fd = new FormData();
-      fd.append("file", recording.blob, `quick-thought.${ext}`);
+      fd.append("file", pending.blob, `quick-thought.${ext}`);
       fd.append("purpose", "voice_capture");
 
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: fd,
-      });
+      const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
       if (!uploadRes.ok) {
         const data = await uploadRes.json();
         throw new Error(data.message || "Upload failed");
       }
       const upload = await uploadRes.json();
 
-      setStep("transcribing");
+      setStep("extracting");
       const captureRes = await fetch("/api/captures", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           modality: "voice",
           rawAudioUrl: upload.url,
-          rawAudioMs: upload.durationMs || recording.durationMs,
+          rawAudioMs: upload.durationMs || pending.durationMs,
+          rawText: trimmed,
         }),
       });
       if (!captureRes.ok) {
@@ -298,7 +314,8 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
       }
       const capture = await captureRes.json();
       setCaptureId(capture.captureId);
-      pollCapture(capture.captureId, { wantTranscript: true });
+      pendingVoiceRef.current = null;
+      pollCapture(capture.captureId);
     } catch (err) {
       console.error("Voice upload error:", err);
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -318,7 +335,7 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
           claims: decisions.map((d) => ({
             text: d.text,
             originalText: d.originalText,
-            stance: d.stance,
+            stance: "agree" as Stance,
             dropped: d.dropped,
             edited: d.edited || d.flipped,
             matchedClaimId: d.matchedClaimId,
@@ -351,53 +368,6 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
     }
     setStep("success");
     setTimeout(() => handleClose(), 1400);
-  };
-
-  const startManualClaim = () => {
-    setManualClaim(transcript.trim());
-    setManualStance("agree");
-    setManualMode(true);
-  };
-
-  const handleSubmitManualClaim = async () => {
-    if (!captureId) return;
-    const trimmed = manualClaim.trim();
-    if (trimmed.length < 3) return;
-
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/captures/${captureId}/manual-claim`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: trimmed,
-          stance: manualStance,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to save claim");
-      }
-      setStep("success");
-      onSuccess?.();
-      setTimeout(() => handleClose(), 1600);
-    } catch (err) {
-      console.error("Manual claim error:", err);
-      setError(err instanceof Error ? err.message : "Failed to save");
-      setIsSubmitting(false);
-    }
-  };
-
-  const cycleStance = (index: number) => {
-    setDecisions((prev) =>
-      prev.map((d, i) => {
-        if (i !== index) return d;
-        const order: Stance[] = ["agree", "complicated", "disagree"];
-        const next = order[(order.indexOf(d.stance) + 1) % order.length];
-        return { ...d, stance: next };
-      })
-    );
   };
 
   const handleDrop = (index: number) => {
@@ -667,9 +637,33 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                 >
                   {formatDuration(voice.duration)}
                 </div>
-                <p style={{ color: C.muted, fontSize: 13, marginBottom: 24 }}>
+                <p style={{ color: C.muted, fontSize: 13, marginBottom: 12 }}>
                   Recording...
                 </p>
+                {voice.liveTranscript ? (
+                  <p
+                    style={{
+                      color: C.textSoft,
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                      marginBottom: 16,
+                      maxWidth: 320,
+                      marginLeft: "auto",
+                      marginRight: "auto",
+                    }}
+                  >
+                    {voice.liveTranscript}
+                  </p>
+                ) : voice.browserSpeechAvailable ? (
+                  <p style={{ color: C.muted, fontSize: 12, marginBottom: 16 }}>
+                    Listening…
+                  </p>
+                ) : (
+                  <p style={{ color: C.muted, fontSize: 12, marginBottom: 16 }}>
+                    Speech-to-text unavailable in this browser — you can type
+                    your words on the next screen.
+                  </p>
+                )}
                 <button
                   onClick={handleStopRecording}
                   style={{
@@ -697,13 +691,11 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
               </div>
             )}
 
-            {(step === "uploading" || step === "transcribing" || step === "extracting") && (
+            {(step === "uploading" || step === "extracting") && (
               <ProcessingState
                 label={
                   step === "uploading"
                     ? "Uploading audio..."
-                    : step === "transcribing"
-                    ? "Transcribing what you said..."
                     : "Extracting your claim..."
                 }
               />
@@ -717,41 +709,82 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                     color: C.muted,
                     textTransform: "uppercase",
                     letterSpacing: 0.5,
-                    marginBottom: 10,
+                    marginBottom: 8,
                   }}
                 >
-                  Here&apos;s what we heard
+                  Your words — edit if needed
                 </div>
-                <div
+                <p
                   style={{
+                    fontSize: 13,
+                    color: C.textSoft,
+                    lineHeight: 1.5,
+                    marginTop: 0,
+                    marginBottom: 12,
+                  }}
+                >
+                  We transcribe in your browser (no OpenAI key needed). Fix any
+                  mistakes, then extract your claim.
+                </p>
+                <textarea
+                  value={editableTranscript}
+                  onChange={(e) => setEditableTranscript(e.target.value)}
+                  placeholder="Type or paste what you said..."
+                  autoFocus
+                  rows={5}
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
                     background: C.bg,
                     border: `1px solid ${C.border}`,
                     borderRadius: 10,
-                    padding: "14px 16px",
-                    fontSize: 15,
-                    lineHeight: 1.55,
+                    padding: "12px 14px",
                     color: C.text,
+                    fontSize: 15,
+                    fontFamily: "inherit",
+                    resize: "vertical",
+                    outline: "none",
+                    minHeight: 120,
                     marginBottom: 16,
                   }}
-                >
-                  {transcript || (
-                    <span style={{ color: C.muted, fontStyle: "italic" }}>
-                      (no transcript yet)
-                    </span>
-                  )}
-                </div>
+                />
                 <div
                   style={{
                     display: "flex",
-                    alignItems: "center",
+                    justifyContent: "space-between",
                     gap: 10,
-                    color: C.muted,
-                    fontSize: 13,
                   }}
                 >
-                  <Loader2 size={14} className="animate-spin" />
-                  Extracting your claim...
+                  <SecondaryButton
+                    onClick={() => {
+                      pendingVoiceRef.current = null;
+                      setStep("select_mode");
+                    }}
+                  >
+                    Back
+                  </SecondaryButton>
+                  <PrimaryButton
+                    onClick={handleSubmitVoiceTranscript}
+                    disabled={editableTranscript.trim().length < 3}
+                  >
+                    Extract claim
+                  </PrimaryButton>
                 </div>
+                {error && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      color: C.danger,
+                      fontSize: 13,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <AlertCircle size={14} />
+                    {error}
+                  </div>
+                )}
               </div>
             )}
 
@@ -801,9 +834,13 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                   }}
                 >
                   {activeClaims.length === 1
-                    ? "1 claim found"
-                    : `${activeClaims.length} claims found`}
+                    ? "Confirm your claim"
+                    : `Confirm ${activeClaims.length} claims`}
                 </div>
+                <p style={{ fontSize: 13, color: C.textSoft, marginTop: 0, marginBottom: 12 }}>
+                  Keep, edit, drop, or flip — this is your own thought, not a reaction
+                  to someone else.
+                </p>
 
                 {decisions.map((d, i) => {
                   if (d.dropped) {
@@ -935,23 +972,6 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                             {d.text}
                           </div>
 
-                          <button
-                            onClick={() => cycleStance(i)}
-                            style={{
-                              background: `${STANCE_COLORS[d.stance]}20`,
-                              border: `1px solid ${STANCE_COLORS[d.stance]}60`,
-                              color: STANCE_COLORS[d.stance],
-                              borderRadius: 6,
-                              padding: "4px 10px",
-                              fontSize: 12,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              marginBottom: 12,
-                            }}
-                          >
-                            {STANCE_LABELS[d.stance]}
-                          </button>
-
                           <div
                             style={{
                               display: "flex",
@@ -1058,24 +1078,10 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
               </div>
             )}
 
-            {step === "need_more_thought" && !manualMode && (
+            {step === "need_more_thought" && (
               <div style={{ padding: "32px 20px", textAlign: "center" }}>
-                <div
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: "50%",
-                    background: `${C.accent}20`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 16px",
-                  }}
-                >
-                  <Sparkles size={22} color={C.accent} />
-                </div>
                 <h3 style={{ fontSize: 17, fontWeight: 600, margin: "0 0 8px" }}>
-                  Couldn&apos;t pull a clear claim
+                  No words to work with
                 </h3>
                 <p
                   style={{
@@ -1089,26 +1095,9 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                     marginRight: "auto",
                   }}
                 >
-                  Want to write the claim yourself? Or save it for later if the
-                  idea still needs to sharpen.
+                  We didn&apos;t get a transcript. Try again with the mic, or
+                  type your thought instead.
                 </p>
-                {transcript && (
-                  <div
-                    style={{
-                      background: C.bg,
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 10,
-                      padding: "12px 14px",
-                      fontSize: 13,
-                      color: C.textSoft,
-                      textAlign: "left",
-                      marginBottom: 20,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {transcript}
-                  </div>
-                )}
                 <div
                   style={{
                     display: "flex",
@@ -1117,166 +1106,16 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                     flexWrap: "wrap",
                   }}
                 >
-                  <SecondaryButton onClick={handleClose}>
-                    Discard
-                  </SecondaryButton>
-                  <SecondaryButton onClick={handlePark}>
-                    Save for later
-                  </SecondaryButton>
-                  <PrimaryButton onClick={startManualClaim}>
-                    Write the claim
-                  </PrimaryButton>
-                </div>
-              </div>
-            )}
-
-            {step === "need_more_thought" && manualMode && (
-              <div style={{ padding: "20px" }}>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: C.muted,
-                    textTransform: "uppercase",
-                    letterSpacing: 0.5,
-                    marginBottom: 8,
-                  }}
-                >
-                  Your words
-                </div>
-                {transcript && (
-                  <div
-                    style={{
-                      background: C.bg,
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 10,
-                      padding: "10px 14px",
-                      fontSize: 13,
-                      color: C.textSoft,
-                      marginBottom: 16,
-                      lineHeight: 1.5,
-                      maxHeight: 120,
-                      overflowY: "auto",
-                    }}
-                  >
-                    {transcript}
-                  </div>
-                )}
-
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 13,
-                    color: C.textSoft,
-                    marginBottom: 8,
-                  }}
-                >
-                  Write the claim in your own words
-                </label>
-                <textarea
-                  value={manualClaim}
-                  onChange={(e) => setManualClaim(e.target.value)}
-                  placeholder="A clear, standalone statement of what you believe..."
-                  autoFocus
-                  rows={3}
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    background: C.bg,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 10,
-                    padding: "12px 14px",
-                    color: C.text,
-                    fontSize: 15,
-                    fontFamily: "inherit",
-                    resize: "vertical",
-                    outline: "none",
-                    minHeight: 80,
-                    marginBottom: 16,
-                  }}
-                />
-
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: C.textSoft,
-                    marginBottom: 8,
-                  }}
-                >
-                  Your stance
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    marginBottom: 20,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  {(["agree", "complicated", "disagree"] as Stance[]).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setManualStance(s)}
-                      style={{
-                        background:
-                          manualStance === s
-                            ? `${STANCE_COLORS[s]}25`
-                            : "transparent",
-                        border: `1px solid ${
-                          manualStance === s
-                            ? `${STANCE_COLORS[s]}80`
-                            : C.border
-                        }`,
-                        color:
-                          manualStance === s ? STANCE_COLORS[s] : C.textSoft,
-                        borderRadius: 8,
-                        padding: "8px 14px",
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {STANCE_LABELS[s]}
-                    </button>
-                  ))}
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 10,
-                  }}
-                >
-                  <SecondaryButton onClick={() => setManualMode(false)}>
-                    Back
-                  </SecondaryButton>
+                  <SecondaryButton onClick={handleClose}>Discard</SecondaryButton>
                   <PrimaryButton
-                    onClick={handleSubmitManualClaim}
-                    disabled={manualClaim.trim().length < 3 || isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <>Add to map</>
-                    )}
-                  </PrimaryButton>
-                </div>
-
-                {error && (
-                  <div
-                    style={{
-                      marginTop: 12,
-                      color: C.danger,
-                      fontSize: 13,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
+                    onClick={() => {
+                      resetAll();
+                      setStep("select_mode");
                     }}
                   >
-                    <AlertCircle size={14} />
-                    {error}
-                  </div>
-                )}
+                    Try again
+                  </PrimaryButton>
+                </div>
               </div>
             )}
 

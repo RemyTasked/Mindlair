@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  createLiveSpeechSession,
+  isBrowserSpeechAvailable,
+} from "@/lib/browser-speech";
 
 export type RecordingState = "idle" | "requesting_permission" | "recording" | "stopped";
 
@@ -8,12 +12,17 @@ export interface Recording {
   blob: Blob;
   mimeType: string;
   durationMs: number;
+  /** Final browser speech transcript at stop time. */
+  transcript: string;
 }
 
 export interface UseVoiceCaptureResult {
   state: RecordingState;
   duration: number;
   error: string | null;
+  /** Live transcript while recording (browser speech API; no OpenAI required). */
+  liveTranscript: string;
+  browserSpeechAvailable: boolean;
   startRecording: () => Promise<void>;
   /** Stops recording. Resolves with the finalized recording once MediaRecorder.onstop fires. */
   stopRecording: () => Promise<Recording | null>;
@@ -25,13 +34,19 @@ export function useVoiceCapture(): UseVoiceCaptureResult {
   const [state, setState] = useState<RecordingState>("idle");
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState("");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const speechSessionRef = useRef<ReturnType<typeof createLiveSpeechSession> | null>(
+    null
+  );
+  const speechPollRef = useRef<NodeJS.Timeout | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const finalDurationRef = useRef(0);
   const stopResolveRef = useRef<((rec: Recording | null) => void) | null>(null);
+  const finalTranscriptRef = useRef("");
 
   const cleanupStream = useCallback(() => {
     if (streamRef.current) {
@@ -50,6 +65,7 @@ export function useVoiceCapture(): UseVoiceCaptureResult {
     audioChunksRef.current = [];
     setDuration(0);
     finalDurationRef.current = 0;
+    setLiveTranscript("");
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -84,11 +100,20 @@ export function useVoiceCapture(): UseVoiceCaptureResult {
           blob,
           mimeType: finalMime,
           durationMs: finalDurationRef.current * 1000,
+          transcript: finalTranscriptRef.current,
         });
       };
 
       mediaRecorder.start(1000);
       setState("recording");
+
+      speechSessionRef.current = createLiveSpeechSession();
+      if (speechSessionRef.current) {
+        speechSessionRef.current.start();
+        speechPollRef.current = setInterval(() => {
+          setLiveTranscript(speechSessionRef.current?.getTranscript() ?? "");
+        }, 300);
+      }
 
       timerRef.current = setInterval(() => {
         setDuration((prev) => {
@@ -115,6 +140,14 @@ export function useVoiceCapture(): UseVoiceCaptureResult {
         return;
       }
       stopResolveRef.current = resolve;
+      speechSessionRef.current?.stop();
+      if (speechPollRef.current) {
+        clearInterval(speechPollRef.current);
+        speechPollRef.current = null;
+      }
+      finalTranscriptRef.current =
+        speechSessionRef.current?.getTranscript() ?? "";
+      setLiveTranscript(finalTranscriptRef.current);
       mediaRecorderRef.current.stop();
       cleanupStream();
     });
@@ -148,6 +181,8 @@ export function useVoiceCapture(): UseVoiceCaptureResult {
     state,
     duration,
     error,
+    liveTranscript,
+    browserSpeechAvailable: isBrowserSpeechAvailable(),
     startRecording,
     stopRecording,
     cancelRecording,
