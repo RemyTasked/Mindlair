@@ -26,7 +26,8 @@ export type NotificationType =
   | 'tension_alert'
   | 'position_shift'
   | 'new_concept'
-  | 'new_post';
+  | 'new_post'
+  | 'capture_ready';
 
 export async function sendPushNotification(
   userId: string,
@@ -199,6 +200,41 @@ export async function sendNewPostNotification(
     },
     actions: [
       { action: 'view', title: 'Read' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  });
+}
+
+export async function sendCaptureReadyNotification(
+  userId: string,
+  capture: {
+    captureId: string;
+    modality: string;
+    claimCount: number;
+  }
+): Promise<void> {
+  const modalityLabel =
+    capture.modality === 'voice'
+      ? 'Voice capture'
+      : capture.modality === 'share_sheet'
+      ? 'Shared item'
+      : 'Capture';
+
+  await sendPushNotification(userId, {
+    title: `${modalityLabel} ready`,
+    body:
+      capture.claimCount > 0
+        ? `${capture.claimCount} claim${capture.claimCount === 1 ? '' : 's'} extracted — tap to confirm`
+        : 'No claims extracted — tap to review',
+    tag: `capture-${capture.captureId}`,
+    data: {
+      type: 'capture_ready',
+      url: `/inbox/react-later?capture=${capture.captureId}`,
+      captureId: capture.captureId,
+      modality: capture.modality,
+    },
+    actions: [
+      { action: 'view', title: 'Review' },
       { action: 'dismiss', title: 'Later' },
     ],
   });

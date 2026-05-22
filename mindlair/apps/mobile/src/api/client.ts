@@ -149,6 +149,77 @@ class ApiClient {
     const response = await this.client.get(`/posts/${postId}`);
     return response.data.post;
   }
+
+  async createCapture(data: {
+    modality: "share_sheet" | "voice" | "typed" | "extension";
+    rawText?: string;
+    rawAudioUrl?: string;
+    rawAudioMs?: number;
+    source?: {
+      url?: string;
+      title?: string;
+      outlet?: string;
+      contentType?: string;
+    };
+  }): Promise<{ captureId: string; status: string }> {
+    const response = await this.client.post("/captures", data);
+    return response.data;
+  }
+
+  async getCapture(captureId: string): Promise<{
+    id: string;
+    modality: string;
+    status: string;
+    rawText: string | null;
+    rawAudioUrl: string | null;
+    candidateClaims: any[];
+    errorReason: string | null;
+    source: any | null;
+  }> {
+    const response = await this.client.get(`/captures/${captureId}`);
+    return response.data;
+  }
+
+  async getCaptures(status?: string): Promise<{ captures: any[] }> {
+    const response = await this.client.get("/captures", {
+      params: status ? { status } : undefined,
+    });
+    return response.data;
+  }
+
+  async commitCapture(
+    captureId: string,
+    data: {
+      claims: Array<{
+        text: string;
+        originalText?: string;
+        stance: string;
+        dropped?: boolean;
+        edited?: boolean;
+        matchedClaimId?: string;
+      }>;
+    }
+  ): Promise<{ success: boolean; claimIds: string[]; positionIds: string[] }> {
+    const response = await this.client.post(`/captures/${captureId}/commit`, data);
+    return response.data;
+  }
+
+  async recordCaptureFeedback(
+    captureId: string,
+    data: {
+      claimText: string;
+      action: "kept" | "dropped" | "edited" | "stance_flipped";
+      stanceBefore?: string;
+      stanceAfter?: string;
+      finalText?: string;
+    }
+  ): Promise<void> {
+    await this.client.post(`/captures/${captureId}/feedback`, data);
+  }
+
+  async dismissCapture(captureId: string): Promise<void> {
+    await this.client.post(`/captures/${captureId}/dismiss`);
+  }
 }
 
 export const api = new ApiClient();

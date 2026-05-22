@@ -601,3 +601,198 @@ export async function suggestTopicTagsFromContent(opts: {
     };
   }
 }
+
+// ============================================
+// Audio Transcription (OpenAI Whisper)
+// ============================================
+
+export async function transcribeAudio(audioUrl: string): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    console.error('OPENAI_API_KEY not set — transcription skipped');
+    return '';
+  }
+
+  try {
+    const audioResponse = await fetch(audioUrl);
+    if (!audioResponse.ok) {
+      console.error('Failed to fetch audio:', audioResponse.status);
+      return '';
+    }
+
+    const audioBlob = await audioResponse.blob();
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'audio.webm');
+    formData.append('model', 'whisper-1');
+    formData.append('language', 'en');
+
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Whisper transcription error:', response.status, errorText);
+      return '';
+    }
+
+    const data = await response.json();
+    return data.text || '';
+  } catch (error) {
+    console.error('Transcription error:', error);
+    return '';
+  }
+}
+
+// ============================================
+// Stance Classification (for Capture System)
+// ============================================
+
+export type AIStance = 'endorse' | 'dispute' | 'complicated' | 'changed_my_mind';
+
+const STANCE_CLASSIFICATION_PROMPT = `Given a claim and the surrounding context where it was mentioned, determine the speaker's stance on the claim.
+
+Stances:
+- "endorse": The speaker agrees with or supports this claim
+- "dispute": The speaker disagrees with or opposes this claim  
+- "complicated": The speaker sees nuance, has mixed feelings, or is uncertain
+- "changed_my_mind": The speaker indicates this changed their view (words like "actually", "I used to think", "now I believe", "that changed my mind")
+
+Respond in JSON format:
+{
+  "stance": "endorse|dispute|complicated|changed_my_mind",
+  "confidence": 0.0-1.0
+}`;
+
+export async function classifyStance(
+  claimText: string,
+  surroundingText: string
+): Promise<{ stance: AIStance; confidence: number }> {
+  try {
+    const result = await claudeJSON<{ stance: AIStance; confidence: number }>({
+      system: STANCE_CLASSIFICATION_PROMPT,
+      user: `Context: "${surroundingText.slice(0, 1500)}"\n\nClaim: "${claimText}"`,
+      model: FAST_MODEL,
+      temperature: 0.1,
+      maxTokens: 100,
+    });
+
+    const validStances: AIStance[] = ['endorse', 'dispute', 'complicated', 'changed_my_mind'];
+    if (!validStances.includes(result.stance)) {
+      return { stance: 'endorse', confidence: 0.5 };
+    }
+
+    return {
+      stance: result.stance,
+      confidence: result.confidence ?? 0.7,
+    };
+  } catch (error) {
+    console.error('Stance classification error:', error);
+    return { stance: 'endorse', confidence: 0.5 };
+  }
+}
+
+// ============================================
+// Spoken-Mode Claim Extraction (for Voice Capture)
+// ============================================
+
+function buildSpokenExtractionPrompt(existingConcepts: string[]): string {
+  const conceptGuidance = existingConcepts.length > 0
+    ? `\n\nIMPORTANT — The user already has these concept clusters in their map:\n${existingConcepts.map(c => `  - ${c}`).join('\n')}\n\nWhen listing concepts for a claim, REUSE labels from this list whenever the topic matches or is closely related. Only create a new concept label if the topic genuinely doesn't fit any existing cluster.`
+    : '';
+
+  return `You are an expert at extracting core claims from SPOKEN transcripts.
+
+Spoken language is messy. You must:
+1. Handle self-corrections: When someone says "actually no, I mean..." or "wait, what I really think is...", take the CORRECTED version only.
+2. Drop filler and hedges: Ignore "just finished," "honestly," "I think," "like," "you know," and similar conversational filler.
+3. Segment multi-topic rambles: If someone talks about multiple unrelated topics, extract claims from each as separate items.
+4. Recognize revision language: Words like "that changed my mind," "I used to think X but now," "this convinced me" indicate the person's view evolved.
+
+Extract the 1-5 most important claims being made. For each claim:
+1. State the claim as a clear, standalone statement (cleaned up from spoken language)
+2. Classify the type: factual, opinion, prediction, policy
+3. Rate your confidence 0-1 that this is the core claim
+4. List 1-3 substantive concepts/topics this claim relates to${conceptGuidance}
+5. If this claim represents a mind-change ("that changed my thinking..."), set changedMind: true
+
+═══════════════════════════════════════════════════════════════════
+CONCEPT QUALITY RULES (CRITICAL — follow strictly):
+═══════════════════════════════════════════════════════════════════
+
+A VALID concept is a domain, field, or topic that:
+✓ Could be the subject of academic study, policy debate, or thoughtful essay
+✓ People can meaningfully agree or disagree about
+✓ Represents a coherent area of knowledge or discourse
+
+NEVER output these types of labels as concepts:
+✗ UI actions: scrolling, clicking, browsing, loading, updating, checking
+✗ Tech elements: inbox, notifications, settings, dashboard, app, website
+✗ Vague words: thing, stuff, something, way, approach, most, change
+✗ Function words: just, only, really, very, much, many, some
+
+Use broad, stable topic labels (e.g. "housing policy" not "September rent tweet").
+═══════════════════════════════════════════════════════════════════
+
+Respond in JSON format:
+{
+  "claims": [
+    {
+      "text": "The claim as a clear statement",
+      "type": "opinion",
+      "confidence": 0.85,
+      "concepts": ["concept1", "concept2"],
+      "changedMind": false
+    }
+  ],
+  "primaryTopic": "main topic",
+  "sentiment": "positive|negative|neutral|mixed"
+}`;
+}
+
+export async function extractClaimsFromSpokenText(
+  content: {
+    title: string;
+    text?: string;
+    url: string;
+  },
+  existingConcepts: string[] = [],
+): Promise<ContentAnalysis & { claims: (ExtractedClaim & { changedMind?: boolean })[] }> {
+  const contentText = content.text 
+    ? `Transcript: ${content.text.slice(0, 10000)}`
+    : `Title: ${content.title}`;
+
+  const systemPrompt = buildSpokenExtractionPrompt(existingConcepts);
+
+  try {
+    const result = await claudeJSON<ContentAnalysis & { claims: (ExtractedClaim & { changedMind?: boolean })[] }>({
+      system: systemPrompt,
+      user: contentText,
+      temperature: 0.3,
+      maxTokens: 1500,
+    });
+    
+    return {
+      claims: result.claims || [],
+      primaryTopic: result.primaryTopic || 'general',
+      sentiment: result.sentiment || 'neutral',
+    };
+  } catch (error) {
+    console.error('Spoken extraction error:', error);
+    
+    return {
+      claims: [{
+        text: `[Pending review] ${content.title}`,
+        type: 'opinion',
+        confidence: 0,
+        concepts: [],
+      }],
+      primaryTopic: 'unknown',
+      sentiment: 'neutral',
+    };
+  }
+}

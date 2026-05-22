@@ -94,27 +94,49 @@ class ShareViewController: UIViewController {
     private func saveToSharedContainer(url: String?, text: String?, title: String?) {
         guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else { return }
         
-        var sharedData: [String: Any] = [
+        // New capture-system payload (drained by useCaptureDrain hook in host app)
+        var capturePayload: [String: Any] = [
+            "modality": "share_sheet",
+            "createdAt": ISO8601DateFormatter().string(from: Date()),
             "timestamp": Date().timeIntervalSince1970
         ]
         
-        if let url = url {
-            sharedData["url"] = url
-        }
         if let text = text {
-            sharedData["text"] = text
+            capturePayload["rawText"] = text
         }
-        if let title = title {
-            sharedData["title"] = title
+        
+        if let url = url {
+            var source: [String: Any] = ["url": url, "contentType": "article"]
+            if let title = title {
+                source["title"] = title
+            }
+            capturePayload["source"] = source
+        } else if let title = title {
+            capturePayload["source"] = ["title": title, "contentType": "article"]
         }
+        
+        var pendingCaptures = sharedDefaults.array(forKey: "pendingCaptures") as? [[String: Any]] ?? []
+        pendingCaptures.append(capturePayload)
+        
+        if pendingCaptures.count > 50 {
+            pendingCaptures = Array(pendingCaptures.suffix(50))
+        }
+        
+        sharedDefaults.set(pendingCaptures, forKey: "pendingCaptures")
+        
+        // Legacy "pendingShares" key kept for backwards compatibility during rollout
+        var sharedData: [String: Any] = [
+            "timestamp": Date().timeIntervalSince1970
+        ]
+        if let url = url { sharedData["url"] = url }
+        if let text = text { sharedData["text"] = text }
+        if let title = title { sharedData["title"] = title }
         
         var pendingShares = sharedDefaults.array(forKey: "pendingShares") as? [[String: Any]] ?? []
         pendingShares.append(sharedData)
-        
         if pendingShares.count > 50 {
             pendingShares = Array(pendingShares.suffix(50))
         }
-        
         sharedDefaults.set(pendingShares, forKey: "pendingShares")
     }
     

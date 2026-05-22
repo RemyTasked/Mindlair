@@ -15,7 +15,8 @@ export async function updateBeliefGraph(
   userId: string,
   claimId: string,
   stance: Stance,
-  conceptIds: string[]
+  conceptIds: string[],
+  confidence: number = 1.0
 ): Promise<void> {
   if (stance === 'skip' || conceptIds.length === 0) {
     return;
@@ -24,7 +25,7 @@ export async function updateBeliefGraph(
   const direction = stanceToDirection(stance);
 
   for (const conceptId of conceptIds) {
-    await updateBelief(userId, conceptId, direction);
+    await updateBelief(userId, conceptId, direction, confidence);
   }
 
   await checkForTensions(userId, conceptIds);
@@ -91,7 +92,8 @@ export async function updateBeliefGraphFromComment(
 async function updateBelief(
   userId: string,
   conceptId: string,
-  direction: BeliefDirection
+  direction: BeliefDirection,
+  confidence: number = 1.0
 ): Promise<void> {
   const existing = await db.belief.findUnique({
     where: {
@@ -105,7 +107,7 @@ async function updateBelief(
         userId,
         conceptId,
         direction,
-        strength: 0.5,
+        strength: 0.5 * confidence,
         stability: 0.3,
         positionCount: 1,
         sameDirectionStreak: 1,
@@ -119,10 +121,11 @@ async function updateBelief(
     ? existing.sameDirectionStreak + 1 
     : 1;
 
-  const newStrength = calculateNewStrength(
+  const newStrength = calculateNewStrengthWithConfidence(
     existing.strength,
     existing.positionCount,
-    direction === existing.direction
+    direction === existing.direction,
+    confidence
   );
 
   const newStability = calculateStability(
@@ -171,6 +174,23 @@ function calculateNewStrength(
     return Math.min(1, currentStrength + 0.1 * decayFactor);
   } else {
     return Math.max(0.1, currentStrength * 0.9);
+  }
+}
+
+function calculateNewStrengthWithConfidence(
+  currentStrength: number,
+  positionCount: number,
+  sameDirection: boolean,
+  confidence: number
+): number {
+  const decayFactor = 1 / (positionCount + 1);
+  const weightedImpact = 0.1 * decayFactor * confidence;
+  
+  if (sameDirection) {
+    return Math.min(1, currentStrength + weightedImpact);
+  } else {
+    const oppositionStrength = 1 - (0.1 * (1 - confidence));
+    return Math.max(0.1, currentStrength * oppositionStrength);
   }
 }
 

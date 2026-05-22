@@ -45,11 +45,33 @@
           ]
         },
         {
+          "action": "android.intent.action.SEND_MULTIPLE",
+          "category": ["android.intent.category.DEFAULT"],
+          "data": [
+            { "mimeType": "text/plain" }
+          ]
+        },
+        {
           "action": "android.intent.action.VIEW",
           "category": ["android.intent.category.DEFAULT", "android.intent.category.BROWSABLE"],
           "data": [
             { "scheme": "mindlair" },
-            { "scheme": "https", "host": "mindlair.app", "pathPrefix": "/share" }
+            { "scheme": "https", "host": "mindlair.app", "pathPrefix": "/share" },
+            { "scheme": "https", "host": "mindlair.app", "pathPrefix": "/voice-capture" }
+          ]
+        }
+      ],
+      "shortcuts": [
+        {
+          "shortcutId": "voice-capture",
+          "shortcutShortLabel": "Voice capture",
+          "shortcutLongLabel": "Start voice capture",
+          "intents": [
+            {
+              "action": "android.intent.action.VIEW",
+              "data": "mindlair://voice-capture",
+              "categories": ["android.intent.category.DEFAULT", "android.intent.category.BROWSABLE"]
+            }
           ]
         }
       ]
@@ -59,11 +81,26 @@
     },
     "plugins": [
       "expo-secure-store",
+      "expo-av",
       [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
           "color": "#10b981"
+        }
+      ],
+      [
+        "expo-quick-actions",
+        {
+          "iosActions": [
+            {
+              "id": "voice-capture",
+              "title": "Voice capture",
+              "subtitle": "Start a new voice note",
+              "icon": "symbol:mic.fill",
+              "params": { "href": "/voice-capture" }
+            }
+          ]
         }
       ]
     ],

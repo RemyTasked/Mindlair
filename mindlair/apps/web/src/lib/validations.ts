@@ -12,6 +12,41 @@ export const surfaceSchema = z.enum([
   'desktop_app',
   'safari_icloud',
   'share_target',
+  // Capture system surfaces
+  'share_sheet',
+  'voice_capture',
+  'react_later',
+]);
+
+export const captureModalitySchema = z.enum([
+  'share_sheet',
+  'voice',
+  'typed',
+  'extension',
+]);
+
+export const captureStatusSchema = z.enum([
+  'queued',
+  'processing',
+  'awaiting_confirmation',
+  'awaiting_reaction',
+  'confirmed',
+  'dismissed',
+  'failed',
+]);
+
+export const aiStanceSchema = z.enum([
+  'endorse',
+  'dispute',
+  'complicated',
+  'changed_my_mind',
+]);
+
+export const feedbackActionSchema = z.enum([
+  'kept',
+  'dropped',
+  'edited',
+  'stance_flipped',
 ]);
 
 export const stanceSchema = z.enum(['agree', 'disagree', 'complicated', 'skip']);

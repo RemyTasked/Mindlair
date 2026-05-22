@@ -54,6 +54,9 @@ model User {
   weeklyRecaps      WeeklyRecap[]
   userMetrics       UserMetrics?
 
+  // Capture System
+  captures          Capture[]
+
   @@map("users")
 }
 
@@ -162,7 +165,7 @@ model Source {
   author String?
 
   contentType String // article, video, podcast, thread
-  surface     String // chrome_extension, ios_share, readwise_import, etc.
+  surface     String // chrome_extension, ios_share, share_sheet, voice_capture, etc.
 
   // Engagement metrics
   dwellTimeMs       Int?
@@ -175,12 +178,16 @@ model Source {
   videoDurationMs Int?
   publishedAt     DateTime?
 
+  // Transcript for audio/video content or fetched article text
+  transcriptText String? @db.Text
+
   consumedAt DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  claims Claim[]
-  post   Post?    // Back-relation to Post (publishing layer)
+  claims   Claim[]
+  post     Post?      // Back-relation to Post (publishing layer)
+  captures Capture[]  // Captures that reference this source
 
   @@index([userId, consumedAt])
   @@index([url])
@@ -211,6 +218,12 @@ model Claim {
   // Cluster assignment (updated by nightly job)
   clusterId String?
 
+  // Capture system fields
+  captureId     String?  // Link to the Capture that created this claim
+  capture       Capture? @relation(fields: [captureId], references: [id], onDelete: SetNull)
+  extractedFrom String?  // reaction | source - what text was extracted from
+  aiStance      String?  // endorse | dispute | complicated | changed_my_mind - AI-suggested stance
+
   positions  Position[]
   claimChain ClaimChain?
 
@@ -223,6 +236,7 @@ model Claim {
 
   @@index([sourceId])
   @@index([clusterId])
+  @@index([captureId])
   @@map("claims")
 }
 
@@ -233,9 +247,10 @@ model Position {
   claimId String
   claim   Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
-  stance  String // agree, disagree, complicated, skip
-  note    String?
-  context String // realtime, digest
+  stance     String // agree, disagree, complicated, skip
+  note       String?
+  context    String // realtime, digest, capture
+  confidence Float  @default(1.0) // Modality-based weight for belief math (1.0=published, 0.85=voice/share, 0.45=source-only, 0.25=extension)
 
   // Evolution tracking
   supersedesId String?
@@ -809,4 +824,56 @@ model UserGrowthSnapshot {
 
   @@index([userId, snapshotAt])
   @@map("user_growth_snapshots")
+}
+
+// ============================================
+// Capture System
+// ============================================
+
+model Capture {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modality        String    // share_sheet | voice | typed | extension
+  status          String    // queued | processing | awaiting_confirmation | awaiting_reaction | confirmed | dismissed | failed
+  rawText         String?   @db.Text // typed reaction OR transcript
+  rawAudioUrl     String?   // Cloudinary blob, voice only
+  rawAudioMs      Int?      // Duration of audio in milliseconds
+  sourceId        String?   // Optional shared/voice-described source
+  source          Source?   @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  candidateClaims Json?     // Extractor output, pre-confirmation
+  errorReason     String?   // Error message if status=failed
+  
+  // For follow-up captures (e.g., clarification needed)
+  parentCaptureId String?
+  parentCapture   Capture?  @relation("CaptureFollowUp", fields: [parentCaptureId], references: [id], onDelete: SetNull)
+  followUpCaptures Capture[] @relation("CaptureFollowUp")
+
+  createdAt       DateTime  @default(now())
+  confirmedAt     DateTime?
+
+  claims          Claim[]   // Claims linked back to this capture
+  feedback        ExtractionFeedback[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@index([parentCaptureId])
+  @@map("captures")
+}
+
+model ExtractionFeedback {
+  id           String   @id @default(cuid())
+  captureId    String
+  capture      Capture  @relation(fields: [captureId], references: [id], onDelete: Cascade)
+  claimText    String   @db.Text // Text as extracted (pre-edit)
+  finalText    String?  @db.Text // Text user committed (post-edit, null if dropped)
+  action       String   // kept | dropped | edited | stance_flipped
+  stanceBefore String?  // AI-suggested stance before flip
+  stanceAfter  String?  // User-selected stance after flip
+  modelVersion String?  // AI model version used for extraction
+  createdAt    DateTime @default(now())
+
+  @@index([captureId])
+  @@index([action, createdAt])
+  @@map("extraction_feedback")
 }

@@ -12,6 +12,7 @@ import {
   type LerpedConceptActivity,
 } from "@/lib/map/timeline-scrub";
 import MapTimelineScrubber from "@/components/map-timeline-scrubber";
+import { OriginalCaptureDrawer } from "@/components/original-capture-drawer";
 
 interface UserCategory {
   name: string;
@@ -198,6 +199,7 @@ export default function PersonalBeliefMap({
   const [recentLoading, setRecentLoading] = useState(false);
   const [recentPositions, setRecentPositions] = useState<MapRecentPosition[] | null>(null);
   const [recentError, setRecentError] = useState(false);
+  const [originalCaptureClaimId, setOriginalCaptureClaimId] = useState<string | null>(null);
   const [timeValue, setTimeValue] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1760,6 +1762,24 @@ export default function PersonalBeliefMap({
                         <span style={{ fontSize: 9, color: C.muted }}>
                           {new Date(row.createdAt).toLocaleDateString()}
                         </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOriginalCaptureClaimId(row.claim.id);
+                          }}
+                          style={{
+                            marginLeft: "auto",
+                            background: "transparent",
+                            border: "none",
+                            color: C.accent,
+                            fontSize: 10,
+                            cursor: "pointer",
+                            padding: 0,
+                            textDecoration: "underline",
+                          }}
+                        >
+                          View original
+                        </button>
                       </div>
                     </div>
                   );
@@ -1842,6 +1862,14 @@ export default function PersonalBeliefMap({
           {readiness.sourceRichClusterCount === 1 ? "" : "s"} with extracted claims from your sources
         </span>
       </div>
+
+      {originalCaptureClaimId && (
+        <OriginalCaptureDrawer
+          claimId={originalCaptureClaimId}
+          open={true}
+          onClose={() => setOriginalCaptureClaimId(null)}
+        />
+      )}
     </div>
   );
 }
