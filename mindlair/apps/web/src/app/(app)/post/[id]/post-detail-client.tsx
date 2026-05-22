@@ -21,6 +21,12 @@ import {
   Calendar,
   Highlighter,
   BarChart2,
+  ExternalLink,
+  FileText,
+  Video,
+  Mic,
+  BookOpen,
+  Link as LinkIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -68,6 +74,16 @@ interface PostDetail {
     publishedAt: string | null;
     author: { id: string; name: string | null; avatarUrl: string | null };
   } | null;
+  citations?: Array<{
+    id: string;
+    url: string;
+    title: string | null;
+    author: string | null;
+    outlet: string | null;
+    excerpt: string | null;
+    contentType: string;
+    position: number;
+  }>;
   totalReactions: number;
   userReaction: string | null;
   reactionCounts: Record<string, number> | null;
@@ -637,6 +653,51 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
             }
           `}</style>
 
+          {/* Citations & Sources */}
+          {post.citations && post.citations.length > 0 && (
+            <div style={{
+              marginTop: isNarrow ? 20 : 32,
+              paddingTop: isNarrow ? 16 : 24,
+              borderTop: `1px solid ${C.border}`,
+            }}>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 12,
+              }}>
+                <LinkIcon size={14} style={{ color: C.muted }} />
+                <h3 style={{
+                  color: C.textSoft,
+                  fontSize: isNarrow ? 13 : 14,
+                  fontWeight: 600,
+                  margin: 0,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}>
+                  Sources
+                </h3>
+              </div>
+              <ol style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}>
+                {post.citations.map((c, i) => (
+                  <CitationItem
+                    key={c.id}
+                    citation={c}
+                    index={i + 1}
+                    isNarrow={isNarrow}
+                  />
+                ))}
+              </ol>
+            </div>
+          )}
+
           {/* Topic Tags */}
           {post.topicTags.length > 0 && (
             <div style={{ 
@@ -817,5 +878,128 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
         variant={isNarrow ? "bottom" : "side"}
       />
     </div>
+  );
+}
+
+const CITATION_ICONS: Record<string, React.ComponentType<{ size?: number; style?: React.CSSProperties }>> = {
+  article: FileText,
+  paper: FileText,
+  video: Video,
+  podcast: Mic,
+  book: BookOpen,
+  other: LinkIcon,
+};
+
+function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+function CitationItem({
+  citation,
+  index,
+  isNarrow,
+}: {
+  citation: NonNullable<PostDetail["citations"]>[number];
+  index: number;
+  isNarrow: boolean;
+}) {
+  const Icon = CITATION_ICONS[citation.contentType] || LinkIcon;
+  const displayTitle = citation.title || getDomain(citation.url);
+
+  return (
+    <li
+      style={{
+        background: C.bg,
+        border: `1px solid ${C.border}`,
+        borderRadius: 10,
+        padding: isNarrow ? "12px 14px" : "14px 16px",
+        display: "flex",
+        gap: 12,
+        alignItems: "flex-start",
+      }}
+    >
+      <div
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 8,
+          background: `${C.accent}15`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={14} style={{ color: C.accent }} />
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <a
+          href={citation.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: C.text,
+            fontSize: isNarrow ? 14 : 15,
+            fontWeight: 500,
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <span style={{ color: C.muted, fontVariantNumeric: "tabular-nums" }}>
+            [{index}]
+          </span>
+          {displayTitle}
+          <ExternalLink size={12} style={{ color: C.muted, flexShrink: 0 }} />
+        </a>
+
+        <div
+          style={{
+            color: C.muted,
+            fontSize: 12,
+            marginTop: 2,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            alignItems: "center",
+          }}
+        >
+          {citation.outlet && <span>{citation.outlet}</span>}
+          {citation.author && (
+            <>
+              {citation.outlet && <span>·</span>}
+              <span>{citation.author}</span>
+            </>
+          )}
+          {!citation.outlet && !citation.author && (
+            <span>{getDomain(citation.url)}</span>
+          )}
+        </div>
+
+        {citation.excerpt && (
+          <blockquote
+            style={{
+              margin: "8px 0 0 0",
+              padding: "8px 12px",
+              borderLeft: `2px solid ${C.accent}`,
+              color: C.textSoft,
+              fontSize: 13,
+              lineHeight: 1.5,
+              fontStyle: "italic",
+              background: `${C.accent}08`,
+              borderRadius: "0 6px 6px 0",
+            }}
+          >
+            &ldquo;{citation.excerpt}&rdquo;
+          </blockquote>
+        )}
+      </div>
+    </li>
   );
 }

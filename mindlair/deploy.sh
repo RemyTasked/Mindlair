@@ -41,6 +41,7 @@ BASELINE_MIGRATIONS="
 20260518000000_add_card_system
 20260518000001_enable_pgvector
 20260521000000_publishing_upgrades
+20260521200000_capture_system
 "
 
 # Migration names from previous app incarnations that may have left FAILED

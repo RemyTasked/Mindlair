@@ -7,6 +7,7 @@ import {
   validateReferencedPostId,
 } from '@/lib/posts/referenced-post';
 import { isValidSlug, isSlugAvailable, isCuid } from '@/lib/utils/slug';
+import { validateCitations, serializeCitation } from '@/lib/posts/citations';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -29,6 +30,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           select: { id: true, name: true, avatarUrl: true },
         },
         referencedPost: { select: referencedPostSelect },
+        citations: {
+          orderBy: { position: 'asc' },
+        },
         reactions: user
           ? {
               where: { userId: user.id },
@@ -115,6 +119,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         reactionCounts,
         referencedPostId: post.referencedPostId,
         referencedPost: serializeReferencedPost(post.referencedPost),
+        citations: post.citations.map(serializeCitation),
         commentsEnabled: post.commentsEnabled,
         isAuthor: user?.id === post.authorId,
         createdAt: post.createdAt.toISOString(),
@@ -335,6 +340,26 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         : String(body.seoDescription).trim().slice(0, 160);
     }
 
+    let pendingCitations: Array<{
+      url: string;
+      title: string | null;
+      author: string | null;
+      outlet: string | null;
+      excerpt: string | null;
+      contentType: string;
+      position: number;
+    }> | null = null;
+    if (body.citations !== undefined) {
+      const result = validateCitations(body.citations);
+      if (!result.ok) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: result.message },
+          { status: 400 }
+        );
+      }
+      pendingCitations = result.citations;
+    }
+
     // For published posts, create a revision before updating
     if (isPublished) {
       await db.postRevision.create({
@@ -359,9 +384,34 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       data: updates,
     });
 
+    if (pendingCitations !== null) {
+      await db.$transaction([
+        db.postCitation.deleteMany({ where: { postId: id } }),
+        ...(pendingCitations.length > 0
+          ? [
+              db.postCitation.createMany({
+                data: pendingCitations.map((c) => ({
+                  postId: id,
+                  url: c.url,
+                  title: c.title,
+                  author: c.author,
+                  outlet: c.outlet,
+                  excerpt: c.excerpt,
+                  contentType: c.contentType,
+                  position: c.position,
+                })),
+              }),
+            ]
+          : []),
+      ]);
+    }
+
     const withRef = await db.post.findUnique({
       where: { id: updated.id },
-      include: { referencedPost: { select: referencedPostSelect } },
+      include: {
+        referencedPost: { select: referencedPostSelect },
+        citations: { orderBy: { position: 'asc' } },
+      },
     });
 
     // Log analytics event for post edit
@@ -398,6 +448,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         referencedPostId: updated.referencedPostId,
         referencedAnnotationId: updated.referencedAnnotationId,
         referencedPost: serializeReferencedPost(withRef?.referencedPost ?? null),
+        citations: (withRef?.citations ?? []).map(serializeCitation),
         createdAt: updated.createdAt.toISOString(),
         updatedAt: updated.updatedAt.toISOString(),
       },

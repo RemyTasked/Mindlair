@@ -511,6 +511,9 @@ model Post {
   commentsEnabled Boolean   @default(true)
   comments        Comment[]
 
+  // External citations (URLs, papers, articles authors are referencing)
+  citations       PostCitation[]
+
   @@index([authorId])
   @@index([publishedAt])
   @@index([status])
@@ -519,6 +522,25 @@ model Post {
   @@index([referencedAnnotationId])
   @@index([slug])
   @@map("posts")
+}
+
+model PostCitation {
+  id          String   @id @default(cuid())
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  url         String
+  title       String?
+  author      String?
+  outlet      String?
+  excerpt     String?  @db.Text
+  contentType String   @default("article") // article, video, podcast, paper, book, other
+
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([postId])
+  @@map("post_citations")
 }
 
 model PostReaction {

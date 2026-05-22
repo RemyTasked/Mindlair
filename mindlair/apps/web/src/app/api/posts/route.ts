@@ -7,6 +7,7 @@ import {
   validateReferencedPostId,
 } from '@/lib/posts/referenced-post';
 import { isValidSlug, isSlugAvailable } from '@/lib/utils/slug';
+import { validateCitations } from '@/lib/posts/citations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -135,7 +136,19 @@ export async function POST(request: NextRequest) {
       slug: rawSlug,
       seoTitle,
       seoDescription,
+      citations: rawCitations,
     } = body;
+
+    let citationData: ReturnType<typeof validateCitations> = { ok: true, citations: [] };
+    if (rawCitations !== undefined && rawCitations !== null) {
+      citationData = validateCitations(rawCitations);
+      if (!citationData.ok) {
+        return NextResponse.json(
+          { code: 'VALIDATION_ERROR', message: citationData.message },
+          { status: 400 }
+        );
+      }
+    }
 
     let referencedPostId: string | null = null;
     if (rawRef !== undefined && rawRef !== null) {
@@ -308,6 +321,21 @@ export async function POST(request: NextRequest) {
         ...(slug ? { slug } : {}),
         ...(validSeoTitle ? { seoTitle: validSeoTitle } : {}),
         ...(validSeoDescription ? { seoDescription: validSeoDescription } : {}),
+        ...(citationData.ok && citationData.citations.length > 0
+          ? {
+              citations: {
+                create: citationData.citations.map((c) => ({
+                  url: c.url,
+                  title: c.title,
+                  author: c.author,
+                  outlet: c.outlet,
+                  excerpt: c.excerpt,
+                  contentType: c.contentType,
+                  position: c.position,
+                })),
+              },
+            }
+          : {}),
       },
     });
 

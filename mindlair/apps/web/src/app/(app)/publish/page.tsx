@@ -37,6 +37,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RichEditor, getWordCount } from "@/components/rich-editor";
 import { formatPublicName } from "@/lib/display-name-policy";
+import { CitationsEditor, type CitationDraft } from "@/components/citations-editor";
 
 
 const C = {
@@ -124,6 +125,7 @@ function PublishPageContent() {
   const [slug, setSlug] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
+  const [citations, setCitations] = useState<CitationDraft[]>([]);
   
   // Preflight state
   const [showPreflightModal, setShowPreflightModal] = useState(false);
@@ -183,6 +185,25 @@ function PublishPageContent() {
           setSlug(post.slug || "");
           setSeoTitle(post.seoTitle || "");
           setSeoDescription(post.seoDescription || "");
+          if (Array.isArray(post.citations)) {
+            setCitations(
+              post.citations.map((c: {
+                url: string;
+                title: string | null;
+                author: string | null;
+                outlet: string | null;
+                excerpt: string | null;
+                contentType: string;
+              }) => ({
+                url: c.url,
+                title: c.title,
+                author: c.author,
+                outlet: c.outlet,
+                excerpt: c.excerpt,
+                contentType: c.contentType,
+              }))
+            );
+          }
           
           if (post.headlineClaim) {
             setClaimEdited(true);
@@ -477,6 +498,7 @@ function PublishPageContent() {
             slug: slug || null,
             seoTitle: seoTitle || null,
             seoDescription: seoDescription || null,
+            citations,
           }),
         });
         
@@ -501,6 +523,7 @@ function PublishPageContent() {
             ...(slug ? { slug } : {}),
             ...(seoTitle ? { seoTitle } : {}),
             ...(seoDescription ? { seoDescription } : {}),
+            ...(citations.length > 0 ? { citations } : {}),
           }),
         });
         
@@ -574,6 +597,7 @@ function PublishPageContent() {
             ...(slug ? { slug } : {}),
             ...(seoTitle ? { seoTitle } : {}),
             ...(seoDescription ? { seoDescription } : {}),
+            ...(citations.length > 0 ? { citations } : {}),
           }),
         });
         
@@ -585,6 +609,13 @@ function PublishPageContent() {
         const data = await response.json();
         postId = data.post.id;
         setDraftId(postId);
+      } else {
+        // Persist any pending citation edits before publishing
+        await fetch(`/api/posts/${postId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ citations }),
+        }).catch(() => undefined);
       }
       
       const publishResponse = await fetch(`/api/posts/${postId}/publish`, {
@@ -629,6 +660,7 @@ function PublishPageContent() {
             ...(slug ? { slug } : {}),
             ...(seoTitle ? { seoTitle } : {}),
             ...(seoDescription ? { seoDescription } : {}),
+            ...(citations.length > 0 ? { citations } : {}),
           }),
         });
         
@@ -1426,6 +1458,20 @@ function PublishPageContent() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Citations */}
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ color: C.textSoft, fontSize: 14, fontWeight: 500, display: "block", marginBottom: 6 }}>
+            Citations & sources
+          </label>
+          <p style={{ color: C.muted, fontSize: 12, marginBottom: 12 }}>
+            Link to articles, papers, videos, or other sources you&apos;re drawing on. We&apos;ll auto-fill the title from the URL when possible.
+          </p>
+          <CitationsEditor
+            citations={citations}
+            onChange={setCitations}
+          />
         </div>
 
         {/* Settings (Desktop: Inline, Mobile: Sheet) */}
