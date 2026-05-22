@@ -292,14 +292,20 @@ export default function ProfilePage() {
                   <strong style={{ color: C.text }}>{profile.user.postCount}</strong>{" "}
                   <span style={{ color: C.muted }}>posts</span>
                 </span>
-                <span>
+                <Link
+                  href={`/profile/${userId}/subscriptions?type=subscribers`}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
                   <strong style={{ color: C.text }}>{profile.user.subscriberCount}</strong>{" "}
                   <span style={{ color: C.muted }}>subscribers</span>
-                </span>
-                <span>
+                </Link>
+                <Link
+                  href={`/profile/${userId}/subscriptions?type=subscriptions`}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
                   <strong style={{ color: C.text }}>{profile.user.subscriptionCount}</strong>{" "}
                   <span style={{ color: C.muted }}>subscriptions</span>
-                </span>
+                </Link>
               </div>
             </div>
           </div>

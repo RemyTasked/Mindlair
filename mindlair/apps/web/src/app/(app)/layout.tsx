@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint, FileText } from "lucide-react";
+import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint, FileText, Users } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationBanner } from "@/components/push-notifications";
 import { VoiceCaptureButton } from "@/components/voice-capture-button";
@@ -91,6 +91,7 @@ function AppLayoutInner({
             <NavLink href="/my-posts" icon={FileText}>My Posts</NavLink>
             <NavLink href="/inbox" icon={Inbox}>Inbox</NavLink>
             <NavLink href="/map" icon={Map}>Map</NavLink>
+            <NavLink href="/subscriptions" icon={Users}>Network</NavLink>
             <NavLink href="/fingerprint" icon={Fingerprint}>Fingerprint</NavLink>
             <NavLink href="/timeline" icon={Brain}>Timeline</NavLink>
             <NavLink href="/nudges" icon={Lightbulb}>Nudges</NavLink>
