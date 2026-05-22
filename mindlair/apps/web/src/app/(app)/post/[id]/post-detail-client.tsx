@@ -530,7 +530,7 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
           />
           
           {/* Annotation controls */}
-          {post.userReaction && post.userReaction !== "skip" && (
+          {(Boolean(post.publishedAt) || post.status === "published") && (
             <div
               style={{
                 display: "flex",
@@ -539,17 +539,22 @@ export function PostDetailClient({ postId, initialPost, initialError }: PostDeta
                 gap: 12,
                 marginTop: 16,
                 padding: "10px 14px",
-                background: `${C.accent}10`,
-                border: `1px solid ${C.accent}25`,
+                background: post.userReaction && post.userReaction !== "skip"
+                  ? `${C.accent}10`
+                  : `${C.surface}`,
+                border: `1px solid ${post.userReaction && post.userReaction !== "skip" ? `${C.accent}25` : C.border}`,
                 borderRadius: 8,
                 flexWrap: "wrap",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8, color: C.textSoft, fontSize: 13 }}>
-                <Highlighter size={16} style={{ color: C.accent }} />
-                <span>Select text to add annotations or write a response</span>
+                <Highlighter size={16} style={{ color: post.userReaction && post.userReaction !== "skip" ? C.accent : C.muted }} />
+                {post.userReaction && post.userReaction !== "skip"
+                  ? <span>Select text to annotate or write a response</span>
+                  : <span style={{ color: C.muted }}>React to this post to leave annotations</span>
+                }
               </div>
-              {annotations.length > 0 && (
+              {annotations.length > 0 && post.userReaction && post.userReaction !== "skip" && (
                 <button
                   onClick={toggleHighlights}
                   style={{

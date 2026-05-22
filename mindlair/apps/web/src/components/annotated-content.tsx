@@ -294,7 +294,7 @@ export function AnnotatedContent({
   const handleAnnotate = useCallback(() => {
     if (!selection) return;
     if (!hasReacted) {
-      toast.info('Please react to the post first to add annotations');
+      toast.info('React to this post first (agree, disagree, or complicated) to add annotations');
       return;
     }
     setPendingSelection(selection);
@@ -305,7 +305,7 @@ export function AnnotatedContent({
   const handleWriteResponse = useCallback(() => {
     if (!selection) return;
     if (!hasReacted) {
-      toast.info('Please react to the post first to write a response');
+      toast.info('React to this post first to write a response');
       return;
     }
     setPendingSelection(selection);
@@ -344,14 +344,12 @@ export function AnnotatedContent({
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
-      {hasReacted && (
-        <AnnotationToolbar
-          selection={selection}
-          onAnnotate={handleAnnotate}
-          onWriteResponse={handleWriteResponse}
-          containerRef={contentRef}
-        />
-      )}
+      <AnnotationToolbar
+        selection={selection}
+        onAnnotate={handleAnnotate}
+        onWriteResponse={handleWriteResponse}
+        containerRef={contentRef}
+      />
 
       {showComposer && pendingSelection && (
         <AnnotationComposer

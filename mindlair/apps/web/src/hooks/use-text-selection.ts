@@ -105,7 +105,7 @@ export function useTextSelection(containerRef: React.RefObject<HTMLElement | nul
     const handleSelectionEnd = () => {
       isSelectingRef.current = false;
       // Longer delay for mobile to let the selection finalize
-      setTimeout(handleSelectionChange, 50);
+      setTimeout(handleSelectionChange, 150);
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -114,12 +114,11 @@ export function useTextSelection(containerRef: React.RefObject<HTMLElement | nul
       }
     };
 
-    // Also listen for the native selectionchange event (works well on mobile)
+    // Listen for the native selectionchange event — critical on iOS where
+    // dragging selection handles doesn't fire touchend, only selectionchange.
     const handleNativeSelectionChange = () => {
-      if (!isSelectingRef.current) {
-        // Debounce to avoid rapid updates during selection
-        setTimeout(handleSelectionChange, 100);
-      }
+      // Debounce to avoid rapid updates during active selection gestures
+      setTimeout(handleSelectionChange, 100);
     };
 
     // Mouse events (desktop)
