@@ -96,7 +96,8 @@ export function middleware(request: NextRequest) {
   if (sitePassword) {
     const isPasswordRoute = pathname === '/password';
     const isPasswordApi = pathname === '/api/auth/site-password';
-    if (!isPasswordRoute && !isPasswordApi) {
+    const isCronRoute = pathname.startsWith('/api/cron/');
+    if (!isPasswordRoute && !isPasswordApi && !isCronRoute) {
       const accessCookie = request.cookies.get(SITE_ACCESS_COOKIE);
       if (accessCookie?.value !== sitePassword) {
         const base = process.env.NEXT_PUBLIC_APP_URL || request.url;
@@ -114,6 +115,11 @@ export function middleware(request: NextRequest) {
 
   // Handle API routes
   if (pathname.startsWith('/api/')) {
+    // Cron routes have their own auth (CRON_SECRET via Authorization header)
+    if (pathname.startsWith('/api/cron/')) {
+      return NextResponse.next();
+    }
+
     const apiKey = request.headers.get('x-api-key');
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
 

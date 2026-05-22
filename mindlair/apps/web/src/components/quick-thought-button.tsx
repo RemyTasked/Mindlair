@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { QuickThoughtModal } from "@/components/quick-thought-modal";
 
 export function QuickThoughtButton() {
   const [open, setOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (searchParams.get("qt") === "open") {
+      setOpen(true);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("qt");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+  }, [searchParams, router, pathname]);
 
   return (
     <>
