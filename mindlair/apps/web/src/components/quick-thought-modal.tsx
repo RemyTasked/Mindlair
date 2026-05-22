@@ -1300,7 +1300,8 @@ export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModa
                   Saved
                 </h3>
                 <p style={{ color: C.textSoft, fontSize: 13, margin: 0 }}>
-                  Your thought is on the map.
+                  Your thought is saved. It&apos;ll show on your map as your graph
+                  builds.
                 </p>
               </div>
             )}

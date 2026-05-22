@@ -147,9 +147,9 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
             {step === "install" &&
               "Want Mindlair to also read what you don't intentionally share? Install one or both of these."}
             {step === "firstThought" &&
-              "Add one quick thought before you go. It'll be the first seed on your map and gets the habit going."}
+              "Add one quick thought before you go. It's saved right away and starts your belief graph — the habit, not the full map view, comes first."}
             {step === "done" &&
-              "Your map starts now. Share, speak, or save for later — every input feeds the same pipeline."}
+              "You're set up. Keep capturing and reacting — your own map view will take shape as you go."}
           </p>
         </div>
 
@@ -495,6 +495,26 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                 </div>
               </div>
 
+              <div
+                style={{
+                  background: `${C.accent}08`,
+                  borderRadius: 10,
+                  border: `1px solid ${C.accent}25`,
+                  padding: "12px 14px",
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "flex-start",
+                }}
+              >
+                <Info className="w-4 h-4 shrink-0" style={{ color: C.accent, marginTop: 1 }} />
+                <p style={{ fontSize: 12, color: C.textSoft, lineHeight: 1.55, margin: 0 }}>
+                  Your thought is stored immediately. The map screen still shows
+                  a sample layout at first — it switches to your own graph once
+                  you&apos;ve added a bit more activity (more quick thoughts,
+                  reactions, or digests).
+                </p>
+              </div>
+
               {firstThoughtCaptured ? (
                 <div
                   style={{
@@ -533,7 +553,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                       First thought captured
                     </p>
                     <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
-                      It&apos;s on your map. Tap continue when you&apos;re ready.
+                      It&apos;s saved. Your personal map view will appear as you
+                      add more — tap continue when you&apos;re ready.
                     </p>
                   </div>
                 </div>
@@ -573,9 +594,14 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
                   marginBottom: 24,
                 }}
               >
-                <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.6 }}>
-                  Your map starts now. Share, speak, or save for later — every input
-                  feeds the same pipeline.
+                <p style={{ fontSize: 14, color: C.textSoft, lineHeight: 1.6, marginBottom: 10 }}>
+                  Share, speak, or save for later — every input feeds the same
+                  pipeline and builds toward your graph.
+                </p>
+                <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.55, margin: 0 }}>
+                  When you open the map, you&apos;ll still see a sample layout at
+                  first. Your first thought is already saved; keep capturing and
+                  your own map will replace it.
                 </p>
               </div>
 
