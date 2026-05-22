@@ -467,19 +467,8 @@ function MindlairMapDemo() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span style={{ fontSize: 13, color: C.accent }}>
-            ✨ This is sample data showing how your map could look.
+            ✨ Sample map. Capture a few thoughts and yours will start to form.
           </span>
-          <a
-            href="/settings"
-            style={{
-              fontSize: 13,
-              color: C.accent,
-              textDecoration: "underline",
-              fontWeight: 500,
-            }}
-          >
-            Install extension to build your own
-          </a>
         </div>
         <a href="/fingerprint" style={{
           background: `${C.surface}`,

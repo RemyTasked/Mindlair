@@ -71,14 +71,23 @@ export function PWAInstallPrompt() {
   if (isStandalone || !showPrompt) return null;
 
   return (
-    <div style={{
-      position: "fixed", bottom: 16, left: 16, right: 16,
+    <div className="mindlair-bottom-banner" style={{
+      position: "fixed",
+      bottom: "calc(170px + env(safe-area-inset-bottom, 0px))",
+      left: 16, right: 16,
       maxWidth: 380, marginLeft: "auto",
       background: C.surface, border: `1px solid ${C.border}`,
-      borderRadius: 14, padding: 16, zIndex: 50,
+      borderRadius: 14, padding: 16, zIndex: 40,
       boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
       fontFamily: "'Inter', system-ui, sans-serif",
     }}>
+      <style jsx>{`
+        @media (min-width: 1024px) {
+          :global(.mindlair-bottom-banner) {
+            bottom: 16px !important;
+          }
+        }
+      `}</style>
       <button onClick={handleDismiss} style={{
         position: "absolute", top: 10, right: 10, background: "none",
         border: "none", color: C.muted, cursor: "pointer", padding: 4,

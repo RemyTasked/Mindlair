@@ -70,6 +70,7 @@ type Step =
 interface QuickThoughtModalProps {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 const STANCE_LABELS: Record<Stance, string> = {
@@ -104,7 +105,7 @@ function formatDuration(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
+export function QuickThoughtModal({ open, onClose, onSuccess }: QuickThoughtModalProps) {
   const [step, setStep] = useState<Step>("select_mode");
   const [error, setError] = useState<string | null>(null);
   const [captureId, setCaptureId] = useState<string | null>(null);
@@ -329,6 +330,7 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
         throw new Error(data.message || "Failed to save");
       }
       setStep("success");
+      onSuccess?.();
       setTimeout(() => handleClose(), 1600);
     } catch (err) {
       console.error("Commit error:", err);
@@ -378,6 +380,7 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
         throw new Error(data.message || "Failed to save claim");
       }
       setStep("success");
+      onSuccess?.();
       setTimeout(() => handleClose(), 1600);
     } catch (err) {
       console.error("Manual claim error:", err);
@@ -471,7 +474,7 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+        className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4"
         style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
         onClick={(e) => {
           if (e.target === e.currentTarget && step !== "recording" && step !== "uploading") {

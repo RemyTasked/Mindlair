@@ -25,6 +25,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { APP_VERSION, GITHUB_REPO } from "@/lib/app-config";
+import { QuickThoughtModal } from "@/components/quick-thought-modal";
 
 const C = {
   bg: "#0f0e0c",
@@ -40,7 +41,7 @@ const C = {
   blue: "#6b9fc4",
 };
 
-const STEPS = ["welcome", "captureAnywhere", "install", "done"] as const;
+const STEPS = ["welcome", "captureAnywhere", "install", "firstThought", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 type PlatformType = "windows" | "mac" | "linux" | "ios" | "android" | "other";
@@ -53,6 +54,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
   const [step, setStep] = useState<Step>("welcome");
   const [platform, setPlatform] = useState<PlatformType>("other");
   const [completing, setCompleting] = useState(false);
+  const [thoughtModalOpen, setThoughtModalOpen] = useState(false);
+  const [firstThoughtCaptured, setFirstThoughtCaptured] = useState(false);
 
   useEffect(() => {
     const ua = navigator.userAgent.toLowerCase();
@@ -123,6 +126,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
             {step === "welcome" && <Brain className="w-6 h-6" style={{ color: C.accent }} />}
             {step === "captureAnywhere" && <Share2 className="w-6 h-6" style={{ color: C.accent }} />}
             {step === "install" && <Download className="w-6 h-6" style={{ color: C.accent }} />}
+            {step === "firstThought" && <Sparkles className="w-6 h-6" style={{ color: C.accent }} />}
             {step === "done" && <Sparkles className="w-6 h-6" style={{ color: C.accent }} />}
           </div>
           <h1
@@ -132,6 +136,7 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
             {step === "welcome" && "Welcome to Mindlair"}
             {step === "captureAnywhere" && "Capture anywhere"}
             {step === "install" && "Optional: ambient capture"}
+            {step === "firstThought" && "Plant your first seed"}
             {step === "done" && "You're ready!"}
           </h1>
           <p className="text-sm" style={{ color: C.muted, maxWidth: 400, margin: "0 auto" }}>
@@ -141,6 +146,8 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
               "Three low-friction surfaces feed the same pipeline. Use whichever fits the moment."}
             {step === "install" &&
               "Want Mindlair to also read what you don't intentionally share? Install one or both of these."}
+            {step === "firstThought" &&
+              "Add one quick thought before you go. It'll be the first seed on your map and gets the habit going."}
             {step === "done" &&
               "Your map starts now. Share, speak, or save for later — every input feeds the same pipeline."}
           </p>
@@ -435,6 +442,119 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
             </>
           )}
 
+          {step === "firstThought" && (
+            <div className="space-y-4">
+              <div
+                style={{
+                  background: C.surface,
+                  borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  padding: "20px 18px",
+                }}
+              >
+                <div className="flex gap-3 items-start">
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: `${C.accent}18`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      color: C.accent,
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: C.text,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Why now?
+                    </p>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: C.muted,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Maps start at the first claim. Type or speak something
+                      you believe — a view on a news story, a frustration, a
+                      half-formed opinion. The AI sharpens it into a claim you
+                      can keep, edit, flip, or drop.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {firstThoughtCaptured ? (
+                <div
+                  style={{
+                    background: `${C.green}10`,
+                    border: `1px solid ${C.green}40`,
+                    borderRadius: 12,
+                    padding: "16px 18px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: `${C.green}25`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Check className="w-4 h-4" style={{ color: C.green }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: C.text,
+                        marginBottom: 2,
+                      }}
+                    >
+                      First thought captured
+                    </p>
+                    <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+                      It&apos;s on your map. Tap continue when you&apos;re ready.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  size="lg"
+                  onClick={() => setThoughtModalOpen(true)}
+                  style={{
+                    background: C.accent,
+                    color: C.bg,
+                    fontWeight: 600,
+                    width: "100%",
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Add your first thought
+                </Button>
+              )}
+            </div>
+          )}
+
           {step === "done" && (
             <div className="text-center py-6">
               <div
@@ -504,20 +624,39 @@ export default function OnboardingOverlay({ onComplete }: OnboardingOverlayProps
 
             <Button
               onClick={() => setStep(STEPS[stepIndex + 1])}
+              disabled={step === "firstThought" && !firstThoughtCaptured}
               style={{
-                background: C.accent,
-                color: C.bg,
+                background:
+                  step === "firstThought" && !firstThoughtCaptured
+                    ? C.border
+                    : C.accent,
+                color:
+                  step === "firstThought" && !firstThoughtCaptured
+                    ? C.muted
+                    : C.bg,
                 fontWeight: 600,
+                cursor:
+                  step === "firstThought" && !firstThoughtCaptured
+                    ? "not-allowed"
+                    : "pointer",
               }}
             >
               {step === "welcome" && "Get Started"}
               {step === "captureAnywhere" && "Continue"}
-              {step === "install" && "Finish setup"}
+              {step === "install" && "Continue"}
+              {step === "firstThought" &&
+                (firstThoughtCaptured ? "Continue" : "Add a thought first")}
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
         )}
       </div>
+
+      <QuickThoughtModal
+        open={thoughtModalOpen}
+        onClose={() => setThoughtModalOpen(false)}
+        onSuccess={() => setFirstThoughtCaptured(true)}
+      />
     </div>
   );
 }

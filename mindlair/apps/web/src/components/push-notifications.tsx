@@ -277,14 +277,23 @@ export function PushNotificationBanner() {
   if (dismissed || !show) return null;
 
   return (
-    <div style={{
-      position: "fixed", bottom: 16, left: 16, right: 16,
+    <div className="mindlair-push-banner" style={{
+      position: "fixed",
+      bottom: "calc(170px + env(safe-area-inset-bottom, 0px))",
+      left: 16, right: 16,
       maxWidth: 380, marginLeft: "auto",
       background: C.surface, border: `1px solid ${C.border}`,
-      borderRadius: 14, padding: 16, zIndex: 50,
+      borderRadius: 14, padding: 16, zIndex: 40,
       boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
       fontFamily: "'Inter', system-ui, sans-serif",
     }}>
+      <style jsx>{`
+        @media (min-width: 1024px) {
+          :global(.mindlair-push-banner) {
+            bottom: 16px !important;
+          }
+        }
+      `}</style>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
         <div style={{ padding: 8, background: `${C.accent}18`, borderRadius: 10, flexShrink: 0 }}>
           <Bell style={{ width: 20, height: 20, color: C.accent }} />
