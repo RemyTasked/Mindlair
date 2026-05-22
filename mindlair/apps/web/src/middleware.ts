@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { SESSION_COOKIE_NAME } from '@/lib/session-cookie';
 
+const SITE_ACCESS_COOKIE = 'mindlair-site-access';
+
 const PUBLIC_PATHS = [
   '/',
   '/login',
@@ -87,6 +89,22 @@ export function middleware(request: NextRequest) {
 
   const canonicalRedirect = tryCanonicalHostRedirect(request);
   if (canonicalRedirect) return canonicalRedirect;
+
+  // Site-wide password gate — only active when SITE_PASSWORD env var is set
+  const sitePassword = process.env.SITE_PASSWORD;
+  if (sitePassword) {
+    const isPasswordRoute = pathname === '/password';
+    const isPasswordApi = pathname === '/api/auth/site-password';
+    if (!isPasswordRoute && !isPasswordApi) {
+      const accessCookie = request.cookies.get(SITE_ACCESS_COOKIE);
+      if (accessCookie?.value !== sitePassword) {
+        const base = process.env.NEXT_PUBLIC_APP_URL || request.url;
+        const dest = new URL('/password', base);
+        if (pathname !== '/') dest.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(dest);
+      }
+    }
+  }
 
   // Allow public paths
   if (PUBLIC_PATHS.includes(pathname) || PUBLIC_API_PATHS.includes(pathname)) {
