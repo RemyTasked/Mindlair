@@ -91,18 +91,37 @@ export function middleware(request: NextRequest) {
   const canonicalRedirect = tryCanonicalHostRedirect(request);
   if (canonicalRedirect) return canonicalRedirect;
 
-  // Site-wide password gate — only active when SITE_PASSWORD env var is set
+  // Site-wide password gate — only active when SITE_PASSWORD env var is set.
+  // Bypassed for:
+  //   - the gate page/API themselves
+  //   - cron jobs (use CRON_SECRET)
+  //   - magic link verification (token is its own proof of access)
+  //   - users who already have a valid session cookie (they're already in)
   const sitePassword = process.env.SITE_PASSWORD;
   if (sitePassword) {
-    const isPasswordRoute = pathname === '/password';
-    const isPasswordApi = pathname === '/api/auth/site-password';
+    const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+    const hasSession = Boolean(sessionCookie?.value);
+
+    const bypassPaths = new Set([
+      '/password',
+      '/api/auth/site-password',
+      '/verify',
+      '/api/auth/verify',
+    ]);
     const isCronRoute = pathname.startsWith('/api/cron/');
-    if (!isPasswordRoute && !isPasswordApi && !isCronRoute) {
+    const isBypassPath = bypassPaths.has(pathname);
+
+    if (!isBypassPath && !isCronRoute && !hasSession) {
       const accessCookie = request.cookies.get(SITE_ACCESS_COOKIE);
       if (accessCookie?.value !== sitePassword) {
         const base = process.env.NEXT_PUBLIC_APP_URL || request.url;
         const dest = new URL('/password', base);
-        if (pathname !== '/') dest.searchParams.set('redirect', pathname);
+        if (pathname !== '/') {
+          dest.searchParams.set(
+            'redirect',
+            pathname + request.nextUrl.search,
+          );
+        }
         return NextResponse.redirect(dest);
       }
     }
