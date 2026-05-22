@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Brain, Inbox, Map, Lightbulb, Settings, Rss, PenSquare, Fingerprint, FileText, Users } from "lucide-react";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { PushNotificationBanner } from "@/components/push-notifications";
-import { VoiceCaptureButton } from "@/components/voice-capture-button";
+import { QuickThoughtButton } from "@/components/quick-thought-button";
 import { ToastContainer } from "@/components/ui/toast";
 import { ToastProvider, useToastState, useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -135,7 +135,7 @@ function AppLayoutInner({
         </div>
       </nav>
 
-      <VoiceCaptureButton />
+      <QuickThoughtButton />
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <PWAInstallPrompt />
       <PushNotificationBanner />

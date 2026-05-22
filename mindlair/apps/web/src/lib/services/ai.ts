@@ -697,6 +697,48 @@ export async function classifyStance(
 }
 
 // ============================================
+// Claim Flipping (for Quick Thought)
+// ============================================
+
+const FLIP_CLAIM_PROMPT = `You invert claims to their logical opposite.
+
+Rules:
+1. Return ONLY the inverted claim as a single clear, falsifiable statement.
+2. Preserve subject, tense, and specificity. Only the directional assertion changes.
+3. Do NOT add hedges, qualifiers, or commentary.
+4. Keep it roughly the same length as the original.
+5. The inverted claim should be the natural counter-position someone could hold.
+
+Examples:
+- "Remote work hurts team culture" -> "Remote work can strengthen team culture"
+- "Universal basic income would reduce poverty" -> "Universal basic income would not reduce poverty"
+- "Social media is bad for democracy" -> "Social media is good for democracy"
+- "AI will replace most knowledge workers" -> "AI will not replace most knowledge workers"
+
+Respond in JSON: { "flipped": "the inverted claim" }`;
+
+export async function flipClaim(claimText: string): Promise<string> {
+  try {
+    const result = await claudeJSON<{ flipped: string }>({
+      system: FLIP_CLAIM_PROMPT,
+      user: `Original claim: "${claimText.trim()}"`,
+      model: FAST_MODEL,
+      temperature: 0.2,
+      maxTokens: 200,
+    });
+
+    const flipped = result.flipped?.trim();
+    if (!flipped) {
+      throw new Error('Empty flip response');
+    }
+    return flipped;
+  } catch (error) {
+    console.error('Flip claim error:', error);
+    throw error;
+  }
+}
+
+// ============================================
 // Spoken-Mode Claim Extraction (for Voice Capture)
 // ============================================
 
