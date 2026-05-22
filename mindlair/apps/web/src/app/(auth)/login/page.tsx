@@ -109,9 +109,20 @@ export default function LoginPage() {
               <p style={{ fontSize: 14, color: C.textSoft, marginBottom: 6 }}>
                 We sent a sign-in link to <strong style={{ color: C.text }}>{email}</strong>
               </p>
-              <p style={{ fontSize: 13, color: C.muted, marginBottom: 20 }}>
+              <p style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>
                 Click the link in your email to sign in. It expires in 15 minutes.
               </p>
+              <div style={{
+                padding: "10px 14px",
+                background: `${C.accent}10`,
+                border: `1px solid ${C.accent}25`,
+                borderRadius: 8,
+                marginBottom: 16,
+              }}>
+                <p style={{ fontSize: 12, color: C.textSoft, lineHeight: 1.5, margin: 0 }}>
+                  <strong style={{ color: C.accent }}>Tip:</strong> On iPhone, open the link in Safari (not Gmail&apos;s in-app browser) to stay signed in.
+                </p>
+              </div>
               <button
                 onClick={() => { setIsSuccess(false); setEmail(""); }}
                 style={{ fontSize: 13, color: C.accent, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
@@ -180,9 +191,6 @@ export default function LoginPage() {
 
         <p style={{ textAlign: "center", fontSize: 13, color: C.muted, marginTop: 20 }}>
           No password required. We&apos;ll send you a magic link.
-        </p>
-        <p style={{ textAlign: "center", fontSize: 12, color: C.muted, marginTop: 12, lineHeight: 1.5, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
-          On iPhone, open the email link in Safari, then add to Home Screen from that same site so your session isn&apos;t split across URLs.
         </p>
       </div>
     </div>
