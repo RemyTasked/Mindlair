@@ -8,6 +8,7 @@ import {
   MODEL_VERSION,
 } from './ai';
 import { linkClaimToConcepts, updateBeliefGraph } from './belief-graph';
+import { extractConceptsFromHeadline } from './concept-resolver';
 import { sendCaptureReadyNotification } from './push';
 import { resolveSpokenSource } from './source-resolver';
 
@@ -472,6 +473,113 @@ export async function commitCapture(
   });
 
   return { claimIds, positionIds };
+}
+
+/**
+ * Commit a user-authored claim for a capture that the AI couldn't extract from.
+ * Skips the candidate flow entirely — the user typed the claim themselves, so
+ * we trust their phrasing and create the Claim/Position directly. Still feeds
+ * the belief graph (contradiction + echo-chamber detection) like any other
+ * confirmed claim.
+ */
+export async function commitCaptureManualClaim(
+  captureId: string,
+  input: { text: string; stance: Stance }
+): Promise<{ claimId: string; positionId: string }> {
+  const capture = await db.capture.findUnique({
+    where: { id: captureId },
+    include: { source: true },
+  });
+
+  if (!capture) {
+    throw new Error('Capture not found');
+  }
+
+  const concepts = await extractConceptsFromHeadline(input.text);
+
+  let claimId = '';
+  let positionId = '';
+
+  await db.$transaction(async (tx) => {
+    let sourceId = capture.sourceId;
+
+    if (!sourceId && capture.source) {
+      sourceId = capture.source.id;
+    }
+
+    if (!sourceId) {
+      const newSource = await tx.source.create({
+        data: {
+          userId: capture.userId,
+          url: `/capture/${captureId}`,
+          title: capture.rawText?.slice(0, 200) || 'Quick thought',
+          contentType: 'article',
+          surface: capture.modality === 'voice' ? 'voice_capture' : 'share_sheet',
+          consumedAt: new Date(),
+        },
+      });
+      sourceId = newSource.id;
+    }
+
+    const claim = await tx.claim.create({
+      data: {
+        sourceId,
+        text: input.text,
+        claimType: 'opinion',
+        confidenceScore: 0.8, // user-authored — high confidence in phrasing
+        modelVersion: MODEL_VERSION,
+        captureId,
+        extractedFrom: 'reaction',
+        aiStance: null,
+      },
+    });
+    claimId = claim.id;
+
+    const conceptIds = await linkClaimToConcepts(claim.id, concepts);
+
+    const position = await tx.position.create({
+      data: {
+        userId: capture.userId,
+        claimId: claim.id,
+        stance: input.stance,
+        context: 'capture',
+        confidence: getConfidenceForModality(capture.modality, 'reaction'),
+      },
+    });
+    positionId = position.id;
+
+    if (conceptIds.length > 0) {
+      await updateBeliefGraph(
+        capture.userId,
+        claim.id,
+        input.stance,
+        conceptIds,
+        getConfidenceForModality(capture.modality, 'reaction')
+      );
+    }
+
+    await tx.extractionFeedback.create({
+      data: {
+        captureId,
+        claimText: capture.rawText?.slice(0, 500) || '',
+        finalText: input.text,
+        action: 'manual_authored',
+        stanceBefore: null,
+        stanceAfter: input.stance,
+        modelVersion: MODEL_VERSION,
+      },
+    });
+
+    await tx.capture.update({
+      where: { id: captureId },
+      data: {
+        status: 'confirmed',
+        confirmedAt: new Date(),
+      },
+    });
+  });
+
+  return { claimId, positionId };
 }
 
 export async function processCapture(captureId: string): Promise<void> {

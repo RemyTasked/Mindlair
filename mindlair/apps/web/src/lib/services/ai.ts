@@ -749,11 +749,42 @@ function buildSpokenExtractionPrompt(existingConcepts: string[]): string {
 
   return `You are an expert at extracting core claims from SPOKEN transcripts.
 
-Spoken language is messy. You must:
-1. Handle self-corrections: When someone says "actually no, I mean..." or "wait, what I really think is...", take the CORRECTED version only.
-2. Drop filler and hedges: Ignore "just finished," "honestly," "I think," "like," "you know," and similar conversational filler.
-3. Segment multi-topic rambles: If someone talks about multiple unrelated topics, extract claims from each as separate items.
-4. Recognize revision language: Words like "that changed my mind," "I used to think X but now," "this convinced me" indicate the person's view evolved.
+Spoken language is messy. You handle:
+1. Self-corrections: When someone says "actually no, I mean..." or "wait, what I really think is...", take the CORRECTED version only.
+2. Filler and hedges: Ignore "just finished," "honestly," "I think," "like," "you know," and similar conversational filler.
+3. Multi-topic rambles: If someone talks about multiple unrelated topics, extract claims from each as separate items.
+4. Revision language: Words like "that changed my mind," "I used to think X but now," "this convinced me" indicate the person's view evolved.
+
+═══════════════════════════════════════════════════════════════════
+EXTRACTION RULE (CRITICAL):
+═══════════════════════════════════════════════════════════════════
+
+ALWAYS extract at least one claim if the speaker makes ANY of these:
+- A value judgment: "X is good/bad/smart/dumb/wrong/right"
+- A prediction: "Y will happen / won't work / will improve"
+- A policy view: "we should / we shouldn't / they need to"
+- A causal claim: "X causes Y / X leads to Z / because of X"
+- An evaluation: "X isn't worth it / X is better than Y"
+
+For SHORT recordings (a single focused statement, no self-correction or
+ramble), extract the core claim DIRECTLY. Don't search for patterns that
+aren't there. A short, clear opinion is the simplest case — just clean
+it up and extract it.
+
+Negative phrasing counts. "Forcing workers back to the office isn't
+smart" is a valid claim — extract it as-is or flip the negation
+("Forcing workers back to the office is a bad policy"). Compound
+statements (X is bad AND Y will suffer) can be ONE claim if they're
+tightly linked, or split into multiple if they're independent.
+
+Only return an empty claims array if the transcript is:
+- Pure rambling with no judgment, prediction, or recommendation
+- Unintelligible / contains no coherent statement
+- A factual recap with no stance ("I went to the store and bought milk")
+
+When uncertain, INCLUDE the claim with a lower confidence (e.g. 0.5-0.6)
+rather than dropping it. The user can edit or drop it themselves.
+═══════════════════════════════════════════════════════════════════
 
 Extract the 1-5 most important claims being made. For each claim:
 1. State the claim as a clear, standalone statement (cleaned up from spoken language)
@@ -796,6 +827,74 @@ Respond in JSON format:
 }`;
 }
 
+const OPINION_PATTERNS = [
+  /\b(isn't|aren't|wasn't|weren't|won't|shouldn't|can't|cannot|doesn't|don't)\b/i,
+  /\b(should|shouldn't|need to|needs to|must|have to|got to)\b/i,
+  /\b(good|bad|smart|dumb|stupid|wrong|right|terrible|amazing|awful|wonderful|better|worse)\b/i,
+  /\b(will|would|could|might)\s+(?:happen|work|fail|suffer|improve|reduce|increase|cause|lead|change)/i,
+  /\b(believe|think|feel|argue|claim|say)\s+that\b/i,
+  /\b(because|since|so that|in order to)\b/i,
+];
+
+function looksLikeOpinion(text: string): boolean {
+  return OPINION_PATTERNS.some((re) => re.test(text));
+}
+
+const PERMISSIVE_SPOKEN_PROMPT = `You extract claims from short spoken statements where a previous attempt found nothing.
+
+The transcript below contains some kind of judgment, prediction, or recommendation — your job is to find it, however informal.
+
+Rules:
+1. Treat the entire statement as a candidate claim. If it expresses a view, extract it.
+2. Clean up filler ("um", "like", "you know", "I think") but PRESERVE the speaker's stance.
+3. Negative phrasing is fine. "X isn't a good idea" is a valid claim.
+4. If the statement contains multiple linked ideas, combine them into ONE claim that captures the full thought.
+5. Confidence 0.5-0.7 is normal here — this is a permissive retry, not a high-bar extraction.
+6. Topic concepts must still be substantive (e.g. "remote work", "workplace policy" — not "office" or "thing").
+
+Respond in JSON:
+{
+  "claims": [
+    {
+      "text": "The claim as a clear statement",
+      "type": "opinion",
+      "confidence": 0.6,
+      "concepts": ["concept1", "concept2"]
+    }
+  ],
+  "primaryTopic": "main topic",
+  "sentiment": "positive|negative|neutral|mixed"
+}`;
+
+async function permissiveSpokenExtraction(
+  content: { title: string; text?: string; url: string },
+  existingConcepts: string[]
+): Promise<ContentAnalysis & { claims: (ExtractedClaim & { changedMind?: boolean })[] }> {
+  const userMsg = content.text
+    ? `Transcript: ${content.text.slice(0, 4000)}`
+    : `Title: ${content.title}`;
+
+  const conceptHint = existingConcepts.length > 0
+    ? `\n\nUser's existing concept labels (reuse when applicable):\n${existingConcepts.slice(0, 50).map((c) => `  - ${c}`).join('\n')}`
+    : '';
+
+  const result = await claudeJSON<
+    ContentAnalysis & { claims: (ExtractedClaim & { changedMind?: boolean })[] }
+  >({
+    system: PERMISSIVE_SPOKEN_PROMPT + conceptHint,
+    user: userMsg,
+    model: FAST_MODEL,
+    temperature: 0.4,
+    maxTokens: 800,
+  });
+
+  return {
+    claims: result.claims || [],
+    primaryTopic: result.primaryTopic || 'general',
+    sentiment: result.sentiment || 'neutral',
+  };
+}
+
 export async function extractClaimsFromSpokenText(
   content: {
     title: string;
@@ -817,9 +916,30 @@ export async function extractClaimsFromSpokenText(
       temperature: 0.3,
       maxTokens: 1500,
     });
-    
+
+    const claims = result.claims || [];
+
+    // Permissive retry: short transcripts with opinion-bearing language that
+    // returned zero claims often need a second, less-conservative pass.
+    if (
+      claims.length === 0 &&
+      content.text &&
+      content.text.length <= 600 &&
+      looksLikeOpinion(content.text)
+    ) {
+      try {
+        console.log('[spoken-extract] empty result on opinion-like short transcript — running permissive retry');
+        const retry = await permissiveSpokenExtraction(content, existingConcepts);
+        if (retry.claims.length > 0) {
+          return retry;
+        }
+      } catch (retryErr) {
+        console.error('Permissive spoken retry failed:', retryErr);
+      }
+    }
+
     return {
-      claims: result.claims || [],
+      claims,
       primaryTopic: result.primaryTopic || 'general',
       sentiment: result.sentiment || 'neutral',
     };

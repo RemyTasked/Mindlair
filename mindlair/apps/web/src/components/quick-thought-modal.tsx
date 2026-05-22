@@ -115,6 +115,9 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
   const [editText, setEditText] = useState("");
   const [flippingIndex, setFlippingIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualClaim, setManualClaim] = useState("");
+  const [manualStance, setManualStance] = useState<Stance>("agree");
 
   const voice = useVoiceCapture();
   const pollRef = useRef<NodeJS.Timeout | null>(null);
@@ -130,6 +133,9 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
     setEditText("");
     setFlippingIndex(null);
     setIsSubmitting(false);
+    setManualMode(false);
+    setManualClaim("");
+    setManualStance("agree");
     voice.reset();
     if (pollRef.current) {
       clearTimeout(pollRef.current);
@@ -343,6 +349,41 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
     }
     setStep("success");
     setTimeout(() => handleClose(), 1400);
+  };
+
+  const startManualClaim = () => {
+    setManualClaim(transcript.trim());
+    setManualStance("agree");
+    setManualMode(true);
+  };
+
+  const handleSubmitManualClaim = async () => {
+    if (!captureId) return;
+    const trimmed = manualClaim.trim();
+    if (trimmed.length < 3) return;
+
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/captures/${captureId}/manual-claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: trimmed,
+          stance: manualStance,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to save claim");
+      }
+      setStep("success");
+      setTimeout(() => handleClose(), 1600);
+    } catch (err) {
+      console.error("Manual claim error:", err);
+      setError(err instanceof Error ? err.message : "Failed to save");
+      setIsSubmitting(false);
+    }
   };
 
   const cycleStance = (index: number) => {
@@ -1014,7 +1055,7 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
               </div>
             )}
 
-            {step === "need_more_thought" && (
+            {step === "need_more_thought" && !manualMode && (
               <div style={{ padding: "32px 20px", textAlign: "center" }}>
                 <div
                   style={{
@@ -1031,7 +1072,7 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
                   <Sparkles size={22} color={C.accent} />
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 600, margin: "0 0 8px" }}>
-                  Needs more thought
+                  Couldn&apos;t pull a clear claim
                 </h3>
                 <p
                   style={{
@@ -1040,13 +1081,13 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
                     lineHeight: 1.55,
                     marginTop: 0,
                     marginBottom: 20,
-                    maxWidth: 360,
+                    maxWidth: 380,
                     marginLeft: "auto",
                     marginRight: "auto",
                   }}
                 >
-                  We couldn&apos;t pull a clear claim from this. Save it for
-                  later so you can come back when the idea sharpens.
+                  Want to write the claim yourself? Or save it for later if the
+                  idea still needs to sharpen.
                 </p>
                 {transcript && (
                   <div
@@ -1070,15 +1111,169 @@ export function QuickThoughtModal({ open, onClose }: QuickThoughtModalProps) {
                     display: "flex",
                     gap: 10,
                     justifyContent: "center",
+                    flexWrap: "wrap",
                   }}
                 >
                   <SecondaryButton onClick={handleClose}>
                     Discard
                   </SecondaryButton>
-                  <PrimaryButton onClick={handlePark}>
+                  <SecondaryButton onClick={handlePark}>
                     Save for later
+                  </SecondaryButton>
+                  <PrimaryButton onClick={startManualClaim}>
+                    Write the claim
                   </PrimaryButton>
                 </div>
+              </div>
+            )}
+
+            {step === "need_more_thought" && manualMode && (
+              <div style={{ padding: "20px" }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: C.muted,
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                    marginBottom: 8,
+                  }}
+                >
+                  Your words
+                </div>
+                {transcript && (
+                  <div
+                    style={{
+                      background: C.bg,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 10,
+                      padding: "10px 14px",
+                      fontSize: 13,
+                      color: C.textSoft,
+                      marginBottom: 16,
+                      lineHeight: 1.5,
+                      maxHeight: 120,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {transcript}
+                  </div>
+                )}
+
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 13,
+                    color: C.textSoft,
+                    marginBottom: 8,
+                  }}
+                >
+                  Write the claim in your own words
+                </label>
+                <textarea
+                  value={manualClaim}
+                  onChange={(e) => setManualClaim(e.target.value)}
+                  placeholder="A clear, standalone statement of what you believe..."
+                  autoFocus
+                  rows={3}
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    background: C.bg,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 10,
+                    padding: "12px 14px",
+                    color: C.text,
+                    fontSize: 15,
+                    fontFamily: "inherit",
+                    resize: "vertical",
+                    outline: "none",
+                    minHeight: 80,
+                    marginBottom: 16,
+                  }}
+                />
+
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: C.textSoft,
+                    marginBottom: 8,
+                  }}
+                >
+                  Your stance
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    marginBottom: 20,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {(["agree", "complicated", "disagree"] as Stance[]).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setManualStance(s)}
+                      style={{
+                        background:
+                          manualStance === s
+                            ? `${STANCE_COLORS[s]}25`
+                            : "transparent",
+                        border: `1px solid ${
+                          manualStance === s
+                            ? `${STANCE_COLORS[s]}80`
+                            : C.border
+                        }`,
+                        color:
+                          manualStance === s ? STANCE_COLORS[s] : C.textSoft,
+                        borderRadius: 8,
+                        padding: "8px 14px",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {STANCE_LABELS[s]}
+                    </button>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 10,
+                  }}
+                >
+                  <SecondaryButton onClick={() => setManualMode(false)}>
+                    Back
+                  </SecondaryButton>
+                  <PrimaryButton
+                    onClick={handleSubmitManualClaim}
+                    disabled={manualClaim.trim().length < 3 || isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <>Add to map</>
+                    )}
+                  </PrimaryButton>
+                </div>
+
+                {error && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      color: C.danger,
+                      fontSize: 13,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <AlertCircle size={14} />
+                    {error}
+                  </div>
+                )}
               </div>
             )}
 
