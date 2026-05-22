@@ -55,14 +55,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    // Get belief map summary (top concepts)
-    const beliefs = await db.belief.findMany({
-      where: { userId: targetUserId },
-      include: { concept: true },
-      orderBy: { positionCount: 'desc' },
-      take: 10,
-    });
-
     // Get relationship status if authenticated
     let relationship = null;
     if (user && user.id !== targetUserId) {
@@ -139,14 +131,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         subscriptionCount: targetUser._count.subscriptions,
       },
       relationship,
-      beliefMap: beliefs.map(b => ({
-        conceptId: b.conceptId,
-        label: b.concept.label,
-        direction: b.direction,
-        strength: b.strength,
-        stability: b.stability,
-        positionCount: b.positionCount,
-      })),
+      beliefMap: [],
       recentPosts: posts.map(p => ({
         id: p.id,
         headlineClaim: p.headlineClaim,

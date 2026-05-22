@@ -35,15 +35,6 @@ const C = {
   purple: "#b399ff",
 };
 
-interface BeliefNode {
-  conceptId: string;
-  label: string;
-  direction: string;
-  strength: number;
-  stability: number;
-  positionCount: number;
-}
-
 interface Post {
   id: string;
   headlineClaim: string;
@@ -69,7 +60,6 @@ interface ProfileData {
     blocking: boolean;
     blockedBy: boolean;
   } | null;
-  beliefMap: BeliefNode[];
   recentPosts: Post[];
 }
 
@@ -83,12 +73,6 @@ const stanceColors = {
   arguing: C.green,
   exploring: C.accent,
   steelmanning: C.blue,
-};
-
-const directionColors = {
-  positive: C.green,
-  negative: C.rose,
-  mixed: C.purple,
 };
 
 export default function ProfilePage() {
@@ -401,82 +385,6 @@ export default function ProfilePage() {
               </AnimatePresence>
             </div>
           )}
-        </motion.div>
-
-        {/* Belief Map */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          style={{
-            background: C.surface,
-            border: `1px solid ${C.border}`,
-            borderRadius: 16,
-            padding: 24,
-            marginBottom: 24,
-          }}
-        >
-          <h2 style={{ 
-            color: C.text, 
-            fontSize: 18, 
-            fontWeight: 600,
-            marginBottom: 16,
-          }}>
-            Belief Landscape
-          </h2>
-
-          {profile.beliefMap.length === 0 ? (
-            <p style={{ color: C.muted, fontSize: 14, textAlign: "center", padding: 24 }}>
-              No belief data yet
-            </p>
-          ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {profile.beliefMap.map((belief) => {
-                const color = directionColors[belief.direction as keyof typeof directionColors] || C.muted;
-                const size = Math.max(40, Math.min(100, belief.positionCount * 10 + 40));
-                
-                return (
-                  <motion.div
-                    key={belief.conceptId}
-                    whileHover={{ scale: 1.05 }}
-                    style={{
-                      padding: "10px 16px",
-                      background: `${color}15`,
-                      border: `1px solid ${color}40`,
-                      borderRadius: 20,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                    title={`${belief.label}: ${belief.direction} (${Math.round(belief.strength * 100)}% strength)`}
-                  >
-                    <div style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      background: color,
-                      opacity: belief.strength,
-                    }} />
-                    <span style={{ color: C.text, fontSize: 13 }}>
-                      {belief.label}
-                    </span>
-                    <span style={{ color: C.muted, fontSize: 11 }}>
-                      {belief.positionCount}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-
-          <p style={{ 
-            color: C.muted, 
-            fontSize: 12, 
-            marginTop: 16,
-            textAlign: "center",
-          }}>
-            The map is the profile — no subscriber counts, just how they think.
-          </p>
         </motion.div>
 
         {/* Recent Posts */}
